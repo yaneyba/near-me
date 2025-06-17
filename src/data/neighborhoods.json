@@ -1,0 +1,50 @@
+{
+  "dallas": [
+    "Downtown",
+    "Uptown",
+    "Deep Ellum",
+    "Bishop Arts District",
+    "Lakewood",
+    "Highland Park",
+    "University Park",
+    "Oak Cliff",
+    "Addison",
+    "Plano"
+  ],
+  "denver": [
+    "Capitol Hill",
+    "Highland",
+    "LoDo",
+    "RiNo",
+    "Cherry Creek",
+    "Washington Park",
+    "Highlands Ranch",
+    "Golden Triangle",
+    "Five Points",
+    "Stapleton"
+  ],
+  "austin": [
+    "South Austin",
+    "East Austin",
+    "West Lake Hills",
+    "Zilker",
+    "The Domain",
+    "Mueller",
+    "Barton Hills",
+    "Clarksville",
+    "Bouldin Creek",
+    "North Loop"
+  ],
+  "houston": [
+    "Downtown",
+    "Montrose",
+    "River Oaks",
+    "The Heights",
+    "Midtown",
+    "Galleria",
+    "Memorial",
+    "Medical Center",
+    "Katy",
+    "Sugar Land"
+  ]
+}
