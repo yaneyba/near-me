@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { parseSubdomain, generateTitle } from './utils/subdomainParser';
 import { JsonDataProvider } from './providers/JsonDataProvider';
 import { Business, SubdomainInfo } from './types';
+import Header from './components/Header';
 import Hero from './components/Hero';
 import BusinessListings from './components/BusinessListings';
 import ServicesSection from './components/ServicesSection';
+import Footer from './components/Footer';
 import DevPanel from './components/DevPanel';
 
 function App() {
@@ -82,6 +84,11 @@ function App() {
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
+    // Scroll to business listings section
+    const businessSection = document.getElementById('businesses');
+    if (businessSection) {
+      businessSection.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   if (loading) {
@@ -96,29 +103,48 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <Hero
+    <div className="min-h-screen bg-white flex flex-col">
+      <Header
         category={subdomainInfo.category}
         city={subdomainInfo.city}
         state={subdomainInfo.state}
         onSearch={handleSearch}
       />
       
-      <BusinessListings
-        businesses={businesses}
+      <main className="flex-grow">
+        <Hero
+          category={subdomainInfo.category}
+          city={subdomainInfo.city}
+          state={subdomainInfo.state}
+          onSearch={handleSearch}
+        />
+        
+        <div id="businesses">
+          <BusinessListings
+            businesses={businesses}
+            category={subdomainInfo.category}
+            city={subdomainInfo.city}
+            searchQuery={searchQuery}
+          />
+        </div>
+        
+        <div id="services">
+          <ServicesSection
+            services={services}
+            category={subdomainInfo.category}
+            city={subdomainInfo.city}
+          />
+        </div>
+      </main>
+
+      <Footer
         category={subdomainInfo.category}
         city={subdomainInfo.city}
-        searchQuery={searchQuery}
-      />
-      
-      <ServicesSection
-        services={services}
-        category={subdomainInfo.category}
-        city={subdomainInfo.city}
+        state={subdomainInfo.state}
       />
 
       {/* Development Panel - Only visible in development */}
-      {process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost' || window.location.hostname.includes('stackblitz') ? (
+      {(process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost' || window.location.hostname.includes('stackblitz')) && (
         <DevPanel
           onSubdomainChange={handleDevSubdomainChange}
           currentCategory={subdomainInfo.category}
@@ -126,7 +152,7 @@ function App() {
           isVisible={devPanelVisible}
           onToggleVisibility={() => setDevPanelVisible(!devPanelVisible)}
         />
-      ) : null}
+      )}
     </div>
   );
 }
