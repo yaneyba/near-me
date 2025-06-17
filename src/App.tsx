@@ -6,6 +6,8 @@ import Header from './components/Header';
 import Hero from './components/Hero';
 import BusinessListings from './components/BusinessListings';
 import ServicesSection from './components/ServicesSection';
+import AboutSection from './components/AboutSection';
+import ContactSection from './components/ContactSection';
 import Footer from './components/Footer';
 import DevPanel from './components/DevPanel';
 
@@ -137,6 +139,18 @@ function App() {
             city={subdomainInfo.city}
           />
         </div>
+
+        <AboutSection
+          category={subdomainInfo.category}
+          city={subdomainInfo.city}
+          state={subdomainInfo.state}
+        />
+
+        <ContactSection
+          category={subdomainInfo.category}
+          city={subdomainInfo.city}
+          state={subdomainInfo.state}
+        />
       </main>
 
       <Footer
