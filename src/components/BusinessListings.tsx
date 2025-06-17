@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Star, Phone, MapPin, Clock, ExternalLink, Globe, Filter, SortAsc } from 'lucide-react';
+import { Star, Phone, MapPin, Clock, ExternalLink, Globe, Filter, SortAsc, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Business } from '../types';
 
 interface BusinessListingsProps {
@@ -20,6 +20,11 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
   const [filterBy, setFilterBy] = useState<'all' | 'top-rated' | 'most-reviewed'>('all');
   const [showFilters, setShowFilters] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(9);
+  const [paginatedBusinesses, setPaginatedBusinesses] = useState<Business[]>([]);
 
   // Real-time filtering and sorting
   useEffect(() => {
@@ -65,11 +70,136 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
       });
 
       setFilteredBusinesses(filtered);
+      setCurrentPage(1); // Reset to first page when filters change
       setIsLoading(false);
     }, 200);
 
     return () => clearTimeout(timer);
   }, [businesses, searchQuery, sortBy, filterBy]);
+
+  // Handle pagination
+  useEffect(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    setPaginatedBusinesses(filteredBusinesses.slice(startIndex, endIndex));
+  }, [filteredBusinesses, currentPage, itemsPerPage]);
+
+  const totalPages = Math.ceil(filteredBusinesses.length / itemsPerPage);
+  const startItem = (currentPage - 1) * itemsPerPage + 1;
+  const endItem = Math.min(currentPage * itemsPerPage, filteredBusinesses.length);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Smooth scroll to top of business listings
+    const businessSection = document.getElementById('businesses');
+    if (businessSection) {
+      businessSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+  };
+
+  const renderPaginationButtons = () => {
+    const buttons = [];
+    const maxVisiblePages = 5;
+    
+    // Calculate start and end page numbers
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    
+    // Adjust start page if we're near the end
+    if (endPage - startPage < maxVisiblePages - 1) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    // Previous button
+    buttons.push(
+      <button
+        key="prev"
+        onClick={() => handlePageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+        className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <ChevronLeft className="w-4 h-4" />
+      </button>
+    );
+
+    // First page and ellipsis
+    if (startPage > 1) {
+      buttons.push(
+        <button
+          key={1}
+          onClick={() => handlePageChange(1)}
+          className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"
+        >
+          1
+        </button>
+      );
+      
+      if (startPage > 2) {
+        buttons.push(
+          <span key="ellipsis1" className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300">
+            ...
+          </span>
+        );
+      }
+    }
+
+    // Page numbers
+    for (let i = startPage; i <= endPage; i++) {
+      buttons.push(
+        <button
+          key={i}
+          onClick={() => handlePageChange(i)}
+          className={`px-3 py-2 text-sm font-medium border border-gray-300 ${
+            i === currentPage
+              ? 'bg-blue-600 text-white border-blue-600'
+              : 'text-gray-700 bg-white hover:bg-gray-50'
+          }`}
+        >
+          {i}
+        </button>
+      );
+    }
+
+    // Last page and ellipsis
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) {
+        buttons.push(
+          <span key="ellipsis2" className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300">
+            ...
+          </span>
+        );
+      }
+      
+      buttons.push(
+        <button
+          key={totalPages}
+          onClick={() => handlePageChange(totalPages)}
+          className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"
+        >
+          {totalPages}
+        </button>
+      );
+    }
+
+    // Next button
+    buttons.push(
+      <button
+        key="next"
+        onClick={() => handlePageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
+        className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <ChevronRight className="w-4 h-4" />
+      </button>
+    );
+
+    return buttons;
+  };
 
   const renderStars = (rating: number, reviewCount: number) => {
     return (
@@ -218,9 +348,32 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
         </div>
       )}
 
+      {/* Pagination Info and Items Per Page */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+        <div className="text-sm text-gray-700 mb-4 sm:mb-0">
+          Showing {startItem} to {endItem} of {filteredBusinesses.length} results
+        </div>
+        
+        <div className="flex items-center space-x-4">
+          <label className="text-sm text-gray-700">
+            Show:
+            <select
+              value={itemsPerPage}
+              onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+              className="ml-2 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value={6}>6 per page</option>
+              <option value={9}>9 per page</option>
+              <option value={12}>12 per page</option>
+              <option value={18}>18 per page</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
       {/* Business Grid with smooth transitions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {filteredBusinesses.map((business, index) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
+        {paginatedBusinesses.map((business, index) => (
           <div
             key={business.id}
             className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100 overflow-hidden"
@@ -331,6 +484,21 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
           </div>
         ))}
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between">
+          <div className="text-sm text-gray-700 mb-4 sm:mb-0">
+            Page {currentPage} of {totalPages}
+          </div>
+          
+          <div className="flex items-center">
+            <nav className="flex" aria-label="Pagination">
+              {renderPaginationButtons()}
+            </nav>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
