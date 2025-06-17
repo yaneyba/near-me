@@ -1,5 +1,7 @@
 import React from 'react';
 import { MapPin, Phone, Mail, Clock, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
+import businessesData from '../data/businesses.json';
+import { Business } from '../types';
 
 interface FooterProps {
   category: string;
@@ -9,26 +11,38 @@ interface FooterProps {
 
 const Footer: React.FC<FooterProps> = ({ category, city, state }) => {
   const currentYear = new Date().getFullYear();
+  const businesses: Business[] = businessesData;
 
-  const popularCategories = [
-    'Nail Salons',
-    'Auto Repair',
-    'Hair Salons',
-    'Restaurants',
-    'Dentists',
-    'Plumbers'
-  ];
+  // Get unique categories that actually exist in the data
+  const getExistingCategories = (): string[] => {
+    const categorySet = new Set<string>();
+    businesses.forEach(business => {
+      // Convert kebab-case to Title Case for display
+      const displayCategory = business.category
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+      categorySet.add(displayCategory);
+    });
+    return Array.from(categorySet).sort();
+  };
 
-  const popularCities = [
-    'Dallas',
-    'Denver',
-    'Austin',
-    'Houston',
-    'Phoenix',
-    'Chicago',
-    'Atlanta',
-    'Miami'
-  ];
+  // Get unique cities that actually exist in the data
+  const getExistingCities = (): string[] => {
+    const citySet = new Set<string>();
+    businesses.forEach(business => {
+      // Convert kebab-case to Title Case for display
+      const displayCity = business.city
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+      citySet.add(displayCity);
+    });
+    return Array.from(citySet).sort();
+  };
+
+  const existingCategories = getExistingCategories();
+  const existingCities = getExistingCities();
 
   const formatForUrl = (text: string) => {
     return text.toLowerCase().replace(/\s+/g, '-');
@@ -64,11 +78,11 @@ const Footer: React.FC<FooterProps> = ({ category, city, state }) => {
             </div>
           </div>
 
-          {/* Popular Categories */}
+          {/* Popular Categories - Only show existing ones */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Popular Categories</h4>
+            <h4 className="text-lg font-semibold mb-4">Available Categories</h4>
             <ul className="space-y-2">
-              {popularCategories.map((cat) => (
+              {existingCategories.map((cat) => (
                 <li key={cat}>
                   <a
                     href={`https://${formatForUrl(cat)}.${formatForUrl(city)}.near-me.us`}
@@ -81,11 +95,11 @@ const Footer: React.FC<FooterProps> = ({ category, city, state }) => {
             </ul>
           </div>
 
-          {/* Popular Cities */}
+          {/* Popular Cities - Only show existing ones */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Popular Cities</h4>
+            <h4 className="text-lg font-semibold mb-4">Available Cities</h4>
             <ul className="space-y-2">
-              {popularCities.map((cityName) => (
+              {existingCities.map((cityName) => (
                 <li key={cityName}>
                   <a
                     href={`https://${formatForUrl(category)}.${formatForUrl(cityName)}.near-me.us`}
