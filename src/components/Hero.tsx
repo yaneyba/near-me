@@ -1,21 +1,17 @@
 import React from 'react';
-import { Search, MapPin, Star } from 'lucide-react';
+import { MapPin, Star } from 'lucide-react';
+import SearchWithLiveResults from './SearchWithLiveResults';
+import { Business } from '../types';
 
 interface HeroProps {
   category: string;
   city: string;
   state: string;
+  businesses: Business[];
   onSearch: (query: string) => void;
 }
 
-const Hero: React.FC<HeroProps> = ({ category, city, state, onSearch }) => {
-  const [searchQuery, setSearchQuery] = React.useState('');
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSearch(searchQuery);
-  };
-
+const Hero: React.FC<HeroProps> = ({ category, city, state, businesses, onSearch }) => {
   return (
     <div className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white">
       <div className="absolute inset-0 bg-black/20"></div>
@@ -34,24 +30,18 @@ const Hero: React.FC<HeroProps> = ({ category, city, state, onSearch }) => {
         </div>
 
         <div className="max-w-2xl mx-auto">
-          <form onSubmit={handleSearch} className="relative">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-6 h-6" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={`Search ${category.toLowerCase()} in ${city}...`}
-                className="w-full pl-12 pr-32 py-4 text-lg rounded-full border-0 shadow-lg focus:ring-4 focus:ring-blue-300/50 focus:outline-none text-gray-900 placeholder-gray-500"
-              />
-              <button
-                type="submit"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2 rounded-full font-semibold transition-all duration-200 hover:scale-105 focus:ring-4 focus:ring-emerald-300/50 focus:outline-none"
-              >
-                Search
-              </button>
-            </div>
-          </form>
+          <SearchWithLiveResults
+            businesses={businesses}
+            category={category}
+            city={city}
+            onSearch={onSearch}
+            className="mb-4"
+          />
+          
+          {/* Search Tips */}
+          <div className="text-center text-blue-200 text-sm">
+            <p>💡 Try searching by business name, service, or neighborhood</p>
+          </div>
         </div>
 
         <div className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">

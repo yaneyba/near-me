@@ -84,10 +84,10 @@ function App() {
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    // Scroll to business listings section
+    // Smooth scroll to business listings section
     const businessSection = document.getElementById('businesses');
-    if (businessSection) {
-      businessSection.scrollIntoView({ behavior: 'smooth' });
+    if (businessSection && query) {
+      businessSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 
@@ -108,6 +108,7 @@ function App() {
         category={subdomainInfo.category}
         city={subdomainInfo.city}
         state={subdomainInfo.state}
+        businesses={businesses}
         onSearch={handleSearch}
       />
       
@@ -116,6 +117,7 @@ function App() {
           category={subdomainInfo.category}
           city={subdomainInfo.city}
           state={subdomainInfo.state}
+          businesses={businesses}
           onSearch={handleSearch}
         />
         

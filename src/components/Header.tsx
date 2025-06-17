@@ -1,22 +1,18 @@
 import React, { useState } from 'react';
-import { Search, Menu, X, MapPin, Phone, Mail } from 'lucide-react';
+import { Menu, X, MapPin, Phone, Mail } from 'lucide-react';
+import SearchWithLiveResults from './SearchWithLiveResults';
+import { Business } from '../types';
 
 interface HeaderProps {
   category: string;
   city: string;
   state: string;
+  businesses: Business[];
   onSearch: (query: string) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ category, city, state, onSearch }) => {
+const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSearch }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSearch(searchQuery);
-    setIsMenuOpen(false);
-  };
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -77,18 +73,13 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, onSearch }) => {
 
           {/* Search bar - Desktop */}
           <div className="hidden lg:block">
-            <form onSubmit={handleSearch} className="relative">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={`Search ${category.toLowerCase()}...`}
-                  className="pl-10 pr-4 py-2 w-64 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                />
-              </div>
-            </form>
+            <SearchWithLiveResults
+              businesses={businesses}
+              category={category}
+              city={city}
+              onSearch={onSearch}
+              className="w-80"
+            />
           </div>
 
           {/* Mobile menu button */}
@@ -108,18 +99,14 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, onSearch }) => {
         <div className="md:hidden bg-white border-t border-gray-200">
           <div className="px-4 pt-2 pb-3 space-y-1">
             {/* Mobile search */}
-            <form onSubmit={handleSearch} className="mb-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={`Search ${category.toLowerCase()}...`}
-                  className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                />
-              </div>
-            </form>
+            <div className="mb-4">
+              <SearchWithLiveResults
+                businesses={businesses}
+                category={category}
+                city={city}
+                onSearch={onSearch}
+              />
+            </div>
 
             {/* Mobile navigation */}
             <a
@@ -146,7 +133,7 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, onSearch }) => {
             <a
               href="#contact"
               className="block px-3 py-2 text-gray-700 hover:text-blue-600 font-medium"
-              onClick={() => setIsMenuOpen(false)}
+              onClick={() => setIsMenuOne(false)}
             >
               Contact
             </a>

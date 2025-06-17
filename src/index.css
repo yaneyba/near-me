@@ -1,3 +1,67 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom animations for search results */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Smooth transitions for search suggestions */
+.search-suggestion-enter {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.search-suggestion-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 200ms, transform 200ms;
+}
+
+.search-suggestion-exit {
+  opacity: 1;
+}
+
+.search-suggestion-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 200ms, transform 200ms;
+}
+
+/* Custom scrollbar for suggestions dropdown */
+.suggestions-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.suggestions-dropdown::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.suggestions-dropdown::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.suggestions-dropdown::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Highlight animation for search matches */
+@keyframes highlight {
+  0% { background-color: transparent; }
+  50% { background-color: #fef3c7; }
+  100% { background-color: transparent; }
+}
+
+.search-highlight {
+  animation: highlight 1s ease-in-out;
+}
