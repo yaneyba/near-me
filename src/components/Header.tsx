@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, MapPin, Phone, Mail } from 'lucide-react';
 import SearchWithLiveResults from './SearchWithLiveResults';
 import { Business } from '../types';
@@ -13,9 +14,14 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSearch }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const location = useLocation();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const isActivePage = (path: string) => {
+    return location.pathname === path;
   };
 
   return (
@@ -48,27 +54,45 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSe
           {/* Logo and brand */}
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <h1 className="text-2xl font-bold text-gray-900">
+              <Link to="/" className="text-2xl font-bold text-gray-900 hover:text-blue-600 transition-colors">
                 <span className="text-blue-600">{city}</span>
                 <span className="text-gray-600 ml-1 text-lg">{category}</span>
-              </h1>
+              </Link>
             </div>
           </div>
 
           {/* Desktop navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <a href="#businesses" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
+            <Link 
+              to="/" 
+              className={`font-medium transition-colors ${
+                isActivePage('/') 
+                  ? 'text-blue-600 border-b-2 border-blue-600 pb-1' 
+                  : 'text-gray-700 hover:text-blue-600'
+              }`}
+            >
               Browse {category}
-            </a>
-            <a href="#services" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
-              Services
-            </a>
-            <a href="#about" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
+            </Link>
+            <Link 
+              to="/about" 
+              className={`font-medium transition-colors ${
+                isActivePage('/about') 
+                  ? 'text-blue-600 border-b-2 border-blue-600 pb-1' 
+                  : 'text-gray-700 hover:text-blue-600'
+              }`}
+            >
               About
-            </a>
-            <a href="#contact" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
+            </Link>
+            <Link 
+              to="/contact" 
+              className={`font-medium transition-colors ${
+                isActivePage('/contact') 
+                  ? 'text-blue-600 border-b-2 border-blue-600 pb-1' 
+                  : 'text-gray-700 hover:text-blue-600'
+              }`}
+            >
               Contact
-            </a>
+            </Link>
           </nav>
 
           {/* Search bar - Desktop */}
@@ -109,34 +133,39 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSe
             </div>
 
             {/* Mobile navigation */}
-            <a
-              href="#businesses"
-              className="block px-3 py-2 text-gray-700 hover:text-blue-600 font-medium"
+            <Link
+              to="/"
+              className={`block px-3 py-2 font-medium ${
+                isActivePage('/') 
+                  ? 'text-blue-600 bg-blue-50' 
+                  : 'text-gray-700 hover:text-blue-600'
+              }`}
               onClick={() => setIsMenuOpen(false)}
             >
               Browse {category}
-            </a>
-            <a
-              href="#services"
-              className="block px-3 py-2 text-gray-700 hover:text-blue-600 font-medium"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Services
-            </a>
-            <a
-              href="#about"
-              className="block px-3 py-2 text-gray-700 hover:text-blue-600 font-medium"
+            </Link>
+            <Link
+              to="/about"
+              className={`block px-3 py-2 font-medium ${
+                isActivePage('/about') 
+                  ? 'text-blue-600 bg-blue-50' 
+                  : 'text-gray-700 hover:text-blue-600'
+              }`}
               onClick={() => setIsMenuOpen(false)}
             >
               About
-            </a>
-            <a
-              href="#contact"
-              className="block px-3 py-2 text-gray-700 hover:text-blue-600 font-medium"
-              onClick={() => setIsMenuOne(false)}
+            </Link>
+            <Link
+              to="/contact"
+              className={`block px-3 py-2 font-medium ${
+                isActivePage('/contact') 
+                  ? 'text-blue-600 bg-blue-50' 
+                  : 'text-gray-700 hover:text-blue-600'
+              }`}
+              onClick={() => setIsMenuOpen(false)}
             >
               Contact
-            </a>
+            </Link>
           </div>
         </div>
       )}
