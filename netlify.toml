@@ -1,0 +1,46 @@
+[build]
+  publish = "dist"
+  command = "npm run build"
+
+# Subdomain routing - serve appropriate HTML file based on subdomain
+[[redirects]]
+  from = "https://nail-salons.dallas.near-me.us/*"
+  to = "/nail-salons.dallas.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://auto-repair.denver.near-me.us/*"
+  to = "/auto-repair.denver.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://nail-salons.austin.near-me.us/*"
+  to = "/nail-salons.austin.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://auto-repair.dallas.near-me.us/*"
+  to = "/auto-repair.dallas.html"
+  status = 200
+  force = true
+
+# Fallback for any other subdomain combinations
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[build.environment]
+  NODE_VERSION = "18"
+
+# Headers for better SEO
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"

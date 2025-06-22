@@ -1,0 +1,8 @@
+# Netlify redirects for subdomain routing
+https://nail-salons.dallas.near-me.us/* /nail-salons.dallas.html 200!
+https://auto-repair.denver.near-me.us/* /auto-repair.denver.html 200!
+https://nail-salons.austin.near-me.us/* /nail-salons.austin.html 200!
+https://auto-repair.dallas.near-me.us/* /auto-repair.dallas.html 200!
+
+# Fallback
+/* /index.html 200
