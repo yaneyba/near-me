@@ -62,23 +62,25 @@ dist/
 </script>
 ```
 
-### Step 3: Subdomain Routing
+### Step 3: Subdomain Routing with Cloudflare Pages
 
-**What happens:** Netlify serves the correct HTML file based on the subdomain.
+**What happens:** Cloudflare Pages serves the correct HTML file based on the subdomain.
 
 **The Magic:**
 1. User visits `nail-salons.dallas.near-me.us`
-2. Netlify checks the subdomain
+2. Cloudflare Pages checks the subdomain
 3. Serves `/nail-salons.dallas.html` instead of generic `/index.html`
 4. Search engines see the SEO-optimized content immediately
 
-**Configuration in `netlify.toml`:**
-```toml
-[[redirects]]
-  from = "https://nail-salons.dallas.near-me.us/*"
-  to = "/nail-salons.dallas.html"
-  status = 200
-  force = true
+**Configuration in `_redirects`:**
+```
+# Cloudflare Pages redirects for subdomain routing
+https://nail-salons.dallas.near-me.us/* /nail-salons.dallas.html 200!
+https://auto-repair.denver.near-me.us/* /auto-repair.denver.html 200!
+https://nail-salons.austin.near-me.us/* /nail-salons.austin.html 200!
+
+# Fallback
+/* /index.html 200
 ```
 
 ### Step 4: React Hydration
@@ -131,17 +133,49 @@ Description: Find top-rated nail salons in Dallas, Texas. Compare 2+ local busin
    ↓
 3. Generates unique HTML files with SEO tags
    ↓
-4. Deploys to Netlify with routing rules
+4. Deploys to Cloudflare Pages with routing rules
    ↓
 5. User visits subdomain
    ↓
-6. Netlify serves SEO-optimized HTML
+6. Cloudflare Pages serves SEO-optimized HTML
    ↓
 7. Search engines see proper meta tags
    ↓
 8. React hydrates and takes over
    ↓
 9. Full SPA functionality
+```
+
+---
+
+## Cloudflare Pages Deployment
+
+### Setting Up Your Domain
+
+1. **Add Custom Domain in Cloudflare Pages:**
+   - Go to your Cloudflare Pages project
+   - Navigate to "Custom domains"
+   - Add `near-me.us` as your custom domain
+
+2. **Configure Wildcard DNS:**
+   - In Cloudflare DNS settings
+   - Add CNAME record: `*` → `your-project.pages.dev`
+   - This enables all subdomains to work
+
+3. **SSL Certificate:**
+   - Cloudflare automatically provides wildcard SSL
+   - No additional configuration needed
+
+### Build Configuration
+
+**In Cloudflare Pages dashboard:**
+- **Build command:** `npm run build`
+- **Build output directory:** `dist`
+- **Node.js version:** `18` or higher
+
+### Environment Variables (if needed)
+```
+NODE_VERSION=18
 ```
 
 ---
@@ -159,7 +193,7 @@ Description: Find top-rated nail salons in Dallas, Texas. Compare 2+ local busin
 - No Next.js or complex frameworks needed
 
 ### ✅ **Fast Performance**
-- Static HTML serves immediately
+- Static HTML serves immediately from Cloudflare's global CDN
 - React hydrates after SEO content loads
 - Best of both worlds: SEO + SPA
 
@@ -175,13 +209,13 @@ Description: Find top-rated nail salons in Dallas, Texas. Compare 2+ local busin
 **Simple Process:**
 1. Add business data to `businesses.json`
 2. Run `npm run build:seo`
-3. Update `netlify.toml` redirects if needed
-4. Deploy
+3. Update `_redirects` file if needed
+4. Deploy to Cloudflare Pages
 
 **Example:** Adding "hair-salons.houston"
 1. Add Houston hair salon data
 2. Script automatically generates `hair-salons.houston.html`
-3. Add redirect rule to `netlify.toml`
+3. Add redirect rule to `_redirects`
 4. Deploy and it's live with perfect SEO
 
 ---
@@ -190,8 +224,8 @@ Description: Find top-rated nail salons in Dallas, Texas. Compare 2+ local busin
 
 ### vs. Server-Side Rendering (SSR)
 - **Simpler:** No server complexity
-- **Faster:** Static files serve instantly
-- **Cheaper:** No server costs
+- **Faster:** Static files serve instantly from CDN
+- **Cheaper:** No server costs, just Cloudflare Pages
 
 ### vs. Dynamic Meta Tag Updates
 - **Reliable:** Search engines see tags immediately
@@ -220,15 +254,39 @@ Description: Find top-rated nail salons in Dallas, Texas. Compare 2+ local busin
 }
 ```
 
-### 3. Netlify Configuration (`netlify.toml`)
+### 3. Cloudflare Pages Configuration (`public/_redirects`)
 - Subdomain routing rules
 - Fallback handling
-- SEO headers
+- Works automatically with Cloudflare Pages
 
 ### 4. Generated Files
 - `nail-salons.dallas.html` - SEO-optimized HTML
 - `subdomain-mapping.json` - Deployment reference
-- `_redirects` - Netlify routing rules
+- `_redirects` - Cloudflare Pages routing rules
+
+---
+
+## Cloudflare Pages Advantages
+
+### 🚀 **Global CDN**
+- Your HTML files serve from 200+ locations worldwide
+- Faster loading times for users everywhere
+- Better Core Web Vitals scores
+
+### 🔒 **Built-in Security**
+- DDoS protection included
+- SSL certificates automatically managed
+- Web Application Firewall available
+
+### 📊 **Analytics Integration**
+- Cloudflare Web Analytics
+- Real User Monitoring (RUM)
+- Performance insights
+
+### 💰 **Cost Effective**
+- Free tier includes unlimited bandwidth
+- No server maintenance costs
+- Pay only for what you use
 
 ---
 
@@ -236,14 +294,15 @@ Description: Find top-rated nail salons in Dallas, Texas. Compare 2+ local busin
 
 ### Track SEO Performance
 1. **Google Search Console** - Monitor indexation and rankings
-2. **Google Analytics** - Track organic traffic by subdomain
-3. **SEO Tools** - Monitor keyword rankings for each subdomain
+2. **Cloudflare Analytics** - Track traffic by subdomain
+3. **Google Analytics** - Monitor organic traffic growth
+4. **SEO Tools** - Monitor keyword rankings for each subdomain
 
 ### Key Metrics to Watch
 - **Indexation Rate:** How many subdomains Google has indexed
 - **Click-Through Rate:** From search results to your subdomains
 - **Organic Traffic:** Growth in search engine visitors
-- **Keyword Rankings:** Position for category + city searches
+- **Page Speed:** Core Web Vitals from Cloudflare's CDN
 
 ---
 
@@ -257,21 +316,34 @@ Description: Find top-rated nail salons in Dallas, Texas. Compare 2+ local busin
 - Run `npm run build:seo` manually
 
 **Wrong content showing:**
-- Verify Netlify redirect rules
+- Verify `_redirects` file format
 - Check subdomain DNS configuration
-- Clear CDN cache if using one
+- Clear Cloudflare cache in dashboard
 
 **SEO tags not updating:**
 - Regenerate HTML files after data changes
-- Redeploy to update live files
+- Redeploy to Cloudflare Pages
 - Check meta tags in browser source
+- Purge Cloudflare cache if needed
+
+### Cloudflare-Specific Debugging
+
+**Cache Issues:**
+- Use "Purge Everything" in Cloudflare dashboard
+- Check cache rules in Cloudflare settings
+- Verify HTML files are in `dist` folder
+
+**Subdomain Not Working:**
+- Verify wildcard DNS record (`*` CNAME)
+- Check custom domain configuration
+- Ensure SSL certificate is active
 
 ---
 
 ## Future Enhancements
 
 ### Automatic Generation
-- **CI/CD Integration:** Auto-generate on data changes
+- **GitHub Actions:** Auto-generate on data changes
 - **API Integration:** Generate from database instead of JSON
 - **Image Generation:** Dynamic Open Graph images per subdomain
 
@@ -280,9 +352,14 @@ Description: Find top-rated nail salons in Dallas, Texas. Compare 2+ local busin
 - **Schema Markup:** Rich snippets for businesses
 - **Local SEO:** Google My Business integration
 
+### Cloudflare Features
+- **Workers:** Advanced routing logic
+- **KV Storage:** Dynamic content caching
+- **Images:** Automatic image optimization
+
 ---
 
-This solution gives you **enterprise-level SEO** with the **simplicity of a static site** and the **interactivity of a React SPA**. It's the perfect balance for your dynamic subdomain system!
+This solution gives you **enterprise-level SEO** with the **simplicity of a static site** and the **global performance of Cloudflare's CDN**. It's the perfect balance for your dynamic subdomain system!
 
 ## Quick Start Commands
 
@@ -293,8 +370,28 @@ npm run build:seo
 # Full build with SEO
 npm run build
 
-# Deploy to Netlify
-netlify deploy --prod --dir=dist
+# Deploy to Cloudflare Pages (via Git integration)
+git add .
+git commit -m "Update SEO content"
+git push origin main
 ```
 
-The system is now ready to deliver perfect SEO for every subdomain while maintaining the full React SPA experience!
+## Cloudflare Pages Setup Steps
+
+1. **Connect Repository:**
+   - Go to Cloudflare Pages dashboard
+   - Connect your GitHub repository
+   - Set build command: `npm run build`
+   - Set output directory: `dist`
+
+2. **Configure Domain:**
+   - Add custom domain: `near-me.us`
+   - Cloudflare will automatically handle wildcard subdomains
+   - SSL certificate will be provisioned automatically
+
+3. **Deploy:**
+   - Push to your main branch
+   - Cloudflare Pages builds and deploys automatically
+   - Your SEO-optimized subdomains are live!
+
+The system is now ready to deliver perfect SEO for every subdomain while maintaining the full React SPA experience, all powered by Cloudflare's global network!
