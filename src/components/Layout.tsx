@@ -3,6 +3,7 @@ import { JsonDataProvider } from '../providers/JsonDataProvider';
 import { Business, SubdomainInfo } from '../types';
 import Header from './Header';
 import Footer from './Footer';
+import Breadcrumb from './Breadcrumb';
 import DevPanel from './DevPanel';
 
 interface LayoutProps {
@@ -56,6 +57,8 @@ const Layout: React.FC<LayoutProps> = ({ children, subdomainInfo }) => {
         businesses={businesses}
         onSearch={handleSearch}
       />
+      
+      <Breadcrumb subdomainInfo={subdomainInfo} />
       
       <main className="flex-grow">
         {children}

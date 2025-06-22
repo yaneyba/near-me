@@ -4,6 +4,7 @@ import { JsonDataProvider } from '../providers/JsonDataProvider';
 import { Business, SubdomainInfo } from '../types';
 import { generateTitle } from '../utils/subdomainParser';
 import Hero from '../components/Hero';
+import PremiumListings from '../components/PremiumListings';
 import BusinessListings from '../components/BusinessListings';
 import ServicesSection from '../components/ServicesSection';
 
@@ -69,6 +70,9 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
     );
   }
 
+  // Check if there are premium businesses to show
+  const hasPremiumBusinesses = businesses.some(business => business.premium);
+
   return (
     <>
       <Hero
@@ -78,6 +82,17 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
         businesses={businesses}
         onSearch={handleSearch}
       />
+      
+      {/* Show Premium Listings section only if there are premium businesses and no search query */}
+      {hasPremiumBusinesses && !searchQuery && (
+        <div id="premium">
+          <PremiumListings
+            businesses={businesses}
+            category={subdomainInfo.category}
+            city={subdomainInfo.city}
+          />
+        </div>
+      )}
       
       <div id="businesses">
         <BusinessListings
