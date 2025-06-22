@@ -46,5 +46,17 @@
     "Medical Center",
     "Katy",
     "Sugar Land"
+  ],
+  "frisco": [
+    "Central Frisco",
+    "West Frisco",
+    "North Frisco",
+    "East Frisco",
+    "South Frisco",
+    "Downtown Frisco",
+    "Legacy West",
+    "Stonebriar",
+    "The Star",
+    "Preston Road"
   ]
 }

@@ -15,7 +15,8 @@ const cityStateMap = {
   'dallas': 'Texas',
   'denver': 'Colorado',
   'austin': 'Texas',
-  'houston': 'Texas'
+  'houston': 'Texas',
+  'frisco': 'Texas'
 };
 
 // Get unique combinations from business data
