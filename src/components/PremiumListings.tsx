@@ -1,5 +1,5 @@
-import React from 'react';
-import { Star, Phone, MapPin, Clock, ExternalLink, Globe, Crown, Zap } from 'lucide-react';
+import React, { useState } from 'react';
+import { Star, Phone, MapPin, Clock, ExternalLink, Globe, Crown, Zap, ChevronDown, ChevronUp } from 'lucide-react';
 import { Business } from '../types';
 
 interface PremiumListingsProps {
@@ -9,12 +9,24 @@ interface PremiumListingsProps {
 }
 
 const PremiumListings: React.FC<PremiumListingsProps> = ({ businesses, category, city }) => {
+  const [expandedServices, setExpandedServices] = useState<Set<string>>(new Set());
+  
   // Filter premium businesses
   const premiumBusinesses = businesses.filter(business => business.premium);
 
   if (premiumBusinesses.length === 0) {
     return null;
   }
+
+  const toggleServicesExpansion = (businessId: string) => {
+    const newExpanded = new Set(expandedServices);
+    if (newExpanded.has(businessId)) {
+      newExpanded.delete(businessId);
+    } else {
+      newExpanded.add(businessId);
+    }
+    setExpandedServices(newExpanded);
+  };
 
   const renderStars = (rating: number, reviewCount: number) => {
     return (
@@ -33,6 +45,46 @@ const PremiumListings: React.FC<PremiumListingsProps> = ({ businesses, category,
         ))}
         <span className="ml-2 text-sm text-gray-600 font-medium">{rating}</span>
         <span className="ml-1 text-sm text-gray-500">({reviewCount} reviews)</span>
+      </div>
+    );
+  };
+
+  const renderServices = (business: Business) => {
+    const isExpanded = expandedServices.has(business.id);
+    const displayServices = isExpanded ? business.services : business.services.slice(0, 4);
+    const hasMoreServices = business.services.length > 4;
+
+    return (
+      <div className="mb-6">
+        <div className="text-sm font-semibold text-gray-900 mb-3">Premium Services:</div>
+        <div className="flex flex-wrap gap-2">
+          {displayServices.map((service, index) => (
+            <span
+              key={index}
+              className="inline-block bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium border border-yellow-200 transition-all duration-200"
+            >
+              {service}
+            </span>
+          ))}
+          {hasMoreServices && (
+            <button
+              onClick={() => toggleServicesExpansion(business.id)}
+              className="inline-flex items-center text-yellow-600 hover:text-yellow-700 px-3 py-1 text-sm font-medium transition-all duration-200 hover:bg-yellow-50 rounded-full"
+            >
+              {isExpanded ? (
+                <>
+                  Show less
+                  <ChevronUp className="w-3 h-3 ml-1" />
+                </>
+              ) : (
+                <>
+                  +{business.services.length - 4} more
+                  <ChevronDown className="w-3 h-3 ml-1" />
+                </>
+              )}
+            </button>
+          )}
+        </div>
       </div>
     );
   };
@@ -160,24 +212,7 @@ const PremiumListings: React.FC<PremiumListingsProps> = ({ businesses, category,
                 </div>
 
                 {/* Services */}
-                <div className="mb-6">
-                  <div className="text-sm font-semibold text-gray-900 mb-3">Premium Services:</div>
-                  <div className="flex flex-wrap gap-2">
-                    {business.services.slice(0, 4).map((service, index) => (
-                      <span
-                        key={index}
-                        className="inline-block bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium border border-yellow-200"
-                      >
-                        {service}
-                      </span>
-                    ))}
-                    {business.services.length > 4 && (
-                      <span className="inline-block text-yellow-600 px-3 py-1 text-sm font-medium">
-                        +{business.services.length - 4} more
-                      </span>
-                    )}
-                  </div>
-                </div>
+                {renderServices(business)}
 
                 {/* Action Buttons */}
                 <div className="flex gap-3 pt-4 border-t border-gray-100">

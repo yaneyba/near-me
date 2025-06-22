@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Star, Phone, MapPin, Clock, ExternalLink, Globe, Filter, SortAsc, ChevronLeft, ChevronRight, Crown } from 'lucide-react';
+import { Star, Phone, MapPin, Clock, ExternalLink, Globe, Filter, SortAsc, ChevronLeft, ChevronRight, Crown, ChevronDown, ChevronUp } from 'lucide-react';
 import { Business } from '../types';
 
 interface BusinessListingsProps {
@@ -20,6 +20,7 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
   const [filterBy, setFilterBy] = useState<'all' | 'premium' | 'top-rated' | 'most-reviewed'>('all');
   const [showFilters, setShowFilters] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [expandedServices, setExpandedServices] = useState<Set<string>>(new Set());
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -108,6 +109,16 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
   const handleItemsPerPageChange = (newItemsPerPage: number) => {
     setItemsPerPage(newItemsPerPage);
     setCurrentPage(1);
+  };
+
+  const toggleServicesExpansion = (businessId: string) => {
+    const newExpanded = new Set(expandedServices);
+    if (newExpanded.has(businessId)) {
+      newExpanded.delete(businessId);
+    } else {
+      newExpanded.add(businessId);
+    }
+    setExpandedServices(newExpanded);
   };
 
   const renderPaginationButtons = () => {
@@ -226,6 +237,52 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
         ))}
         <span className="ml-2 text-sm text-gray-600 font-medium">{rating}</span>
         <span className="ml-1 text-sm text-gray-500">({reviewCount} reviews)</span>
+      </div>
+    );
+  };
+
+  const renderServices = (business: Business) => {
+    const isExpanded = expandedServices.has(business.id);
+    const displayServices = isExpanded ? business.services : business.services.slice(0, 3);
+    const hasMoreServices = business.services.length > 3;
+
+    return (
+      <div className="mb-4">
+        <div className="text-sm font-medium text-gray-900 mb-2">Services:</div>
+        <div className="flex flex-wrap gap-1">
+          {displayServices.map((service, index) => (
+            <span
+              key={index}
+              className={`inline-block px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 ${
+                business.premium
+                  ? 'bg-yellow-50 text-yellow-700 border border-yellow-200'
+                  : 'bg-blue-50 text-blue-700'
+              }`}
+            >
+              {service}
+            </span>
+          ))}
+          {hasMoreServices && (
+            <button
+              onClick={() => toggleServicesExpansion(business.id)}
+              className={`inline-flex items-center px-2 py-1 text-xs font-medium transition-all duration-200 hover:bg-gray-100 rounded-full ${
+                business.premium ? 'text-yellow-600 hover:text-yellow-700' : 'text-blue-600 hover:text-blue-700'
+              }`}
+            >
+              {isExpanded ? (
+                <>
+                  Show less
+                  <ChevronUp className="w-3 h-3 ml-1" />
+                </>
+              ) : (
+                <>
+                  +{business.services.length - 3} more
+                  <ChevronDown className="w-3 h-3 ml-1" />
+                </>
+              )}
+            </button>
+          )}
+        </div>
       </div>
     );
   };
@@ -482,30 +539,7 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
                 </div>
               </div>
               
-              <div className="mb-4">
-                <div className="text-sm font-medium text-gray-900 mb-2">Services:</div>
-                <div className="flex flex-wrap gap-1">
-                  {business.services.slice(0, 3).map((service, index) => (
-                    <span
-                      key={index}
-                      className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                        business.premium
-                          ? 'bg-yellow-50 text-yellow-700 border border-yellow-200'
-                          : 'bg-blue-50 text-blue-700'
-                      }`}
-                    >
-                      {service}
-                    </span>
-                  ))}
-                  {business.services.length > 3 && (
-                    <span className={`inline-block px-2 py-1 text-xs font-medium ${
-                      business.premium ? 'text-yellow-600' : 'text-blue-600'
-                    }`}>
-                      +{business.services.length - 3} more
-                    </span>
-                  )}
-                </div>
-              </div>
+              {renderServices(business)}
               
               <div className="flex gap-2 pt-4 border-t border-gray-100">
                 <a
