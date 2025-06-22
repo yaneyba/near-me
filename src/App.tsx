@@ -5,6 +5,7 @@ import { SubdomainInfo } from './types';
 import HomePage from './pages/HomePage';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
+import SitemapPage from './pages/SitemapPage';
 import Layout from './components/Layout';
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
           <Route path="/" element={<HomePage subdomainInfo={subdomainInfo} />} />
           <Route path="/about" element={<AboutPage subdomainInfo={subdomainInfo} />} />
           <Route path="/contact" element={<ContactPage subdomainInfo={subdomainInfo} />} />
+          <Route path="/sitemap-generator" element={<SitemapPage />} />
         </Routes>
       </Layout>
     </Router>

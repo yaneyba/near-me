@@ -1,0 +1,22 @@
+User-agent: *
+Allow: /
+
+# Main sitemap
+Sitemap: https://near-me.us/sitemap.xml
+
+# Category-specific sitemaps
+Sitemap: https://nail-salons.dallas.near-me.us/sitemap.xml
+Sitemap: https://auto-repair.denver.near-me.us/sitemap.xml
+Sitemap: https://nail-salons.austin.near-me.us/sitemap.xml
+
+# Block development and admin resources
+Disallow: /dev/
+Disallow: /_next/
+Disallow: /api/
+Disallow: /admin/
+Disallow: /*.json$
+
+# Allow important files
+Allow: /sitemap.xml
+Allow: /robots.txt
+Allow: /favicon.ico
