@@ -6,6 +6,7 @@ const cityStateMap: Record<string, string> = {
   'denver': 'Colorado',
   'austin': 'Texas',
   'houston': 'Texas',
+  'frisco': 'Texas',
   'phoenix': 'Arizona',
   'chicago': 'Illinois',
   'atlanta': 'Georgia',
@@ -40,7 +41,7 @@ export const parseSubdomain = (hostname: string = window.location.hostname): Sub
   if (hostname === 'localhost' || hostname.startsWith('127.0.0.1') || hostname.includes('stackblitz')) {
     return {
       category: 'Nail Salons',
-      city: 'Dallas',
+      city: 'Frisco',
       state: 'Texas'
     };
   }
@@ -62,7 +63,7 @@ export const parseSubdomain = (hostname: string = window.location.hostname): Sub
   // Fallback for any other hostname
   return {
     category: 'Nail Salons',
-    city: 'Dallas',
+    city: 'Frisco',
     state: 'Texas'
   };
 };
