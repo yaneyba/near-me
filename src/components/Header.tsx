@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, MapPin, Phone, Mail } from 'lucide-react';
+import { Menu, X, MapPin, Phone, Mail, Plus } from 'lucide-react';
 import SearchWithLiveResults from './SearchWithLiveResults';
 import { Business } from '../types';
 
@@ -93,6 +93,17 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSe
             >
               Contact
             </Link>
+            <Link 
+              to="/add-business" 
+              className={`flex items-center font-medium transition-colors px-4 py-2 rounded-lg ${
+                isActivePage('/add-business') 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+              }`}
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              Add Business
+            </Link>
           </nav>
 
           {/* Search bar - Desktop */}
@@ -165,6 +176,18 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSe
               onClick={() => setIsMenuOpen(false)}
             >
               Contact
+            </Link>
+            <Link
+              to="/add-business"
+              className={`flex items-center px-3 py-2 font-medium ${
+                isActivePage('/add-business') 
+                  ? 'text-blue-600 bg-blue-50' 
+                  : 'text-gray-700 hover:text-blue-600'
+              }`}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Business
             </Link>
           </div>
         </div>
