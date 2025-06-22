@@ -16,6 +16,7 @@ export interface Business {
     [key: string]: string;
   };
   image: string;
+  premium: boolean; // New premium field
 }
 
 export interface IDataProvider {

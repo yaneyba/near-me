@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Star, Phone, MapPin, Clock, ExternalLink, Globe, Filter, SortAsc, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Star, Phone, MapPin, Clock, ExternalLink, Globe, Filter, SortAsc, ChevronLeft, ChevronRight, Crown } from 'lucide-react';
 import { Business } from '../types';
 
 interface BusinessListingsProps {
@@ -16,8 +16,8 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
   searchQuery 
 }) => {
   const [filteredBusinesses, setFilteredBusinesses] = useState<Business[]>([]);
-  const [sortBy, setSortBy] = useState<'rating' | 'reviews' | 'name'>('rating');
-  const [filterBy, setFilterBy] = useState<'all' | 'top-rated' | 'most-reviewed'>('all');
+  const [sortBy, setSortBy] = useState<'rating' | 'reviews' | 'name' | 'premium'>('premium');
+  const [filterBy, setFilterBy] = useState<'all' | 'premium' | 'top-rated' | 'most-reviewed'>('all');
   const [showFilters, setShowFilters] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
@@ -45,6 +45,9 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
 
       // Apply filters
       switch (filterBy) {
+        case 'premium':
+          filtered = filtered.filter(business => business.premium);
+          break;
         case 'top-rated':
           filtered = filtered.filter(business => business.rating >= 4.5);
           break;
@@ -58,6 +61,11 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
       // Apply sorting
       filtered.sort((a, b) => {
         switch (sortBy) {
+          case 'premium':
+            // Premium businesses first, then by rating
+            if (a.premium && !b.premium) return -1;
+            if (!a.premium && b.premium) return 1;
+            return b.rating - a.rating;
           case 'rating':
             return b.rating - a.rating;
           case 'reviews':
@@ -224,10 +232,12 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
 
   const getResultsText = () => {
     const total = filteredBusinesses.length;
+    const premiumCount = filteredBusinesses.filter(b => b.premium).length;
+    
     if (searchQuery) {
-      return `${total} result${total !== 1 ? 's' : ''} for "${searchQuery}"`;
+      return `${total} result${total !== 1 ? 's' : ''} for "${searchQuery}"${premiumCount > 0 ? ` (${premiumCount} premium)` : ''}`;
     }
-    return `${total} ${category.toLowerCase()} in ${city}`;
+    return `${total} ${category.toLowerCase()} in ${city}${premiumCount > 0 ? ` (${premiumCount} premium)` : ''}`;
   };
 
   if (isLoading) {
@@ -273,7 +283,7 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            {searchQuery ? 'Search Results' : `Top ${category} in ${city}`}
+            {searchQuery ? 'Search Results' : `All ${category} in ${city}`}
           </h2>
           <p className="text-lg text-gray-600">
             {getResultsText()}
@@ -297,9 +307,10 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
           
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as 'rating' | 'reviews' | 'name')}
+            onChange={(e) => setSortBy(e.target.value as 'rating' | 'reviews' | 'name' | 'premium')}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
+            <option value="premium">Premium First</option>
             <option value="rating">Sort by Rating</option>
             <option value="reviews">Sort by Reviews</option>
             <option value="name">Sort by Name</option>
@@ -321,6 +332,18 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
                 className="mr-2"
               />
               All Businesses
+            </label>
+            <label className="flex items-center">
+              <input
+                type="radio"
+                name="filter"
+                value="premium"
+                checked={filterBy === 'premium'}
+                onChange={(e) => setFilterBy(e.target.value as any)}
+                className="mr-2"
+              />
+              <Crown className="w-4 h-4 mr-1 text-yellow-500" />
+              Premium Only
             </label>
             <label className="flex items-center">
               <input
@@ -376,12 +399,26 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
         {paginatedBusinesses.map((business, index) => (
           <div
             key={business.id}
-            className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100 overflow-hidden"
+            className={`bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border overflow-hidden relative ${
+              business.premium 
+                ? 'border-yellow-300 ring-2 ring-yellow-100' 
+                : 'border-gray-100'
+            }`}
             style={{
               animationDelay: `${index * 50}ms`,
               animation: 'fadeInUp 0.5s ease-out forwards'
             }}
           >
+            {/* Premium Badge */}
+            {business.premium && (
+              <div className="absolute top-4 left-4 z-10">
+                <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center shadow-lg">
+                  <Crown className="w-3 h-3 mr-1" />
+                  PREMIUM
+                </div>
+              </div>
+            )}
+
             <div className="relative h-48 overflow-hidden">
               <img
                 src={business.image}
@@ -392,7 +429,7 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
                 {business.neighborhood}
               </div>
               {searchQuery && (
-                <div className="absolute top-4 left-4 bg-blue-600 text-white px-2 py-1 rounded-full text-xs font-medium">
+                <div className="absolute bottom-4 left-4 bg-blue-600 text-white px-2 py-1 rounded-full text-xs font-medium">
                   Match
                 </div>
               )}
@@ -400,7 +437,9 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
             
             <div className="p-6">
               <div className="flex items-start justify-between mb-3">
-                <h3 className="text-xl font-bold text-gray-900 leading-tight">
+                <h3 className={`text-xl font-bold leading-tight ${
+                  business.premium ? 'text-yellow-700' : 'text-gray-900'
+                }`}>
                   {business.name}
                 </h3>
                 {business.website && (
@@ -449,13 +488,19 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
                   {business.services.slice(0, 3).map((service, index) => (
                     <span
                       key={index}
-                      className="inline-block bg-blue-50 text-blue-700 px-2 py-1 rounded-full text-xs font-medium"
+                      className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                        business.premium
+                          ? 'bg-yellow-50 text-yellow-700 border border-yellow-200'
+                          : 'bg-blue-50 text-blue-700'
+                      }`}
                     >
                       {service}
                     </span>
                   ))}
                   {business.services.length > 3 && (
-                    <span className="inline-block text-blue-600 px-2 py-1 text-xs font-medium">
+                    <span className={`inline-block px-2 py-1 text-xs font-medium ${
+                      business.premium ? 'text-yellow-600' : 'text-blue-600'
+                    }`}>
                       +{business.services.length - 3} more
                     </span>
                   )}
@@ -465,7 +510,11 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
               <div className="flex gap-2 pt-4 border-t border-gray-100">
                 <a
                   href={`tel:${business.phone}`}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium text-center transition-colors duration-200 focus:ring-4 focus:ring-blue-300/50 focus:outline-none"
+                  className={`flex-1 py-2 px-4 rounded-lg font-medium text-center transition-colors duration-200 focus:ring-4 focus:outline-none ${
+                    business.premium
+                      ? 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white focus:ring-yellow-300/50 shadow-lg'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-300/50'
+                  }`}
                 >
                   Call Now
                 </a>
@@ -481,6 +530,11 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
                 )}
               </div>
             </div>
+
+            {/* Premium Glow Effect */}
+            {business.premium && (
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-yellow-400/5 to-orange-500/5 pointer-events-none"></div>
+            )}
           </div>
         ))}
       </div>

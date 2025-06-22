@@ -22,7 +22,8 @@
       "Saturday": "8:00 AM - 6:00 PM",
       "Sunday": "10:00 AM - 5:00 PM"
     },
-    "image": "https://images.pexels.com/photos/3997379/pexels-photo-3997379.jpeg"
+    "image": "https://images.pexels.com/photos/3997379/pexels-photo-3997379.jpeg",
+    "premium": true
   },
   {
     "id": "2",
@@ -46,7 +47,8 @@
       "Saturday": "9:00 AM - 7:00 PM",
       "Sunday": "11:00 AM - 6:00 PM"
     },
-    "image": "https://images.pexels.com/photos/3997974/pexels-photo-3997974.jpeg"
+    "image": "https://images.pexels.com/photos/3997974/pexels-photo-3997974.jpeg",
+    "premium": false
   },
   {
     "id": "3",
@@ -71,7 +73,8 @@
       "Saturday": "8:00 AM - 4:00 PM",
       "Sunday": "Closed"
     },
-    "image": "https://images.pexels.com/photos/3806288/pexels-photo-3806288.jpeg"
+    "image": "https://images.pexels.com/photos/3806288/pexels-photo-3806288.jpeg",
+    "premium": true
   },
   {
     "id": "4",
@@ -95,7 +98,8 @@
       "Saturday": "8:00 AM - 3:00 PM",
       "Sunday": "Closed"
     },
-    "image": "https://images.pexels.com/photos/3806288/pexels-photo-3806288.jpeg"
+    "image": "https://images.pexels.com/photos/3806288/pexels-photo-3806288.jpeg",
+    "premium": false
   },
   {
     "id": "5",
@@ -119,6 +123,58 @@
       "Saturday": "8:00 AM - 7:00 PM",
       "Sunday": "10:00 AM - 6:00 PM"
     },
-    "image": "https://images.pexels.com/photos/3997379/pexels-photo-3997379.jpeg"
+    "image": "https://images.pexels.com/photos/3997379/pexels-photo-3997379.jpeg",
+    "premium": true
+  },
+  {
+    "id": "6",
+    "name": "Precision Nails Dallas",
+    "category": "nail-salons",
+    "city": "dallas",
+    "state": "Texas",
+    "address": "789 Elm St, Dallas, TX 75203",
+    "phone": "(214) 555-0789",
+    "website": "https://precisionnails.com",
+    "rating": 4.7,
+    "reviewCount": 124,
+    "description": "Expert nail technicians specializing in precision manicures and custom nail art.",
+    "services": ["Custom Nail Art", "French Manicures", "Gel Extensions", "Nail Repair"],
+    "neighborhood": "Deep Ellum",
+    "hours": {
+      "Monday": "10:00 AM - 7:00 PM",
+      "Tuesday": "10:00 AM - 7:00 PM",
+      "Wednesday": "10:00 AM - 7:00 PM",
+      "Thursday": "10:00 AM - 8:00 PM",
+      "Friday": "10:00 AM - 8:00 PM",
+      "Saturday": "9:00 AM - 6:00 PM",
+      "Sunday": "11:00 AM - 5:00 PM"
+    },
+    "image": "https://images.pexels.com/photos/3997974/pexels-photo-3997974.jpeg",
+    "premium": false
+  },
+  {
+    "id": "7",
+    "name": "Mountain View Auto",
+    "category": "auto-repair",
+    "city": "denver",
+    "state": "Colorado",
+    "address": "456 Mountain Rd, Denver, CO 80204",
+    "phone": "(303) 555-0456",
+    "rating": 4.8,
+    "reviewCount": 167,
+    "description": "Family-owned auto repair shop serving Denver for over 20 years with honest service.",
+    "services": ["General Repairs", "Preventive Maintenance", "Brake Service", "Oil Changes"],
+    "neighborhood": "Highlands Ranch",
+    "hours": {
+      "Monday": "7:30 AM - 5:30 PM",
+      "Tuesday": "7:30 AM - 5:30 PM",
+      "Wednesday": "7:30 AM - 5:30 PM",
+      "Thursday": "7:30 AM - 5:30 PM",
+      "Friday": "7:30 AM - 5:30 PM",
+      "Saturday": "8:00 AM - 2:00 PM",
+      "Sunday": "Closed"
+    },
+    "image": "https://images.pexels.com/photos/3806288/pexels-photo-3806288.jpeg",
+    "premium": false
   }
 ]
