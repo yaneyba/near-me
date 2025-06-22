@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Star, Phone, MapPin, Clock, ExternalLink, Globe, Filter, SortAsc, ChevronLeft, ChevronRight, Crown, ChevronDown, ChevronUp } from 'lucide-react';
+import { Star, Phone, MapPin, Clock, ExternalLink, Globe, Filter, SortAsc, ChevronLeft, ChevronRight, Crown, ChevronDown, ChevronUp, MoreHorizontal } from 'lucide-react';
 import { Business } from '../types';
 
 interface BusinessListingsProps {
@@ -22,10 +22,12 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [expandedServices, setExpandedServices] = useState<Set<string>>(new Set());
   
-  // Pagination state
+  // Enhanced pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(9);
   const [paginatedBusinesses, setPaginatedBusinesses] = useState<Business[]>([]);
+  const [showPageJump, setShowPageJump] = useState(false);
+  const [jumpToPage, setJumpToPage] = useState('');
 
   // Real-time filtering and sorting
   useEffect(() => {
@@ -98,17 +100,28 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
   const endItem = Math.min(currentPage * itemsPerPage, filteredBusinesses.length);
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    // Smooth scroll to top of business listings
-    const businessSection = document.getElementById('businesses');
-    if (businessSection) {
-      businessSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      // Smooth scroll to top of business listings
+      const businessSection = document.getElementById('businesses');
+      if (businessSection) {
+        businessSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
   };
 
   const handleItemsPerPageChange = (newItemsPerPage: number) => {
     setItemsPerPage(newItemsPerPage);
     setCurrentPage(1);
+  };
+
+  const handlePageJump = () => {
+    const pageNum = parseInt(jumpToPage);
+    if (pageNum >= 1 && pageNum <= totalPages) {
+      handlePageChange(pageNum);
+      setJumpToPage('');
+      setShowPageJump(false);
+    }
   };
 
   const toggleServicesExpansion = (businessId: string) => {
@@ -134,25 +147,13 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
 
-    // Previous button
-    buttons.push(
-      <button
-        key="prev"
-        onClick={() => handlePageChange(currentPage - 1)}
-        disabled={currentPage === 1}
-        className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <ChevronLeft className="w-4 h-4" />
-      </button>
-    );
-
-    // First page and ellipsis
+    // First page button
     if (startPage > 1) {
       buttons.push(
         <button
           key={1}
           onClick={() => handlePageChange(1)}
-          className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"
+          className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors"
         >
           1
         </button>
@@ -160,9 +161,14 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
       
       if (startPage > 2) {
         buttons.push(
-          <span key="ellipsis1" className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300">
-            ...
-          </span>
+          <button
+            key="jump-start"
+            onClick={() => setShowPageJump(true)}
+            className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 hover:bg-gray-50 transition-colors"
+            title="Jump to page"
+          >
+            <MoreHorizontal className="w-4 h-4" />
+          </button>
         );
       }
     }
@@ -173,10 +179,10 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
         <button
           key={i}
           onClick={() => handlePageChange(i)}
-          className={`px-3 py-2 text-sm font-medium border border-gray-300 ${
+          className={`px-3 py-2 text-sm font-medium border transition-colors ${
             i === currentPage
-              ? 'bg-blue-600 text-white border-blue-600'
-              : 'text-gray-700 bg-white hover:bg-gray-50'
+              ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+              : 'text-gray-700 bg-white border-gray-300 hover:bg-gray-50'
           }`}
         >
           {i}
@@ -184,13 +190,18 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
       );
     }
 
-    // Last page and ellipsis
+    // Last page button
     if (endPage < totalPages) {
       if (endPage < totalPages - 1) {
         buttons.push(
-          <span key="ellipsis2" className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300">
-            ...
-          </span>
+          <button
+            key="jump-end"
+            onClick={() => setShowPageJump(true)}
+            className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 hover:bg-gray-50 transition-colors"
+            title="Jump to page"
+          >
+            <MoreHorizontal className="w-4 h-4" />
+          </button>
         );
       }
       
@@ -198,47 +209,14 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
         <button
           key={totalPages}
           onClick={() => handlePageChange(totalPages)}
-          className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"
+          className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors"
         >
           {totalPages}
         </button>
       );
     }
 
-    // Next button
-    buttons.push(
-      <button
-        key="next"
-        onClick={() => handlePageChange(currentPage + 1)}
-        disabled={currentPage === totalPages}
-        className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <ChevronRight className="w-4 h-4" />
-      </button>
-    );
-
     return buttons;
-  };
-
-  const renderStars = (rating: number, reviewCount: number) => {
-    return (
-      <div className="flex items-center">
-        {[...Array(5)].map((_, i) => (
-          <Star
-            key={i}
-            className={`w-4 h-4 ${
-              i < Math.floor(rating)
-                ? 'text-yellow-400 fill-current'
-                : i < rating
-                ? 'text-yellow-400 fill-current opacity-50'
-                : 'text-gray-300'
-            }`}
-          />
-        ))}
-        <span className="ml-2 text-sm text-gray-600 font-medium">{rating}</span>
-        <span className="ml-1 text-sm text-gray-500">({reviewCount} reviews)</span>
-      </div>
-    );
   };
 
   const renderServices = (business: Business) => {
@@ -283,6 +261,27 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
             </button>
           )}
         </div>
+      </div>
+    );
+  };
+
+  const renderStars = (rating: number, reviewCount: number) => {
+    return (
+      <div className="flex items-center">
+        {[...Array(5)].map((_, i) => (
+          <Star
+            key={i}
+            className={`w-4 h-4 ${
+              i < Math.floor(rating)
+                ? 'text-yellow-400 fill-current'
+                : i < rating
+                ? 'text-yellow-400 fill-current opacity-50'
+                : 'text-gray-300'
+            }`}
+          />
+        ))}
+        <span className="ml-2 text-sm text-gray-600 font-medium">{rating}</span>
+        <span className="ml-1 text-sm text-gray-500">({reviewCount} reviews)</span>
       </div>
     );
   };
@@ -428,26 +427,63 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
         </div>
       )}
 
-      {/* Pagination Info and Items Per Page */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-        <div className="text-sm text-gray-700 mb-4 sm:mb-0">
-          Showing {startItem} to {endItem} of {filteredBusinesses.length} results
+      {/* Enhanced Pagination Info and Controls */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="text-sm text-gray-700">
+            Showing <span className="font-medium">{startItem}</span> to <span className="font-medium">{endItem}</span> of{' '}
+            <span className="font-medium">{filteredBusinesses.length}</span> results
+          </div>
+          
+          {totalPages > 1 && (
+            <div className="text-sm text-gray-500">
+              Page <span className="font-medium">{currentPage}</span> of <span className="font-medium">{totalPages}</span>
+            </div>
+          )}
         </div>
         
-        <div className="flex items-center space-x-4">
-          <label className="text-sm text-gray-700">
-            Show:
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          {/* Items per page selector */}
+          <div className="flex items-center space-x-2">
+            <label className="text-sm text-gray-700 whitespace-nowrap">Show:</label>
             <select
               value={itemsPerPage}
               onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
-              className="ml-2 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="px-3 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value={6}>6 per page</option>
               <option value={9}>9 per page</option>
               <option value={12}>12 per page</option>
               <option value={18}>18 per page</option>
+              <option value={24}>24 per page</option>
             </select>
-          </label>
+          </div>
+
+          {/* Quick page jump */}
+          {totalPages > 10 && (
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-700 whitespace-nowrap">Go to:</span>
+              <div className="flex items-center space-x-1">
+                <input
+                  type="number"
+                  min="1"
+                  max={totalPages}
+                  value={jumpToPage}
+                  onChange={(e) => setJumpToPage(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handlePageJump()}
+                  placeholder="Page"
+                  className="w-16 px-2 py-1 border border-gray-300 rounded text-sm text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+                <button
+                  onClick={handlePageJump}
+                  disabled={!jumpToPage || parseInt(jumpToPage) < 1 || parseInt(jumpToPage) > totalPages}
+                  className="px-2 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                >
+                  Go
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -573,17 +609,99 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
         ))}
       </div>
 
-      {/* Pagination Controls */}
+      {/* Enhanced Pagination Controls */}
       {totalPages > 1 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between">
-          <div className="text-sm text-gray-700 mb-4 sm:mb-0">
-            Page {currentPage} of {totalPages}
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
+          <div className="flex items-center space-x-4">
+            <div className="text-sm text-gray-700">
+              Page <span className="font-medium">{currentPage}</span> of <span className="font-medium">{totalPages}</span>
+            </div>
+            
+            {/* Quick navigation */}
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => handlePageChange(1)}
+                disabled={currentPage === 1}
+                className="px-2 py-1 text-sm text-gray-600 hover:text-blue-600 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+                title="First page"
+              >
+                First
+              </button>
+              <button
+                onClick={() => handlePageChange(totalPages)}
+                disabled={currentPage === totalPages}
+                className="px-2 py-1 text-sm text-gray-600 hover:text-blue-600 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+                title="Last page"
+              >
+                Last
+              </button>
+            </div>
           </div>
           
+          {/* Main pagination controls */}
           <div className="flex items-center">
-            <nav className="flex" aria-label="Pagination">
+            {/* Previous button */}
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            {/* Page numbers */}
+            <div className="flex">
               {renderPaginationButtons()}
-            </nav>
+            </div>
+
+            {/* Next button */}
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Page Jump Modal */}
+      {showPageJump && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Jump to Page</h3>
+            <div className="flex items-center space-x-3 mb-4">
+              <input
+                type="number"
+                min="1"
+                max={totalPages}
+                value={jumpToPage}
+                onChange={(e) => setJumpToPage(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handlePageJump()}
+                placeholder={`1-${totalPages}`}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                autoFocus
+              />
+              <button
+                onClick={handlePageJump}
+                disabled={!jumpToPage || parseInt(jumpToPage) < 1 || parseInt(jumpToPage) > totalPages}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              >
+                Go
+              </button>
+            </div>
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => {
+                  setShowPageJump(false);
+                  setJumpToPage('');
+                }}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}
