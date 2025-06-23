@@ -16,7 +16,7 @@ import {
   Shield,
   Zap
 } from 'lucide-react';
-import { getDataProvider } from '../providers';
+import { DataProviderFactory } from '../providers';
 import { ContactSubmission } from '../types';
 
 interface ContactSectionProps {
@@ -60,7 +60,7 @@ const ContactSection: React.FC<ContactSectionProps> = ({ category, city, state }
   const [submitMessage, setSubmitMessage] = useState('');
   const [submissionId, setSubmissionId] = useState('');
 
-  const dataProvider = getDataProvider();
+  const dataProvider = DataProviderFactory.getProvider();
 
   const inquiryTypes = [
     { value: 'general', label: 'General Inquiry', icon: MessageSquare },
