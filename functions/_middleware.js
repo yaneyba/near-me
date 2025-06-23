@@ -1,34 +1,28 @@
 export async function onRequest(context) {
-  console.log('🔥 MIDDLEWARE IS RUNNING!');
-  console.log('Hostname:', context.request.url);
-  
   const url = new URL(context.request.url);
   const hostname = url.hostname;
   
-  console.log('Parsed hostname:', hostname);
-  
-  // Parse subdomain: nail-salons.dallas.near-me.us
+  // Parse subdomain: nail-salons.frisco.near-me.us
   const parts = hostname.split('.');
-  console.log('Hostname parts:', parts);
-  
   if (parts.length >= 4 && parts[2] === 'near-me' && parts[3] === 'us') {
-    const category = parts[0];
-    const city = parts[1];
+    const category = parts[0]; // nail-salons
+    const city = parts[1];     // frisco
+    
+    // Build the filename: nail-salons.frisco.html
     const htmlFileName = `${category}.${city}.html`;
     
-    console.log('🎯 SUBDOMAIN DETECTED:', category, city);
-    console.log('Looking for file:', htmlFileName);
-    
-    // Add a debug header so you can see in browser dev tools
-    return new Response('MIDDLEWARE WORKING - SUBDOMAIN DETECTED', {
-      status: 200,
-      headers: {
-        'Content-Type': 'text/plain',
-        'X-Debug': `category=${category}, city=${city}, file=${htmlFileName}`
+    try {
+      // Fetch the pre-built SEO HTML file
+      const response = await context.env.ASSETS.fetch(`/${htmlFileName}`);
+      
+      if (response.ok) {
+        return response;
       }
-    });
+    } catch (error) {
+      console.error('Error fetching SEO file:', htmlFileName);
+    }
   }
   
-  console.log('❌ No subdomain match, continuing...');
+  // Fallback to normal React app
   return context.next();
 }
