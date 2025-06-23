@@ -1,3 +1,5 @@
+//src/types/index.ts
+
 export interface Business {
   id: string;
   name: string;

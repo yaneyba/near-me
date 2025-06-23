@@ -1,3 +1,5 @@
+// src/utils/subdomainParser.ts
+
 import { SubdomainInfo } from '../types';
 
 // Map cities to their states
