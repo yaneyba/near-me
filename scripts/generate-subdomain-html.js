@@ -73,7 +73,9 @@ function generateHTML(combo) {
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
     <!-- SEO Meta Tags -->
@@ -110,10 +112,13 @@ function generateHTML(combo) {
       }
     }
     </script>
+    
+    <!-- Vite Build Assets -->
+    <script type="module" crossorigin src="/assets/index-BmqmcbZP.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-DQN5rLq0.css">
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>`;
 }
@@ -136,14 +141,15 @@ function generateSubdomainHTML() {
     const filepath = path.join(distDir, filename);
     
     fs.writeFileSync(filepath, html);
-    console.log(`✓ Generated: ${filename}`);
+    console.log(`✓ Generated: ${filename} - "${combo.category} in ${combo.city}, ${combo.state}"`);
   });
 
   // Generate a mapping file for deployment
   const mapping = combinations.map(combo => ({
     subdomain: `${combo.categoryUrl}.${combo.cityUrl}.near-me.us`,
     file: `${combo.categoryUrl}.${combo.cityUrl}.html`,
-    title: `Best ${combo.category} in ${combo.city}, ${combo.state}`
+    title: `Best ${combo.category} in ${combo.city}, ${combo.state}`,
+    description: `Find top-rated ${combo.category.toLowerCase()} in ${combo.city}, ${combo.state}. Compare ${combo.businessCount}+ local businesses.`
   }));
 
   fs.writeFileSync(
@@ -151,8 +157,14 @@ function generateSubdomainHTML() {
     JSON.stringify(mapping, null, 2)
   );
 
-  console.log(`\n✅ Generated ${combinations.length} HTML files`);
+  console.log(`\n✅ Generated ${combinations.length} HTML files with SEO meta tags`);
   console.log('📄 Created subdomain-mapping.json for deployment configuration');
+  
+  // Show what was generated
+  console.log('\n📋 Generated files:');
+  combinations.forEach(combo => {
+    console.log(`   • ${combo.categoryUrl}.${combo.cityUrl}.html → "${combo.category} in ${combo.city}, ${combo.state}"`);
+  });
 }
 
 // Run the generator
