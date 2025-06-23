@@ -1,7 +1,7 @@
-/nail-salons.dallas/* /nail-salons.dallas.html 200!
-/nail-salons.austin/* /nail-salons.austin.html 200!
-/nail-salons.frisco/* /nail-salons.frisco.html 200!
-/auto-repair.denver/* /auto-repair.denver.html 200!
+/nail-salons.dallas/* /nail-salons.dallas.html 200
+/nail-salons.austin/* /nail-salons.austin.html 200
+/nail-salons.frisco/* /nail-salons.frisco.html 200
+/auto-repair.denver/* /auto-repair.denver.html 200
 
-# Optional fallback (only if you're sure it's safe)
-/* /index.html 200
+# Optional fallback
+/* /index.html 302
