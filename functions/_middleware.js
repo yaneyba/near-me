@@ -4,7 +4,7 @@ export async function onRequest(context) {
   const hostname = url.hostname;
   
   // Parse subdomain structure: category.city.near-me.us
-  const parts = hostname.split('.');
+  const parts = hostname.toLowerCase().split('.');
   if (parts.length >= 4 && parts[2] === 'near-me' && parts[3] === 'us') {
     const category = parts[0];
     const city = parts[1];
