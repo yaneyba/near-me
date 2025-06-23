@@ -6,7 +6,7 @@ Sitemap: https://near-me.us/sitemap.xml
 
 # Category-specific sitemaps
 Sitemap: https://nail-salons.dallas.near-me.us/sitemap.xml
-Sitemap: https:///nail-salons.denver.near-me.us/sitemap.xml
+Sitemap: https://auto-repair.denver.near-me.us/sitemap.xml
 Sitemap: https://nail-salons.austin.near-me.us/sitemap.xml
 Sitemap: https://nail-salons.frisco.near-me.us/sitemap.xml
 
