@@ -13,36 +13,55 @@ const Footer: React.FC<FooterProps> = ({ category, city, state }) => {
   const currentYear = new Date().getFullYear();
   const businesses: Business[] = businessesData;
 
-  // Get unique categories that actually exist in the data
-  const getExistingCategories = (): string[] => {
+  // Get categories that actually exist in the CURRENT CITY
+  const getExistingCategoriesInCurrentCity = (): string[] => {
     const categorySet = new Set<string>();
-    businesses.forEach(business => {
-      // Convert kebab-case to Title Case for display
-      const displayCategory = business.category
-        .split('-')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-      categorySet.add(displayCategory);
-    });
+    
+    // Only look at businesses in the current city
+    businesses
+      .filter(business => {
+        const businessCity = business.city
+          .split('-')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+        return businessCity === city;
+      })
+      .forEach(business => {
+        // Convert kebab-case to Title Case for display
+        const displayCategory = business.category
+          .split('-')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+        categorySet.add(displayCategory);
+      });
+    
     return Array.from(categorySet).sort();
   };
 
-  // Get unique cities that actually exist in the data
-  const getExistingCities = (): string[] => {
+  // Get cities that actually exist for the CURRENT CATEGORY
+  const getExistingCitiesForCurrentCategory = (): string[] => {
     const citySet = new Set<string>();
-    businesses.forEach(business => {
-      // Convert kebab-case to Title Case for display
-      const displayCity = business.city
-        .split('-')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-      citySet.add(displayCity);
-    });
+    
+    // Convert current category to kebab-case for comparison
+    const currentCategoryKebab = category.toLowerCase().replace(/\s+/g, '-');
+    
+    // Only look at businesses in the current category
+    businesses
+      .filter(business => business.category === currentCategoryKebab)
+      .forEach(business => {
+        // Convert kebab-case to Title Case for display
+        const displayCity = business.city
+          .split('-')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+        citySet.add(displayCity);
+      });
+    
     return Array.from(citySet).sort();
   };
 
-  const existingCategories = getExistingCategories();
-  const existingCities = getExistingCities();
+  const existingCategoriesInCity = getExistingCategoriesInCurrentCity();
+  const existingCitiesForCategory = getExistingCitiesForCurrentCategory();
 
   const formatForUrl = (text: string) => {
     return text.toLowerCase().replace(/\s+/g, '-');
@@ -78,38 +97,46 @@ const Footer: React.FC<FooterProps> = ({ category, city, state }) => {
             </div>
           </div>
 
-          {/* Popular Categories - Only show existing ones */}
+          {/* Categories available in current city */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Available Categories</h4>
-            <ul className="space-y-2">
-              {existingCategories.map((cat) => (
-                <li key={cat}>
-                  <a
-                    href={`https://${formatForUrl(cat)}.${formatForUrl(city)}.near-me.us`}
-                    className="text-gray-300 hover:text-white transition-colors text-sm"
-                  >
-                    {cat} in {city}
-                  </a>
-                </li>
-              ))}
-            </ul>
+            <h4 className="text-lg font-semibold mb-4">Categories in {city}</h4>
+            {existingCategoriesInCity.length > 0 ? (
+              <ul className="space-y-2">
+                {existingCategoriesInCity.map((cat) => (
+                  <li key={cat}>
+                    <a
+                      href={`https://${formatForUrl(cat)}.${formatForUrl(city)}.near-me.us`}
+                      className="text-gray-300 hover:text-white transition-colors text-sm"
+                    >
+                      {cat} in {city}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-400 text-sm">No other categories available in {city}</p>
+            )}
           </div>
 
-          {/* Popular Cities - Only show existing ones */}
+          {/* Cities available for current category */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Available Cities</h4>
-            <ul className="space-y-2">
-              {existingCities.map((cityName) => (
-                <li key={cityName}>
-                  <a
-                    href={`https://${formatForUrl(category)}.${formatForUrl(cityName)}.near-me.us`}
-                    className="text-gray-300 hover:text-white transition-colors text-sm"
-                  >
-                    {category} in {cityName}
-                  </a>
-                </li>
-              ))}
-            </ul>
+            <h4 className="text-lg font-semibold mb-4">{category} Locations</h4>
+            {existingCitiesForCategory.length > 0 ? (
+              <ul className="space-y-2">
+                {existingCitiesForCategory.map((cityName) => (
+                  <li key={cityName}>
+                    <a
+                      href={`https://${formatForUrl(category)}.${formatForUrl(cityName)}.near-me.us`}
+                      className="text-gray-300 hover:text-white transition-colors text-sm"
+                    >
+                      {category} in {cityName}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-400 text-sm">No other cities available for {category}</p>
+            )}
           </div>
 
           {/* Contact Info */}
