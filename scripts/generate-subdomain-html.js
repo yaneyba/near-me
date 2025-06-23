@@ -113,7 +113,7 @@ function generateHTML(combo) {
     }
     </script>
     
-    <!-- Vite Build Assets - These will be replaced during build -->
+    <!-- Vite Build Assets -->
     <script type="module" crossorigin src="/assets/index-BmqmcbZP.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-DQN5rLq0.css">
   </head>
@@ -141,14 +141,15 @@ function generateSubdomainHTML() {
     const filepath = path.join(distDir, filename);
     
     fs.writeFileSync(filepath, html);
-    console.log(`✓ Generated: ${filename}`);
+    console.log(`✓ Generated: ${filename} - "${combo.category} in ${combo.city}, ${combo.state}"`);
   });
 
   // Generate a mapping file for deployment
   const mapping = combinations.map(combo => ({
     subdomain: `${combo.categoryUrl}.${combo.cityUrl}.near-me.us`,
     file: `${combo.categoryUrl}.${combo.cityUrl}.html`,
-    title: `Best ${combo.category} in ${combo.city}, ${combo.state}`
+    title: `Best ${combo.category} in ${combo.city}, ${combo.state}`,
+    description: `Find top-rated ${combo.category.toLowerCase()} in ${combo.city}, ${combo.state}. Compare ${combo.businessCount}+ local businesses.`
   }));
 
   fs.writeFileSync(
@@ -156,27 +157,14 @@ function generateSubdomainHTML() {
     JSON.stringify(mapping, null, 2)
   );
 
-  console.log(`\n✅ Generated ${combinations.length} HTML files`);
+  console.log(`\n✅ Generated ${combinations.length} HTML files with SEO meta tags`);
   console.log('📄 Created subdomain-mapping.json for deployment configuration');
   
-  // Also update the _redirects file
-  updateRedirectsFile(combinations);
-}
-
-// Update _redirects file with all combinations
-function updateRedirectsFile(combinations) {
-  const redirectsPath = path.join(__dirname, '../public/_redirects');
-  
-  let redirectsContent = '# Cloudflare Pages redirects for subdomain routing\n';
-  
+  // Show what was generated
+  console.log('\n📋 Generated files:');
   combinations.forEach(combo => {
-    redirectsContent += `https://${combo.categoryUrl}.${combo.cityUrl}.near-me.us/* /${combo.categoryUrl}.${combo.cityUrl}.html 200!\n`;
+    console.log(`   • ${combo.categoryUrl}.${combo.cityUrl}.html → "${combo.category} in ${combo.city}, ${combo.state}"`);
   });
-  
-  redirectsContent += '\n# Fallback\n/* /index.html 200\n';
-  
-  fs.writeFileSync(redirectsPath, redirectsContent);
-  console.log('✅ Updated _redirects file with all combinations');
 }
 
 // Run the generator
