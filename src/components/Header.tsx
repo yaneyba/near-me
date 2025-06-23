@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, MapPin, Phone, Mail, Plus } from 'lucide-react';
 import SearchWithLiveResults from './SearchWithLiveResults';
 import { Business } from '../types';
+import { SITE_INFO } from '../siteInfo';
 
 interface HeaderProps {
   category: string;
@@ -37,12 +38,12 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSe
               </div>
               <div className="hidden sm:flex items-center">
                 <Phone className="w-4 h-4 mr-1" />
-                <span>(555) 123-4567</span>
+                <span>{SITE_INFO.phone}</span>
               </div>
             </div>
             <div className="hidden sm:flex items-center">
               <Mail className="w-4 h-4 mr-1" />
-              <span>info@near-me.us</span>
+              <span>{SITE_INFO.email}</span>
             </div>
           </div>
         </div>

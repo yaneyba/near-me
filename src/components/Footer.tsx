@@ -2,6 +2,7 @@ import React from 'react';
 import { MapPin, Phone, Mail, Clock, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
 import businessesData from '../data/businesses.json';
 import { Business } from '../types';
+import { SITE_INFO } from '../siteInfo';
 
 interface FooterProps {
   category: string;
@@ -11,7 +12,7 @@ interface FooterProps {
 
 const Footer: React.FC<FooterProps> = ({ category, city, state }) => {
   const currentYear = new Date().getFullYear();
-  const businesses: Business[] = businessesData;
+  const businesses = businessesData as Business[];
 
   // Get categories that actually exist in the CURRENT CITY
   const getExistingCategoriesInCurrentCity = (): string[] => {
@@ -152,21 +153,21 @@ const Footer: React.FC<FooterProps> = ({ category, city, state }) => {
               </div>
               <div className="flex items-center">
                 <Phone className="w-5 h-5 mr-3 text-blue-400 flex-shrink-0" />
-                <a href="tel:+15551234567" className="text-gray-300 hover:text-white transition-colors text-sm">
-                  (555) 123-4567
+                <a href={`tel:${SITE_INFO.phone.replace(/[^\d+]/g, '')}`} className="text-gray-300 hover:text-white transition-colors text-sm">
+                  {SITE_INFO.phone}
                 </a>
               </div>
               <div className="flex items-center">
                 <Mail className="w-5 h-5 mr-3 text-blue-400 flex-shrink-0" />
-                <a href="mailto:info@near-me.us" className="text-gray-300 hover:text-white transition-colors text-sm">
-                  info@near-me.us
+                <a href={`mailto:${SITE_INFO.email}`} className="text-gray-300 hover:text-white transition-colors text-sm">
+                  {SITE_INFO.email}
                 </a>
               </div>
               <div className="flex items-start">
                 <Clock className="w-5 h-5 mr-3 mt-0.5 text-blue-400 flex-shrink-0" />
                 <div className="text-gray-300 text-sm">
-                  <div>Mon-Fri: 9:00 AM - 6:00 PM</div>
-                  <div>Sat-Sun: 10:00 AM - 4:00 PM</div>
+                  <div>{SITE_INFO.hours.weekdays}</div>
+                  <div>{SITE_INFO.hours.weekends}</div>
                 </div>
               </div>
             </div>

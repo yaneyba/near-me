@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { DataProviderFactory } from '../providers';
 import { ContactSubmission } from '../types';
+import { SITE_INFO } from '../siteInfo';
 
 interface ContactSectionProps {
   category: string;
@@ -242,10 +243,10 @@ const ContactSection: React.FC<ContactSectionProps> = ({ category, city, state }
                   </div>
                   <div>
                     <h4 className="font-semibold text-gray-900">Phone</h4>
-                    <a href="tel:+15551234567" className="text-blue-600 hover:text-blue-700 transition-colors">
-                      (555) 123-4567
+                    <a href={`tel:${SITE_INFO.phone.replace(/[^\d+]/g, '')}`} className="text-blue-600 hover:text-blue-700 transition-colors">
+                      {SITE_INFO.phone}
                     </a>
-                    <p className="text-sm text-gray-500 mt-1">Monday - Friday, 9 AM - 6 PM</p>
+                    <p className="text-sm text-gray-500 mt-1">{SITE_INFO.hours.weekdays}</p>
                   </div>
                 </div>
                 
@@ -255,8 +256,8 @@ const ContactSection: React.FC<ContactSectionProps> = ({ category, city, state }
                   </div>
                   <div>
                     <h4 className="font-semibold text-gray-900">Email</h4>
-                    <a href="mailto:info@near-me.us" className="text-green-600 hover:text-green-700 transition-colors">
-                      info@near-me.us
+                    <a href={`mailto:${SITE_INFO.email}`} className="text-green-600 hover:text-green-700 transition-colors">
+                      {SITE_INFO.email}
                     </a>
                     <p className="text-sm text-gray-500 mt-1">We respond within 24 hours</p>
                   </div>
@@ -280,9 +281,8 @@ const ContactSection: React.FC<ContactSectionProps> = ({ category, city, state }
                   <div>
                     <h4 className="font-semibold text-gray-900">Business Hours</h4>
                     <div className="text-sm text-gray-600 space-y-1">
-                      <div>Monday - Friday: 9:00 AM - 6:00 PM</div>
-                      <div>Saturday: 10:00 AM - 4:00 PM</div>
-                      <div>Sunday: Closed</div>
+                      <div>{SITE_INFO.hours.weekdays}</div>
+                      <div>{SITE_INFO.hours.weekends}</div>
                     </div>
                   </div>
                 </div>

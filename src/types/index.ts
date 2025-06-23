@@ -6,7 +6,7 @@ export interface Business {
   state: string;
   address: string;
   phone: string;
-  website?: string;
+  website: string | null; // Allow null for website
   rating: number;
   reviewCount: number;
   description: string;
