@@ -17,7 +17,10 @@ interface SitemapData {
 
 export class SitemapGenerator {
   private baseUrl = 'https://near-me.us';
-  private businesses: Business[] = businessesData;
+  private businesses: Business[] = businessesData.map(b => ({
+    ...b,
+    website: b.website ?? null
+  }));
 
   // City-state mapping for generating combinations
   private cityStateMap: Record<string, string> = {
