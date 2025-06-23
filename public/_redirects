@@ -1,4 +1,18 @@
+# Subdomain-specific main page routing
 /nail-salons.dallas/* /nail-salons.dallas.html 200
 /nail-salons.austin/* /nail-salons.austin.html 200
 /nail-salons.frisco/* /nail-salons.frisco.html 200
 /nail-salons.denver/* /nail-salons.denver.html 200
+
+# Subdomain-specific 404 routing
+/nail-salons.dallas/404 /nail-salons.dallas.404.html 200
+/nail-salons.austin/404 /nail-salons.austin.404.html 200
+/nail-salons.frisco/404 /nail-salons.frisco.404.html 200
+/nail-salons.denver/404 /nail-salons.denver.404.html 200
+
+# Auto-repair subdomain routing (when available)
+/auto-repair.denver/* /auto-repair.denver.html 200
+/auto-repair.denver/404 /auto-repair.denver.404.html 200
+
+# Global 404 fallback for main domain
+/* /404.html 404
