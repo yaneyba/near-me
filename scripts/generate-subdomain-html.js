@@ -70,6 +70,7 @@ function generateHTML(combo) {
   ].join(', ');
 
   return `<!doctype html>
+<!-- TEST-MARKER: ${combo.categoryUrl}.${combo.cityUrl} -->
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
