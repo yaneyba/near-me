@@ -1,16 +1,10 @@
-# Cloudflare Pages redirects for subdomain routing
-# Note: Cloudflare Pages requires relative URLs, not absolute URLs
-
-# Specific subdomain combinations
-nail-salons.dallas.near-me.us/* /nail-salons.dallas.html 200
-auto-repair.denver.near-me.us/* /auto-repair.denver.html 200
-nail-salons.austin.near-me.us/* /nail-salons.austin.html 200
-nail-salons.frisco.near-me.us/* /nail-salons.frisco.html 200
-auto-repair.dallas.near-me.us/* /auto-repair.dallas.html 200
-
-# Category-specific fallbacks (when city is not specified)
-nail-salons.*.near-me.us/* /nail-salons.dallas.html 200
-auto-repair.*.near-me.us/* /auto-repair.denver.html 200
-
-# Global fallback to main SPA
+# SPA fallback for React Router
+# Subdomain routing is now handled by Functions middleware
+# This ensures non-subdomain requests fall back to the React app
+!/index.html
+!/assets/*
+!/favicon*
+!/robots.txt
+!/sitemap.xml
+!/*.html
 /* /index.html 200
