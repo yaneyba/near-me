@@ -7,6 +7,3 @@
 # Category-specific redirects
 /nail-salons/* /nail-salons.dallas.html 200
 /auto-repair/* /auto-repair.denver.html 200
-
-# Global fallback to index (remove the 404 status - not supported)
-/* /index.html 200
