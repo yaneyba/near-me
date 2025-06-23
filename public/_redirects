@@ -1,10 +1,10 @@
 # SPA fallback for React Router
 # Subdomain routing is now handled by Functions middleware
 # This ensures non-subdomain requests fall back to the React app
-!/index.html
-!/assets/*
-!/favicon*
-!/robots.txt
-!/sitemap.xml
-!/*.html
+/index.html 200
+/assets/* 200
+/favicon* 200
+/robots.txt 200
+/sitemap.xml 200
+/*.html 200
 /* /index.html 200
