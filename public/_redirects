@@ -1,9 +1,1 @@
-# Cloudflare Pages redirects for subdomain routing (relative URLs only)
-/nail-salons/dallas/* /nail-salons.dallas.html 200
-/auto-repair/denver/* /auto-repair.denver.html 200
-/nail-salons/austin/* /nail-salons.austin.html 200
-/nail-salons/frisco/* /nail-salons.frisco.html 200
-
-# Category-specific redirects
-/nail-salons/* /nail-salons.dallas.html 200
-/auto-repair/* /auto-repair.denver.html 200
+/* /index.html 200
