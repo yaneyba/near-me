@@ -4,5 +4,8 @@ https://auto-repair.denver.near-me.us/* /auto-repair.denver.html 200!
 https://nail-salons.austin.near-me.us/* /nail-salons.austin.html 200!
 https://nail-salons.frisco.near-me.us/* /nail-salons.frisco.html 200!
 
-# Fallback
+# Global 404 fallback
+/* /404.html 404
+
+# Final fallback to index
 /* /index.html 200
