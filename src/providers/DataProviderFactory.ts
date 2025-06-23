@@ -37,6 +37,13 @@ export class DataProviderFactory {
   }
 
   /**
+   * Convenience method to get the configured data provider
+   */
+  static getProvider(): IDataProvider {
+    return this.getInstance();
+  }
+
+  /**
    * Create a new provider instance (useful for testing)
    */
   static createProvider(config?: DataProviderConfig): IDataProvider {
