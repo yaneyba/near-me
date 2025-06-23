@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { SubdomainInfo } from '../types';
 import { generateTitle } from '../utils/subdomainParser';
+import { JsonDataProvider } from '../providers/JsonDataProvider';
+import { BusinessSubmission } from '../types';
 import { 
   Building, 
   Phone, 
@@ -81,7 +83,7 @@ const SubmissionSuccess: React.FC<{
             Application Submitted Successfully!
           </h1>
           
-          <p className="text-lg text-gray-600 mb-8">
+          <p className="text-lg text-gray-600 mb-8 whitespace-pre-line">
             {result.message}
           </p>
           
@@ -89,7 +91,7 @@ const SubmissionSuccess: React.FC<{
             <div className="bg-gray-50 rounded-lg p-6 mb-8">
               <h3 className="font-semibold text-gray-900 mb-2">Submission Details</h3>
               <p className="text-sm text-gray-600 mb-2">
-                <strong>Reference ID:</strong> {result.submissionId.slice(0, 8)}
+                <strong>Reference ID:</strong> {result.submissionId.slice(0, 12)}
               </p>
               <p className="text-sm text-gray-500">
                 Save this reference ID for tracking your application status.
@@ -146,6 +148,8 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
   const [submitResult, setSubmitResult] = useState<SubmissionResult | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
+
+  const dataProvider = new JsonDataProvider();
 
   const [formData, setFormData] = useState<BusinessFormData>({
     businessName: '',
@@ -361,24 +365,31 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
     setSubmitResult(null);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Simulate success/failure
-      const success = Math.random() > 0.1; // 90% success rate for demo
-      
-      if (success) {
-        setSubmitResult({
-          success: true,
-          message: `Thank you! Your ${subdomainInfo.category.toLowerCase()} business application has been submitted successfully. We'll review your information and contact you within 2-3 business days.`,
-          submissionId: `BIZ-${Date.now()}`
-        });
-      } else {
-        setSubmitResult({
-          success: false,
-          message: 'There was an error submitting your application. Please try again or contact support.'
-        });
-      }
+      const businessSubmission: BusinessSubmission = {
+        businessName: formData.businessName,
+        ownerName: formData.ownerName,
+        email: formData.email,
+        phone: formData.phone,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        zipCode: formData.zipCode,
+        category: formData.category,
+        website: formData.website || undefined,
+        description: formData.description,
+        services: formData.services,
+        customServices: formData.customServices,
+        hours: formData.hours,
+        socialMedia: formData.socialMedia,
+        businessType: formData.businessType,
+        yearsInBusiness: formData.yearsInBusiness,
+        employeeCount: formData.employeeCount,
+        specialOffers: formData.specialOffers,
+        submittedAt: new Date()
+      };
+
+      const result = await dataProvider.submitBusiness(businessSubmission);
+      setSubmitResult(result);
     } catch (error) {
       setSubmitResult({
         success: false,
@@ -867,7 +878,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                   <div>
                     <h3 className="font-semibold text-red-800">Submission Failed</h3>
-                    <p className="text-red-700 text-sm mt-1">{submitResult.message}</p>
+                    <p className="text-red-700 text-sm mt-1 whitespace-pre-line">{submitResult.message}</p>
                   </div>
                 </div>
               )}
