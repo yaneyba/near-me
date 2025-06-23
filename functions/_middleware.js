@@ -1,27 +1,34 @@
 export async function onRequest(context) {
-  const { request } = context;
-  const url = new URL(request.url);
+  console.log('🔥 MIDDLEWARE IS RUNNING!');
+  console.log('Hostname:', context.request.url);
+  
+  const url = new URL(context.request.url);
   const hostname = url.hostname;
   
-  // Parse subdomain structure: category.city.near-me.us
-  const parts = hostname.toLowerCase().split('.');
+  console.log('Parsed hostname:', hostname);
+  
+  // Parse subdomain: nail-salons.dallas.near-me.us
+  const parts = hostname.split('.');
+  console.log('Hostname parts:', parts);
+  
   if (parts.length >= 4 && parts[2] === 'near-me' && parts[3] === 'us') {
     const category = parts[0];
     const city = parts[1];
+    const htmlFileName = `${category}.${city}.html`;
     
-    // Rewrite to the appropriate HTML file
-    const htmlFile = `/${category}.${city}.html`;
+    console.log('🎯 SUBDOMAIN DETECTED:', category, city);
+    console.log('Looking for file:', htmlFileName);
     
-    // Fetch the HTML file
-    const response = await context.env.ASSETS.fetch(
-      new Request(url.origin + htmlFile, request)
-    );
-    
-    if (response.status === 200) {
-      return response;
-    }
+    // Add a debug header so you can see in browser dev tools
+    return new Response('MIDDLEWARE WORKING - SUBDOMAIN DETECTED', {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/plain',
+        'X-Debug': `category=${category}, city=${city}, file=${htmlFileName}`
+      }
+    });
   }
   
-  // Fallback to original request
+  console.log('❌ No subdomain match, continuing...');
   return context.next();
 }
