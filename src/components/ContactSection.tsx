@@ -16,6 +16,8 @@ import {
   Shield,
   Zap
 } from 'lucide-react';
+import { DataProviderFactory } from '../providers';
+import { ContactSubmission } from '../types';
 
 interface ContactSectionProps {
   category: string;
@@ -56,6 +58,9 @@ const ContactSection: React.FC<ContactSectionProps> = ({ category, city, state }
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [submitMessage, setSubmitMessage] = useState('');
+  const [submissionId, setSubmissionId] = useState('');
+
+  const dataProvider = DataProviderFactory.getProvider();
 
   const inquiryTypes = [
     { value: 'general', label: 'General Inquiry', icon: MessageSquare },
@@ -142,15 +147,28 @@ const ContactSection: React.FC<ContactSectionProps> = ({ category, city, state }
     setSubmitStatus('idle');
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const contactSubmission: ContactSubmission = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone || undefined,
+        subject: formData.subject,
+        message: formData.message,
+        inquiryType: formData.inquiryType,
+        businessName: formData.businessName || undefined,
+        preferredContact: formData.preferredContact,
+        urgency: formData.urgency,
+        category,
+        city,
+        state,
+        submittedAt: new Date()
+      };
+
+      const result = await dataProvider.submitContact(contactSubmission);
       
-      // Simulate success/failure (90% success rate)
-      const success = Math.random() > 0.1;
-      
-      if (success) {
+      if (result.success) {
         setSubmitStatus('success');
-        setSubmitMessage('Thank you for your message! We\'ll get back to you soon.');
+        setSubmitMessage(result.message);
+        setSubmissionId(result.submissionId || '');
         
         // Reset form
         setFormData({
@@ -166,7 +184,20 @@ const ContactSection: React.FC<ContactSectionProps> = ({ category, city, state }
         });
       } else {
         setSubmitStatus('error');
-        setSubmitMessage('Sorry, there was an error sending your message. Please try again.');
+        setSubmitMessage(result.message);
+        
+        // Handle field-specific errors
+        if (result.errors) {
+          const fieldErrors: FormErrors = {};
+          result.errors.forEach(error => {
+            if (error.includes('Name')) fieldErrors.name = error;
+            if (error.includes('Email')) fieldErrors.email = error;
+            if (error.includes('Subject')) fieldErrors.subject = error;
+            if (error.includes('Message')) fieldErrors.message = error;
+            if (error.includes('Business name')) fieldErrors.businessName = error;
+          });
+          setErrors(fieldErrors);
+        }
       }
     } catch (error) {
       setSubmitStatus('error');
@@ -293,7 +324,12 @@ const ContactSection: React.FC<ContactSectionProps> = ({ category, city, state }
                   <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                   <div>
                     <h4 className="font-semibold text-green-800">Message Sent Successfully!</h4>
-                    <p className="text-green-700 text-sm mt-1">{submitMessage}</p>
+                    <p className="text-green-700 text-sm mt-1 whitespace-pre-line">{submitMessage}</p>
+                    {submissionId && (
+                      <p className="text-green-600 text-xs mt-2">
+                        Reference ID: {submissionId.slice(0, 12)}
+                      </p>
+                    )}
                   </div>
                 </div>
               )}

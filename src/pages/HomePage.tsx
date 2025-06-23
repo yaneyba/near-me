@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { JsonDataProvider } from '../providers/JsonDataProvider';
+import { DataProviderFactory } from '../providers';
 import { Business, SubdomainInfo } from '../types';
 import { generateTitle } from '../utils/subdomainParser';
 import Hero from '../components/Hero';
@@ -19,7 +19,7 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [loading, setLoading] = useState(true);
   
-  const dataProvider = new JsonDataProvider();
+  const dataProvider = DataProviderFactory.getProvider();
 
   // Update document title
   useEffect(() => {

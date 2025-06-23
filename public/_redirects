@@ -1,11 +1,12 @@
-# Cloudflare Pages redirects for subdomain routing
-https://nail-salons.dallas.near-me.us/* /nail-salons.dallas.html 200!
-https://auto-repair.denver.near-me.us/* /auto-repair.denver.html 200!
-https://nail-salons.austin.near-me.us/* /nail-salons.austin.html 200!
-https://nail-salons.frisco.near-me.us/* /nail-salons.frisco.html 200!
+# Cloudflare Pages redirects for subdomain routing (relative URLs only)
+/nail-salons/dallas/* /nail-salons.dallas.html 200
+/auto-repair/denver/* /auto-repair.denver.html 200
+/nail-salons/austin/* /nail-salons.austin.html 200
+/nail-salons/frisco/* /nail-salons.frisco.html 200
 
-# Global 404 fallback
-/* /404.html 404
+# Category-specific redirects
+/nail-salons/* /nail-salons.dallas.html 200
+/auto-repair/* /auto-repair.denver.html 200
 
-# Final fallback to index
+# Global fallback to index (remove the 404 status - not supported)
 /* /index.html 200
