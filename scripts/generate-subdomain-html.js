@@ -73,7 +73,9 @@ function generateHTML(combo) {
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
     <!-- SEO Meta Tags -->
@@ -110,10 +112,13 @@ function generateHTML(combo) {
       }
     }
     </script>
+    
+    <!-- Vite Build Assets - These will be replaced during build -->
+    <script type="module" crossorigin src="/assets/index-BmqmcbZP.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-DQN5rLq0.css">
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>`;
 }
@@ -153,6 +158,25 @@ function generateSubdomainHTML() {
 
   console.log(`\n✅ Generated ${combinations.length} HTML files`);
   console.log('📄 Created subdomain-mapping.json for deployment configuration');
+  
+  // Also update the _redirects file
+  updateRedirectsFile(combinations);
+}
+
+// Update _redirects file with all combinations
+function updateRedirectsFile(combinations) {
+  const redirectsPath = path.join(__dirname, '../public/_redirects');
+  
+  let redirectsContent = '# Cloudflare Pages redirects for subdomain routing\n';
+  
+  combinations.forEach(combo => {
+    redirectsContent += `https://${combo.categoryUrl}.${combo.cityUrl}.near-me.us/* /${combo.categoryUrl}.${combo.cityUrl}.html 200!\n`;
+  });
+  
+  redirectsContent += '\n# Fallback\n/* /index.html 200\n';
+  
+  fs.writeFileSync(redirectsPath, redirectsContent);
+  console.log('✅ Updated _redirects file with all combinations');
 }
 
 // Run the generator
