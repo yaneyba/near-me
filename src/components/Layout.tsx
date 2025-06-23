@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { JsonDataProvider } from '../providers/JsonDataProvider';
+import { getDataProvider } from '../providers';
 import { Business, SubdomainInfo } from '../types';
 import Header from './Header';
 import Footer from './Footer';
@@ -16,7 +16,7 @@ const Layout: React.FC<LayoutProps> = ({ children, subdomainInfo }) => {
   const [loading, setLoading] = useState(true);
   const [devPanelVisible, setDevPanelVisible] = useState(false);
   
-  const dataProvider = new JsonDataProvider();
+  const dataProvider = getDataProvider();
 
   // Load businesses for search functionality
   useEffect(() => {

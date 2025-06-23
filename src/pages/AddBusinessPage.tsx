@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { SubdomainInfo } from '../types';
 import { generateTitle } from '../utils/subdomainParser';
-import { JsonDataProvider } from '../providers/JsonDataProvider';
+import { getDataProvider } from '../providers';
 import { BusinessSubmission } from '../types';
 import { 
   Building, 
@@ -149,7 +149,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
 
-  const dataProvider = new JsonDataProvider();
+  const dataProvider = getDataProvider();
 
   const [formData, setFormData] = useState<BusinessFormData>({
     businessName: '',
