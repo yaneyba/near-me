@@ -1,14 +1,18 @@
 {
   "name": "vite-react-typescript-starter",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build && node scripts/generate-subdomain-html.js",
     "build:seo": "node scripts/generate-subdomain-html.js",
+    "build:production": "npm run build && npm run optimize:production",
+    "optimize:production": "node scripts/optimize-production.js",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy:staging": "npm run build && echo 'Deploy to staging'",
+    "deploy:production": "npm run build:production && echo 'Deploy to production'"
   },
   "dependencies": {
     "lucide-react": "^0.344.0",

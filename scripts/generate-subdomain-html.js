@@ -55,9 +55,53 @@ function getUniqueCombinations() {
   return result;
 }
 
-// Generate HTML template with proper meta tags
+// Get asset filenames from manifest
+function getAssetFilenames() {
+  const manifestPath = path.join(__dirname, '../dist/.vite/manifest.json');
+  
+  if (fs.existsSync(manifestPath)) {
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    
+    // Find the main entry point
+    const mainEntry = manifest['src/main.tsx'] || manifest['index.html'];
+    
+    if (mainEntry) {
+      return {
+        js: mainEntry.file ? `/assets/${mainEntry.file}` : '/assets/index.js',
+        css: mainEntry.css && mainEntry.css.length > 0 ? `/assets/${mainEntry.css[0]}` : '/assets/index.css'
+      };
+    }
+  }
+  
+  // Fallback to scanning dist/assets directory
+  const assetsDir = path.join(__dirname, '../dist/assets');
+  if (fs.existsSync(assetsDir)) {
+    const files = fs.readdirSync(assetsDir);
+    const jsFile = files.find(f => f.startsWith('index-') && f.endsWith('.js'));
+    const cssFile = files.find(f => f.startsWith('index-') && f.endsWith('.css'));
+    
+    return {
+      js: jsFile ? `/assets/${jsFile}` : '/assets/index.js',
+      css: cssFile ? `/assets/${cssFile}` : '/assets/index.css'
+    };
+  }
+  
+  // Final fallback
+  return {
+    js: '/assets/index.js',
+    css: '/assets/index.css'
+  };
+}
+
+// Generate HTML template with proper meta tags and cache busting
 function generateHTML(combo) {
   const { category, city, state, businessCount } = combo;
+  const buildTime = new Date().toISOString();
+  const version = process.env.npm_package_version || '1.0.0';
+  const cacheKey = Date.now();
+  
+  // Get actual asset filenames with hashes
+  const assets = getAssetFilenames();
   
   const title = `Best ${category} in ${city}, ${state} (${businessCount}+ Options)`;
   const description = `Find top-rated ${category.toLowerCase()} in ${city}, ${state}. Compare ${businessCount}+ local businesses, read reviews, get contact info, and book services online.`;
@@ -70,14 +114,19 @@ function generateHTML(combo) {
   ].join(', ');
 
   return `<!doctype html>
-<!-- TEST-MARKER: ${combo.categoryUrl}.${combo.cityUrl} -->
+<!-- Generated: ${buildTime} | Version: ${version} | Cache: ${cacheKey} -->
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=${cacheKey}" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico?v=${cacheKey}" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=${cacheKey}" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- Cache Control for Production -->
+    <meta http-equiv="Cache-Control" content="public, max-age=31536000, immutable" />
+    <meta name="build-time" content="${buildTime}" />
+    <meta name="build-version" content="${version}" />
     
     <!-- SEO Meta Tags -->
     <title>${title}</title>
@@ -114,12 +163,20 @@ function generateHTML(combo) {
     }
     </script>
     
-    <!-- Vite Build Assets -->
-    <script type="module" crossorigin src="/assets/index-BmqmcbZP.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-DQN5rLq0.css">
+    <!-- Vite Build Assets with Cache Busting -->
+    <script type="module" crossorigin src="${assets.js}"></script>
+    <link rel="stylesheet" crossorigin href="${assets.css}">
   </head>
   <body>
     <div id="root"></div>
+    <!-- Build Info -->
+    <script>
+      window.__BUILD_INFO__ = {
+        time: "${buildTime}",
+        version: "${version}",
+        cache: "${cacheKey}"
+      };
+    </script>
   </body>
 </html>`;
 }
@@ -150,7 +207,9 @@ function generateSubdomainHTML() {
     subdomain: `${combo.categoryUrl}.${combo.cityUrl}.near-me.us`,
     file: `${combo.categoryUrl}.${combo.cityUrl}.html`,
     title: `Best ${combo.category} in ${combo.city}, ${combo.state}`,
-    description: `Find top-rated ${combo.category.toLowerCase()} in ${combo.city}, ${combo.state}. Compare ${combo.businessCount}+ local businesses.`
+    description: `Find top-rated ${combo.category.toLowerCase()} in ${combo.city}, ${combo.state}. Compare ${combo.businessCount}+ local businesses.`,
+    buildTime: new Date().toISOString(),
+    version: process.env.npm_package_version || '1.0.0'
   }));
 
   fs.writeFileSync(
@@ -158,7 +217,7 @@ function generateSubdomainHTML() {
     JSON.stringify(mapping, null, 2)
   );
 
-  console.log(`\n✅ Generated ${combinations.length} HTML files with SEO meta tags`);
+  console.log(`\n✅ Generated ${combinations.length} HTML files with production cache busting`);
   console.log('📄 Created subdomain-mapping.json for deployment configuration');
   
   // Show what was generated
