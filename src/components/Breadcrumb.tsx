@@ -21,18 +21,11 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ subdomainInfo }) => {
   const generateBreadcrumbs = (): BreadcrumbItem[] => {
     const breadcrumbs: BreadcrumbItem[] = [];
 
-    // Root domain link
-    breadcrumbs.push({
-      label: 'Near Me',
-      href: 'https://near-me.us',
-      icon: <Home className="w-4 h-4" />
-    });
-
-    // Current subdomain home
+    // Current subdomain home (this is the actual homepage)
     breadcrumbs.push({
       label: `${category} in ${city}`,
       href: location.pathname === '/' ? undefined : '/',
-      icon: <Building className="w-4 h-4" />
+      icon: <Home className="w-4 h-4" />
     });
 
     // Add current page if not home
@@ -49,6 +42,13 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ subdomainInfo }) => {
           breadcrumbs.push({
             label: 'Contact',
             icon: <Phone className="w-4 h-4" />,
+            current: true
+          });
+          break;
+        case '/add-business':
+          breadcrumbs.push({
+            label: 'Add Business',
+            icon: <Building className="w-4 h-4" />,
             current: true
           });
           break;
@@ -94,8 +94,8 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ subdomainInfo }) => {
 
   const breadcrumbs = generateBreadcrumbs();
 
-  // Don't show breadcrumbs if there's only one item (just the home)
-  if (breadcrumbs.length <= 1) {
+  // Don't show breadcrumbs if there's only one item and it's the current page
+  if (breadcrumbs.length <= 1 && location.pathname === '/') {
     return null;
   }
 
@@ -116,23 +116,13 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ subdomainInfo }) => {
                     {item.label}
                   </span>
                 ) : item.href ? (
-                  item.href.startsWith('http') ? (
-                    <a
-                      href={item.href}
-                      className="flex items-center text-gray-600 hover:text-blue-600 transition-colors"
-                    >
-                      {item.icon && <span className="mr-2">{item.icon}</span>}
-                      {item.label}
-                    </a>
-                  ) : (
-                    <Link
-                      to={item.href}
-                      className="flex items-center text-gray-600 hover:text-blue-600 transition-colors"
-                    >
-                      {item.icon && <span className="mr-2">{item.icon}</span>}
-                      {item.label}
-                    </Link>
-                  )
+                  <Link
+                    to={item.href}
+                    className="flex items-center text-gray-600 hover:text-blue-600 transition-colors"
+                  >
+                    {item.icon && <span className="mr-2">{item.icon}</span>}
+                    {item.label}
+                  </Link>
                 ) : (
                   <span className="flex items-center text-gray-600">
                     {item.icon && <span className="mr-2">{item.icon}</span>}
