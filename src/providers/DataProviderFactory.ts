@@ -1,7 +1,8 @@
 import { IDataProvider } from '../types';
 import { JsonDataProvider } from './JsonDataProvider';
+import { HybridDataProvider } from './HybridDataProvider';
 
-export type DataProviderType = 'json' | 'api' | 'mock';
+export type DataProviderType = 'json' | 'hybrid' | 'api' | 'mock';
 
 export interface DataProviderConfig {
   type: DataProviderType;
@@ -14,7 +15,7 @@ export interface DataProviderConfig {
 export class DataProviderFactory {
   private static instance: IDataProvider | null = null;
   private static config: DataProviderConfig = {
-    type: 'json' // Default to JSON provider
+    type: 'hybrid' // Default to hybrid provider (JSON + Supabase)
   };
 
   /**
@@ -53,9 +54,12 @@ export class DataProviderFactory {
       case 'json':
         return new JsonDataProvider();
       
+      case 'hybrid':
+        return new HybridDataProvider();
+      
       case 'api':
         // In the future, this would create an API-based provider
-        throw new Error('API provider not yet implemented. Use JsonDataProvider for now.');
+        throw new Error('API provider not yet implemented. Use HybridDataProvider for now.');
       
       case 'mock':
         // In the future, this would create a mock provider for testing
