@@ -14,7 +14,7 @@ function App() {
   // Configure the data provider factory
   React.useEffect(() => {
     DataProviderFactory.configure({
-      type: 'json', // Use JSON provider by default
+      type: 'hybrid', // Use hybrid provider (JSON for business data, Supabase for forms)
       // In production, you might configure:
       // type: 'api',
       // apiBaseUrl: 'https://api.near-me.us',
