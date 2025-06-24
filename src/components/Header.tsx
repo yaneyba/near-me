@@ -103,7 +103,7 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSe
               }`}
             >
               <Plus className="w-4 h-4 mr-1" />
-              Add Business
+              Add Your Business
             </Link>
           </nav>
 
@@ -188,7 +188,7 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSe
               onClick={() => setIsMenuOpen(false)}
             >
               <Plus className="w-4 h-4 mr-2" />
-              Add Business
+              Add Your Business
             </Link>
           </div>
         </div>
