@@ -258,19 +258,19 @@ const SearchWithLiveResults: React.FC<SearchWithLiveResultsProps> = ({
 
       {/* Live Results Count */}
       {query && (
-        <div className="absolute top-full left-0 right-0 mt-1 text-sm text-gray-600 px-4">
+        <div className="absolute top-full left-0 right-0 mt-1 text-sm text-white/80 px-4 z-40">
           {isLoading ? (
             <div className="flex items-center">
-              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-2"></div>
+              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-2"></div>
               Searching...
             </div>
           ) : (
             <div>
               {suggestions.length > 0 ? (
                 `${suggestions.length} suggestion${suggestions.length !== 1 ? 's' : ''} found`
-              ) : (
+              ) : query.length > 0 ? (
                 'No suggestions found'
-              )}
+              ) : null}
             </div>
           )}
         </div>
@@ -361,12 +361,30 @@ const SearchWithLiveResults: React.FC<SearchWithLiveResultsProps> = ({
             </div>
           )}
 
-          {/* No Results */}
+          {/* No Results - Enhanced visibility */}
           {query && !isLoading && suggestions.length === 0 && (
-            <div className="p-4 text-center text-gray-500">
-              <div className="text-lg mb-2">🔍</div>
-              <div>No suggestions found for "{query}"</div>
-              <div className="text-sm mt-1">Try a different search term</div>
+            <div className="p-6 text-center text-gray-500 bg-gray-50 border-t border-gray-100">
+              <div className="text-4xl mb-3">🔍</div>
+              <div className="text-lg font-medium text-gray-700 mb-2">
+                No suggestions found for "{query}"
+              </div>
+              <div className="text-sm text-gray-500 mb-4">
+                Try adjusting your search terms or browse our categories
+              </div>
+              <div className="space-y-2 text-sm text-gray-600">
+                <p className="font-medium">Suggestions:</p>
+                <ul className="space-y-1">
+                  <li>• Check your spelling</li>
+                  <li>• Try more general terms</li>
+                  <li>• Browse by neighborhood or service type</li>
+                </ul>
+              </div>
+              <button
+                onClick={clearQuery}
+                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+              >
+                Clear Search
+              </button>
             </div>
           )}
         </div>
