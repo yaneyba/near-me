@@ -3,7 +3,7 @@ import { ContactSubmission, BusinessSubmission, SubmissionResult } from '../type
 
 export class SupabaseDataProvider {
   /**
-   * Submit contact form to Supabase
+   * Submit contact form to Supabase using existing schema
    */
   async submitContact(contactData: ContactSubmission): Promise<SubmissionResult> {
     try {
@@ -36,7 +36,7 @@ export class SupabaseDataProvider {
         };
       }
 
-      // Insert into Supabase
+      // Insert into existing contact_messages table
       const { data, error } = await supabase
         .from('contact_messages')
         .insert({
@@ -100,7 +100,7 @@ export class SupabaseDataProvider {
   }
 
   /**
-   * Submit business application to Supabase
+   * Submit business application to Supabase using existing schema
    */
   async submitBusiness(businessData: BusinessSubmission): Promise<SubmissionResult> {
     try {
@@ -175,7 +175,7 @@ export class SupabaseDataProvider {
       // Combine all services
       const allServices = [...businessData.services, ...businessData.customServices];
 
-      // Insert into Supabase
+      // Insert into existing business_submissions table
       const { data, error } = await supabase
         .from('business_submissions')
         .insert({

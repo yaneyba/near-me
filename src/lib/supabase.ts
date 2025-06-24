@@ -10,7 +10,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Database types for TypeScript
+// Database types matching your existing schema
 export interface Database {
   public: {
     Tables: {

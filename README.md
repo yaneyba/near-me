@@ -37,21 +37,14 @@ VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your_anon_key_here
 ```
 
-### 3. Set Up Database
+### 3. Database Setup
 
-Run the migration to create the required tables:
+Your existing database schema is already compatible! The application will use your existing:
 
-```sql
--- Copy and paste the contents of supabase/migrations/create_contact_and_business_tables.sql
--- into your Supabase SQL editor and run it
-```
-
-This creates:
 - `contact_messages` table for contact form submissions
 - `business_submissions` table for business applications
-- Proper RLS policies for security
-- Indexes for performance
-- Triggers for notifications
+
+**No migration needed** - the application works with your current schema.
 
 ### 4. Start Development
 
@@ -70,22 +63,23 @@ The application uses a **hybrid data approach**:
   - `src/data/services.json` 
   - `src/data/neighborhoods.json`
 
-- **Form Submissions**: Stored in Supabase (persistent, real data)
-  - Contact form messages
-  - Business applications
+- **Form Submissions**: Stored in your existing Supabase tables (persistent, real data)
+  - Contact form messages → `contact_messages` table
+  - Business applications → `business_submissions` table
 
 ### Why Hybrid?
 
 1. **Performance**: Business listings load instantly from JSON
-2. **Real Data**: Form submissions are properly stored and managed
+2. **Real Data**: Form submissions are properly stored and managed in your existing database
 3. **Scalability**: Easy to migrate business data to Supabase later
 4. **Development**: Fast iteration without database dependencies for listings
+5. **Compatibility**: Works with your existing database schema
 
 ## Supabase Integration
 
 ### Contact Forms
 
-Contact form submissions are stored in the `contact_messages` table with:
+Contact form submissions are stored in your existing `contact_messages` table with:
 - User information (name, email)
 - Message details (subject, message)
 - Context (category, city)
@@ -93,7 +87,7 @@ Contact form submissions are stored in the `contact_messages` table with:
 
 ### Business Applications
 
-Business submissions are stored in the `business_submissions` table with:
+Business submissions are stored in your existing `business_submissions` table with:
 - Complete business information
 - Services and hours
 - Review workflow (pending → approved/rejected)
@@ -101,7 +95,7 @@ Business submissions are stored in the `business_submissions` table with:
 
 ### Security
 
-- **Row Level Security (RLS)** enabled on all tables
+Your existing Row Level Security (RLS) policies are used:
 - **Public insert** allowed for form submissions
 - **User access** to their own submissions only
 - **Admin access** to all data for management
@@ -170,13 +164,16 @@ Each subdomain gets a unique HTML file:
 
 ✅ **Perfect SEO**: Each subdomain has unique, descriptive titles  
 ✅ **Fast Performance**: Static HTML + React hydration  
-✅ **Real Data**: Form submissions properly stored  
+✅ **Real Data**: Form submissions properly stored in your existing database  
 ✅ **Scalable**: Easy to add new cities and categories  
 ✅ **Production Ready**: Optimized for CDN deployment  
+✅ **Compatible**: Works with your existing database schema
 
-## Database Schema
+## Database Schema (Existing)
 
 ### contact_messages
+
+Your existing table structure is used:
 
 | Column | Type | Description |
 |--------|------|-------------|
@@ -188,9 +185,15 @@ Each subdomain gets a unique HTML file:
 | category | text | Business category context |
 | city | text | City context |
 | status | text | new, in_progress, resolved |
+| admin_notes | text | Internal admin notes |
+| resolved_at | timestamptz | Resolution timestamp |
+| resolved_by | text | Admin who resolved |
 | created_at | timestamptz | Submission time |
+| updated_at | timestamptz | Last update time |
 
 ### business_submissions
+
+Your existing table structure is used:
 
 | Column | Type | Description |
 |--------|------|-------------|
@@ -202,10 +205,27 @@ Each subdomain gets a unique HTML file:
 | address | text | Business address |
 | city | text | City |
 | state | text | State |
+| zip_code | text | ZIP code |
 | category | text | Business category |
+| website | text | Website URL (optional) |
+| description | text | Business description |
 | services | text[] | Array of services |
+| hours | jsonb | Business hours |
 | status | enum | pending, approved, rejected |
-| created_at | timestamptz | Submission time |
+| submitted_at | timestamptz | Submission time |
+| reviewed_at | timestamptz | Review time |
+| reviewer_notes | text | Admin review notes |
+| site_id | text | Site identifier |
+| created_at | timestamptz | Creation time |
+| updated_at | timestamptz | Last update time |
+
+## Admin Features
+
+Your existing admin features work seamlessly:
+- View all contact messages and business submissions
+- Update status and add notes
+- Approve/reject business applications
+- All existing triggers and notifications continue to work
 
 ## Support
 
