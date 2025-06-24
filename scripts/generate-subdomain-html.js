@@ -115,12 +115,13 @@ function generateHTML(combo) {
   const GA_ID = process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID || '';
   const GTM_ID = process.env.NEXT_PUBLIC_GOOGLE_TAG_MANAGER_ID || '';
 
-  // Default OG image
-  const defaultOgImage = 'https://near-me-directories.s3.us-east-2.amazonaws.com/nail-salons/nail-salons-frisco-0.png';
+  // Default OG image (from public directory)
+  const defaultOgImage = '/og-image.png';
   // Construct OG image path
   const ogImage = `https://near-me.us/og-images/${combo.categoryUrl}-${combo.cityUrl}.jpg`;
 
-  // Optionally, you could check for file existence, but for static HTML generation, fallback logic is best done at generation time.
+  // Use the specific OG image if available, otherwise fall back to the default
+  // Since we can't check remote existence at build time, always use ogImage, but document fallback for consumers
 
   return `<!doctype html>
 <!-- Generated: ${buildTime} | Version: ${version} | Cache: ${cacheKey} -->
@@ -148,13 +149,13 @@ function generateHTML(combo) {
     <meta property="og:title" content="${title}" />
     <meta property="og:description" content="${description}" />
     <meta property="og:url" content="https://${combo.categoryUrl}.${combo.cityUrl}.near-me.us/" />
-    <meta property="og:image" content="${ogImage || defaultOgImage}" />
+    <meta property="og:image" content="${ogImage}" onerror="this.content='${defaultOgImage}'" />
     
     <!-- Twitter Card Tags -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${title}" />
     <meta name="twitter:description" content="${description}" />
-    <meta name="twitter:image" content="${ogImage || defaultOgImage}" />
+    <meta name="twitter:image" content="${ogImage}" />
     
     <!-- Structured Data -->
     <script type="application/ld+json">
