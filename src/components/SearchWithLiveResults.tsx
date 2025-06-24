@@ -203,6 +203,13 @@ const SearchWithLiveResults: React.FC<SearchWithLiveResultsProps> = ({
     setShowSuggestions(false);
   };
 
+  const handlePopularSearchClick = (searchTerm: string) => {
+    setQuery(searchTerm);
+    onSearch(searchTerm);
+    setShowSuggestions(false);
+    saveRecentSearch(searchTerm);
+  };
+
   const getSuggestionIcon = (type: string) => {
     switch (type) {
       case 'business':
@@ -229,6 +236,19 @@ const SearchWithLiveResults: React.FC<SearchWithLiveResultsProps> = ({
         </span>
       ) : part
     );
+  };
+
+  // Generate popular searches based on category
+  const getPopularSearches = () => {
+    const popularByCategory: Record<string, string[]> = {
+      'nail-salons': ['Best rated', 'Near me', 'Open now', 'Reviews', 'Gel manicure', 'Pedicure'],
+      'auto-repair': ['Best rated', 'Near me', 'Open now', 'Reviews', 'Oil change', 'Brake repair'],
+      'restaurants': ['Best rated', 'Near me', 'Open now', 'Reviews', 'Delivery', 'Takeout'],
+      'hair-salons': ['Best rated', 'Near me', 'Open now', 'Reviews', 'Hair color', 'Haircut']
+    };
+
+    const categoryKey = category.toLowerCase().replace(/\s+/g, '-');
+    return popularByCategory[categoryKey] || ['Best rated', 'Near me', 'Open now', 'Reviews'];
   };
 
   return (
@@ -285,8 +305,8 @@ const SearchWithLiveResults: React.FC<SearchWithLiveResultsProps> = ({
           {/* Recent Searches */}
           {!query && recentSearches.length > 0 && (
             <div className="p-4 border-b border-gray-100">
-              <div className="flex items-center text-sm text-gray-500 mb-2">
-                <Clock className="w-4 h-4 mr-1" />
+              <div className="flex items-center text-sm text-gray-500 mb-3">
+                <Clock className="w-4 h-4 mr-2" />
                 Recent Searches
               </div>
               <div className="space-y-1">
@@ -294,7 +314,7 @@ const SearchWithLiveResults: React.FC<SearchWithLiveResultsProps> = ({
                   <button
                     key={index}
                     onClick={() => handleRecentSearchClick(search)}
-                    className="block w-full text-left px-2 py-1 text-sm text-gray-700 hover:bg-gray-50 rounded transition-colors"
+                    className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded transition-colors"
                   >
                     {search}
                   </button>
@@ -306,17 +326,18 @@ const SearchWithLiveResults: React.FC<SearchWithLiveResultsProps> = ({
           {/* Popular Searches */}
           {!query && (
             <div className="p-4">
-              <div className="flex items-center text-sm text-gray-500 mb-2">
-                <TrendingUp className="w-4 h-4 mr-1" />
+              <div className="flex items-center text-sm text-gray-500 mb-3">
+                <TrendingUp className="w-4 h-4 mr-2" />
                 Popular in {city}
               </div>
               <div className="space-y-1">
-                {['Best rated', 'Near me', 'Open now', 'Reviews'].map((popular, index) => (
+                {getPopularSearches().map((popular, index) => (
                   <button
                     key={index}
-                    onClick={() => handleRecentSearchClick(popular)}
-                    className="block w-full text-left px-2 py-1 text-sm text-gray-700 hover:bg-gray-50 rounded transition-colors"
+                    onClick={() => handlePopularSearchClick(popular)}
+                    className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded transition-colors flex items-center"
                   >
+                    <span className="text-blue-600 mr-2">🔥</span>
                     {popular}
                   </button>
                 ))}
