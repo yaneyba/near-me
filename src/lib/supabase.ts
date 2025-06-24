@@ -10,7 +10,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Database types matching your existing schema
+// Database types matching your existing schema with submission_status enum
 export interface Database {
   public: {
     Tables: {
@@ -77,7 +77,7 @@ export interface Database {
           description: string | null;
           services: string[] | null;
           hours: any | null;
-          status: 'pending' | 'approved' | 'rejected' | null;
+          status: Database['public']['Enums']['submission_status'] | null;
           submitted_at: string | null;
           reviewed_at: string | null;
           reviewer_notes: string | null;
@@ -100,7 +100,7 @@ export interface Database {
           description?: string | null;
           services?: string[] | null;
           hours?: any | null;
-          status?: 'pending' | 'approved' | 'rejected' | null;
+          status?: Database['public']['Enums']['submission_status'] | null;
           submitted_at?: string | null;
           reviewed_at?: string | null;
           reviewer_notes?: string | null;
@@ -123,7 +123,7 @@ export interface Database {
           description?: string | null;
           services?: string[] | null;
           hours?: any | null;
-          status?: 'pending' | 'approved' | 'rejected' | null;
+          status?: Database['public']['Enums']['submission_status'] | null;
           submitted_at?: string | null;
           reviewed_at?: string | null;
           reviewer_notes?: string | null;
@@ -132,6 +132,9 @@ export interface Database {
           updated_at?: string | null;
         };
       };
+    };
+    Enums: {
+      submission_status: 'pending' | 'approved' | 'rejected';
     };
   };
 }

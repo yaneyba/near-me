@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase';
+import { supabase, type Database } from '../lib/supabase';
 import { ContactSubmission, BusinessSubmission, SubmissionResult } from '../types';
 
 export class SupabaseDataProvider {
@@ -175,7 +175,7 @@ export class SupabaseDataProvider {
       // Combine all services
       const allServices = [...businessData.services, ...businessData.customServices];
 
-      // Insert into existing business_submissions table
+      // Insert into existing business_submissions table with correct enum type
       const { data, error } = await supabase
         .from('business_submissions')
         .insert({
@@ -192,7 +192,7 @@ export class SupabaseDataProvider {
           description: businessData.description || null,
           services: allServices,
           hours: businessData.hours,
-          status: 'pending',
+          status: 'pending' as Database['public']['Enums']['submission_status'],
           site_id: 'near-me-us'
         })
         .select()
