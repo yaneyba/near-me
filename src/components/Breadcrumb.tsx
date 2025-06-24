@@ -47,7 +47,7 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ subdomainInfo }) => {
           break;
         case '/add-business':
           breadcrumbs.push({
-            label: 'Add Business',
+            label: 'Add Your Business',
             icon: <Building className="w-4 h-4" />,
             current: true
           });
