@@ -115,13 +115,14 @@ function generateHTML(combo) {
   const GA_ID = process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID || '';
   const GTM_ID = process.env.NEXT_PUBLIC_GOOGLE_TAG_MANAGER_ID || '';
 
-  // Default OG image (from public directory)
-  const defaultOgImage = '/og-image.png';
-  // Construct OG image path
-  const ogImage = `https://near-me.us/og-images/${combo.categoryUrl}-${combo.cityUrl}.jpg`;
-
-  // Use the specific OG image if available, otherwise fall back to the default
-  // Since we can't check remote existence at build time, always use ogImage, but document fallback for consumers
+  // Try to use /og-{categoryUrl}.png if it exists, otherwise fall back to /og-image.png
+  const categoryOgImage = `/og-${combo.categoryUrl}.png`;
+  const publicDir = path.join(__dirname, '../public');
+  const categoryOgImagePath = path.join(publicDir, `og-${combo.categoryUrl}.png`);
+  let ogImage = '/og-image.png';
+  if (fs.existsSync(categoryOgImagePath)) {
+    ogImage = categoryOgImage;
+  }
 
   return `<!doctype html>
 <!-- Generated: ${buildTime} | Version: ${version} | Cache: ${cacheKey} -->
@@ -149,7 +150,7 @@ function generateHTML(combo) {
     <meta property="og:title" content="${title}" />
     <meta property="og:description" content="${description}" />
     <meta property="og:url" content="https://${combo.categoryUrl}.${combo.cityUrl}.near-me.us/" />
-    <meta property="og:image" content="${ogImage}" onerror="this.content='${defaultOgImage}'" />
+    <meta property="og:image" content="${ogImage}" />
     
     <!-- Twitter Card Tags -->
     <meta name="twitter:card" content="summary_large_image" />
