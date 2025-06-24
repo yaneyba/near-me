@@ -112,8 +112,8 @@ function generateHTML(combo) {
   ].join(', ');
 
   // Google Analytics & Tag Manager IDs from env
-  const GA_ID = process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID || '';
-  const GTM_ID = process.env.NEXT_PUBLIC_GOOGLE_TAG_MANAGER_ID || '';
+  const GA_ID = process.env.VITE_GOOGLE_ANALYTICS_ID || '';
+  const GTM_ID = process.env.VITE_GOOGLE_TAG_MANAGER_ID || '';
 
   // Try to use /og-{categoryUrl}.png if it exists, otherwise fall back to /og-image.png
   const categoryOgImage = `/og-${combo.categoryUrl}.png`;
