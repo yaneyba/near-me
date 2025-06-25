@@ -606,13 +606,21 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
       <label className="block text-sm font-medium text-gray-700 mb-2">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
-        {formErrors[fieldName] && (
-          <span className="text-red-600 text-xs ml-2 font-normal">
-            - {formErrors[fieldName]}
-          </span>
-        )}
       </label>
     );
+  };
+
+  // Helper function to render error message below input
+  const renderErrorMessage = (fieldName: string) => {
+    if (formErrors[fieldName]) {
+      return (
+        <div className="mt-1 flex items-center text-red-600 text-sm">
+          <AlertCircle className="w-4 h-4 mr-1 flex-shrink-0" />
+          <span>{formErrors[fieldName]}</span>
+        </div>
+      );
+    }
+    return null;
   };
 
   // Show success page
@@ -650,6 +658,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   className={getInputClasses('businessName')}
                   required
                 />
+                {renderErrorMessage('businessName')}
               </div>
 
               <div>
@@ -663,6 +672,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   className={getInputClasses('ownerName')}
                   required
                 />
+                {renderErrorMessage('ownerName')}
               </div>
 
               <div>
@@ -676,6 +686,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   className={getInputClasses('email')}
                   required
                 />
+                {renderErrorMessage('email')}
               </div>
 
               <div>
@@ -689,6 +700,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   className={getInputClasses('phone')}
                   required
                 />
+                {renderErrorMessage('phone')}
               </div>
             </div>
 
@@ -702,6 +714,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                 rows={4}
                 className={getInputClasses('description', 'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:outline-none transition-colors resize-none')}
               />
+              {renderErrorMessage('description')}
             </div>
 
             <div>
@@ -714,6 +727,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                 placeholder="https://yourbusiness.com"
                 className={getInputClasses('website')}
               />
+              {renderErrorMessage('website')}
             </div>
           </div>
         );
@@ -738,6 +752,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                 className={getInputClasses('address')}
                 required
               />
+              {renderErrorMessage('address')}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -751,6 +766,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   className={getInputClasses('city')}
                   required
                 />
+                {renderErrorMessage('city')}
               </div>
 
               <div>
@@ -764,6 +780,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   className={getInputClasses('state')}
                   required
                 />
+                {renderErrorMessage('state')}
               </div>
 
               <div>
@@ -777,6 +794,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   className={getInputClasses('zipCode')}
                   required
                 />
+                {renderErrorMessage('zipCode')}
               </div>
             </div>
 
@@ -792,6 +810,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   <option value="franchise">Franchise</option>
                   <option value="chain">Chain/Corporate</option>
                 </select>
+                {renderErrorMessage('businessType')}
               </div>
 
               <div>
@@ -808,6 +827,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   <option value="6-10">6-10 years</option>
                   <option value="more-than-10">More than 10 years</option>
                 </select>
+                {renderErrorMessage('yearsInBusiness')}
               </div>
             </div>
           </div>
@@ -825,11 +845,6 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-4">
                 Services Offered <span className="text-red-500">*</span>
-                {formErrors.services && (
-                  <span className="text-red-600 text-xs ml-2 font-normal">
-                    - {formErrors.services}
-                  </span>
-                )}
               </label>
               <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 p-4 rounded-lg border-2 ${
                 formErrors.services ? 'border-red-300 bg-red-50' : 'border-gray-200'
@@ -846,6 +861,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   </label>
                 ))}
               </div>
+              {renderErrorMessage('services')}
             </div>
 
             {/* Custom Services */}
@@ -940,6 +956,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   placeholder="https://facebook.com/yourbusiness"
                   className={getInputClasses('facebook')}
                 />
+                {renderErrorMessage('facebook')}
               </div>
 
               <div>
@@ -951,6 +968,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   placeholder="https://instagram.com/yourbusiness"
                   className={getInputClasses('instagram')}
                 />
+                {renderErrorMessage('instagram')}
               </div>
 
               <div>
@@ -962,6 +980,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   placeholder="https://twitter.com/yourbusiness"
                   className={getInputClasses('twitter')}
                 />
+                {renderErrorMessage('twitter')}
               </div>
             </div>
 
@@ -974,6 +993,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                 rows={3}
                 className={getInputClasses('specialOffers', 'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:outline-none transition-colors resize-none')}
               />
+              {renderErrorMessage('specialOffers')}
             </div>
 
             <div>
@@ -991,6 +1011,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                 <option value="26-50">26-50 employees</option>
                 <option value="50+">50+ employees</option>
               </select>
+              {renderErrorMessage('employeeCount')}
             </div>
           </div>
         );
