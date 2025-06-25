@@ -26,6 +26,7 @@ import {
   Plus
 } from 'lucide-react';
 import stats from '../data/stats.json';
+import { SITE_INFO } from '../siteInfo';
 
 interface AddBusinessPageProps {
   subdomainInfo: SubdomainInfo;
@@ -1138,8 +1139,8 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   <Phone className="w-5 h-5 text-blue-600" />
                   <div>
                     <div className="text-sm font-medium text-gray-900">Call Us</div>
-                    <a href="tel:+15551234567" className="text-sm text-blue-600 hover:text-blue-700">
-                      (555) 123-4567
+                    <a href={`tel:${SITE_INFO.phone}`} className="text-sm text-blue-600 hover:text-blue-700">
+                      {SITE_INFO.phone}
                     </a>
                   </div>
                 </div>
@@ -1147,8 +1148,8 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   <Mail className="w-5 h-5 text-blue-600" />
                   <div>
                     <div className="text-sm font-medium text-gray-900">Email Us</div>
-                    <a href="mailto:support@near-me.us" className="text-sm text-blue-600 hover:text-blue-700">
-                      support@near-me.us
+                    <a href={`mailto:${SITE_INFO.email}`} className="text-sm text-blue-600 hover:text-blue-700">
+                      {SITE_INFO.email}
                     </a>
                   </div>
                 </div>
