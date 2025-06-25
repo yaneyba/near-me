@@ -431,7 +431,8 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
     return Object.keys(errors).length === 0;
   };
 
-  const validateStep = (step: number): boolean => {
+  // Pure validation function that doesn't set state - used for checking if step is valid
+  const _getStepErrors = (step: number): FormErrors => {
     const errors: FormErrors = {};
 
     switch (step) {
@@ -476,13 +477,17 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
         break;
     }
 
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
+    return errors;
   };
 
   const nextStep = () => {
-    if (currentStep < totalSteps && validateStep(currentStep)) {
-      setCurrentStep(currentStep + 1);
+    if (currentStep < totalSteps) {
+      const stepErrors = _getStepErrors(currentStep);
+      setFormErrors(stepErrors);
+      
+      if (Object.keys(stepErrors).length === 0) {
+        setCurrentStep(currentStep + 1);
+      }
     }
   };
 
@@ -1188,7 +1193,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   <button
                     type="button"
                     onClick={nextStep}
-                    disabled={!validateStep(currentStep)}
+                    disabled={Object.keys(_getStepErrors(currentStep)).length > 0}
                     className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     Next
