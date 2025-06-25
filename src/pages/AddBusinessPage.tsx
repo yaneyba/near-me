@@ -58,10 +58,15 @@ interface BusinessFormData {
   customServices: string[];
 }
 
+interface FormErrors {
+  [key: string]: string;
+}
+
 interface SubmissionResult {
   success: boolean;
   message: string;
   submissionId?: string;
+  errors?: string[];
 }
 
 // Success component
@@ -147,6 +152,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitResult, setSubmitResult] = useState<SubmissionResult | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
   const totalSteps = 4;
 
   const dataProvider = DataProviderFactory.getProvider();
@@ -291,6 +297,15 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
 
   const handleInputChange = (field: keyof BusinessFormData, value: string | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Clear field error when user starts typing
+    if (formErrors[field]) {
+      setFormErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
   };
 
   const handleServiceToggle = (service: string, checked: boolean) => {
@@ -300,6 +315,15 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
         ? [...prev.services, service]
         : prev.services.filter(s => s !== service)
     }));
+    
+    // Clear services error when user selects a service
+    if (formErrors.services) {
+      setFormErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.services;
+        return newErrors;
+      });
+    }
   };
 
   const handleCustomServiceAdd = (service: string) => {
@@ -308,6 +332,15 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
         ...prev,
         customServices: [...prev.customServices, service.trim()]
       }));
+      
+      // Clear services error when user adds a custom service
+      if (formErrors.services) {
+        setFormErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.services;
+          return newErrors;
+        });
+      }
     }
   };
 
@@ -332,19 +365,119 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
     }));
   };
 
+  // Client-side validation function
+  const validateForm = (): boolean => {
+    const errors: FormErrors = {};
+
+    // Step 1 validation
+    if (!formData.businessName.trim()) {
+      errors.businessName = 'Business name is required';
+    } else if (formData.businessName.trim().length < 2) {
+      errors.businessName = 'Business name must be at least 2 characters';
+    }
+
+    if (!formData.ownerName.trim()) {
+      errors.ownerName = 'Owner/Manager name is required';
+    } else if (formData.ownerName.trim().length < 2) {
+      errors.ownerName = 'Owner/Manager name must be at least 2 characters';
+    }
+
+    if (!formData.email.trim()) {
+      errors.email = 'Email address is required';
+    } else if (!isValidEmail(formData.email)) {
+      errors.email = 'Please enter a valid email address';
+    }
+
+    if (!formData.phone.trim()) {
+      errors.phone = 'Phone number is required';
+    } else if (!isValidPhone(formData.phone)) {
+      errors.phone = 'Please enter a valid phone number';
+    }
+
+    // Step 2 validation
+    if (!formData.address.trim()) {
+      errors.address = 'Street address is required';
+    }
+
+    if (!formData.city.trim()) {
+      errors.city = 'City is required';
+    }
+
+    if (!formData.state.trim()) {
+      errors.state = 'State is required';
+    }
+
+    if (!formData.zipCode.trim()) {
+      errors.zipCode = 'ZIP code is required';
+    } else if (!isValidZipCode(formData.zipCode)) {
+      errors.zipCode = 'Please enter a valid ZIP code';
+    }
+
+    // Step 3 validation
+    const totalServices = formData.services.length + formData.customServices.length;
+    if (totalServices === 0) {
+      errors.services = 'Please select at least one service';
+    }
+
+    // Validate business hours
+    const hasValidHours = Object.values(formData.hours).some(hours => 
+      hours && hours.trim() && hours.toLowerCase() !== 'closed'
+    );
+    if (!hasValidHours) {
+      errors.hours = 'Please specify business hours for at least one day';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const validateStep = (step: number): boolean => {
+    const errors: FormErrors = {};
+
     switch (step) {
       case 1:
-        return !!(formData.businessName && formData.ownerName && formData.email && formData.phone);
+        if (!formData.businessName.trim()) {
+          errors.businessName = 'Business name is required';
+        }
+        if (!formData.ownerName.trim()) {
+          errors.ownerName = 'Owner/Manager name is required';
+        }
+        if (!formData.email.trim()) {
+          errors.email = 'Email address is required';
+        } else if (!isValidEmail(formData.email)) {
+          errors.email = 'Please enter a valid email address';
+        }
+        if (!formData.phone.trim()) {
+          errors.phone = 'Phone number is required';
+        }
+        break;
       case 2:
-        return !!(formData.address && formData.city && formData.state && formData.zipCode);
+        if (!formData.address.trim()) {
+          errors.address = 'Street address is required';
+        }
+        if (!formData.city.trim()) {
+          errors.city = 'City is required';
+        }
+        if (!formData.state.trim()) {
+          errors.state = 'State is required';
+        }
+        if (!formData.zipCode.trim()) {
+          errors.zipCode = 'ZIP code is required';
+        }
+        break;
       case 3:
-        return formData.services.length > 0 || formData.customServices.length > 0;
+        const totalServices = formData.services.length + formData.customServices.length;
+        if (totalServices === 0) {
+          errors.services = 'Please select at least one service';
+        }
+        break;
       case 4:
-        return true; // Optional step
-      default:
-        return false;
+        // Optional step, no required fields
+        break;
     }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const nextStep = () => {
@@ -361,6 +494,17 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      // Scroll to first error
+      const firstErrorField = Object.keys(formErrors)[0];
+      const errorElement = document.querySelector(`[name="${firstErrorField}"]`);
+      if (errorElement) {
+        errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitResult(null);
 
@@ -390,6 +534,34 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
 
       const result = await dataProvider.submitBusiness(businessSubmission);
       setSubmitResult(result);
+
+      // If there are field-specific errors from the server, map them to form errors
+      if (!result.success && result.errors) {
+        const serverErrors: FormErrors = {};
+        result.errors.forEach(error => {
+          const errorLower = error.toLowerCase();
+          if (errorLower.includes('business name')) {
+            serverErrors.businessName = error;
+          } else if (errorLower.includes('owner') || errorLower.includes('manager')) {
+            serverErrors.ownerName = error;
+          } else if (errorLower.includes('email')) {
+            serverErrors.email = error;
+          } else if (errorLower.includes('phone')) {
+            serverErrors.phone = error;
+          } else if (errorLower.includes('address')) {
+            serverErrors.address = error;
+          } else if (errorLower.includes('city')) {
+            serverErrors.city = error;
+          } else if (errorLower.includes('state')) {
+            serverErrors.state = error;
+          } else if (errorLower.includes('zip')) {
+            serverErrors.zipCode = error;
+          } else if (errorLower.includes('service')) {
+            serverErrors.services = error;
+          }
+        });
+        setFormErrors(serverErrors);
+      }
     } catch (error) {
       setSubmitResult({
         success: false,
@@ -403,6 +575,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
   const resetForm = () => {
     setSubmitResult(null);
     setCurrentStep(1);
+    setFormErrors({});
     setFormData({
       businessName: '',
       ownerName: '',
@@ -438,6 +611,23 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
     });
   };
 
+  // Validation helper functions
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const isValidPhone = (phone: string): boolean => {
+    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+    const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+    return cleanPhone.length >= 10 && phoneRegex.test(cleanPhone);
+  };
+
+  const isValidZipCode = (zipCode: string): boolean => {
+    const zipRegex = /^\d{5}(-\d{4})?$/;
+    return zipRegex.test(zipCode);
+  };
+
   // Show success page
   if (submitResult?.success) {
     return (
@@ -468,12 +658,21 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                 </label>
                 <input
                   type="text"
+                  name="businessName"
                   value={formData.businessName}
                   onChange={(e) => handleInputChange('businessName', e.target.value)}
                   placeholder={categoryContent.placeholders.businessName}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+                    formErrors.businessName ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                  }`}
                   required
                 />
+                {formErrors.businessName && (
+                  <p className="mt-1 text-sm text-red-600 flex items-center">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {formErrors.businessName}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -482,12 +681,21 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                 </label>
                 <input
                   type="text"
+                  name="ownerName"
                   value={formData.ownerName}
                   onChange={(e) => handleInputChange('ownerName', e.target.value)}
                   placeholder="Your full name"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+                    formErrors.ownerName ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                  }`}
                   required
                 />
+                {formErrors.ownerName && (
+                  <p className="mt-1 text-sm text-red-600 flex items-center">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {formErrors.ownerName}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -496,12 +704,21 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                 </label>
                 <input
                   type="email"
+                  name="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
                   placeholder="info@yourbusiness.com"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+                    formErrors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                  }`}
                   required
                 />
+                {formErrors.email && (
+                  <p className="mt-1 text-sm text-red-600 flex items-center">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {formErrors.email}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -510,12 +727,21 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                 </label>
                 <input
                   type="tel"
+                  name="phone"
                   value={formData.phone}
                   onChange={(e) => handleInputChange('phone', e.target.value)}
                   placeholder="(555) 123-4567"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+                    formErrors.phone ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                  }`}
                   required
                 />
+                {formErrors.phone && (
+                  <p className="mt-1 text-sm text-red-600 flex items-center">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {formErrors.phone}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -524,6 +750,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                 Business Description
               </label>
               <textarea
+                name="description"
                 value={formData.description}
                 onChange={(e) => handleInputChange('description', e.target.value)}
                 placeholder={categoryContent.placeholders.description}
@@ -538,6 +765,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
               </label>
               <input
                 type="url"
+                name="website"
                 value={formData.website}
                 onChange={(e) => handleInputChange('website', e.target.value)}
                 placeholder="https://yourbusiness.com"
@@ -562,12 +790,21 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
               </label>
               <input
                 type="text"
+                name="address"
                 value={formData.address}
                 onChange={(e) => handleInputChange('address', e.target.value)}
                 placeholder="123 Main Street"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+                  formErrors.address ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                }`}
                 required
               />
+              {formErrors.address && (
+                <p className="mt-1 text-sm text-red-600 flex items-center">
+                  <AlertCircle className="w-4 h-4 mr-1" />
+                  {formErrors.address}
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -577,11 +814,20 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                 </label>
                 <input
                   type="text"
+                  name="city"
                   value={formData.city}
                   onChange={(e) => handleInputChange('city', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+                    formErrors.city ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                  }`}
                   required
                 />
+                {formErrors.city && (
+                  <p className="mt-1 text-sm text-red-600 flex items-center">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {formErrors.city}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -590,12 +836,21 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                 </label>
                 <input
                   type="text"
+                  name="state"
                   value={formData.state}
                   onChange={(e) => handleInputChange('state', e.target.value)}
                   placeholder="TX"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+                    formErrors.state ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                  }`}
                   required
                 />
+                {formErrors.state && (
+                  <p className="mt-1 text-sm text-red-600 flex items-center">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {formErrors.state}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -604,12 +859,21 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                 </label>
                 <input
                   type="text"
+                  name="zipCode"
                   value={formData.zipCode}
                   onChange={(e) => handleInputChange('zipCode', e.target.value)}
                   placeholder="75201"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+                    formErrors.zipCode ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                  }`}
                   required
                 />
+                {formErrors.zipCode && (
+                  <p className="mt-1 text-sm text-red-600 flex items-center">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {formErrors.zipCode}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -663,6 +927,14 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
               <label className="block text-sm font-medium text-gray-700 mb-4">
                 Services Offered * (Select all that apply)
               </label>
+              {formErrors.services && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600 flex items-center">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {formErrors.services}
+                  </p>
+                </div>
+              )}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {getAvailableServices().map((service, index) => (
                   <label key={index} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
@@ -731,6 +1003,14 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
               <label className="block text-sm font-medium text-gray-700 mb-4">
                 Business Hours
               </label>
+              {formErrors.hours && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600 flex items-center">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {formErrors.hours}
+                  </p>
+                </div>
+              )}
               <div className="space-y-3">
                 {Object.entries(formData.hours).map(([day, hours]) => (
                   <div key={day} className="flex items-center gap-4">
@@ -879,6 +1159,13 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   <div>
                     <h3 className="font-semibold text-red-800">Submission Failed</h3>
                     <p className="text-red-700 text-sm mt-1 whitespace-pre-line">{submitResult.message}</p>
+                    {submitResult.errors && submitResult.errors.length > 0 && (
+                      <ul className="mt-2 text-sm text-red-700 list-disc list-inside">
+                        {submitResult.errors.map((error, index) => (
+                          <li key={index}>{error}</li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                 </div>
               )}
