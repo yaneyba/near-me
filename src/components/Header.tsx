@@ -108,7 +108,15 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSe
           </nav>
 
           {/* Search bar - Desktop */}
-  /
+          <div className="hidden lg:block">
+            <SearchWithLiveResults
+              businesses={businesses}
+              category={category}
+              city={city}
+              onSearch={onSearch}
+              className="w-80"
+            />
+          </div>
 
           {/* Mobile menu button */}
           <div className="md:hidden">
