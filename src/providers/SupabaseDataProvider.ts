@@ -3,6 +3,15 @@ import { ContactSubmission, BusinessSubmission, SubmissionResult } from '../type
 
 export class SupabaseDataProvider {
   /**
+   * Generate site_id as subdomain slug (category.city format)
+   */
+  private generateSiteId(category: string, city: string): string {
+    const categorySlug = category.toLowerCase().replace(/\s+/g, '-');
+    const citySlug = city.toLowerCase().replace(/\s+/g, '-');
+    return `${categorySlug}.${citySlug}`;
+  }
+
+  /**
    * Submit contact form to Supabase using existing schema
    */
   async submitContact(contactData: ContactSubmission): Promise<SubmissionResult> {
@@ -164,7 +173,10 @@ export class SupabaseDataProvider {
         };
       }
 
-      // FIXED: Check for duplicate business without using .single()
+      // Generate site_id as subdomain slug (category.city)
+      const siteId = this.generateSiteId(businessData.category, businessData.city);
+
+      // Check for duplicate business without using .single()
       const { data: existingBusinesses, error: checkError } = await supabase
         .from('business_submissions')
         .select('id')
@@ -189,7 +201,7 @@ export class SupabaseDataProvider {
       // Combine all services
       const allServices = [...businessData.services, ...businessData.customServices];
 
-      // Insert into existing business_submissions table - only select ID
+      // Insert with ALL required fields including dynamic site_id
       const { data, error } = await supabase
         .from('business_submissions')
         .insert({
@@ -202,12 +214,12 @@ export class SupabaseDataProvider {
           state: businessData.state,
           zip_code: businessData.zipCode,
           category: businessData.category,
+          site_id: siteId, // ← Just the subdomain slug: "auto-repair.denver"
           website: businessData.website || null,
           description: businessData.description || null,
           services: allServices,
           hours: businessData.hours,
-          status: 'pending' as Database['public']['Enums']['submission_status'],
-          site_id: 'near-me-us'
+          status: 'pending' as Database['public']['Enums']['submission_status']
         })
         .select('id')  // ← Only get the ID we need
         .single();
