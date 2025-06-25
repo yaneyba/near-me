@@ -481,8 +481,8 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
     }
   };
 
-  // FIXED: Separate submit handler that only runs on final step
-  const handleFinalSubmit = async () => {
+  // FIXED: Submit handler that only runs on final step
+  const handleSubmit = async () => {
     // Validate all steps
     let allErrors: FormErrors = {};
     for (let step = 1; step <= totalSteps; step++) {
@@ -539,15 +539,6 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
       });
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  // FIXED: Form submit handler that prevents default submission
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Only submit if we're on the final step
-    if (currentStep === totalSteps) {
-      handleFinalSubmit();
     }
   };
 
@@ -1041,8 +1032,8 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Main Form */}
           <div className="lg:col-span-3">
-            {/* FIXED: Form only submits on final step */}
-            <form onSubmit={handleFormSubmit} className="bg-white rounded-xl shadow-lg p-8">
+            {/* FIXED: No form element, just a div container */}
+            <div className="bg-white rounded-xl shadow-lg p-8">
               {submitResult && !submitResult.success && (
                 <div className="mb-8 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start space-x-3">
                   <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
@@ -1078,7 +1069,8 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   </button>
                 ) : (
                   <button
-                    type="submit"
+                    type="button"
+                    onClick={handleSubmit}
                     disabled={isSubmitting}
                     className="flex items-center justify-center px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors order-1 sm:order-2"
                   >
@@ -1096,7 +1088,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   </button>
                 )}
               </div>
-            </form>
+            </div>
           </div>
 
           {/* Sidebar */}
