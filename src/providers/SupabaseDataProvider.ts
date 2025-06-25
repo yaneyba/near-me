@@ -189,7 +189,7 @@ export class SupabaseDataProvider {
       // Combine all services
       const allServices = [...businessData.services, ...businessData.customServices];
 
-      // Insert into existing business_submissions table - only select ID
+      // FIXED: Insert with ALL required fields including site_id
       const { data, error } = await supabase
         .from('business_submissions')
         .insert({
@@ -202,12 +202,12 @@ export class SupabaseDataProvider {
           state: businessData.state,
           zip_code: businessData.zipCode,
           category: businessData.category,
+          site_id: 'near-me-us', // ← REQUIRED field
           website: businessData.website || null,
           description: businessData.description || null,
           services: allServices,
           hours: businessData.hours,
-          status: 'pending' as Database['public']['Enums']['submission_status'],
-          site_id: 'near-me-us'
+          status: 'pending' as Database['public']['Enums']['submission_status']
         })
         .select('id')  // ← Only get the ID we need
         .single();
