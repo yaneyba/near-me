@@ -54,27 +54,28 @@ export class SupabaseDataProvider {
       if (error) {
         console.error('Supabase error:', error);
         
-        // Handle specific Supabase errors with user-friendly messages
-        if (error.code === 'PGRST116') {
-          return {
-            success: false,
-            message: 'We\'re experiencing technical difficulties. Please try again in a few minutes.',
-            errors: ['DATABASE_CONNECTION_ERROR']
-          };
-        }
-        
+        // User-friendly error messages for common issues
         if (error.message.includes('row-level security policy')) {
           return {
             success: false,
-            message: 'There was a permission issue with your submission. Please contact our support team for assistance.',
-            errors: ['PERMISSION_ERROR']
+            message: 'Our system is currently experiencing technical difficulties. Please try again in a few minutes, or contact our support team directly for immediate assistance.',
+            errors: ['TECHNICAL_DIFFICULTIES']
           };
         }
         
+        if (error.code === 'PGRST116') {
+          return {
+            success: false,
+            message: 'Server temporarily unavailable. Please try again in a few minutes.',
+            errors: ['SERVER_UNAVAILABLE']
+          };
+        }
+        
+        // Generic friendly error for any other database issues
         return {
           success: false,
-          message: 'We encountered an issue while submitting your message. Please try again or contact our support team if the problem persists.',
-          errors: ['SUBMISSION_ERROR']
+          message: 'We\'re experiencing technical difficulties at the moment. Please try again in a few minutes, or contact our support team if the issue persists.',
+          errors: ['TECHNICAL_DIFFICULTIES']
         };
       }
 
@@ -101,7 +102,7 @@ export class SupabaseDataProvider {
       console.error('Error submitting contact form:', error);
       return {
         success: false,
-        message: 'An unexpected error occurred. Please try again later or contact our support team for assistance.',
+        message: 'An unexpected error occurred. Please try again later.',
         errors: ['UNEXPECTED_ERROR']
       };
     }
@@ -209,12 +210,20 @@ export class SupabaseDataProvider {
       if (error) {
         console.error('Supabase error:', error);
         
-        // Handle specific Supabase errors with user-friendly messages
+        // User-friendly error messages for common issues
+        if (error.message.includes('row-level security policy')) {
+          return {
+            success: false,
+            message: 'Our system is currently experiencing technical difficulties. Please try again in a few minutes, or contact our support team directly for immediate assistance.',
+            errors: ['TECHNICAL_DIFFICULTIES']
+          };
+        }
+        
         if (error.code === 'PGRST116') {
           return {
             success: false,
-            message: 'We\'re experiencing technical difficulties. Please try again in a few minutes.',
-            errors: ['DATABASE_CONNECTION_ERROR']
+            message: 'Server temporarily unavailable. Please try again in a few minutes.',
+            errors: ['SERVER_UNAVAILABLE']
           };
         }
         
@@ -225,19 +234,21 @@ export class SupabaseDataProvider {
             errors: ['DUPLICATE_BUSINESS']
           };
         }
-
-        if (error.message.includes('row-level security policy')) {
+        
+        // Simulate occasional high volume error like JsonDataProvider
+        if (Math.random() < 0.1) { // 10% chance to show high volume message
           return {
             success: false,
-            message: 'There was a permission issue with your business submission. This usually means our database security settings need to be updated. Please contact our support team and we\'ll resolve this immediately.',
-            errors: ['PERMISSION_ERROR']
+            message: 'Our system is currently experiencing high volume. Please try again in a few minutes.',
+            errors: ['HIGH_VOLUME']
           };
         }
         
+        // Generic friendly error for any other database issues
         return {
           success: false,
-          message: 'We encountered an issue while submitting your business application. Please try again or contact our support team if the problem persists.',
-          errors: ['SUBMISSION_ERROR']
+          message: 'We\'re experiencing technical difficulties at the moment. Please try again in a few minutes, or contact our support team if the issue persists.',
+          errors: ['TECHNICAL_DIFFICULTIES']
         };
       }
 
@@ -264,7 +275,7 @@ We'll contact you at ${businessData.email} with updates on your application stat
       console.error('Error submitting business application:', error);
       return {
         success: false,
-        message: 'An unexpected error occurred while submitting your application. Please try again later or contact our support team for assistance.',
+        message: 'An unexpected error occurred while submitting your application. Please try again later.',
         errors: ['UNEXPECTED_ERROR']
       };
     }
