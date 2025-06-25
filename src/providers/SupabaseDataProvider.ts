@@ -3,12 +3,12 @@ import { ContactSubmission, BusinessSubmission, SubmissionResult } from '../type
 
 export class SupabaseDataProvider {
   /**
-   * Generate site_id from category and city (subdomain slug format)
+   * Generate site_id as subdomain slug (category.city format)
    */
   private generateSiteId(category: string, city: string): string {
     const categorySlug = category.toLowerCase().replace(/\s+/g, '-');
     const citySlug = city.toLowerCase().replace(/\s+/g, '-');
-    return `${categorySlug}.${citySlug}.near-me.us`;
+    return `${categorySlug}.${citySlug}`;
   }
 
   /**
@@ -173,7 +173,7 @@ export class SupabaseDataProvider {
         };
       }
 
-      // Generate site_id from subdomain (category.city.near-me.us)
+      // Generate site_id as subdomain slug (category.city)
       const siteId = this.generateSiteId(businessData.category, businessData.city);
 
       // Check for duplicate business without using .single()
@@ -214,7 +214,7 @@ export class SupabaseDataProvider {
           state: businessData.state,
           zip_code: businessData.zipCode,
           category: businessData.category,
-          site_id: siteId, // ← Dynamic subdomain slug
+          site_id: siteId, // ← Just the subdomain slug: "auto-repair.denver"
           website: businessData.website || null,
           description: businessData.description || null,
           services: allServices,
