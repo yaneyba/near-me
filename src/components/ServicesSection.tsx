@@ -199,8 +199,7 @@ const ServicesSection: React.FC<ServicesSectionProps> = ({
               Need a Specific Service?
             </h3>
             <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-              Can't find what you're looking for? Use our search feature to find {category.toLowerCase()} 
-              that offer exactly what you need in {city}.
+              Can't find what you're looking for? Use our search feature to find {category.toLowerCase()} that offer exactly what you need in {city}.
             </p>
             <button
               onClick={() => {
