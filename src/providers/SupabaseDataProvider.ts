@@ -155,16 +155,22 @@ export class SupabaseDataProvider {
         };
       }
 
-      // Check for duplicate business
-      const { data: existingBusiness } = await supabase
+      // Check for duplicate business - Fixed: Remove .single() to avoid PGRST116 error
+      const { data: existingBusinesses, error: duplicateCheckError } = await supabase
         .from('business_submissions')
         .select('id')
         .eq('business_name', businessData.businessName)
         .eq('city', businessData.city)
-        .eq('state', businessData.state)
-        .single();
+        .eq('state', businessData.state);
 
-      if (existingBusiness) {
+      // Handle duplicate check error
+      if (duplicateCheckError) {
+        console.error('Error checking for duplicate business:', duplicateCheckError);
+        // Continue with submission even if duplicate check fails
+      }
+
+      // Check if any existing businesses were found
+      if (existingBusinesses && existingBusinesses.length > 0) {
         return {
           success: false,
           message: 'A business with this name already exists in this city. Please contact us if this is your business.',
@@ -200,6 +206,15 @@ export class SupabaseDataProvider {
 
       if (error) {
         console.error('Supabase error:', error);
+        
+        // Handle RLS policy violation specifically
+        if (error.code === '42501' || error.message?.includes('row-level security policy')) {
+          return {
+            success: false,
+            message: 'We\'re currently experiencing technical difficulties with business submissions. Please try again later or contact us directly.',
+            errors: ['RLS_POLICY_ERROR']
+          };
+        }
         
         // Handle specific Supabase errors
         if (error.code === 'PGRST116') {
