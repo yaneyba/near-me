@@ -3,6 +3,15 @@ import { ContactSubmission, BusinessSubmission, SubmissionResult } from '../type
 
 export class SupabaseDataProvider {
   /**
+   * Generate site_id from category and city (subdomain slug format)
+   */
+  private generateSiteId(category: string, city: string): string {
+    const categorySlug = category.toLowerCase().replace(/\s+/g, '-');
+    const citySlug = city.toLowerCase().replace(/\s+/g, '-');
+    return `${categorySlug}.${citySlug}.near-me.us`;
+  }
+
+  /**
    * Submit contact form to Supabase using existing schema
    */
   async submitContact(contactData: ContactSubmission): Promise<SubmissionResult> {
@@ -164,7 +173,10 @@ export class SupabaseDataProvider {
         };
       }
 
-      // FIXED: Check for duplicate business without using .single()
+      // Generate site_id from subdomain (category.city.near-me.us)
+      const siteId = this.generateSiteId(businessData.category, businessData.city);
+
+      // Check for duplicate business without using .single()
       const { data: existingBusinesses, error: checkError } = await supabase
         .from('business_submissions')
         .select('id')
@@ -189,7 +201,7 @@ export class SupabaseDataProvider {
       // Combine all services
       const allServices = [...businessData.services, ...businessData.customServices];
 
-      // FIXED: Insert with ALL required fields including site_id
+      // Insert with ALL required fields including dynamic site_id
       const { data, error } = await supabase
         .from('business_submissions')
         .insert({
@@ -202,7 +214,7 @@ export class SupabaseDataProvider {
           state: businessData.state,
           zip_code: businessData.zipCode,
           category: businessData.category,
-          site_id: 'near-me-us', // ← REQUIRED field
+          site_id: siteId, // ← Dynamic subdomain slug
           website: businessData.website || null,
           description: businessData.description || null,
           services: allServices,
