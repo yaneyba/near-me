@@ -25,6 +25,9 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSe
     return location.pathname === path;
   };
 
+  // Check if we're on the add-business page
+  const isAddBusinessPage = location.pathname === '/add-business';
+
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
       {/* Top bar with contact info */}
@@ -94,17 +97,16 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSe
             >
               Contact
             </Link>
-            <Link 
-              to="/add-business" 
-              className={`flex items-center font-medium transition-colors px-4 py-2 rounded-lg ${
-                isActivePage('/add-business') 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
-              }`}
-            >
-              <Plus className="w-4 h-4 mr-1" />
-              Add Your Business
-            </Link>
+            {/* Hide Add Business button when on add-business page */}
+            {!isAddBusinessPage && (
+              <Link 
+                to="/add-business" 
+                className="flex items-center font-medium transition-colors px-4 py-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100"
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                Add Your Business
+              </Link>
+            )}
           </nav>
 
           {/* Search bar - Desktop */}
@@ -182,18 +184,17 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSe
             >
               Contact
             </Link>
-            <Link
-              to="/add-business"
-              className={`flex items-center px-3 py-2 font-medium ${
-                isActivePage('/add-business') 
-                  ? 'text-blue-600 bg-blue-50' 
-                  : 'text-gray-700 hover:text-blue-600'
-              }`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Your Business
-            </Link>
+            {/* Hide Add Business button when on add-business page */}
+            {!isAddBusinessPage && (
+              <Link
+                to="/add-business"
+                className="flex items-center px-3 py-2 font-medium text-gray-700 hover:text-blue-600"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Your Business
+              </Link>
+            )}
           </div>
         </div>
       )}
