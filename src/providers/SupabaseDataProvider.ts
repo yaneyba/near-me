@@ -54,18 +54,26 @@ export class SupabaseDataProvider {
       if (error) {
         console.error('Supabase error:', error);
         
-        // Handle specific Supabase errors
+        // Handle specific Supabase errors with user-friendly messages
         if (error.code === 'PGRST116') {
           return {
             success: false,
-            message: 'Database connection error. Please try again later.',
+            message: 'We\'re experiencing technical difficulties. Please try again in a few minutes.',
             errors: ['DATABASE_CONNECTION_ERROR']
+          };
+        }
+        
+        if (error.message.includes('row-level security policy')) {
+          return {
+            success: false,
+            message: 'There was a permission issue with your submission. Please contact our support team for assistance.',
+            errors: ['PERMISSION_ERROR']
           };
         }
         
         return {
           success: false,
-          message: `Database error: ${error.message}`,
+          message: 'We encountered an issue while submitting your message. Please try again or contact our support team if the problem persists.',
           errors: ['SUBMISSION_ERROR']
         };
       }
@@ -93,7 +101,7 @@ export class SupabaseDataProvider {
       console.error('Error submitting contact form:', error);
       return {
         success: false,
-        message: 'An unexpected error occurred. Please try again later.',
+        message: 'An unexpected error occurred. Please try again later or contact our support team for assistance.',
         errors: ['UNEXPECTED_ERROR']
       };
     }
@@ -201,11 +209,11 @@ export class SupabaseDataProvider {
       if (error) {
         console.error('Supabase error:', error);
         
-        // Handle specific Supabase errors
+        // Handle specific Supabase errors with user-friendly messages
         if (error.code === 'PGRST116') {
           return {
             success: false,
-            message: 'Database connection error. Please try again later.',
+            message: 'We\'re experiencing technical difficulties. Please try again in a few minutes.',
             errors: ['DATABASE_CONNECTION_ERROR']
           };
         }
@@ -217,10 +225,18 @@ export class SupabaseDataProvider {
             errors: ['DUPLICATE_BUSINESS']
           };
         }
+
+        if (error.message.includes('row-level security policy')) {
+          return {
+            success: false,
+            message: 'There was a permission issue with your business submission. This usually means our database security settings need to be updated. Please contact our support team and we\'ll resolve this immediately.',
+            errors: ['PERMISSION_ERROR']
+          };
+        }
         
         return {
           success: false,
-          message: `Database error: ${error.message}`,
+          message: 'We encountered an issue while submitting your business application. Please try again or contact our support team if the problem persists.',
           errors: ['SUBMISSION_ERROR']
         };
       }
@@ -248,7 +264,7 @@ We'll contact you at ${businessData.email} with updates on your application stat
       console.error('Error submitting business application:', error);
       return {
         success: false,
-        message: 'An unexpected error occurred while submitting your application. Please try again later.',
+        message: 'An unexpected error occurred while submitting your application. Please try again later or contact our support team for assistance.',
         errors: ['UNEXPECTED_ERROR']
       };
     }
