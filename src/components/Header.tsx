@@ -108,7 +108,17 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSe
           </nav>
 
           {/* Search bar - Desktop */}
-  /
+          {process.env.VITE_SHOW_SEARCH_BAR_ON_HEADER !== 'false' && (
+            <div className="hidden lg:block">
+              <SearchWithLiveResults
+                businesses={businesses}
+                category={category}
+                city={city}
+                onSearch={onSearch}
+                className="w-80"
+              />
+            </div>
+          )}
 
           {/* Mobile menu button */}
           <div className="md:hidden">
@@ -127,14 +137,16 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSe
         <div className="md:hidden bg-white border-t border-gray-200">
           <div className="px-4 pt-2 pb-3 space-y-1">
             {/* Mobile search */}
-            <div className="mb-4">
-              <SearchWithLiveResults
-                businesses={businesses}
-                category={category}
-                city={city}
-                onSearch={onSearch}
-              />
-            </div>
+            {process.env.VITE_SHOW_SEARCH_BAR_ON_HEADER !== 'false' && (
+              <div className="mb-4">
+                <SearchWithLiveResults
+                  businesses={businesses}
+                  category={category}
+                  city={city}
+                  onSearch={onSearch}
+                />
+              </div>
+            )}
 
             {/* Mobile navigation */}
             <Link
