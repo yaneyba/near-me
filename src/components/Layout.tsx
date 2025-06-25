@@ -5,6 +5,7 @@ import Header from './Header';
 import Footer from './Footer';
 import Breadcrumb from './Breadcrumb';
 import DevPanel from './DevPanel';
+import { AdUnit } from './ads';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -50,6 +51,20 @@ const Layout: React.FC<LayoutProps> = ({ children, subdomainInfo }) => {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
+      {/* Header Ad */}
+      {import.meta.env.VITE_ENABLE_ADS === 'true' && (
+        <div className="bg-gray-50 border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+            <AdUnit
+              slot={import.meta.env.VITE_GOOGLE_ADS_SLOT_HEADER || ''}
+              size="leaderboard"
+              className="flex justify-center"
+              label="Advertisement"
+            />
+          </div>
+        </div>
+      )}
+
       <Header
         category={subdomainInfo.category}
         city={subdomainInfo.city}
@@ -60,15 +75,45 @@ const Layout: React.FC<LayoutProps> = ({ children, subdomainInfo }) => {
       
       <Breadcrumb subdomainInfo={subdomainInfo} />
       
-      <main className="flex-grow">
-        {children}
-      </main>
+      <div className="flex-grow flex">
+        {/* Sidebar Ad */}
+        {import.meta.env.VITE_ENABLE_ADS === 'true' && (
+          <aside className="hidden xl:block w-80 bg-gray-50 border-r border-gray-200">
+            <div className="sticky top-20 p-4">
+              <AdUnit
+                slot={import.meta.env.VITE_GOOGLE_ADS_SLOT_SIDEBAR || ''}
+                size="sidebar"
+                label="Sponsored"
+              />
+            </div>
+          </aside>
+        )}
+
+        {/* Main Content */}
+        <main className="flex-1">
+          {children}
+        </main>
+      </div>
 
       <Footer
         category={subdomainInfo.category}
         city={subdomainInfo.city}
         state={subdomainInfo.state}
       />
+
+      {/* Footer Ad */}
+      {import.meta.env.VITE_ENABLE_ADS === 'true' && (
+        <div className="bg-gray-50 border-t border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <AdUnit
+              slot={import.meta.env.VITE_GOOGLE_ADS_SLOT_FOOTER || ''}
+              size="leaderboard"
+              className="flex justify-center"
+              label="Advertisement"
+            />
+          </div>
+        </div>
+      )}
 
       {/* Development Panel - Only visible in development */}
       {(process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost' || window.location.hostname.includes('stackblitz')) && (
