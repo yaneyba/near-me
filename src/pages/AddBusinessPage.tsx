@@ -1046,13 +1046,13 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
 
               {renderStepContent()}
 
-              {/* Navigation Buttons */}
-              <div className="flex justify-between mt-8 pt-6 border-t border-gray-200">
+              {/* Navigation Buttons - Fixed for mobile */}
+              <div className="flex flex-col sm:flex-row sm:justify-between gap-4 mt-8 pt-6 border-t border-gray-200">
                 <button
                   type="button"
                   onClick={prevStep}
                   disabled={currentStep === 1}
-                  className="flex items-center px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="flex items-center justify-center px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors order-2 sm:order-1"
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Previous
@@ -1062,7 +1062,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   <button
                     type="button"
                     onClick={nextStep}
-                    className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors order-1 sm:order-2"
                   >
                     Next
                     <ArrowRight className="w-4 h-4 ml-2" />
@@ -1071,7 +1071,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex items-center px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="flex items-center justify-center px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors order-1 sm:order-2"
                   >
                     {isSubmitting ? (
                       <>
