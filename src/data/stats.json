@@ -1,8 +1,8 @@
 [
   { "label": "Local Businesses", "value": "500+" },
   { "label": "Average Rating", "value": "4.8", "icon": "star" },
-  { "label": "Happy Customers", "value": "10K+" },
+  { "label": "Happy Customers", "value": "1K+" },
   { "label": "Active Businesses", "value": "500+" },
-  { "label": "Monthly Visitors", "value": "50K+" },
-  { "label": "Customer Connections", "value": "10K+" }
+  { "label": "Monthly Visitors", "value": "1K+" },
+  { "label": "Customer Connections", "value": "1K+" }
 ]
