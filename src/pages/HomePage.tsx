@@ -17,6 +17,7 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [services, setServices] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+  const [serviceFilter, setServiceFilter] = useState<string>('');
   const [loading, setLoading] = useState(true);
   
   const dataProvider = DataProviderFactory.getProvider();
@@ -52,11 +53,23 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
+    setServiceFilter(''); // Clear service filter when searching
     // Smooth scroll to business listings section
     const businessSection = document.getElementById('businesses');
     if (businessSection && query) {
       businessSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+  };
+
+  const handleServiceFilter = (service: string) => {
+    setServiceFilter(service);
+    setSearchQuery(''); // Clear search query when filtering by service
+  };
+
+  // Combine search and service filter for business listings
+  const getEffectiveSearchQuery = () => {
+    if (serviceFilter) return serviceFilter;
+    return searchQuery;
   };
 
   if (loading) {
@@ -72,6 +85,7 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
 
   // Check if there are premium businesses to show
   const hasPremiumBusinesses = businesses.some(business => business.premium);
+  const effectiveQuery = getEffectiveSearchQuery();
 
   return (
     <>
@@ -83,8 +97,8 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
         onSearch={handleSearch}
       />
       
-      {/* Show Premium Listings section only if there are premium businesses and no search query */}
-      {hasPremiumBusinesses && !searchQuery && (
+      {/* Show Premium Listings section only if there are premium businesses and no active filters */}
+      {hasPremiumBusinesses && !effectiveQuery && (
         <div id="premium">
           <PremiumListings
             businesses={businesses}
@@ -99,7 +113,7 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
           businesses={businesses}
           category={subdomainInfo.category}
           city={subdomainInfo.city}
-          searchQuery={searchQuery}
+          searchQuery={effectiveQuery}
         />
       </div>
       
@@ -108,6 +122,7 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
           services={services}
           category={subdomainInfo.category}
           city={subdomainInfo.city}
+          onServiceFilter={handleServiceFilter}
         />
       </div>
     </>
