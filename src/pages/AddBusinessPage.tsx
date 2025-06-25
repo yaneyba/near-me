@@ -481,9 +481,8 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  // FIXED: Separate submit handler that only runs on final step
+  const handleFinalSubmit = async () => {
     // Validate all steps
     let allErrors: FormErrors = {};
     for (let step = 1; step <= totalSteps; step++) {
@@ -540,6 +539,15 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // FIXED: Form submit handler that prevents default submission
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Only submit if we're on the final step
+    if (currentStep === totalSteps) {
+      handleFinalSubmit();
     }
   };
 
@@ -1033,7 +1041,8 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Main Form */}
           <div className="lg:col-span-3">
-            <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-8">
+            {/* FIXED: Form only submits on final step */}
+            <form onSubmit={handleFormSubmit} className="bg-white rounded-xl shadow-lg p-8">
               {submitResult && !submitResult.success && (
                 <div className="mb-8 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start space-x-3">
                   <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
