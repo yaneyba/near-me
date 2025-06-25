@@ -164,16 +164,21 @@ export class SupabaseDataProvider {
         };
       }
 
-      // Check for duplicate business
-      const { data: existingBusiness } = await supabase
+      // FIXED: Check for duplicate business without using .single()
+      const { data: existingBusinesses, error: checkError } = await supabase
         .from('business_submissions')
         .select('id')
         .eq('business_name', businessData.businessName)
         .eq('city', businessData.city)
-        .eq('state', businessData.state)
-        .single();
+        .eq('state', businessData.state);
 
-      if (existingBusiness) {
+      if (checkError) {
+        console.error('Error checking for duplicate business:', checkError);
+        // Continue with submission even if duplicate check fails
+      }
+
+      // Check if any existing businesses were found
+      if (existingBusinesses && existingBusinesses.length > 0) {
         return {
           success: false,
           message: 'A business with this name already exists in this city. Please contact us if this is your business.',
