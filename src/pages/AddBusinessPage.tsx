@@ -66,7 +66,6 @@ interface SubmissionResult {
   success: boolean;
   message: string;
   submissionId?: string;
-  errors?: string[];
 }
 
 // Success component
@@ -153,6 +152,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
   const [submitResult, setSubmitResult] = useState<SubmissionResult | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [formErrors, setFormErrors] = useState<FormErrors>({});
+  const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
   const totalSteps = 4;
 
   const dataProvider = DataProviderFactory.getProvider();
@@ -295,16 +295,111 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
 
   const categoryContent = getCategorySpecificContent();
 
+  // Validation function that returns errors without setting state
+  const _getStepErrors = (step: number): FormErrors => {
+    const errors: FormErrors = {};
+
+    switch (step) {
+      case 1:
+        if (!formData.businessName.trim()) {
+          errors.businessName = 'Business name is required';
+        } else if (formData.businessName.trim().length < 2) {
+          errors.businessName = 'Business name must be at least 2 characters';
+        }
+
+        if (!formData.ownerName.trim()) {
+          errors.ownerName = 'Owner/Manager name is required';
+        } else if (formData.ownerName.trim().length < 2) {
+          errors.ownerName = 'Name must be at least 2 characters';
+        }
+
+        if (!formData.email.trim()) {
+          errors.email = 'Email address is required';
+        } else if (!isValidEmail(formData.email)) {
+          errors.email = 'Please enter a valid email address';
+        }
+
+        if (!formData.phone.trim()) {
+          errors.phone = 'Phone number is required';
+        } else if (!isValidPhone(formData.phone)) {
+          errors.phone = 'Please enter a valid phone number';
+        }
+        break;
+
+      case 2:
+        if (!formData.address.trim()) {
+          errors.address = 'Street address is required';
+        }
+
+        if (!formData.city.trim()) {
+          errors.city = 'City is required';
+        }
+
+        if (!formData.state.trim()) {
+          errors.state = 'State is required';
+        }
+
+        if (!formData.zipCode.trim()) {
+          errors.zipCode = 'ZIP code is required';
+        } else if (!isValidZipCode(formData.zipCode)) {
+          errors.zipCode = 'Please enter a valid ZIP code';
+        }
+        break;
+
+      case 3:
+        const totalServices = formData.services.length + formData.customServices.length;
+        if (totalServices === 0) {
+          errors.services = 'Please select at least one service';
+        }
+        break;
+
+      case 4:
+        // Optional step - no required fields
+        break;
+    }
+
+    return errors;
+  };
+
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const isValidPhone = (phone: string): boolean => {
+    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+    const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+    return phoneRegex.test(cleanPhone) && cleanPhone.length >= 10;
+  };
+
+  const isValidZipCode = (zipCode: string): boolean => {
+    const zipRegex = /^\d{5}(-\d{4})?$/;
+    return zipRegex.test(zipCode);
+  };
+
   const handleInputChange = (field: keyof BusinessFormData, value: string | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
-    // Clear field error when user starts typing
+    // Mark field as touched
+    setTouchedFields(prev => new Set(prev).add(field));
+    
+    // Clear error for this field if it exists
     if (formErrors[field]) {
       setFormErrors(prev => {
         const newErrors = { ...prev };
         delete newErrors[field];
         return newErrors;
       });
+    }
+  };
+
+  const handleFieldBlur = (field: string) => {
+    setTouchedFields(prev => new Set(prev).add(field));
+    
+    // Validate this specific field on blur
+    const stepErrors = _getStepErrors(currentStep);
+    if (stepErrors[field]) {
+      setFormErrors(prev => ({ ...prev, [field]: stepErrors[field] }));
     }
   };
 
@@ -316,8 +411,12 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
         : prev.services.filter(s => s !== service)
     }));
     
-    // Clear services error when user selects a service
-    if (formErrors.services) {
+    // Clear services error if at least one service is selected
+    const totalServices = checked 
+      ? formData.services.length + 1 + formData.customServices.length
+      : formData.services.length - 1 + formData.customServices.length;
+    
+    if (totalServices > 0 && formErrors.services) {
       setFormErrors(prev => {
         const newErrors = { ...prev };
         delete newErrors.services;
@@ -333,7 +432,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
         customServices: [...prev.customServices, service.trim()]
       }));
       
-      // Clear services error when user adds a custom service
+      // Clear services error
       if (formErrors.services) {
         setFormErrors(prev => {
           const newErrors = { ...prev };
@@ -365,147 +464,42 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
     }));
   };
 
-  // Client-side validation function
-  const validateForm = (): boolean => {
-    const errors: FormErrors = {};
-
-    // Step 1 validation
-    if (!formData.businessName.trim()) {
-      errors.businessName = 'Business name is required';
-    } else if (formData.businessName.trim().length < 2) {
-      errors.businessName = 'Business name must be at least 2 characters';
-    }
-
-    if (!formData.ownerName.trim()) {
-      errors.ownerName = 'Owner/Manager name is required';
-    } else if (formData.ownerName.trim().length < 2) {
-      errors.ownerName = 'Owner/Manager name must be at least 2 characters';
-    }
-
-    if (!formData.email.trim()) {
-      errors.email = 'Email address is required';
-    } else if (!isValidEmail(formData.email)) {
-      errors.email = 'Please enter a valid email address';
-    }
-
-    if (!formData.phone.trim()) {
-      errors.phone = 'Phone number is required';
-    } else if (!isValidPhone(formData.phone)) {
-      errors.phone = 'Please enter a valid phone number';
-    }
-
-    // Step 2 validation
-    if (!formData.address.trim()) {
-      errors.address = 'Street address is required';
-    }
-
-    if (!formData.city.trim()) {
-      errors.city = 'City is required';
-    }
-
-    if (!formData.state.trim()) {
-      errors.state = 'State is required';
-    }
-
-    if (!formData.zipCode.trim()) {
-      errors.zipCode = 'ZIP code is required';
-    } else if (!isValidZipCode(formData.zipCode)) {
-      errors.zipCode = 'Please enter a valid ZIP code';
-    }
-
-    // Step 3 validation
-    const totalServices = formData.services.length + formData.customServices.length;
-    if (totalServices === 0) {
-      errors.services = 'Please select at least one service';
-    }
-
-    // Validate business hours
-    const hasValidHours = Object.values(formData.hours).some(hours => 
-      hours && hours.trim() && hours.toLowerCase() !== 'closed'
-    );
-    if (!hasValidHours) {
-      errors.hours = 'Please specify business hours for at least one day';
-    }
-
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  // Pure validation function that doesn't set state - used for checking if step is valid
-  const _getStepErrors = (step: number): FormErrors => {
-    const errors: FormErrors = {};
-
-    switch (step) {
-      case 1:
-        if (!formData.businessName.trim()) {
-          errors.businessName = 'Business name is required';
-        }
-        if (!formData.ownerName.trim()) {
-          errors.ownerName = 'Owner/Manager name is required';
-        }
-        if (!formData.email.trim()) {
-          errors.email = 'Email address is required';
-        } else if (!isValidEmail(formData.email)) {
-          errors.email = 'Please enter a valid email address';
-        }
-        if (!formData.phone.trim()) {
-          errors.phone = 'Phone number is required';
-        }
-        break;
-      case 2:
-        if (!formData.address.trim()) {
-          errors.address = 'Street address is required';
-        }
-        if (!formData.city.trim()) {
-          errors.city = 'City is required';
-        }
-        if (!formData.state.trim()) {
-          errors.state = 'State is required';
-        }
-        if (!formData.zipCode.trim()) {
-          errors.zipCode = 'ZIP code is required';
-        }
-        break;
-      case 3:
-        const totalServices = formData.services.length + formData.customServices.length;
-        if (totalServices === 0) {
-          errors.services = 'Please select at least one service';
-        }
-        break;
-      case 4:
-        // Optional step, no required fields
-        break;
-    }
-
-    return errors;
-  };
-
   const nextStep = () => {
-    if (currentStep < totalSteps) {
-      const stepErrors = _getStepErrors(currentStep);
-      setFormErrors(stepErrors);
-      
-      if (Object.keys(stepErrors).length === 0) {
-        setCurrentStep(currentStep + 1);
-      }
+    const stepErrors = _getStepErrors(currentStep);
+    setFormErrors(stepErrors);
+    
+    if (Object.keys(stepErrors).length === 0 && currentStep < totalSteps) {
+      setCurrentStep(currentStep + 1);
+      setFormErrors({}); // Clear errors when moving to next step
     }
   };
 
   const prevStep = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+      setFormErrors({}); // Clear errors when moving to previous step
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) {
-      // Scroll to first error
-      const firstErrorField = Object.keys(formErrors)[0];
-      const errorElement = document.querySelector(`[name="${firstErrorField}"]`);
-      if (errorElement) {
-        errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Validate all steps
+    let allErrors: FormErrors = {};
+    for (let step = 1; step <= totalSteps; step++) {
+      const stepErrors = _getStepErrors(step);
+      allErrors = { ...allErrors, ...stepErrors };
+    }
+    
+    if (Object.keys(allErrors).length > 0) {
+      setFormErrors(allErrors);
+      // Go to first step with errors
+      for (let step = 1; step <= totalSteps; step++) {
+        const stepErrors = _getStepErrors(step);
+        if (Object.keys(stepErrors).length > 0) {
+          setCurrentStep(step);
+          break;
+        }
       }
       return;
     }
@@ -539,34 +533,6 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
 
       const result = await dataProvider.submitBusiness(businessSubmission);
       setSubmitResult(result);
-
-      // If there are field-specific errors from the server, map them to form errors
-      if (!result.success && result.errors) {
-        const serverErrors: FormErrors = {};
-        result.errors.forEach(error => {
-          const errorLower = error.toLowerCase();
-          if (errorLower.includes('business name')) {
-            serverErrors.businessName = error;
-          } else if (errorLower.includes('owner') || errorLower.includes('manager')) {
-            serverErrors.ownerName = error;
-          } else if (errorLower.includes('email')) {
-            serverErrors.email = error;
-          } else if (errorLower.includes('phone')) {
-            serverErrors.phone = error;
-          } else if (errorLower.includes('address')) {
-            serverErrors.address = error;
-          } else if (errorLower.includes('city')) {
-            serverErrors.city = error;
-          } else if (errorLower.includes('state')) {
-            serverErrors.state = error;
-          } else if (errorLower.includes('zip')) {
-            serverErrors.zipCode = error;
-          } else if (errorLower.includes('service')) {
-            serverErrors.services = error;
-          }
-        });
-        setFormErrors(serverErrors);
-      }
     } catch (error) {
       setSubmitResult({
         success: false,
@@ -581,6 +547,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
     setSubmitResult(null);
     setCurrentStep(1);
     setFormErrors({});
+    setTouchedFields(new Set());
     setFormData({
       businessName: '',
       ownerName: '',
@@ -616,21 +583,37 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
     });
   };
 
-  // Validation helper functions
-  const isValidEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+  // Helper function to get input classes based on validation state
+  const getInputClasses = (fieldName: string, baseClasses: string = '') => {
+    const hasError = formErrors[fieldName];
+    const isTouched = touchedFields.has(fieldName);
+    
+    let classes = baseClasses || 'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:outline-none transition-colors';
+    
+    if (hasError) {
+      classes += ' border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-200';
+    } else if (isTouched && formData[fieldName as keyof BusinessFormData]) {
+      classes += ' border-green-300 bg-green-50 focus:border-green-500 focus:ring-green-200';
+    } else {
+      classes += ' border-gray-300 focus:border-blue-500 focus:ring-blue-200';
+    }
+    
+    return classes;
   };
 
-  const isValidPhone = (phone: string): boolean => {
-    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
-    const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
-    return cleanPhone.length >= 10 && phoneRegex.test(cleanPhone);
-  };
-
-  const isValidZipCode = (zipCode: string): boolean => {
-    const zipRegex = /^\d{5}(-\d{4})?$/;
-    return zipRegex.test(zipCode);
+  // Helper function to render field label with required indicator
+  const renderFieldLabel = (label: string, fieldName: string, required: boolean = false) => {
+    return (
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        {label}
+        {required && <span className="text-red-500 ml-1">*</span>}
+        {formErrors[fieldName] && (
+          <span className="text-red-600 text-xs ml-2 font-normal">
+            - {formErrors[fieldName]}
+          </span>
+        )}
+      </label>
+    );
   };
 
   // Show success page
@@ -658,123 +641,79 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Business Name *
-                </label>
+                {renderFieldLabel('Business Name', 'businessName', true)}
                 <input
                   type="text"
-                  name="businessName"
                   value={formData.businessName}
                   onChange={(e) => handleInputChange('businessName', e.target.value)}
+                  onBlur={() => handleFieldBlur('businessName')}
                   placeholder={categoryContent.placeholders.businessName}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                    formErrors.businessName ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
+                  className={getInputClasses('businessName')}
                   required
                 />
-                {formErrors.businessName && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center">
-                    <AlertCircle className="w-4 h-4 mr-1" />
-                    {formErrors.businessName}
-                  </p>
-                )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Owner/Manager Name *
-                </label>
+                {renderFieldLabel('Owner/Manager Name', 'ownerName', true)}
                 <input
                   type="text"
-                  name="ownerName"
                   value={formData.ownerName}
                   onChange={(e) => handleInputChange('ownerName', e.target.value)}
+                  onBlur={() => handleFieldBlur('ownerName')}
                   placeholder="Your full name"
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                    formErrors.ownerName ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
+                  className={getInputClasses('ownerName')}
                   required
                 />
-                {formErrors.ownerName && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center">
-                    <AlertCircle className="w-4 h-4 mr-1" />
-                    {formErrors.ownerName}
-                  </p>
-                )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email Address *
-                </label>
+                {renderFieldLabel('Email Address', 'email', true)}
                 <input
                   type="email"
-                  name="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
+                  onBlur={() => handleFieldBlur('email')}
                   placeholder="info@yourbusiness.com"
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                    formErrors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
+                  className={getInputClasses('email')}
                   required
                 />
-                {formErrors.email && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center">
-                    <AlertCircle className="w-4 h-4 mr-1" />
-                    {formErrors.email}
-                  </p>
-                )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Phone Number *
-                </label>
+                {renderFieldLabel('Phone Number', 'phone', true)}
                 <input
                   type="tel"
-                  name="phone"
                   value={formData.phone}
                   onChange={(e) => handleInputChange('phone', e.target.value)}
+                  onBlur={() => handleFieldBlur('phone')}
                   placeholder="(555) 123-4567"
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                    formErrors.phone ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
+                  className={getInputClasses('phone')}
                   required
                 />
-                {formErrors.phone && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center">
-                    <AlertCircle className="w-4 h-4 mr-1" />
-                    {formErrors.phone}
-                  </p>
-                )}
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Business Description
-              </label>
+              {renderFieldLabel('Business Description', 'description')}
               <textarea
-                name="description"
                 value={formData.description}
                 onChange={(e) => handleInputChange('description', e.target.value)}
+                onBlur={() => handleFieldBlur('description')}
                 placeholder={categoryContent.placeholders.description}
                 rows={4}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className={getInputClasses('description', 'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:outline-none transition-colors resize-none')}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Website (Optional)
-              </label>
+              {renderFieldLabel('Website', 'website')}
               <input
                 type="url"
-                name="website"
                 value={formData.website}
                 onChange={(e) => handleInputChange('website', e.target.value)}
+                onBlur={() => handleFieldBlur('website')}
                 placeholder="https://yourbusiness.com"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className={getInputClasses('website')}
               />
             </div>
           </div>
@@ -790,107 +729,65 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Street Address *
-              </label>
+              {renderFieldLabel('Street Address', 'address', true)}
               <input
                 type="text"
-                name="address"
                 value={formData.address}
                 onChange={(e) => handleInputChange('address', e.target.value)}
+                onBlur={() => handleFieldBlur('address')}
                 placeholder="123 Main Street"
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                  formErrors.address ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                }`}
+                className={getInputClasses('address')}
                 required
               />
-              {formErrors.address && (
-                <p className="mt-1 text-sm text-red-600 flex items-center">
-                  <AlertCircle className="w-4 h-4 mr-1" />
-                  {formErrors.address}
-                </p>
-              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  City *
-                </label>
+                {renderFieldLabel('City', 'city', true)}
                 <input
                   type="text"
-                  name="city"
                   value={formData.city}
                   onChange={(e) => handleInputChange('city', e.target.value)}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                    formErrors.city ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
+                  onBlur={() => handleFieldBlur('city')}
+                  className={getInputClasses('city')}
                   required
                 />
-                {formErrors.city && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center">
-                    <AlertCircle className="w-4 h-4 mr-1" />
-                    {formErrors.city}
-                  </p>
-                )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  State *
-                </label>
+                {renderFieldLabel('State', 'state', true)}
                 <input
                   type="text"
-                  name="state"
                   value={formData.state}
                   onChange={(e) => handleInputChange('state', e.target.value)}
+                  onBlur={() => handleFieldBlur('state')}
                   placeholder="TX"
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                    formErrors.state ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
+                  className={getInputClasses('state')}
                   required
                 />
-                {formErrors.state && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center">
-                    <AlertCircle className="w-4 h-4 mr-1" />
-                    {formErrors.state}
-                  </p>
-                )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  ZIP Code *
-                </label>
+                {renderFieldLabel('ZIP Code', 'zipCode', true)}
                 <input
                   type="text"
-                  name="zipCode"
                   value={formData.zipCode}
                   onChange={(e) => handleInputChange('zipCode', e.target.value)}
+                  onBlur={() => handleFieldBlur('zipCode')}
                   placeholder="75201"
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                    formErrors.zipCode ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
+                  className={getInputClasses('zipCode')}
                   required
                 />
-                {formErrors.zipCode && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center">
-                    <AlertCircle className="w-4 h-4 mr-1" />
-                    {formErrors.zipCode}
-                  </p>
-                )}
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Business Type
-                </label>
+                {renderFieldLabel('Business Type', 'businessType')}
                 <select
                   value={formData.businessType}
                   onChange={(e) => handleInputChange('businessType', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className={getInputClasses('businessType')}
                 >
                   <option value="individual">Independent Business</option>
                   <option value="franchise">Franchise</option>
@@ -899,13 +796,11 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Years in Business
-                </label>
+                {renderFieldLabel('Years in Business', 'yearsInBusiness')}
                 <select
                   value={formData.yearsInBusiness}
                   onChange={(e) => handleInputChange('yearsInBusiness', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className={getInputClasses('yearsInBusiness')}
                 >
                   <option value="">Select years</option>
                   <option value="less-than-1">Less than 1 year</option>
@@ -930,17 +825,16 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-4">
-                Services Offered * (Select all that apply)
+                Services Offered <span className="text-red-500">*</span>
+                {formErrors.services && (
+                  <span className="text-red-600 text-xs ml-2 font-normal">
+                    - {formErrors.services}
+                  </span>
+                )}
               </label>
-              {formErrors.services && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm text-red-600 flex items-center">
-                    <AlertCircle className="w-4 h-4 mr-1" />
-                    {formErrors.services}
-                  </p>
-                </div>
-              )}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 p-4 rounded-lg border-2 ${
+                formErrors.services ? 'border-red-300 bg-red-50' : 'border-gray-200'
+              }`}>
                 {getAvailableServices().map((service, index) => (
                   <label key={index} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
                     <input
@@ -1008,14 +902,6 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
               <label className="block text-sm font-medium text-gray-700 mb-4">
                 Business Hours
               </label>
-              {formErrors.hours && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm text-red-600 flex items-center">
-                    <AlertCircle className="w-4 h-4 mr-1" />
-                    {formErrors.hours}
-                  </p>
-                </div>
-              )}
               <div className="space-y-3">
                 {Object.entries(formData.hours).map(([day, hours]) => (
                   <div key={day} className="flex items-center gap-4">
@@ -1047,66 +933,56 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Facebook Page
-                </label>
+                {renderFieldLabel('Facebook Page', 'facebook')}
                 <input
                   type="url"
                   value={formData.socialMedia.facebook}
                   onChange={(e) => handleSocialMediaChange('facebook', e.target.value)}
                   placeholder="https://facebook.com/yourbusiness"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className={getInputClasses('facebook')}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Instagram Profile
-                </label>
+                {renderFieldLabel('Instagram Profile', 'instagram')}
                 <input
                   type="url"
                   value={formData.socialMedia.instagram}
                   onChange={(e) => handleSocialMediaChange('instagram', e.target.value)}
                   placeholder="https://instagram.com/yourbusiness"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className={getInputClasses('instagram')}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Twitter Profile
-                </label>
+                {renderFieldLabel('Twitter Profile', 'twitter')}
                 <input
                   type="url"
                   value={formData.socialMedia.twitter}
                   onChange={(e) => handleSocialMediaChange('twitter', e.target.value)}
                   placeholder="https://twitter.com/yourbusiness"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className={getInputClasses('twitter')}
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Special Offers or Promotions
-              </label>
+              {renderFieldLabel('Special Offers or Promotions', 'specialOffers')}
               <textarea
                 value={formData.specialOffers}
                 onChange={(e) => handleInputChange('specialOffers', e.target.value)}
                 placeholder={categoryContent.placeholders.specialOffers}
                 rows={3}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className={getInputClasses('specialOffers', 'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:outline-none transition-colors resize-none')}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Number of Employees
-              </label>
+              {renderFieldLabel('Number of Employees', 'employeeCount')}
               <select
                 value={formData.employeeCount}
                 onChange={(e) => handleInputChange('employeeCount', e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className={getInputClasses('employeeCount')}
               >
                 <option value="">Select employee count</option>
                 <option value="1">Just me</option>
@@ -1164,13 +1040,6 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   <div>
                     <h3 className="font-semibold text-red-800">Submission Failed</h3>
                     <p className="text-red-700 text-sm mt-1 whitespace-pre-line">{submitResult.message}</p>
-                    {submitResult.errors && submitResult.errors.length > 0 && (
-                      <ul className="mt-2 text-sm text-red-700 list-disc list-inside">
-                        {submitResult.errors.map((error, index) => (
-                          <li key={index}>{error}</li>
-                        ))}
-                      </ul>
-                    )}
                   </div>
                 </div>
               )}
@@ -1193,8 +1062,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   <button
                     type="button"
                     onClick={nextStep}
-                    disabled={Object.keys(_getStepErrors(currentStep)).length > 0}
-                    className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     Next
                     <ArrowRight className="w-4 h-4 ml-2" />
