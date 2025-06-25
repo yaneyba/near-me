@@ -25,6 +25,7 @@ import {
   X,
   Plus
 } from 'lucide-react';
+import stats from '../data/stats.json';
 
 interface AddBusinessPageProps {
   subdomainInfo: SubdomainInfo;
@@ -1158,18 +1159,12 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
             <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
               <h3 className="text-lg font-bold text-gray-900 mb-4">Join Our Network</h3>
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Active Businesses</span>
-                  <span className="text-lg font-bold text-blue-600">500+</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Monthly Visitors</span>
-                  <span className="text-lg font-bold text-blue-600">50K+</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Customer Connections</span>
-                  <span className="text-lg font-bold text-blue-600">10K+</span>
-                </div>
+                {stats.map((stat: { label: string; value: string }, idx: number) => (
+                  <div key={idx} className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">{stat.label}</span>
+                    <span className="text-lg font-bold text-blue-600">{stat.value}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
