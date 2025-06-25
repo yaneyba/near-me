@@ -36,7 +36,7 @@ export class SupabaseDataProvider {
         };
       }
 
-      // Insert into existing contact_messages table
+      // Insert into existing contact_messages table - only select ID
       const { data, error } = await supabase
         .from('contact_messages')
         .insert({
@@ -48,7 +48,7 @@ export class SupabaseDataProvider {
           city: contactData.city || null,
           status: 'new'
         })
-        .select()
+        .select('id')  // ← Only get the ID we need
         .single();
 
       if (error) {
@@ -189,7 +189,7 @@ export class SupabaseDataProvider {
       // Combine all services
       const allServices = [...businessData.services, ...businessData.customServices];
 
-      // Insert into existing business_submissions table with correct enum type
+      // Insert into existing business_submissions table - only select ID
       const { data, error } = await supabase
         .from('business_submissions')
         .insert({
@@ -209,7 +209,7 @@ export class SupabaseDataProvider {
           status: 'pending' as Database['public']['Enums']['submission_status'],
           site_id: 'near-me-us'
         })
-        .select()
+        .select('id')  // ← Only get the ID we need
         .single();
 
       if (error) {
