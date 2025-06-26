@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Star, Phone, MapPin, Clock, ExternalLink, Globe, Filter, SortAsc, ChevronLeft, ChevronRight, Crown, ChevronDown, ChevronUp, MoreHorizontal, Calendar, Navigation } from 'lucide-react';
+import { Star, Phone, MapPin, Clock, ExternalLink, Globe, Filter, SortAsc, ChevronLeft, ChevronRight, Crown, ChevronDown, ChevronUp, MoreHorizontal, Calendar, Navigation, TrendingUp } from 'lucide-react';
 import { Business } from '../types';
 import { AdUnit, SponsoredContent } from './ads';
+import PremiumUpgrade from './PremiumUpgrade';
 
 interface BusinessListingsProps {
   businesses: Business[];
@@ -22,6 +23,8 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
   const [showFilters, setShowFilters] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [expandedServices, setExpandedServices] = useState<Set<string>>(new Set());
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [selectedBusinessForUpgrade, setSelectedBusinessForUpgrade] = useState<string>('');
   
   // Enhanced pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -135,6 +138,11 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
     setExpandedServices(newExpanded);
   };
 
+  const handleUpgradeClick = (businessName: string) => {
+    setSelectedBusinessForUpgrade(businessName);
+    setShowUpgradeModal(true);
+  };
+
   const renderPaginationButtons = () => {
     const buttons = [];
     const maxVisiblePages = 5;
@@ -218,52 +226,6 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
     }
 
     return buttons;
-  };
-
-  const renderServices = (business: Business) => {
-    const isExpanded = expandedServices.has(business.id);
-    const displayServices = isExpanded ? business.services : business.services.slice(0, 3);
-    const hasMoreServices = business.services.length > 3;
-
-    return (
-      <div className="mb-4">
-        <div className="text-sm font-medium text-gray-900 mb-2">Services:</div>
-        <div className="flex flex-wrap gap-1">
-          {displayServices.map((service, index) => (
-            <span
-              key={index}
-              className={`inline-block px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 ${
-                business.premium
-                  ? 'bg-yellow-50 text-yellow-700 border border-yellow-200'
-                  : 'bg-blue-50 text-blue-700'
-              }`}
-            >
-              {service}
-            </span>
-          ))}
-          {hasMoreServices && (
-            <button
-              onClick={() => toggleServicesExpansion(business.id)}
-              className={`inline-flex items-center px-2 py-1 text-xs font-medium transition-all duration-200 hover:bg-gray-100 rounded-full ${
-                business.premium ? 'text-yellow-600 hover:text-yellow-700' : 'text-blue-600 hover:text-blue-700'
-              }`}
-            >
-              {isExpanded ? (
-                <>
-                  Show less
-                  <ChevronUp className="w-3 h-3 ml-1" />
-                </>
-              ) : (
-                <>
-                  +{business.services.length - 3} more
-                  <ChevronDown className="w-3 h-3 ml-1" />
-                </>
-              )}
-            </button>
-          )}
-        </div>
-      </div>
-    );
   };
 
   const renderBookingLinks = (business: Business) => {
@@ -355,6 +317,79 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
             <Navigation className="w-3 h-3 mr-1" />
             Directions Coming Soon
           </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderUpgradePrompt = (business: Business) => {
+    if (business.premium) {
+      return null;
+    }
+
+    // Show subtle upgrade prompt for non-premium businesses
+    return (
+      <div className="mt-4 p-3 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Crown className="w-4 h-4 text-yellow-600" />
+            <div>
+              <div className="text-sm font-medium text-yellow-800">Want to stand out?</div>
+              <div className="text-xs text-yellow-700">Get premium features for more visibility</div>
+            </div>
+          </div>
+          <button
+            onClick={() => handleUpgradeClick(business.name)}
+            className="text-xs bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white px-3 py-1 rounded-full font-medium transition-all duration-200 shadow-sm hover:shadow-md"
+          >
+            Upgrade
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const renderServices = (business: Business) => {
+    const isExpanded = expandedServices.has(business.id);
+    const displayServices = isExpanded ? business.services : business.services.slice(0, 3);
+    const hasMoreServices = business.services.length > 3;
+
+    return (
+      <div className="mb-4">
+        <div className="text-sm font-medium text-gray-900 mb-2">Services:</div>
+        <div className="flex flex-wrap gap-1">
+          {displayServices.map((service, index) => (
+            <span
+              key={index}
+              className={`inline-block px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 ${
+                business.premium
+                  ? 'bg-yellow-50 text-yellow-700 border border-yellow-200'
+                  : 'bg-blue-50 text-blue-700'
+              }`}
+            >
+              {service}
+            </span>
+          ))}
+          {hasMoreServices && (
+            <button
+              onClick={() => toggleServicesExpansion(business.id)}
+              className={`inline-flex items-center px-2 py-1 text-xs font-medium transition-all duration-200 hover:bg-gray-100 rounded-full ${
+                business.premium ? 'text-yellow-600 hover:text-yellow-700' : 'text-blue-600 hover:text-blue-700'
+              }`}
+            >
+              {isExpanded ? (
+                <>
+                  Show less
+                  <ChevronUp className="w-3 h-3 ml-1" />
+                </>
+              ) : (
+                <>
+                  +{business.services.length - 3} more
+                  <ChevronDown className="w-3 h-3 ml-1" />
+                </>
+              )}
+            </button>
+          )}
         </div>
       </div>
     );
@@ -505,6 +540,9 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
                 </a>
               )}
             </div>
+
+            {/* Upgrade prompt for non-premium businesses */}
+            {renderUpgradePrompt(business)}
           </div>
 
           {/* Premium Glow Effect */}
@@ -836,6 +874,17 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Premium Upgrade Modal */}
+      {showUpgradeModal && (
+        <PremiumUpgrade
+          businessName={selectedBusinessForUpgrade}
+          onClose={() => {
+            setShowUpgradeModal(false);
+            setSelectedBusinessForUpgrade('');
+          }}
+        />
       )}
     </div>
   );
