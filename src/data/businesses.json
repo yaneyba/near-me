@@ -436,5 +436,207 @@
     },
     "image": "https://near-me-directories.s3.us-east-2.amazonaws.com/nail-salons/nail-salons-frisco-0.png",
     "premium": false
+  },
+  {
+    "id": "nail-salons-garland-1",
+    "name": "Lavish Nail & Spa",
+    "category": "nail-salons",
+    "city": "garland",
+    "state": "Texas",
+    "address": "1440 W Buckingham Rd, Garland, TX 75042",
+    "phone": "(214) 501-3619",
+    "website": "https://lavishnailandspagarland.com/",
+    "rating": 4.7,
+    "reviewCount": 486,
+    "description": "",
+    "services": [
+      "Nail salon",
+      "Beauty salon",
+      "Waxing hair removal service"
+    ],
+    "neighborhood": "",
+    "hours": {
+      "Wednesday": "9:30 AM–7:30 PM",
+      "Thursday": "9:30 AM–7:30 PM",
+      "Friday": "9:30 AM–7:30 PM",
+      "Saturday": "9 AM–7 PM",
+      "Sunday": "11:30 AM–6 PM",
+      "Monday": "9:30 AM–7:30 PM",
+      "Tuesday": "9:30 AM–7:30 PM"
+    },
+    "image": "https://lh3.googleusercontent.com/p/AF1QipMg7YTpCO3fGtP3ioOvV1bOPeF0fFHiXkIlWHo3",
+    "premium": false
+  },
+  {
+    "id": "nail-salons-garland-2",
+    "name": "Luxury Nails",
+    "category": "nail-salons",
+    "city": "garland",
+    "state": "Texas",
+    "address": "5435 N Garland Ave # 115, Garland, TX 75040",
+    "phone": "(972) 414-3604",
+    "website": null,
+    "rating": 4.7,
+    "reviewCount": 555,
+    "description": "",
+    "services": [
+      "Nail salon"
+    ],
+    "neighborhood": "",
+    "hours": {
+      "Wednesday": "10 AM–7 PM",
+      "Thursday": "10 AM–7 PM",
+      "Friday": "10 AM–7 PM",
+      "Saturday": "9 AM–6 PM",
+      "Sunday": "Closed",
+      "Monday": "10 AM–7 PM",
+      "Tuesday": "10 AM–7 PM"
+    },
+    "image": "https://lh3.googleusercontent.com/gps-cs-s/AC9h4noFY2Mjm1_wp7M_7dlv0TFcPQySTx0dblydI-Gm_B3K6k3_vq5Mj7tH6o-KCsz0GmP23uLLQ_bmLQ8tW59_eMlOUinMRKFlNrRoLDTH-UOsYJx3tqTl3K7YEQHxez2lMENAdZQd",
+    "premium": false
+  },
+  {
+    "id": "nail-salons-garland-3",
+    "name": "Deluxe Nails & Spa",
+    "category": "nail-salons",
+    "city": "garland",
+    "state": "Texas",
+    "address": "6505 Duck Creek Dr, Garland, TX 75043",
+    "phone": "(972) 303-7000",
+    "website": null,
+    "rating": 4.6,
+    "reviewCount": 359,
+    "description": "",
+    "services": [
+      "Nail salon"
+    ],
+    "neighborhood": "",
+    "hours": {
+      "Wednesday": "10 AM–7 PM",
+      "Thursday": "10 AM–7 PM",
+      "Friday": "10 AM–7 PM",
+      "Saturday": "10 AM–7 PM",
+      "Sunday": "12–5 PM",
+      "Monday": "10 AM–7 PM",
+      "Tuesday": "Closed"
+    },
+    "image": "https://lh3.googleusercontent.com/p/AF1QipNRoTizxBalZnhIy3weplgjJu15V5SRd5VBGKby",
+    "premium": false
+  },
+  {
+    "id": "nail-salons-garland-4",
+    "name": "Ola Nail Spa",
+    "category": "nail-salons",
+    "city": "garland",
+    "state": "Texas",
+    "address": "1548 S First St, Garland, TX 75040",
+    "phone": "(469) 661-8258",
+    "website": null,
+    "rating": 4.5,
+    "reviewCount": 238,
+    "description": "",
+    "services": [
+      "Nail salon"
+    ],
+    "neighborhood": "",
+    "hours": {
+      "Wednesday": "10 AM–7:30 PM",
+      "Thursday": "10 AM–7:30 PM",
+      "Friday": "10 AM–7:30 PM",
+      "Saturday": "9 AM–7:30 PM",
+      "Sunday": "12–6 PM",
+      "Monday": "11 AM–7:30 PM",
+      "Tuesday": "10 AM–7:30 PM"
+    },
+    "image": "https://lh3.googleusercontent.com/p/AF1QipNCACyQkJFekarrgxCpqUTknAasyTPuf6PZqXcG",
+    "premium": false
+  },
+  {
+    "id": "nail-salons-garland-5",
+    "name": "Avalon Nails",
+    "category": "nail-salons",
+    "city": "garland",
+    "state": "Texas",
+    "address": "1311 Marketplace Dr #134, Garland, TX 75041",
+    "phone": "(469) 372-7706",
+    "website": null,
+    "rating": 4.3,
+    "reviewCount": 399,
+    "description": "",
+    "services": [
+      "Nail salon"
+    ],
+    "neighborhood": "",
+    "hours": {
+      "Wednesday": "9:30 AM–7 PM",
+      "Thursday": "9:30 AM–7 PM",
+      "Friday": "9:30 AM–7 PM",
+      "Saturday": "9:30 AM–6 PM",
+      "Sunday": "Closed",
+      "Monday": "9:30 AM–7 PM",
+      "Tuesday": "9:30 AM–7 PM"
+    },
+    "image": "https://lh3.googleusercontent.com/gps-cs-s/AC9h4npd9dFx6wYq2IGbdr_pb57q7ub9wg-m4DeNWRB2CoadsxgwdqipriuJdvoOz4Rl1n--l3NLqnDVV4Yr-h6GoagpILYHBGAIw1IDs05oqTu90DM6GYy2O9rfEe88QyoAyXlKsa4",
+    "premium": false
+  },
+  {
+    "id": "nail-salons-dallas-1",
+    "name": "Uptown Nail Spa",
+    "category": "nail-salons",
+    "city": "dallas",
+    "state": "Texas",
+    "address": "2906 McKinney Ave, Dallas, TX 75204, United States",
+    "phone": "214-953-6245",
+    "website": "https://uptownnailspadallas.com/",
+    "rating": 4.6,
+    "reviewCount": 1372,
+    "description": "Uptown Nail Spa",
+    "services": [
+      "Nail salon",
+      "Massage spa"
+    ],
+    "neighborhood": "",
+    "hours": {
+      "Wednesday": "9:30 a.m.–8 p.m.",
+      "Thursday": "9:30 a.m.–8 p.m.",
+      "Friday": "9:30 a.m.–8 p.m.",
+      "Saturday": "9 a.m.–7 p.m.",
+      "Sunday": "10 a.m.–8 p.m.",
+      "Monday": "9:30 a.m.–8 p.m.",
+      "Tuesday": "9:30 a.m.–8 p.m."
+    },
+    "image": "https://lh3.googleusercontent.com/p/AF1QipOFKW6-t3yb3jQuwfwYWUqJXPbXwGbwlMZ9IB2I",
+    "premium": false
+  },
+  {
+    "id": "nail-salons-dallas-2",
+    "name": "Onyx Nail Bar",
+    "category": "nail-salons",
+    "city": "dallas",
+    "state": "Texas",
+    "address": "4123 Cedar Springs Rd #109, Dallas, TX 75219, United States",
+    "phone": "214-599-0255",
+    "website": "https://onyx.hayven.ai/",
+    "rating": 4.5,
+    "reviewCount": 1148,
+    "description": "Onyx Nail Bar",
+    "services": [
+      "Nail salon",
+      "Facial spa",
+      "Massage spa",
+      "Waxing hair removal service"
+    ],
+    "neighborhood": "",
+    "hours": {
+      "Wednesday": "10 a.m.–8 p.m.",
+      "Thursday": "10 a.m.–8 p.m.",
+      "Friday": "10 a.m.–8 p.m.",
+      "Saturday": "9 a.m.–7 p.m.",
+      "Sunday": "11:30 a.m.–6 p.m.",
+      "Monday": "10 a.m.–8 p.m.",
+      "Tuesday": "10 a.m.–8 p.m."
+    },
+    "image": "https://lh3.googleusercontent.com/p/AF1QipPqN-idTq3a1nf2RHYLAD-ZYonKskUn6hXyzf-z",
+    "premium": false
   }
 ]
