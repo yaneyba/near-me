@@ -8,6 +8,8 @@ import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import SitemapPage from './pages/SitemapPage';
 import AddBusinessPage from './pages/AddBusinessPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import TermsOfServicePage from './pages/TermsOfServicePage';
 import Layout from './components/Layout';
 
 function App() {
@@ -34,8 +36,11 @@ function App() {
           <Route path="/" element={<HomePage subdomainInfo={subdomainInfo} />} />
           <Route path="/about" element={<AboutPage subdomainInfo={subdomainInfo} />} />
           <Route path="/contact" element={<ContactPage subdomainInfo={subdomainInfo} />} />
+          <Route path="/sitemap" element={<SitemapPage />} />
           <Route path="/sitemap-generator" element={<SitemapPage />} />
           <Route path="/add-business" element={<AddBusinessPage subdomainInfo={subdomainInfo} />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+          <Route path="/terms-of-service" element={<TermsOfServicePage />} />
         </Routes>
       </Layout>
     </Router>

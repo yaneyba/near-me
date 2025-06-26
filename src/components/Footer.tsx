@@ -1,5 +1,6 @@
 import React from 'react';
 import { MapPin, Phone, Mail, Clock, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import businessesData from '../data/businesses.json';
 import { Business } from '../types';
 import { SITE_INFO } from '../siteInfo';
@@ -183,15 +184,15 @@ const Footer: React.FC<FooterProps> = ({ category, city, state }) => {
               © {currentYear} Near Me Directory. All rights reserved.
             </div>
             <div className="flex flex-wrap items-center space-x-6 text-sm">
-              <a href="#privacy" className="text-gray-400 hover:text-white transition-colors">
+              <Link to="/privacy-policy" className="text-gray-400 hover:text-white transition-colors">
                 Privacy Policy
-              </a>
-              <a href="#terms" className="text-gray-400 hover:text-white transition-colors">
+              </Link>
+              <Link to="/terms-of-service" className="text-gray-400 hover:text-white transition-colors">
                 Terms of Service
-              </a>
-              <a href="#sitemap" className="text-gray-400 hover:text-white transition-colors">
+              </Link>
+              <Link to="/sitemap" className="text-gray-400 hover:text-white transition-colors">
                 Sitemap
-              </a>
+              </Link>
               <a href="#business-owners" className="text-gray-400 hover:text-white transition-colors">
                 For Business Owners
               </a>
