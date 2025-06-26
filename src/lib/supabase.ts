@@ -132,6 +132,41 @@ export interface Database {
           updated_at?: string | null;
         };
       };
+      user_engagement_events: {
+        Row: {
+          id: string;
+          business_id: string;
+          business_name: string;
+          event_type: string;
+          event_data: any | null;
+          timestamp: string;
+          ip_address: string | null;
+          user_session_id: string;
+          created_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          business_id: string;
+          business_name: string;
+          event_type: string;
+          event_data?: any | null;
+          timestamp?: string;
+          ip_address?: string | null;
+          user_session_id: string;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          business_id?: string;
+          business_name?: string;
+          event_type?: string;
+          event_data?: any | null;
+          timestamp?: string;
+          ip_address?: string | null;
+          user_session_id?: string;
+          created_at?: string | null;
+        };
+      };
     };
     Enums: {
       submission_status: 'pending' | 'approved' | 'rejected';
