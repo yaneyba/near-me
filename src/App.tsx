@@ -10,6 +10,7 @@ import SitemapPage from './pages/SitemapPage';
 import AddBusinessPage from './pages/AddBusinessPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import TermsOfServicePage from './pages/TermsOfServicePage';
+import BusinessOwnersPage from './pages/BusinessOwnersPage';
 import Layout from './components/Layout';
 
 function App() {
@@ -41,6 +42,7 @@ function App() {
           <Route path="/add-business" element={<AddBusinessPage subdomainInfo={subdomainInfo} />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+          <Route path="/business-owners" element={<BusinessOwnersPage />} />
         </Routes>
       </Layout>
     </Router>
