@@ -12,7 +12,10 @@ import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import TermsOfServicePage from './pages/TermsOfServicePage';
 import BusinessOwnersPage from './pages/BusinessOwnersPage';
 import BusinessDashboardPage from './pages/BusinessDashboardPage';
+import LoginPage from './pages/LoginPage';
+import AdminSettingsPage from './pages/AdminSettingsPage';
 import Layout from './components/Layout';
+import AuthGuard from './components/auth/AuthGuard';
 
 function App() {
   // Configure the data provider factory
@@ -35,6 +38,7 @@ function App() {
     <Router>
       <Layout subdomainInfo={subdomainInfo}>
         <Routes>
+          {/* Public Routes */}
           <Route path="/" element={<HomePage subdomainInfo={subdomainInfo} />} />
           <Route path="/about" element={<AboutPage subdomainInfo={subdomainInfo} />} />
           <Route path="/contact" element={<ContactPage subdomainInfo={subdomainInfo} />} />
@@ -44,7 +48,42 @@ function App() {
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/terms-of-service" element={<TermsOfServicePage />} />
           <Route path="/business-owners" element={<BusinessOwnersPage />} />
-          <Route path="/business-dashboard" element={<BusinessDashboardPage />} />
+          
+          {/* Auth Routes - Accessible only when NOT logged in */}
+          <Route 
+            path="/login" 
+            element={
+              <AuthGuard requireAuth={false} redirectTo="/business-dashboard">
+                <LoginPage />
+              </AuthGuard>
+            } 
+          />
+          
+          {/* Redirect register to add-business */}
+          <Route 
+            path="/register" 
+            element={<AuthGuard requireAuth={false} redirectTo="/add-business" />} 
+          />
+          
+          {/* Protected Routes - Require authentication */}
+          <Route 
+            path="/business-dashboard" 
+            element={
+              <AuthGuard requireAuth={true}>
+                <BusinessDashboardPage />
+              </AuthGuard>
+            } 
+          />
+          
+          {/* Admin Routes */}
+          <Route 
+            path="/admin/settings" 
+            element={
+              <AuthGuard requireAuth={true}>
+                <AdminSettingsPage />
+              </AuthGuard>
+            } 
+          />
         </Routes>
       </Layout>
     </Router>
