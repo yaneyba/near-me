@@ -1,6 +1,6 @@
 [
   {
-    "id": "auto-repair-denver-1",
+    "id": "auto-repair-denver-01",
     "name": "Quick Fix Auto Repair",
     "category": "auto-repair",
     "city": "denver",
@@ -26,7 +26,7 @@
     "premium": true
   },
   {
-    "id": "auto-repair-denver-2",
+    "id": "auto-repair-denver-02",
     "name": "Denver Auto Service Center",
     "category": "auto-repair",
     "city": "denver",
@@ -51,7 +51,7 @@
     "premium": false
   },
   {
-    "id": "auto-repair-denver-3",
+    "id": "auto-repair-denver-03",
     "name": "Mountain View Auto",
     "category": "auto-repair",
     "city": "denver",
@@ -76,7 +76,7 @@
     "premium": false
   },
   {
-    "id": "nail-salons-austin-1",
+    "id": "nail-salons-austin-01",
     "name": "Elite Nail Bar",
     "category": "nail-salons",
     "city": "austin",
@@ -101,7 +101,7 @@
     "premium": true
   },
   {
-    "id": "nail-salons-dallas-1",
+    "id": "nail-salons-dallas-01",
     "name": "Uptown Nail Spa",
     "category": "nail-salons",
     "city": "dallas",
@@ -129,7 +129,7 @@
     "longitude": -96.8006362
   },
   {
-    "id": "nail-salons-dallas-10",
+    "id": "nail-salons-dallas-02",
     "name": "Cosmo Nails & Spa",
     "category": "nail-salons",
     "city": "dallas",
@@ -157,7 +157,7 @@
     "longitude": -96.7623271
   },
   {
-    "id": "nail-salons-dallas-11",
+    "id": "nail-salons-dallas-03",
     "name": "Rose Couture Nail Bar - Dallas",
     "category": "nail-salons",
     "city": "dallas",
@@ -185,7 +185,7 @@
     "longitude": -96.76761979999999
   },
   {
-    "id": "nail-salons-dallas-12",
+    "id": "nail-salons-dallas-04",
     "name": "French Nails Luxury Spa & Bar",
     "category": "nail-salons",
     "city": "dallas",
@@ -213,7 +213,7 @@
     "longitude": -96.79075619999999
   },
   {
-    "id": "nail-salons-dallas-13",
+    "id": "nail-salons-dallas-05",
     "name": "Royal Nails Spa",
     "category": "nail-salons",
     "city": "dallas",
@@ -241,7 +241,7 @@
     "longitude": -96.8058155
   },
   {
-    "id": "nail-salons-dallas-14",
+    "id": "nail-salons-dallas-06",
     "name": "HIGHLAND NAIL BAR - BEST NAIL SALON IN DALLAS ( 15% OFF MON-THUR 12PM-3PM, 10% OFF BIRTHDAY, 10% OFF STUDENTS)",
     "category": "nail-salons",
     "city": "dallas",
@@ -269,7 +269,7 @@
     "longitude": -96.70235219999999
   },
   {
-    "id": "nail-salons-dallas-15",
+    "id": "nail-salons-dallas-07",
     "name": "Nail Haus & Spa",
     "category": "nail-salons",
     "city": "dallas",
@@ -297,7 +297,7 @@
     "longitude": -96.775548
   },
   {
-    "id": "nail-salons-dallas-16",
+    "id": "nail-salons-dallas-08",
     "name": "French Nails Dallas",
     "category": "nail-salons",
     "city": "dallas",
@@ -325,7 +325,7 @@
     "longitude": -96.7716504
   },
   {
-    "id": "nail-salons-dallas-17",
+    "id": "nail-salons-dallas-09",
     "name": "The Best Nails Dallas",
     "category": "nail-salons",
     "city": "dallas",
@@ -353,7 +353,7 @@
     "longitude": -96.80118019999999
   },
   {
-    "id": "nail-salons-dallas-18",
+    "id": "nail-salons-dallas-10",
     "name": "3311 Nail Bar",
     "category": "nail-salons",
     "city": "dallas",
@@ -381,7 +381,7 @@
     "longitude": -96.80734269999999
   },
   {
-    "id": "nail-salons-dallas-19",
+    "id": "nail-salons-dallas-11",
     "name": "High Five Nail Bar",
     "category": "nail-salons",
     "city": "dallas",
@@ -409,7 +409,7 @@
     "longitude": -96.8098186
   },
   {
-    "id": "nail-salons-dallas-20",
+    "id": "nail-salons-dallas-12",
     "name": "Bliss Nail Spa Dallas ( Top Rated )",
     "category": "nail-salons",
     "city": "dallas",
@@ -437,7 +437,7 @@
     "longitude": -96.7512304
   },
   {
-    "id": "nail-salons-dallas-21",
+    "id": "nail-salons-dallas-13",
     "name": "Luxe Nail Studio",
     "category": "nail-salons",
     "city": "dallas",
@@ -463,7 +463,7 @@
     "premium": true
   },
   {
-    "id": "nail-salons-dallas-22",
+    "id": "nail-salons-dallas-14",
     "name": "Dallas Nails & Spa",
     "category": "nail-salons",
     "city": "dallas",
@@ -488,7 +488,7 @@
     "premium": false
   },
   {
-    "id": "nail-salons-dallas-23",
+    "id": "nail-salons-dallas-15",
     "name": "Precision Nails Dallas",
     "category": "nail-salons",
     "city": "dallas",
@@ -514,7 +514,7 @@
     "premium": false
   },
   {
-    "id": "nail-salons-frisco-1",
+    "id": "nail-salons-frisco-01",
     "name": "Onyx Nail Bar Frisco",
     "category": "nail-salons",
     "city": "frisco",
@@ -540,7 +540,7 @@
     "premium": false
   },
   {
-    "id": "nail-salons-frisco-2",
+    "id": "nail-salons-frisco-02",
     "name": "Willow Nail Lounge",
     "category": "nail-salons",
     "city": "frisco",
@@ -566,7 +566,7 @@
     "premium": false
   },
   {
-    "id": "nail-salons-frisco-3",
+    "id": "nail-salons-frisco-03",
     "name": "Ooh La La Nail and Spa",
     "category": "nail-salons",
     "city": "frisco",
@@ -592,7 +592,7 @@
     "premium": false
   },
   {
-    "id": "nail-salons-frisco-4",
+    "id": "nail-salons-frisco-04",
     "name": "Universal Nail & Spa Of Frisco",
     "category": "nail-salons",
     "city": "frisco",
@@ -618,7 +618,7 @@
     "premium": true
   },
   {
-    "id": "nail-salons-frisco-5",
+    "id": "nail-salons-frisco-05",
     "name": "Fabuluxe Nails & Spa",
     "category": "nail-salons",
     "city": "frisco",
@@ -644,7 +644,7 @@
     "premium": true
   },
   {
-    "id": "nail-salons-frisco-6",
+    "id": "nail-salons-frisco-06",
     "name": "Dash Nail Spa",
     "category": "nail-salons",
     "city": "frisco",
@@ -670,7 +670,7 @@
     "premium": false
   },
   {
-    "id": "nail-salons-frisco-7",
+    "id": "nail-salons-frisco-07",
     "name": "American Nail Salon & Bar",
     "category": "nail-salons",
     "city": "frisco",
@@ -696,7 +696,7 @@
     "premium": false
   },
   {
-    "id": "nail-salons-frisco-8",
+    "id": "nail-salons-frisco-08",
     "name": "Grey Stone Nails Bar",
     "category": "nail-salons",
     "city": "frisco",
@@ -722,7 +722,7 @@
     "premium": false
   },
   {
-    "id": "nail-salons-frisco-9",
+    "id": "nail-salons-frisco-09",
     "name": "Aria Nail Bar",
     "category": "nail-salons",
     "city": "frisco",
@@ -774,7 +774,7 @@
     "premium": false
   },
   {
-    "id": "nail-salons-garland-1",
+    "id": "nail-salons-garland-01",
     "name": "Lavish Nail & Spa",
     "category": "nail-salons",
     "city": "garland",
@@ -804,7 +804,7 @@
     "premium": false
   },
   {
-    "id": "nail-salons-garland-2",
+    "id": "nail-salons-garland-02",
     "name": "Luxury Nails",
     "category": "nail-salons",
     "city": "garland",
@@ -832,7 +832,7 @@
     "premium": false
   },
   {
-    "id": "nail-salons-garland-3",
+    "id": "nail-salons-garland-03",
     "name": "Deluxe Nails & Spa",
     "category": "nail-salons",
     "city": "garland",
@@ -860,7 +860,7 @@
     "premium": false
   },
   {
-    "id": "nail-salons-garland-4",
+    "id": "nail-salons-garland-04",
     "name": "Ola Nail Spa",
     "category": "nail-salons",
     "city": "garland",
@@ -888,7 +888,7 @@
     "premium": false
   },
   {
-    "id": "nail-salons-garland-5",
+    "id": "nail-salons-garland-05",
     "name": "Avalon Nails",
     "category": "nail-salons",
     "city": "garland",
