@@ -5,9 +5,10 @@ This guide provides detailed instructions for administrators on how to manage us
 ## Table of Contents
 
 1. [Admin User Setup](#admin-user-setup)
-2. [Authentication Management](#authentication-management)
-3. [Admin Dashboard](#admin-dashboard)
-4. [Security Best Practices](#security-best-practices)
+2. [Business Owner User Setup](#business-owner-user-setup)
+3. [Authentication Management](#authentication-management)
+4. [Admin Dashboard](#admin-dashboard)
+5. [Security Best Practices](#security-best-practices)
 
 ---
 
@@ -84,6 +85,86 @@ If you encounter errors during admin user creation:
 3. **"Network error"**:
    - Check your internet connection
    - Verify the Supabase URL is correct and accessible
+
+---
+
+## Business Owner User Setup
+
+### Creating a Business Owner User
+
+The system includes a script to create business owner users who can access the business dashboard. This script creates a user in Supabase Auth and sets up their business profile.
+
+#### Prerequisites
+
+- Supabase project URL
+- Supabase service role key (found in your Supabase dashboard under Project Settings > API)
+- Node.js installed on your machine
+
+#### Steps to Create a Business Owner User
+
+1. Run the business owner creation script:
+
+```bash
+npm run create-business-owner
+```
+
+2. When prompted, enter the following information:
+   - Supabase URL (e.g., `https://your-project.supabase.co`)
+   - Supabase service role key
+   - Business owner email address
+   - Business owner password
+   - Business name
+   - Business ID (e.g., `nail-salons-dallas-01`)
+
+3. The script will:
+   - Create a new user in Supabase Auth
+   - Skip email confirmation
+   - Create a profile with the 'owner' role
+   - Link the user to their business
+   - Display confirmation of successful creation
+
+#### Example Output
+
+```
+👤 Business Owner User Setup Script
+==================================
+This script will create a business owner user in your Supabase project.
+
+Enter your Supabase URL: https://example.supabase.co
+Enter your Supabase service role key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Enter business owner email: owner@elegantails.com
+Enter business owner password: ********
+Enter business name: Elegant Nails Studio
+Enter business ID (e.g., nail-salons-dallas-01): nail-salons-dallas-01
+
+🔄 Creating business owner user...
+✅ User created successfully
+📧 Email: owner@elegantails.com
+✅ Business owner profile created successfully
+👤 User ID: 550e8400-e29b-41d4-a716-446655440000
+🏢 Business: Elegant Nails Studio
+🔑 Role: owner
+
+🎉 Business owner setup complete!
+The user can now log in with the provided email and password to access the business dashboard.
+```
+
+### Troubleshooting Business Owner Creation
+
+If you encounter errors during business owner user creation:
+
+1. **"Error creating user"**: 
+   - Verify your Supabase URL and service role key
+   - Check if the email is already in use
+   - Ensure password meets strength requirements (min 6 characters)
+
+2. **"Error creating business owner profile"**:
+   - Verify the `business_profiles` table exists in your database
+   - Check if the user was created successfully before the profile error
+
+3. **"Business ID not found"**:
+   - The business ID is optional - if not provided, the user will still be created
+   - You can update the business ID later through the admin dashboard
 
 ---
 
@@ -191,6 +272,13 @@ The Supabase service role key has full access to your database. To keep it secur
 2. **Only use it for admin scripts and server-side operations**
 3. **Rotate the key if you suspect it has been compromised**
 4. **Do not commit it to version control**
+
+### Business Owner Account Security
+
+1. **Verify Identity**: Confirm the business owner's identity before creating their account
+2. **Secure Delivery**: Send credentials securely to the business owner
+3. **Password Reset**: Encourage business owners to reset their password after first login
+4. **Access Review**: Periodically review business owner accounts for suspicious activity
 
 ### Monitoring Admin Actions
 
