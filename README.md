@@ -11,6 +11,7 @@ A React application that creates unique, SEO-optimized pages for different busin
 - **Hybrid Data Strategy**: JSON for business listings (fast), Supabase for forms (persistent)
 - **Mobile Responsive**: Optimized for all devices
 - **Production Ready**: Cache busting, CDN optimization, and deployment ready
+- **Authentication**: Business owner login and admin controls
 
 ## Quick Start
 
@@ -51,6 +52,28 @@ Your existing database schema is already compatible! The application will use yo
 ```bash
 npm run dev
 ```
+
+## Admin Setup
+
+### Creating an Admin User
+
+To create an admin user with full access to the admin settings:
+
+```bash
+npm run create-admin
+```
+
+Follow the prompts to enter your Supabase URL, service role key, and admin user details.
+
+### Toggling Authentication Features
+
+To enable or disable login functionality:
+
+```bash
+npm run toggle-auth
+```
+
+This script allows you to toggle authentication features without accessing the admin dashboard.
 
 ## Data Architecture
 
@@ -93,6 +116,13 @@ Business submissions are stored in your existing `business_submissions` table wi
 - Review workflow (pending → approved/rejected)
 - Admin notes and tracking
 
+### Authentication
+
+User authentication is handled through Supabase Auth with:
+- Email/password login for business owners
+- Role-based access control
+- Admin settings for enabling/disabling authentication
+
 ### Security
 
 Your existing Row Level Security (RLS) policies are used:
@@ -110,6 +140,8 @@ npm run build            # Build for production with SEO
 npm run build:production # Build with production optimizations
 npm run preview          # Preview production build
 npm run lint             # Run ESLint
+npm run create-admin     # Create an admin user
+npm run toggle-auth      # Toggle authentication features
 ```
 
 ### Adding New Content
@@ -125,6 +157,7 @@ Required for Supabase integration:
 ```env
 VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_AUTH_LOGIN_ENABLED=true
 ```
 
 ## Deployment
@@ -144,6 +177,7 @@ Add these in your Cloudflare Pages dashboard:
 ```
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your_anon_key_here
+VITE_AUTH_LOGIN_ENABLED=true
 ```
 
 ## SEO Strategy
@@ -169,69 +203,40 @@ Each subdomain gets a unique HTML file:
 ✅ **Production Ready**: Optimized for CDN deployment  
 ✅ **Compatible**: Works with your existing database schema
 
-## Database Schema (Existing)
+## Database Schema
 
-### contact_messages
-
-Your existing table structure is used:
+### business_profiles
 
 | Column | Type | Description |
 |--------|------|-------------|
 | id | uuid | Primary key |
-| name | text | Contact name |
-| email | text | Contact email |
-| subject | text | Message subject |
-| message | text | Message content |
-| category | text | Business category context |
-| city | text | City context |
-| status | text | new, in_progress, resolved |
-| admin_notes | text | Internal admin notes |
-| resolved_at | timestamptz | Resolution timestamp |
-| resolved_by | text | Admin who resolved |
-| created_at | timestamptz | Submission time |
-| updated_at | timestamptz | Last update time |
-
-### business_submissions
-
-Your existing table structure is used:
-
-| Column | Type | Description |
-|--------|------|-------------|
-| id | uuid | Primary key |
+| user_id | uuid | References auth.users |
+| business_id | text | Business identifier |
 | business_name | text | Business name |
-| owner_name | text | Owner/manager name |
 | email | text | Contact email |
-| phone | text | Phone number |
-| address | text | Business address |
-| city | text | City |
-| state | text | State |
-| zip_code | text | ZIP code |
-| category | text | Business category |
-| website | text | Website URL (optional) |
-| description | text | Business description |
-| services | text[] | Array of services |
-| hours | jsonb | Business hours |
-| status | enum | pending, approved, rejected |
-| submitted_at | timestamptz | Submission time |
-| reviewed_at | timestamptz | Review time |
-| reviewer_notes | text | Admin review notes |
-| site_id | text | Site identifier |
-| created_at | timestamptz | Creation time |
-| updated_at | timestamptz | Last update time |
+| role | text | 'owner', 'admin', or 'staff' |
+| created_at | timestamptz | Creation timestamp |
+| updated_at | timestamptz | Update timestamp |
 
-## Admin Features
+### user_engagement_events
 
-Your existing admin features work seamlessly:
-- View all contact messages and business submissions
-- Update status and add notes
-- Approve/reject business applications
-- All existing triggers and notifications continue to work
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | Primary key |
+| business_id | text | Business identifier |
+| business_name | text | Business name |
+| event_type | text | Type of engagement event |
+| event_data | jsonb | Additional event data |
+| timestamp | timestamptz | Event timestamp |
+| ip_address | text | User IP address |
+| user_session_id | text | Session identifier |
+| created_at | timestamptz | Creation timestamp |
 
 ## Support
 
 For questions or issues:
 1. Check the documentation in the `docs/` folder
-2. Review the code comments in source files
+2. Review the code comments in the source files
 3. Use the development panel for testing different configurations
 
 ## License

@@ -12,7 +12,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "deploy:staging": "npm run build && echo 'Deploy to staging'",
-    "deploy:production": "npm run build:production && echo 'Deploy to production'"
+    "deploy:production": "npm run build:production && echo 'Deploy to production'",
+    "create-admin": "node scripts/create-admin-user.js",
+    "toggle-auth": "node scripts/toggle-auth-features.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.50.0",
