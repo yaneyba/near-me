@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Star, Phone, MapPin, Clock, ExternalLink, Globe, Crown, Zap, ChevronDown, ChevronUp, Calendar, Navigation } from 'lucide-react';
 import { Business } from '../types';
+import { engagementTracker } from '../utils/engagementTracker';
 
 interface PremiumListingsProps {
   businesses: Business[];
@@ -14,18 +15,60 @@ const PremiumListings: React.FC<PremiumListingsProps> = ({ businesses, category,
   // Filter premium businesses
   const premiumBusinesses = businesses.filter(business => business.premium);
 
+  // Track premium section views
+  useEffect(() => {
+    if (premiumBusinesses.length > 0) {
+      premiumBusinesses.forEach(business => {
+        engagementTracker.trackView(
+          business.id, 
+          business.name, 
+          'premium', 
+          undefined
+        );
+      });
+    }
+  }, [premiumBusinesses]);
+
   if (premiumBusinesses.length === 0) {
     return null;
   }
 
-  const toggleServicesExpansion = (businessId: string) => {
+  const toggleServicesExpansion = (businessId: string, businessName: string) => {
     const newExpanded = new Set(expandedServices);
     if (newExpanded.has(businessId)) {
       newExpanded.delete(businessId);
     } else {
       newExpanded.add(businessId);
+      // Track services expand event
+      engagementTracker.trackServicesExpand(businessId, businessName);
     }
     setExpandedServices(newExpanded);
+  };
+
+  const handlePhoneClick = (business: Business) => {
+    engagementTracker.trackPhoneClick(business.id, business.name, business.phone);
+  };
+
+  const handleWebsiteClick = (business: Business) => {
+    if (business.website) {
+      engagementTracker.trackWebsiteClick(business.id, business.name, business.website);
+    }
+  };
+
+  const handleBookingClick = (business: Business, bookingUrl: string) => {
+    engagementTracker.trackBookingClick(business.id, business.name, bookingUrl);
+  };
+
+  const handleDirectionsClick = (business: Business, directionsUrl: string) => {
+    engagementTracker.trackDirectionsClick(business.id, business.name, directionsUrl);
+  };
+
+  const handleHoursView = (business: Business) => {
+    engagementTracker.trackHoursView(business.id, business.name);
+  };
+
+  const handlePhotoView = (business: Business) => {
+    engagementTracker.trackPhotoView(business.id, business.name, business.image);
   };
 
   const renderStars = (rating: number, reviewCount: number) => {
@@ -68,7 +111,7 @@ const PremiumListings: React.FC<PremiumListingsProps> = ({ businesses, category,
           ))}
           {hasMoreServices && (
             <button
-              onClick={() => toggleServicesExpansion(business.id)}
+              onClick={() => toggleServicesExpansion(business.id, business.name)}
               className="inline-flex items-center text-yellow-600 hover:text-yellow-700 px-3 py-1 text-sm font-medium transition-all duration-200 hover:bg-yellow-50 rounded-full"
             >
               {isExpanded ? (
@@ -102,6 +145,7 @@ const PremiumListings: React.FC<PremiumListingsProps> = ({ businesses, category,
                 href={link}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => handleBookingClick(business, link)}
                 className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white text-sm font-semibold rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
               >
                 <Calendar className="w-4 h-4 mr-2" />
@@ -142,6 +186,7 @@ const PremiumListings: React.FC<PremiumListingsProps> = ({ businesses, category,
               href={googleMapsUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => handleDirectionsClick(business, googleMapsUrl)}
               className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white text-sm font-semibold rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
             >
               <Navigation className="w-4 h-4 mr-2" />
@@ -211,7 +256,7 @@ const PremiumListings: React.FC<PremiumListingsProps> = ({ businesses, category,
         </div>
 
         {/* Premium Business Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
           {premiumBusinesses.map((business, index) => (
             <div
               key={business.id}
@@ -235,6 +280,7 @@ const PremiumListings: React.FC<PremiumListingsProps> = ({ businesses, category,
                   src={business.image}
                   alt={business.name}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  onClick={() => handlePhotoView(business)}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                 <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-semibold text-gray-900 border border-white/20">
@@ -253,6 +299,7 @@ const PremiumListings: React.FC<PremiumListingsProps> = ({ businesses, category,
                       href={business.website}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={() => handleWebsiteClick(business)}
                       className="text-yellow-600 hover:text-yellow-700 transition-colors p-2 hover:bg-yellow-50 rounded-full"
                     >
                       <Globe className="w-5 h-5" />
@@ -276,12 +323,16 @@ const PremiumListings: React.FC<PremiumListingsProps> = ({ businesses, category,
                     <Phone className="w-5 h-5 mr-3 text-yellow-500 flex-shrink-0" />
                     <a 
                       href={`tel:${business.phone}`}
+                      onClick={() => handlePhoneClick(business)}
                       className="hover:text-yellow-600 transition-colors font-medium"
                     >
                       {business.phone}
                     </a>
                   </div>
-                  <div className="flex items-start text-gray-600">
+                  <div 
+                    className="flex items-start text-gray-600"
+                    onClick={() => handleHoursView(business)}
+                  >
                     <Clock className="w-5 h-5 mr-3 text-yellow-500 flex-shrink-0 mt-0.5" />
                     <div>
                       <div className="font-medium">Today: {business.hours.Monday}</div>
@@ -299,6 +350,7 @@ const PremiumListings: React.FC<PremiumListingsProps> = ({ businesses, category,
                 <div className="flex gap-3 pt-4 border-t border-gray-100">
                   <a
                     href={`tel:${business.phone}`}
+                    onClick={() => handlePhoneClick(business)}
                     className="flex-1 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white py-3 px-6 rounded-xl font-semibold text-center transition-all duration-200 focus:ring-4 focus:ring-yellow-300/50 focus:outline-none shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                   >
                     Call Now
@@ -308,6 +360,7 @@ const PremiumListings: React.FC<PremiumListingsProps> = ({ businesses, category,
                       href={business.website}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={() => handleWebsiteClick(business)}
                       className="flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-6 rounded-xl font-semibold transition-all duration-200 focus:ring-4 focus:ring-gray-300/50 focus:outline-none shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                     >
                       <ExternalLink className="w-5 h-5" />

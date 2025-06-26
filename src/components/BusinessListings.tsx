@@ -3,6 +3,7 @@ import { Star, Phone, MapPin, Clock, ExternalLink, Globe, Filter, SortAsc, Chevr
 import { Business } from '../types';
 import { AdUnit, SponsoredContent } from './ads';
 import PremiumUpgrade from './PremiumUpgrade';
+import { engagementTracker } from '../utils/engagementTracker';
 
 interface BusinessListingsProps {
   businesses: Business[];
@@ -99,6 +100,18 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
     setPaginatedBusinesses(filteredBusinesses.slice(startIndex, endIndex));
   }, [filteredBusinesses, currentPage, itemsPerPage]);
 
+  // Track business views when they appear
+  useEffect(() => {
+    paginatedBusinesses.forEach(business => {
+      engagementTracker.trackView(
+        business.id, 
+        business.name, 
+        searchQuery ? 'search' : 'category',
+        searchQuery
+      );
+    });
+  }, [paginatedBusinesses, searchQuery]);
+
   const totalPages = Math.ceil(filteredBusinesses.length / itemsPerPage);
   const startItem = (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, filteredBusinesses.length);
@@ -128,12 +141,14 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
     }
   };
 
-  const toggleServicesExpansion = (businessId: string) => {
+  const toggleServicesExpansion = (businessId: string, businessName: string) => {
     const newExpanded = new Set(expandedServices);
     if (newExpanded.has(businessId)) {
       newExpanded.delete(businessId);
     } else {
       newExpanded.add(businessId);
+      // Track services expand event
+      engagementTracker.trackServicesExpand(businessId, businessName);
     }
     setExpandedServices(newExpanded);
   };
@@ -141,6 +156,28 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
   const handleUpgradeClick = (businessName: string) => {
     setSelectedBusinessForUpgrade(businessName);
     setShowUpgradeModal(true);
+  };
+
+  const handlePhoneClick = (business: Business) => {
+    engagementTracker.trackPhoneClick(business.id, business.name, business.phone);
+  };
+
+  const handleWebsiteClick = (business: Business) => {
+    if (business.website) {
+      engagementTracker.trackWebsiteClick(business.id, business.name, business.website);
+    }
+  };
+
+  const handleBookingClick = (business: Business, bookingUrl: string) => {
+    engagementTracker.trackBookingClick(business.id, business.name, bookingUrl);
+  };
+
+  const handleDirectionsClick = (business: Business, directionsUrl: string) => {
+    engagementTracker.trackDirectionsClick(business.id, business.name, directionsUrl);
+  };
+
+  const handleHoursView = (business: Business) => {
+    engagementTracker.trackHoursView(business.id, business.name);
   };
 
   const renderPaginationButtons = () => {
@@ -245,6 +282,7 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
                 href={link}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => handleBookingClick(business, link)}
                 className="inline-flex items-center px-3 py-1 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white text-xs font-medium rounded-full transition-all duration-200 shadow-sm hover:shadow-md"
               >
                 <Calendar className="w-3 h-3 mr-1" />
@@ -294,6 +332,7 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
               href={googleMapsUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => handleDirectionsClick(business, googleMapsUrl)}
               className="inline-flex items-center px-3 py-1 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white text-xs font-medium rounded-full transition-all duration-200 shadow-sm hover:shadow-md"
             >
               <Navigation className="w-3 h-3 mr-1" />
@@ -372,7 +411,7 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
           ))}
           {hasMoreServices && (
             <button
-              onClick={() => toggleServicesExpansion(business.id)}
+              onClick={() => toggleServicesExpansion(business.id, business.name)}
               className={`inline-flex items-center px-2 py-1 text-xs font-medium transition-all duration-200 hover:bg-gray-100 rounded-full ${
                 business.premium ? 'text-yellow-600 hover:text-yellow-700' : 'text-blue-600 hover:text-blue-700'
               }`}
@@ -460,6 +499,7 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
               src={business.image}
               alt={business.name}
               className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
+              onClick={() => engagementTracker.trackPhotoView(business.id, business.name, business.image)}
             />
             <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-sm font-semibold text-gray-900 border border-white/20">
               {business.neighborhood}
@@ -483,6 +523,7 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
                   href={business.website}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => handleWebsiteClick(business)}
                   className="text-blue-600 hover:text-blue-700 transition-colors p-1"
                 >
                   <Globe className="w-5 h-5" />
@@ -502,12 +543,16 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
                 <Phone className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
                 <a 
                   href={`tel:${business.phone}`}
+                  onClick={() => handlePhoneClick(business)}
                   className="hover:text-blue-600 transition-colors"
                 >
                   {business.phone}
                 </a>
               </div>
-              <div className="flex items-start text-sm text-gray-600">
+              <div 
+                className="flex items-start text-sm text-gray-600"
+                onClick={() => handleHoursView(business)}
+              >
                 <Clock className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0 mt-0.5" />
                 <div>
                   <div className="font-medium">Today: {business.hours.Monday}</div>
@@ -521,6 +566,7 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
             <div className="flex gap-2 pt-4 border-t border-gray-100">
               <a
                 href={`tel:${business.phone}`}
+                onClick={() => handlePhoneClick(business)}
                 className={`flex-1 py-2 px-4 rounded-lg font-medium text-center transition-colors duration-200 focus:ring-4 focus:outline-none ${
                   business.premium
                     ? 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white focus:ring-yellow-300/50 shadow-lg'
@@ -534,6 +580,7 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
                   href={business.website}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => handleWebsiteClick(business)}
                   className="flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg font-medium transition-colors duration-200 focus:ring-4 focus:ring-gray-300/50 focus:outline-none"
                 >
                   <ExternalLink className="w-4 h-4" />
