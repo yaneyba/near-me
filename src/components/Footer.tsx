@@ -190,9 +190,9 @@ const Footer: React.FC<FooterProps> = ({ category, city, state }) => {
               <Link to="/terms-of-service" className="text-gray-400 hover:text-white transition-colors">
                 Terms of Service
               </Link>
-              <a href="#sitemap" className="text-gray-400 hover:text-white transition-colors">
+              <Link to="/sitemap" className="text-gray-400 hover:text-white transition-colors">
                 Sitemap
-              </a>
+              </Link>
               <a href="#business-owners" className="text-gray-400 hover:text-white transition-colors">
                 For Business Owners
               </a>

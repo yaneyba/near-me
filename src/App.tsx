@@ -36,6 +36,7 @@ function App() {
           <Route path="/" element={<HomePage subdomainInfo={subdomainInfo} />} />
           <Route path="/about" element={<AboutPage subdomainInfo={subdomainInfo} />} />
           <Route path="/contact" element={<ContactPage subdomainInfo={subdomainInfo} />} />
+          <Route path="/sitemap" element={<SitemapPage />} />
           <Route path="/sitemap-generator" element={<SitemapPage />} />
           <Route path="/add-business" element={<AddBusinessPage subdomainInfo={subdomainInfo} />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
