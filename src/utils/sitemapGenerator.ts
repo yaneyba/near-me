@@ -25,6 +25,7 @@ export class SitemapGenerator {
   // City-state mapping for generating combinations
   private cityStateMap: Record<string, string> = {
     'dallas': 'Texas',
+    'garland': 'Texas',
     'denver': 'Colorado',
     'austin': 'Texas',
     'houston': 'Texas',

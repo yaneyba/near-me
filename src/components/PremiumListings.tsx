@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Star, Phone, MapPin, Clock, ExternalLink, Globe, Crown, Zap, ChevronDown, ChevronUp } from 'lucide-react';
+import { Star, Phone, MapPin, Clock, ExternalLink, Globe, Crown, Zap, ChevronDown, ChevronUp, Calendar, Navigation } from 'lucide-react';
 import { Business } from '../types';
 
 interface PremiumListingsProps {
@@ -84,6 +84,87 @@ const PremiumListings: React.FC<PremiumListingsProps> = ({ businesses, category,
               )}
             </button>
           )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderBookingLinks = (business: Business) => {
+    // Show booking links if available
+    if (business.bookingLinks && business.bookingLinks.length > 0) {
+      return (
+        <div className="mb-6">
+          <div className="text-sm font-semibold text-gray-900 mb-3">Quick Booking:</div>
+          <div className="flex flex-wrap gap-3">
+            {business.bookingLinks.map((link, index) => (
+              <a
+                key={index}
+                href={link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white text-sm font-semibold rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+              >
+                <Calendar className="w-4 h-4 mr-2" />
+                Book Online
+                <ExternalLink className="w-4 h-4 ml-2" />
+              </a>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // Show "Coming Soon" for premium businesses without booking links
+    return (
+      <div className="mb-6">
+        <div className="text-sm font-semibold text-gray-900 mb-3">Quick Booking:</div>
+        <div className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-600 text-sm font-medium rounded-lg border border-gray-200">
+          <Calendar className="w-4 h-4 mr-2" />
+          Coming Soon
+        </div>
+      </div>
+    );
+  };
+
+  const renderLocationInfo = (business: Business) => {
+    // Show directions if coordinates are available
+    if (business.latitude && business.longitude) {
+      const googleMapsUrl = `https://www.google.com/maps?q=${business.latitude},${business.longitude}`;
+
+      return (
+        <div className="space-y-3">
+          <div className="flex items-center text-gray-600">
+            <MapPin className="w-5 h-5 mr-3 text-yellow-500 flex-shrink-0" />
+            <span className="font-medium">{business.address}</span>
+          </div>
+          <div className="flex items-center">
+            <a
+              href={googleMapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white text-sm font-semibold rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+            >
+              <Navigation className="w-4 h-4 mr-2" />
+              Get Directions
+              <ExternalLink className="w-4 h-4 ml-2" />
+            </a>
+          </div>
+        </div>
+      );
+    }
+
+    // Show "Coming Soon" for premium businesses without coordinates
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center text-gray-600">
+          <MapPin className="w-5 h-5 mr-3 text-yellow-500 flex-shrink-0" />
+          <span className="font-medium">{business.address}</span>
+        </div>
+        <div className="flex items-center">
+          <div className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-600 text-sm font-medium rounded-lg border border-gray-200">
+            <Navigation className="w-4 h-4 mr-2" />
+            Directions Coming Soon
+          </div>
         </div>
       </div>
     );
@@ -190,10 +271,7 @@ const PremiumListings: React.FC<PremiumListingsProps> = ({ businesses, category,
 
                 {/* Business Details */}
                 <div className="space-y-4 mb-6">
-                  <div className="flex items-center text-gray-600">
-                    <MapPin className="w-5 h-5 mr-3 text-yellow-500 flex-shrink-0" />
-                    <span className="font-medium">{business.address}</span>
-                  </div>
+                  {renderLocationInfo(business)}
                   <div className="flex items-center text-gray-600">
                     <Phone className="w-5 h-5 mr-3 text-yellow-500 flex-shrink-0" />
                     <a 
@@ -213,6 +291,9 @@ const PremiumListings: React.FC<PremiumListingsProps> = ({ businesses, category,
 
                 {/* Services */}
                 {renderServices(business)}
+
+                {/* Booking Links */}
+                {renderBookingLinks(business)}
 
                 {/* Action Buttons */}
                 <div className="flex gap-3 pt-4 border-t border-gray-100">

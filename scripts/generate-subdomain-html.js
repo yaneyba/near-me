@@ -13,6 +13,7 @@ const businessesData = JSON.parse(
 // City-state mapping
 const cityStateMap = {
   'dallas': 'Texas',
+  'garland': 'Texas',
   'denver': 'Colorado',
   'austin': 'Texas',
   'houston': 'Texas',

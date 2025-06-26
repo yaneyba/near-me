@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Star, Phone, MapPin, Clock, ExternalLink, Globe, Filter, SortAsc, ChevronLeft, ChevronRight, Crown, ChevronDown, ChevronUp, MoreHorizontal } from 'lucide-react';
+import { Star, Phone, MapPin, Clock, ExternalLink, Globe, Filter, SortAsc, ChevronLeft, ChevronRight, Crown, ChevronDown, ChevronUp, MoreHorizontal, Calendar, Navigation } from 'lucide-react';
 import { Business } from '../types';
+import { AdUnit, SponsoredContent } from './ads';
 
 interface BusinessListingsProps {
   businesses: Business[];
@@ -265,6 +266,100 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
     );
   };
 
+  const renderBookingLinks = (business: Business) => {
+    if (!business.premium) {
+      return null;
+    }
+
+    // Show booking links if available
+    if (business.bookingLinks && business.bookingLinks.length > 0) {
+      return (
+        <div className="mb-4">
+          <div className="text-sm font-medium text-gray-900 mb-2">Quick Booking:</div>
+          <div className="flex flex-wrap gap-2">
+            {business.bookingLinks.map((link, index) => (
+              <a
+                key={index}
+                href={link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center px-3 py-1 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white text-xs font-medium rounded-full transition-all duration-200 shadow-sm hover:shadow-md"
+              >
+                <Calendar className="w-3 h-3 mr-1" />
+                Book Online
+                <ExternalLink className="w-3 h-3 ml-1" />
+              </a>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // Show "Coming Soon" for premium businesses without booking links
+    return (
+      <div className="mb-4">
+        <div className="text-sm font-medium text-gray-900 mb-2">Quick Booking:</div>
+        <div className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full border border-gray-200">
+          <Calendar className="w-3 h-3 mr-1" />
+          Coming Soon
+        </div>
+      </div>
+    );
+  };
+
+  const renderLocationInfo = (business: Business) => {
+    if (!business.premium) {
+      return (
+        <div className="flex items-center text-sm text-gray-600">
+          <MapPin className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
+          <span>{business.address}</span>
+        </div>
+      );
+    }
+
+    // Show directions if coordinates are available
+    if (business.latitude && business.longitude) {
+      const googleMapsUrl = `https://www.google.com/maps?q=${business.latitude},${business.longitude}`;
+
+      return (
+        <div className="space-y-2">
+          <div className="flex items-center text-sm text-gray-600">
+            <MapPin className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
+            <span>{business.address}</span>
+          </div>
+          <div className="flex items-center">
+            <a
+              href={googleMapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-3 py-1 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white text-xs font-medium rounded-full transition-all duration-200 shadow-sm hover:shadow-md"
+            >
+              <Navigation className="w-3 h-3 mr-1" />
+              Get Directions
+              <ExternalLink className="w-3 h-3 ml-1" />
+            </a>
+          </div>
+        </div>
+      );
+    }
+
+    // Show "Coming Soon" for premium businesses without coordinates
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center text-sm text-gray-600">
+          <MapPin className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
+          <span>{business.address}</span>
+        </div>
+        <div className="flex items-center">
+          <div className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full border border-gray-200">
+            <Navigation className="w-3 h-3 mr-1" />
+            Directions Coming Soon
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderStars = (rating: number, reviewCount: number) => {
     return (
       <div className="flex items-center">
@@ -294,6 +389,160 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
       return `${total} result${total !== 1 ? 's' : ''} for "${searchQuery}"${premiumCount > 0 ? ` (${premiumCount} premium)` : ''}`;
     }
     return `${total} ${category.toLowerCase()} in ${city}${premiumCount > 0 ? ` (${premiumCount} premium)` : ''}`;
+  };
+
+  // Insert ads strategically in the business grid
+  const renderBusinessGrid = () => {
+    const businessesWithAds = [];
+    const adsEnabled = import.meta.env.VITE_ENABLE_ADS === 'true';
+
+    paginatedBusinesses.forEach((business, index) => {
+      businessesWithAds.push(
+        <div
+          key={business.id}
+          className={`bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border overflow-hidden relative ${
+            business.premium 
+              ? 'border-yellow-300 ring-2 ring-yellow-100' 
+              : 'border-gray-100'
+          }`}
+          style={{
+            animationDelay: `${index * 50}ms`,
+            animation: 'fadeInUp 0.5s ease-out forwards'
+          }}
+        >
+          {/* Premium Badge */}
+          {business.premium && (
+            <div className="absolute top-4 left-4 z-10">
+              <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center shadow-lg">
+                <Crown className="w-3 h-3 mr-1" />
+                PREMIUM
+              </div>
+            </div>
+          )}
+
+          <div className="relative h-48 overflow-hidden">
+            <img
+              src={business.image}
+              alt={business.name}
+              className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
+            />
+            <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-sm font-semibold text-gray-900 border border-white/20">
+              {business.neighborhood}
+            </div>
+            {searchQuery && (
+              <div className="absolute bottom-4 left-4 bg-blue-600 text-white px-2 py-1 rounded-full text-xs font-medium">
+                Match
+              </div>
+            )}
+          </div>
+          
+          <div className="p-6">
+            <div className="flex items-start justify-between mb-3">
+              <h3 className={`text-xl font-bold leading-tight ${
+                business.premium ? 'text-yellow-700' : 'text-gray-900'
+              }`}>
+                {business.name}
+              </h3>
+              {business.website && (
+                <a
+                  href={business.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-700 transition-colors p-1"
+                >
+                  <Globe className="w-5 h-5" />
+                </a>
+              )}
+            </div>
+            
+            {renderStars(business.rating, business.reviewCount)}
+            
+            <p className="text-gray-600 mt-3 mb-4 leading-relaxed">
+              {business.description}
+            </p>
+            
+            <div className="space-y-3 mb-4">
+              {renderLocationInfo(business)}
+              <div className="flex items-center text-sm text-gray-600">
+                <Phone className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
+                <a 
+                  href={`tel:${business.phone}`}
+                  className="hover:text-blue-600 transition-colors"
+                >
+                  {business.phone}
+                </a>
+              </div>
+              <div className="flex items-start text-sm text-gray-600">
+                <Clock className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-medium">Today: {business.hours.Monday}</div>
+                </div>
+              </div>
+            </div>
+            
+            {renderServices(business)}
+            {renderBookingLinks(business)}
+            
+            <div className="flex gap-2 pt-4 border-t border-gray-100">
+              <a
+                href={`tel:${business.phone}`}
+                className={`flex-1 py-2 px-4 rounded-lg font-medium text-center transition-colors duration-200 focus:ring-4 focus:outline-none ${
+                  business.premium
+                    ? 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white focus:ring-yellow-300/50 shadow-lg'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-300/50'
+                }`}
+              >
+                Call Now
+              </a>
+              {business.website && (
+                <a
+                  href={business.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg font-medium transition-colors duration-200 focus:ring-4 focus:ring-gray-300/50 focus:outline-none"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+              )}
+            </div>
+          </div>
+
+          {/* Premium Glow Effect */}
+          {business.premium && (
+            <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-yellow-400/5 to-orange-500/5 pointer-events-none"></div>
+          )}
+        </div>
+      );
+
+      // Insert sponsored content after every 6 businesses (2 rows in 3-column grid)
+      if (adsEnabled && (index + 1) % 6 === 0 && index < paginatedBusinesses.length - 1) {
+        businessesWithAds.push(
+          <div key={`sponsored-${index}`} className="lg:col-span-3">
+            <SponsoredContent 
+              category={category}
+              city={city}
+              className="my-4"
+            />
+          </div>
+        );
+      }
+
+      // Insert banner ad after every 9 businesses (3 rows in 3-column grid)
+      if (adsEnabled && (index + 1) % 9 === 0 && index < paginatedBusinesses.length - 1) {
+        businessesWithAds.push(
+          <div key={`ad-${index}`} className="lg:col-span-3">
+            <AdUnit
+              slot={import.meta.env.VITE_GOOGLE_ADS_SLOT_BETWEEN_LISTINGS || ''}
+              size="leaderboard"
+              className="my-6"
+              label="Sponsored"
+            />
+          </div>
+        );
+      }
+    });
+
+    return businessesWithAds;
   };
 
   if (isLoading) {
@@ -487,126 +736,9 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
         </div>
       </div>
 
-      {/* Business Grid with smooth transitions */}
+      {/* Business Grid with strategic ad placement */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
-        {paginatedBusinesses.map((business, index) => (
-          <div
-            key={business.id}
-            className={`bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border overflow-hidden relative ${
-              business.premium 
-                ? 'border-yellow-300 ring-2 ring-yellow-100' 
-                : 'border-gray-100'
-            }`}
-            style={{
-              animationDelay: `${index * 50}ms`,
-              animation: 'fadeInUp 0.5s ease-out forwards'
-            }}
-          >
-            {/* Premium Badge */}
-            {business.premium && (
-              <div className="absolute top-4 left-4 z-10">
-                <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center shadow-lg">
-                  <Crown className="w-3 h-3 mr-1" />
-                  PREMIUM
-                </div>
-              </div>
-            )}
-
-            <div className="relative h-48 overflow-hidden">
-              <img
-                src={business.image}
-                alt={business.name}
-                className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
-              />
-              <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-sm font-semibold text-gray-900 border border-white/20">
-                {business.neighborhood}
-              </div>
-              {searchQuery && (
-                <div className="absolute bottom-4 left-4 bg-blue-600 text-white px-2 py-1 rounded-full text-xs font-medium">
-                  Match
-                </div>
-              )}
-            </div>
-            
-            <div className="p-6">
-              <div className="flex items-start justify-between mb-3">
-                <h3 className={`text-xl font-bold leading-tight ${
-                  business.premium ? 'text-yellow-700' : 'text-gray-900'
-                }`}>
-                  {business.name}
-                </h3>
-                {business.website && (
-                  <a
-                    href={business.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-700 transition-colors p-1"
-                  >
-                    <Globe className="w-5 h-5" />
-                  </a>
-                )}
-              </div>
-              
-              {renderStars(business.rating, business.reviewCount)}
-              
-              <p className="text-gray-600 mt-3 mb-4 leading-relaxed">
-                {business.description}
-              </p>
-              
-              <div className="space-y-3 mb-4">
-                <div className="flex items-center text-sm text-gray-600">
-                  <MapPin className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
-                  <span>{business.address}</span>
-                </div>
-                <div className="flex items-center text-sm text-gray-600">
-                  <Phone className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
-                  <a 
-                    href={`tel:${business.phone}`}
-                    className="hover:text-blue-600 transition-colors"
-                  >
-                    {business.phone}
-                  </a>
-                </div>
-                <div className="flex items-start text-sm text-gray-600">
-                  <Clock className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <div className="font-medium">Today: {business.hours.Monday}</div>
-                  </div>
-                </div>
-              </div>
-              
-              {renderServices(business)}
-              
-              <div className="flex gap-2 pt-4 border-t border-gray-100">
-                <a
-                  href={`tel:${business.phone}`}
-                  className={`flex-1 py-2 px-4 rounded-lg font-medium text-center transition-colors duration-200 focus:ring-4 focus:outline-none ${
-                    business.premium
-                      ? 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white focus:ring-yellow-300/50 shadow-lg'
-                      : 'bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-300/50'
-                  }`}
-                >
-                  Call Now
-                </a>
-                {business.website && (
-                  <a
-                    href={business.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg font-medium transition-colors duration-200 focus:ring-4 focus:ring-gray-300/50 focus:outline-none"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                  </a>
-                )}
-              </div>
-            </div>
-
-            {/* Premium Glow Effect */}
-            {business.premium && (
-              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-yellow-400/5 to-orange-500/5 pointer-events-none"></div>
-            )}
-          </div>
-        ))}
+        {renderBusinessGrid()}
       </div>
 
       {/* Enhanced Pagination Controls */}

@@ -3,6 +3,15 @@ import { ContactSubmission, BusinessSubmission, SubmissionResult } from '../type
 
 export class SupabaseDataProvider {
   /**
+   * Generate site_id as subdomain slug (category.city format)
+   */
+  private generateSiteId(category: string, city: string): string {
+    const categorySlug = category.toLowerCase().replace(/\s+/g, '-');
+    const citySlug = city.toLowerCase().replace(/\s+/g, '-');
+    return `${categorySlug}.${citySlug}`;
+  }
+
+  /**
    * Submit contact form to Supabase using existing schema
    */
   async submitContact(contactData: ContactSubmission): Promise<SubmissionResult> {
@@ -36,7 +45,7 @@ export class SupabaseDataProvider {
         };
       }
 
-      // Insert into existing contact_messages table
+      // Insert into existing contact_messages table - only select ID
       const { data, error } = await supabase
         .from('contact_messages')
         .insert({
@@ -48,25 +57,34 @@ export class SupabaseDataProvider {
           city: contactData.city || null,
           status: 'new'
         })
-        .select()
+        .select('id')  // ← Only get the ID we need
         .single();
 
       if (error) {
         console.error('Supabase error:', error);
         
-        // Handle specific Supabase errors
-        if (error.code === 'PGRST116') {
+        // User-friendly error messages for common issues
+        if (error.message.includes('row-level security policy')) {
           return {
             success: false,
-            message: 'Database connection error. Please try again later.',
-            errors: ['DATABASE_CONNECTION_ERROR']
+            message: 'Our system is currently experiencing technical difficulties. Please try again in a few minutes, or contact our support team directly for immediate assistance.',
+            errors: ['TECHNICAL_DIFFICULTIES']
           };
         }
         
+        if (error.code === 'PGRST116') {
+          return {
+            success: false,
+            message: 'Server temporarily unavailable. Please try again in a few minutes.',
+            errors: ['SERVER_UNAVAILABLE']
+          };
+        }
+        
+        // Generic friendly error for any other database issues
         return {
           success: false,
-          message: 'Failed to submit your message. Please try again.',
-          errors: ['SUBMISSION_ERROR']
+          message: 'We\'re experiencing technical difficulties at the moment. Please try again in a few minutes, or contact our support team if the issue persists.',
+          errors: ['TECHNICAL_DIFFICULTIES']
         };
       }
 
@@ -155,17 +173,19 @@ export class SupabaseDataProvider {
         };
       }
 
-      // Check for duplicate business - Fixed: Remove .single() to avoid PGRST116 error
-      const { data: existingBusinesses, error: duplicateCheckError } = await supabase
+      // Generate site_id as subdomain slug (category.city)
+      const siteId = this.generateSiteId(businessData.category, businessData.city);
+
+      // Check for duplicate business without using .single()
+      const { data: existingBusinesses, error: checkError } = await supabase
         .from('business_submissions')
         .select('id')
         .eq('business_name', businessData.businessName)
         .eq('city', businessData.city)
         .eq('state', businessData.state);
 
-      // Handle duplicate check error
-      if (duplicateCheckError) {
-        console.error('Error checking for duplicate business:', duplicateCheckError);
+      if (checkError) {
+        console.error('Error checking for duplicate business:', checkError);
         // Continue with submission even if duplicate check fails
       }
 
@@ -181,7 +201,7 @@ export class SupabaseDataProvider {
       // Combine all services
       const allServices = [...businessData.services, ...businessData.customServices];
 
-      // Insert into existing business_submissions table with correct enum type
+      // Insert with ALL required fields including dynamic site_id
       const { data, error } = await supabase
         .from('business_submissions')
         .insert({
@@ -194,34 +214,33 @@ export class SupabaseDataProvider {
           state: businessData.state,
           zip_code: businessData.zipCode,
           category: businessData.category,
+          site_id: siteId, // ← Just the subdomain slug: "auto-repair.denver"
           website: businessData.website || null,
           description: businessData.description || null,
           services: allServices,
           hours: businessData.hours,
-          status: 'pending' as Database['public']['Enums']['submission_status'],
-          site_id: 'near-me-us'
+          status: 'pending' as Database['public']['Enums']['submission_status']
         })
-        .select()
+        .select('id')  // ← Only get the ID we need
         .single();
 
       if (error) {
         console.error('Supabase error:', error);
         
-        // Handle RLS policy violation specifically
-        if (error.code === '42501' || error.message?.includes('row-level security policy')) {
+        // User-friendly error messages for common issues
+        if (error.message.includes('row-level security policy')) {
           return {
             success: false,
-            message: 'We\'re currently experiencing technical difficulties with business submissions. Please try again later or contact us directly.',
-            errors: ['RLS_POLICY_ERROR']
+            message: 'Our system is currently experiencing technical difficulties. Please try again in a few minutes, or contact our support team directly for immediate assistance.',
+            errors: ['TECHNICAL_DIFFICULTIES']
           };
         }
         
-        // Handle specific Supabase errors
         if (error.code === 'PGRST116') {
           return {
             success: false,
-            message: 'Database connection error. Please try again later.',
-            errors: ['DATABASE_CONNECTION_ERROR']
+            message: 'Server temporarily unavailable. Please try again in a few minutes.',
+            errors: ['SERVER_UNAVAILABLE']
           };
         }
         
@@ -233,10 +252,20 @@ export class SupabaseDataProvider {
           };
         }
         
+        // Simulate occasional high volume error like JsonDataProvider
+        if (Math.random() < 0.1) { // 10% chance to show high volume message
+          return {
+            success: false,
+            message: 'Our system is currently experiencing high volume. Please try again in a few minutes.',
+            errors: ['HIGH_VOLUME']
+          };
+        }
+        
+        // Generic friendly error for any other database issues
         return {
           success: false,
-          message: 'Failed to submit your business application. Please try again.',
-          errors: ['SUBMISSION_ERROR']
+          message: 'We\'re experiencing technical difficulties at the moment. Please try again in a few minutes, or contact our support team if the issue persists.',
+          errors: ['TECHNICAL_DIFFICULTIES']
         };
       }
 

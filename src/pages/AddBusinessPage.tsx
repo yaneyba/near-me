@@ -25,6 +25,8 @@ import {
   X,
   Plus
 } from 'lucide-react';
+import stats from '../data/stats.json';
+import { SITE_INFO } from '../siteInfo';
 
 interface AddBusinessPageProps {
   subdomainInfo: SubdomainInfo;
@@ -481,9 +483,8 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  // FIXED: Submit handler that only runs on final step
+  const handleSubmit = async () => {
     // Validate all steps
     let allErrors: FormErrors = {};
     for (let step = 1; step <= totalSteps; step++) {
@@ -607,13 +608,21 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
       <label className="block text-sm font-medium text-gray-700 mb-2">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
-        {formErrors[fieldName] && (
-          <span className="text-red-600 text-xs ml-2 font-normal">
-            - {formErrors[fieldName]}
-          </span>
-        )}
       </label>
     );
+  };
+
+  // Helper function to render error message below input
+  const renderErrorMessage = (fieldName: string) => {
+    if (formErrors[fieldName]) {
+      return (
+        <div className="mt-1 flex items-center text-red-600 text-sm">
+          <AlertCircle className="w-4 h-4 mr-1 flex-shrink-0" />
+          <span>{formErrors[fieldName]}</span>
+        </div>
+      );
+    }
+    return null;
   };
 
   // Show success page
@@ -651,6 +660,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   className={getInputClasses('businessName')}
                   required
                 />
+                {renderErrorMessage('businessName')}
               </div>
 
               <div>
@@ -664,6 +674,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   className={getInputClasses('ownerName')}
                   required
                 />
+                {renderErrorMessage('ownerName')}
               </div>
 
               <div>
@@ -677,6 +688,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   className={getInputClasses('email')}
                   required
                 />
+                {renderErrorMessage('email')}
               </div>
 
               <div>
@@ -690,6 +702,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   className={getInputClasses('phone')}
                   required
                 />
+                {renderErrorMessage('phone')}
               </div>
             </div>
 
@@ -703,6 +716,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                 rows={4}
                 className={getInputClasses('description', 'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:outline-none transition-colors resize-none')}
               />
+              {renderErrorMessage('description')}
             </div>
 
             <div>
@@ -715,6 +729,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                 placeholder="https://yourbusiness.com"
                 className={getInputClasses('website')}
               />
+              {renderErrorMessage('website')}
             </div>
           </div>
         );
@@ -739,6 +754,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                 className={getInputClasses('address')}
                 required
               />
+              {renderErrorMessage('address')}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -752,6 +768,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   className={getInputClasses('city')}
                   required
                 />
+                {renderErrorMessage('city')}
               </div>
 
               <div>
@@ -765,6 +782,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   className={getInputClasses('state')}
                   required
                 />
+                {renderErrorMessage('state')}
               </div>
 
               <div>
@@ -778,6 +796,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   className={getInputClasses('zipCode')}
                   required
                 />
+                {renderErrorMessage('zipCode')}
               </div>
             </div>
 
@@ -793,6 +812,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   <option value="franchise">Franchise</option>
                   <option value="chain">Chain/Corporate</option>
                 </select>
+                {renderErrorMessage('businessType')}
               </div>
 
               <div>
@@ -809,6 +829,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   <option value="6-10">6-10 years</option>
                   <option value="more-than-10">More than 10 years</option>
                 </select>
+                {renderErrorMessage('yearsInBusiness')}
               </div>
             </div>
           </div>
@@ -826,11 +847,6 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-4">
                 Services Offered <span className="text-red-500">*</span>
-                {formErrors.services && (
-                  <span className="text-red-600 text-xs ml-2 font-normal">
-                    - {formErrors.services}
-                  </span>
-                )}
               </label>
               <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 p-4 rounded-lg border-2 ${
                 formErrors.services ? 'border-red-300 bg-red-50' : 'border-gray-200'
@@ -847,6 +863,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   </label>
                 ))}
               </div>
+              {renderErrorMessage('services')}
             </div>
 
             {/* Custom Services */}
@@ -941,6 +958,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   placeholder="https://facebook.com/yourbusiness"
                   className={getInputClasses('facebook')}
                 />
+                {renderErrorMessage('facebook')}
               </div>
 
               <div>
@@ -952,6 +970,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   placeholder="https://instagram.com/yourbusiness"
                   className={getInputClasses('instagram')}
                 />
+                {renderErrorMessage('instagram')}
               </div>
 
               <div>
@@ -963,6 +982,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   placeholder="https://twitter.com/yourbusiness"
                   className={getInputClasses('twitter')}
                 />
+                {renderErrorMessage('twitter')}
               </div>
             </div>
 
@@ -975,6 +995,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                 rows={3}
                 className={getInputClasses('specialOffers', 'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:outline-none transition-colors resize-none')}
               />
+              {renderErrorMessage('specialOffers')}
             </div>
 
             <div>
@@ -992,6 +1013,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                 <option value="26-50">26-50 employees</option>
                 <option value="50+">50+ employees</option>
               </select>
+              {renderErrorMessage('employeeCount')}
             </div>
           </div>
         );
@@ -1033,7 +1055,8 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Main Form */}
           <div className="lg:col-span-3">
-            <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-8">
+            {/* FIXED: No form element, just a div container */}
+            <div className="bg-white rounded-xl shadow-lg p-8">
               {submitResult && !submitResult.success && (
                 <div className="mb-8 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start space-x-3">
                   <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
@@ -1069,7 +1092,8 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   </button>
                 ) : (
                   <button
-                    type="submit"
+                    type="button"
+                    onClick={handleSubmit}
                     disabled={isSubmitting}
                     className="flex items-center justify-center px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors order-1 sm:order-2"
                   >
@@ -1087,7 +1111,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   </button>
                 )}
               </div>
-            </form>
+            </div>
           </div>
 
           {/* Sidebar */}
@@ -1115,8 +1139,8 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   <Phone className="w-5 h-5 text-blue-600" />
                   <div>
                     <div className="text-sm font-medium text-gray-900">Call Us</div>
-                    <a href="tel:+15551234567" className="text-sm text-blue-600 hover:text-blue-700">
-                      (555) 123-4567
+                    <a href={`tel:${SITE_INFO.phone}`} className="text-sm text-blue-600 hover:text-blue-700">
+                      {SITE_INFO.phone}
                     </a>
                   </div>
                 </div>
@@ -1124,8 +1148,8 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
                   <Mail className="w-5 h-5 text-blue-600" />
                   <div>
                     <div className="text-sm font-medium text-gray-900">Email Us</div>
-                    <a href="mailto:support@near-me.us" className="text-sm text-blue-600 hover:text-blue-700">
-                      support@near-me.us
+                    <a href={`mailto:${SITE_INFO.email}`} className="text-sm text-blue-600 hover:text-blue-700">
+                      {SITE_INFO.email}
                     </a>
                   </div>
                 </div>
@@ -1136,18 +1160,12 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
             <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
               <h3 className="text-lg font-bold text-gray-900 mb-4">Join Our Network</h3>
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Active Businesses</span>
-                  <span className="text-lg font-bold text-blue-600">500+</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Monthly Visitors</span>
-                  <span className="text-lg font-bold text-blue-600">50K+</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Customer Connections</span>
-                  <span className="text-lg font-bold text-blue-600">10K+</span>
-                </div>
+                {stats.map((stat: { label: string; value: string }, idx: number) => (
+                  <div key={idx} className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">{stat.label}</span>
+                    <span className="text-lg font-bold text-blue-600">{stat.value}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
