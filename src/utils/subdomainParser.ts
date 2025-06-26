@@ -5,6 +5,7 @@ import { SubdomainInfo } from '../types';
 // Map cities to their states
 const cityStateMap: Record<string, string> = {
   'dallas': 'Texas',
+  'garland': 'Texas',
   'denver': 'Colorado',
   'austin': 'Texas',
   'houston': 'Texas',
