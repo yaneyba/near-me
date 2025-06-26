@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Star, Phone, MapPin, Clock, ExternalLink, Globe, Filter, SortAsc, ChevronLeft, ChevronRight, Crown, ChevronDown, ChevronUp, MoreHorizontal } from 'lucide-react';
+import { Star, Phone, MapPin, Clock, ExternalLink, Globe, Filter, SortAsc, ChevronLeft, ChevronRight, Crown, ChevronDown, ChevronUp, MoreHorizontal, Calendar, Navigation } from 'lucide-react';
 import { Business } from '../types';
 import { AdUnit, SponsoredContent } from './ads';
 
@@ -266,6 +266,100 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
     );
   };
 
+  const renderBookingLinks = (business: Business) => {
+    if (!business.premium) {
+      return null;
+    }
+
+    // Show booking links if available
+    if (business.bookingLinks && business.bookingLinks.length > 0) {
+      return (
+        <div className="mb-4">
+          <div className="text-sm font-medium text-gray-900 mb-2">Quick Booking:</div>
+          <div className="flex flex-wrap gap-2">
+            {business.bookingLinks.map((link, index) => (
+              <a
+                key={index}
+                href={link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center px-3 py-1 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white text-xs font-medium rounded-full transition-all duration-200 shadow-sm hover:shadow-md"
+              >
+                <Calendar className="w-3 h-3 mr-1" />
+                Book Online
+                <ExternalLink className="w-3 h-3 ml-1" />
+              </a>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // Show "Coming Soon" for premium businesses without booking links
+    return (
+      <div className="mb-4">
+        <div className="text-sm font-medium text-gray-900 mb-2">Quick Booking:</div>
+        <div className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full border border-gray-200">
+          <Calendar className="w-3 h-3 mr-1" />
+          Coming Soon
+        </div>
+      </div>
+    );
+  };
+
+  const renderLocationInfo = (business: Business) => {
+    if (!business.premium) {
+      return (
+        <div className="flex items-center text-sm text-gray-600">
+          <MapPin className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
+          <span>{business.address}</span>
+        </div>
+      );
+    }
+
+    // Show directions if coordinates are available
+    if (business.latitude && business.longitude) {
+      const googleMapsUrl = `https://www.google.com/maps?q=${business.latitude},${business.longitude}`;
+
+      return (
+        <div className="space-y-2">
+          <div className="flex items-center text-sm text-gray-600">
+            <MapPin className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
+            <span>{business.address}</span>
+          </div>
+          <div className="flex items-center">
+            <a
+              href={googleMapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-3 py-1 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white text-xs font-medium rounded-full transition-all duration-200 shadow-sm hover:shadow-md"
+            >
+              <Navigation className="w-3 h-3 mr-1" />
+              Get Directions
+              <ExternalLink className="w-3 h-3 ml-1" />
+            </a>
+          </div>
+        </div>
+      );
+    }
+
+    // Show "Coming Soon" for premium businesses without coordinates
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center text-sm text-gray-600">
+          <MapPin className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
+          <span>{business.address}</span>
+        </div>
+        <div className="flex items-center">
+          <div className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full border border-gray-200">
+            <Navigation className="w-3 h-3 mr-1" />
+            Directions Coming Soon
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderStars = (rating: number, reviewCount: number) => {
     return (
       <div className="flex items-center">
@@ -368,10 +462,7 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
             </p>
             
             <div className="space-y-3 mb-4">
-              <div className="flex items-center text-sm text-gray-600">
-                <MapPin className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
-                <span>{business.address}</span>
-              </div>
+              {renderLocationInfo(business)}
               <div className="flex items-center text-sm text-gray-600">
                 <Phone className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
                 <a 
@@ -390,6 +481,7 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
             </div>
             
             {renderServices(business)}
+            {renderBookingLinks(business)}
             
             <div className="flex gap-2 pt-4 border-t border-gray-100">
               <a
