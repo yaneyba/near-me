@@ -8,7 +8,7 @@ export interface Business {
   state: string;
   address: string;
   phone: string;
-  website: string | null; // Allow null for website
+  website?: string | null;
   rating: number;
   reviewCount: number;
   description: string;
