@@ -93,42 +93,6 @@
     "premium": false
   },
   {
-    "id": "nail-salons-austin-01",
-    "name": "MILANO NAIL SPA AUSTIN (rank#1 BEST NAIL SALON ATX, rank#2 BEST NAIL SALON in AMERICA)",
-    "category": "nail-salons",
-    "city": "austin",
-    "state": "Texas",
-    "address": "2755 E 7th St, Austin, TX 78702",
-    "phone": "(737) 781-9036",
-    "website": "https://milanonailspaatx.com/",
-    "rating": 4.9,
-    "reviewCount": 6050,
-    "description": "Modern nail bar with organic products and artistic nail designs.",
-    "services": [
-      "Organic Manicures",
-      "Designer Pedicures",
-      "Nail Art",
-      "Hand Treatments"
-    ],
-    "neighborhood": "South Austin",
-    "hours": {
-      "Thursday": "9 AM–7:30 PM",
-      "Friday": "9 AM–7:30 PM",
-      "Saturday": "9 AM–7:30 PM",
-      "Sunday": "10 AM–6 PM",
-      "Monday": "9 AM–7:30 PM",
-      "Tuesday": "9 AM–7:30 PM",
-      "Wednesday": "9 AM–7:30 PM"
-    },
-    "image": "https://lh3.googleusercontent.com/p/AF1QipMUZpFRXOblXPNaJPAAlqIphutsC0ew81PgGj2D",
-    "premium": false,
-    "bookingLinks": [
-      "https://www.lldtek.org/salon/appt/VkZoZk1EazVNREE9"
-    ],
-    "latitude": 30.2596077,
-    "longitude": -97.7104531
-  },
-  {
     "id": "nail-salons-dallas-01",
     "name": "Uptown Nail Spa",
     "category": "nail-salons",
