@@ -21,22 +21,21 @@ import {
   ArrowDownRight, 
   Zap,
   Crown,
-  Star
+  Star,
+  LogOut
 } from 'lucide-react';
 import { DataProviderFactory } from '../providers';
 import { BusinessAnalytics } from '../types';
-
-// This is a placeholder component for the business dashboard
-// In a real implementation, this would be connected to authentication
-// and would only show data for the logged-in business owner
+import { useAuth, signOut } from '../lib/auth';
+import { useNavigate } from 'react-router-dom';
 
 const BusinessDashboardPage: React.FC = () => {
   const [period, setPeriod] = useState<'day' | 'week' | 'month' | 'year'>('week');
   const [analytics, setAnalytics] = useState<BusinessAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
-  const [businessId] = useState('nail-salons-dallas-01'); // This would come from auth in real app
-  const [businessName] = useState('Elegant Nails Studio'); // This would come from auth in real app
-  const [isPremium] = useState(true); // This would come from business data in real app
+  const [businessId, setBusinessId] = useState('nail-salons-dallas-01'); // Default value
+  const [businessName, setBusinessName] = useState('Elegant Nails Studio'); // Default value
+  const [isPremium, setIsPremium] = useState(true);
   const [customDateRange, setCustomDateRange] = useState(false);
   const [startDate, setStartDate] = useState<string>(
     new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
@@ -45,12 +44,25 @@ const BusinessDashboardPage: React.FC = () => {
     new Date().toISOString().split('T')[0]
   );
 
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const dataProvider = DataProviderFactory.getProvider();
 
   useEffect(() => {
     document.title = 'Business Dashboard - Near Me Directory';
+    
+    // If user has a businessId in their profile, use it
+    if (user?.businessId) {
+      setBusinessId(user.businessId);
+    }
+    
+    // If user has a businessName in their profile, use it
+    if (user?.businessName) {
+      setBusinessName(user.businessName);
+    }
+    
     loadAnalytics();
-  }, [period, customDateRange, startDate, endDate]);
+  }, [period, customDateRange, startDate, endDate, user]);
 
   const loadAnalytics = async () => {
     setLoading(true);
@@ -75,6 +87,15 @@ const BusinessDashboardPage: React.FC = () => {
       console.error('Error loading analytics:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      navigate('/login');
+    } catch (error) {
+      console.error('Error signing out:', error);
     }
   };
 
@@ -409,12 +430,13 @@ const BusinessDashboardPage: React.FC = () => {
               </button>
             </div>
             
-            {/* Export button */}
+            {/* Logout button */}
             <button
-              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              onClick={handleLogout}
+              className="flex items-center px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
             >
-              <Download className="w-4 h-4 mr-2" />
-              Export Data
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign Out
             </button>
           </div>
         </div>

@@ -1,17 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { signIn } from '../lib/auth';
 import { Mail, Lock, AlertCircle, LogIn, ArrowRight, Building, Shield } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
   
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as any)?.from?.pathname || '/business-dashboard';
+
+  // Check for message in location state (e.g., from registration)
+  useEffect(() => {
+    if (location.state && (location.state as any).message) {
+      setMessage((location.state as any).message);
+      // Clear the message from location state
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,6 +70,13 @@ const LoginPage: React.FC = () => {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          {message && (
+            <div className="mb-4 bg-green-50 border border-green-200 rounded-md p-4 flex items-start">
+              <CheckCircle className="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-green-700">{message}</div>
+            </div>
+          )}
+          
           {error && (
             <div className="mb-4 bg-red-50 border border-red-200 rounded-md p-4 flex items-start">
               <AlertCircle className="w-5 h-5 text-red-500 mr-3 flex-shrink-0 mt-0.5" />

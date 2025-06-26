@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, MapPin, Phone, Mail, Plus } from 'lucide-react';
+import { Menu, X, MapPin, Phone, Mail, Plus, User, LogIn } from 'lucide-react';
 import SearchWithLiveResults from './SearchWithLiveResults';
 import { Business } from '../types';
 import { SITE_INFO } from '../siteInfo';
+import { useAuth } from '../lib/auth';
 
 interface HeaderProps {
   category: string;
@@ -16,6 +17,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSearch }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const { user } = useAuth();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -107,6 +109,25 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSe
                 Add Your Business
               </Link>
             )}
+            
+            {/* Auth links */}
+            {user ? (
+              <Link 
+                to="/business-dashboard" 
+                className="flex items-center font-medium transition-colors px-4 py-2 rounded-lg bg-green-50 text-green-600 hover:bg-green-100"
+              >
+                <User className="w-4 h-4 mr-1" />
+                Dashboard
+              </Link>
+            ) : (
+              <Link 
+                to="/login" 
+                className="flex items-center font-medium transition-colors px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                <LogIn className="w-4 h-4 mr-1" />
+                Sign In
+              </Link>
+            )}
           </nav>
 
           {/* Search bar - Desktop */}
@@ -193,6 +214,27 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSe
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Add Your Business
+              </Link>
+            )}
+            
+            {/* Auth links for mobile */}
+            {user ? (
+              <Link
+                to="/business-dashboard"
+                className="flex items-center px-3 py-2 font-medium text-green-600 hover:text-green-700"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <User className="w-4 h-4 mr-2" />
+                Dashboard
+              </Link>
+            ) : (
+              <Link
+                to="/login"
+                className="flex items-center px-3 py-2 font-medium text-gray-700 hover:text-blue-600"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <LogIn className="w-4 h-4 mr-2" />
+                Sign In
               </Link>
             )}
           </div>

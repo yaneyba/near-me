@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { signUp } from '../lib/auth';
-import { Mail, Lock, AlertCircle, UserPlus, Building, ArrowRight, Shield, CheckCircle } from 'lucide-react';
-import { DataProviderFactory } from '../providers';
+import { Mail, Lock, AlertCircle, UserPlus, Building, ArrowRight, Shield, CheckCircle, LogIn } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 const RegisterPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -14,7 +14,6 @@ const RegisterPage: React.FC = () => {
   const [success, setSuccess] = useState(false);
   
   const navigate = useNavigate();
-  const dataProvider = DataProviderFactory.getProvider();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,17 +39,21 @@ const RegisterPage: React.FC = () => {
       setLoading(true);
       
       // Register with Supabase Auth
-      const { user } = await signUp(email, password);
+      const { data, error: signUpError } = await signUp(email, password);
       
-      if (!user) {
+      if (signUpError) {
+        throw signUpError;
+      }
+      
+      if (!data.user) {
         throw new Error('Registration failed');
       }
       
       // Create business profile
-      const { data: profile, error: profileError } = await supabase
+      const { error: profileError } = await supabase
         .from('business_profiles')
         .insert({
-          user_id: user.id,
+          user_id: data.user.id,
           business_name: businessName,
           email: email,
           role: 'owner'
