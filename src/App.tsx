@@ -11,6 +11,7 @@ import AddBusinessPage from './pages/AddBusinessPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import TermsOfServicePage from './pages/TermsOfServicePage';
 import BusinessOwnersPage from './pages/BusinessOwnersPage';
+import BusinessDashboardPage from './pages/BusinessDashboardPage';
 import Layout from './components/Layout';
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/terms-of-service" element={<TermsOfServicePage />} />
           <Route path="/business-owners" element={<BusinessOwnersPage />} />
+          <Route path="/business-dashboard" element={<BusinessDashboardPage />} />
         </Routes>
       </Layout>
     </Router>

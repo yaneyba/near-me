@@ -1,4 +1,4 @@
-import { IDataProvider, Business, ContactSubmission, BusinessSubmission, SubmissionResult } from '../types';
+import { IDataProvider, Business, ContactSubmission, BusinessSubmission, SubmissionResult, UserEngagementEvent, BusinessAnalytics } from '../types';
 import businessesData from '../data/businesses.json';
 import servicesData from '../data/services.json';
 import neighborhoodsData from '../data/neighborhoods.json';
@@ -7,6 +7,7 @@ export class JsonDataProvider implements IDataProvider {
   private businesses: Business[] = businessesData;
   private services: Record<string, string[]> = servicesData;
   private neighborhoods: Record<string, string[]> = neighborhoodsData;
+  private engagementEvents: UserEngagementEvent[] = []; // In-memory storage for development
 
   async getBusinesses(category: string, city: string): Promise<Business[]> {
     // Convert display format back to kebab-case for filtering
@@ -254,6 +255,293 @@ We'll contact you at ${businessData.email} with updates on your application stat
         errors: ['UNEXPECTED_ERROR']
       };
     }
+  }
+
+  /**
+   * Track user engagement events (in-memory for development)
+   */
+  async trackEngagement(event: UserEngagementEvent): Promise<void> {
+    try {
+      // Add unique ID for in-memory storage
+      const eventWithId = {
+        ...event,
+        id: `event-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      };
+
+      // Store in memory (in production, this would go to database)
+      this.engagementEvents.push(eventWithId);
+
+      // Log for development
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📊 Engagement tracked (JSON Provider):', {
+          business: event.businessName,
+          event: event.eventType,
+          data: event.eventData
+        });
+      }
+
+      // Keep only last 1000 events to prevent memory issues
+      if (this.engagementEvents.length > 1000) {
+        this.engagementEvents = this.engagementEvents.slice(-1000);
+      }
+    } catch (error) {
+      console.error('Failed to track engagement:', error);
+      // Don't throw error to avoid disrupting user experience
+    }
+  }
+
+  /**
+   * Get business analytics (from in-memory events for development)
+   */
+  async getBusinessAnalytics(
+    businessId: string, 
+    period: 'day' | 'week' | 'month' | 'year',
+    startDate?: Date,
+    endDate?: Date
+  ): Promise<BusinessAnalytics> {
+    try {
+      // Calculate date range if not provided
+      const end = endDate || new Date();
+      let start = startDate;
+      
+      if (!start) {
+        start = new Date();
+        switch (period) {
+          case 'day':
+            start.setDate(start.getDate() - 1);
+            break;
+          case 'week':
+            start.setDate(start.getDate() - 7);
+            break;
+          case 'month':
+            start.setMonth(start.getMonth() - 1);
+            break;
+          case 'year':
+            start.setFullYear(start.getFullYear() - 1);
+            break;
+        }
+      }
+
+      // Filter events for this business and time period
+      const relevantEvents = this.engagementEvents.filter(event => 
+        event.businessId === businessId &&
+        event.timestamp >= start! &&
+        event.timestamp <= end
+      );
+
+      // Process events to generate analytics
+      return this.processEngagementEvents(relevantEvents, businessId, period, start, end);
+
+    } catch (error) {
+      console.error('Failed to get business analytics:', error);
+      // Return empty analytics on error
+      return this.getEmptyAnalytics(businessId, period, startDate || new Date(), endDate || new Date());
+    }
+  }
+
+  private processEngagementEvents(
+    events: UserEngagementEvent[], 
+    businessId: string, 
+    period: 'day' | 'week' | 'month' | 'year',
+    startDate: Date,
+    endDate: Date
+  ): BusinessAnalytics {
+    const metrics = {
+      totalViews: 0,
+      uniqueViews: 0,
+      phoneClicks: 0,
+      websiteClicks: 0,
+      bookingClicks: 0,
+      directionsClicks: 0,
+      emailClicks: 0,
+      hoursViews: 0,
+      servicesExpands: 0,
+      photoViews: 0,
+      conversionRate: 0,
+      engagementRate: 0
+    };
+
+    const uniqueSessionIds = new Set<string>();
+    const sourceMap = new Map<string, number>();
+    const searchQueryMap = new Map<string, { views: number; clicks: number }>();
+    const deviceMap = { mobile: 0, tablet: 0, desktop: 0 };
+    const hourlyMap = new Map<number, { views: number; interactions: number }>();
+
+    // Process each event
+    events.forEach(event => {
+      const eventData = event.eventData || {};
+      const hour = new Date(event.timestamp).getHours();
+      
+      // Initialize hourly data
+      if (!hourlyMap.has(hour)) {
+        hourlyMap.set(hour, { views: 0, interactions: 0 });
+      }
+      const hourlyData = hourlyMap.get(hour)!;
+
+      // Track unique sessions
+      if (event.userSessionId) {
+        uniqueSessionIds.add(event.userSessionId);
+      }
+
+      // Count metrics by event type
+      switch (event.eventType) {
+        case 'view':
+          metrics.totalViews++;
+          hourlyData.views++;
+          
+          // Track sources
+          const source = eventData.source || 'direct';
+          sourceMap.set(source, (sourceMap.get(source) || 0) + 1);
+          
+          // Track search queries
+          if (eventData.searchQuery) {
+            const existing = searchQueryMap.get(eventData.searchQuery) || { views: 0, clicks: 0 };
+            existing.views++;
+            searchQueryMap.set(eventData.searchQuery, existing);
+          }
+          break;
+          
+        case 'phone_click':
+          metrics.phoneClicks++;
+          hourlyData.interactions++;
+          break;
+          
+        case 'website_click':
+          metrics.websiteClicks++;
+          hourlyData.interactions++;
+          break;
+          
+        case 'booking_click':
+          metrics.bookingClicks++;
+          hourlyData.interactions++;
+          break;
+          
+        case 'directions_click':
+          metrics.directionsClicks++;
+          hourlyData.interactions++;
+          break;
+          
+        case 'email_click':
+          metrics.emailClicks++;
+          hourlyData.interactions++;
+          break;
+          
+        case 'hours_view':
+          metrics.hoursViews++;
+          hourlyData.interactions++;
+          break;
+          
+        case 'services_expand':
+          metrics.servicesExpands++;
+          hourlyData.interactions++;
+          break;
+          
+        case 'photo_view':
+          metrics.photoViews++;
+          hourlyData.interactions++;
+          break;
+      }
+
+      // Track device types
+      const deviceType = eventData.deviceType || 'desktop';
+      if (deviceType in deviceMap) {
+        deviceMap[deviceType as keyof typeof deviceMap]++;
+      }
+
+      // Update search query clicks
+      if (eventData.searchQuery && event.eventType !== 'view') {
+        const existing = searchQueryMap.get(eventData.searchQuery) || { views: 0, clicks: 0 };
+        existing.clicks++;
+        searchQueryMap.set(eventData.searchQuery, existing);
+      }
+    });
+
+    // Calculate derived metrics
+    metrics.uniqueViews = uniqueSessionIds.size;
+    const totalInteractions = metrics.phoneClicks + metrics.websiteClicks + metrics.bookingClicks;
+    metrics.conversionRate = metrics.totalViews > 0 ? (totalInteractions / metrics.totalViews) * 100 : 0;
+    
+    const allInteractions = totalInteractions + metrics.directionsClicks + metrics.emailClicks + 
+                           metrics.hoursViews + metrics.servicesExpands + metrics.photoViews;
+    metrics.engagementRate = metrics.totalViews > 0 ? (allInteractions / metrics.totalViews) * 100 : 0;
+
+    // Process top sources
+    const topSources = Array.from(sourceMap.entries())
+      .map(([source, views]) => ({
+        source,
+        views,
+        percentage: metrics.totalViews > 0 ? (views / metrics.totalViews) * 100 : 0
+      }))
+      .sort((a, b) => b.views - a.views)
+      .slice(0, 10);
+
+    // Process top search queries
+    const topSearchQueries = Array.from(searchQueryMap.entries())
+      .map(([query, data]) => ({
+        query,
+        views: data.views,
+        clicks: data.clicks
+      }))
+      .sort((a, b) => b.views - a.views)
+      .slice(0, 10);
+
+    // Process hourly distribution
+    const hourlyDistribution = Array.from({ length: 24 }, (_, hour) => {
+      const data = hourlyMap.get(hour) || { views: 0, interactions: 0 };
+      return {
+        hour,
+        views: data.views,
+        interactions: data.interactions
+      };
+    });
+
+    return {
+      businessId,
+      period,
+      startDate,
+      endDate,
+      metrics,
+      topSources,
+      topSearchQueries,
+      deviceBreakdown: deviceMap,
+      hourlyDistribution
+    };
+  }
+
+  private getEmptyAnalytics(
+    businessId: string, 
+    period: 'day' | 'week' | 'month' | 'year',
+    startDate: Date,
+    endDate: Date
+  ): BusinessAnalytics {
+    return {
+      businessId,
+      period,
+      startDate,
+      endDate,
+      metrics: {
+        totalViews: 0,
+        uniqueViews: 0,
+        phoneClicks: 0,
+        websiteClicks: 0,
+        bookingClicks: 0,
+        directionsClicks: 0,
+        emailClicks: 0,
+        hoursViews: 0,
+        servicesExpands: 0,
+        photoViews: 0,
+        conversionRate: 0,
+        engagementRate: 0
+      },
+      topSources: [],
+      topSearchQueries: [],
+      deviceBreakdown: { mobile: 0, tablet: 0, desktop: 0 },
+      hourlyDistribution: Array.from({ length: 24 }, (_, hour) => ({
+        hour,
+        views: 0,
+        interactions: 0
+      }))
+    };
   }
 
   private isValidEmail(email: string): boolean {
