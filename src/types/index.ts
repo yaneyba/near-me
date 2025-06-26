@@ -18,7 +18,10 @@ export interface Business {
     [key: string]: string;
   };
   image: string;
-  premium: boolean; // New premium field
+  premium: boolean;
+  bookingLinks?: string[]; // New field for premium businesses
+  latitude?: number; // New field for premium businesses
+  longitude?: number; // New field for premium businesses
 }
 
 export interface ContactSubmission {
