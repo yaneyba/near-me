@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { signUp } from '../lib/auth';
+import { signUp, getAuthFeatureFlags } from '../lib/auth';
 import { Mail, Lock, AlertCircle, UserPlus, Building, ArrowRight, Shield, CheckCircle, LogIn } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -14,6 +14,14 @@ const RegisterPage: React.FC = () => {
   const [success, setSuccess] = useState(false);
   
   const navigate = useNavigate();
+  const { registrationEnabled } = getAuthFeatureFlags();
+
+  // Redirect if registration is disabled
+  useEffect(() => {
+    if (!registrationEnabled) {
+      navigate('/', { replace: true });
+    }
+  }, [registrationEnabled, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,6 +45,11 @@ const RegisterPage: React.FC = () => {
     try {
       setError(null);
       setLoading(true);
+      
+      // Check if registration is still enabled (could have changed while on page)
+      if (!getAuthFeatureFlags().registrationEnabled) {
+        throw new Error('Registration is currently disabled');
+      }
       
       // Register with Supabase Auth
       const { data, error: signUpError } = await signUp(email, password);
@@ -78,7 +91,9 @@ const RegisterPage: React.FC = () => {
     } catch (err: any) {
       console.error('Registration error:', err);
       
-      if (err.message.includes('already registered')) {
+      if (err.message.includes('Registration is currently disabled')) {
+        setError('Registration is currently disabled by the administrator');
+      } else if (err.message.includes('already registered')) {
         setError('This email is already registered. Please log in instead.');
       } else if (err.message.includes('rate limit')) {
         setError('Too many registration attempts. Please try again later.');

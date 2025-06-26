@@ -11,8 +11,57 @@ export interface AuthUser {
   role?: 'owner' | 'admin' | 'staff';
 }
 
+// Auth feature flags
+export interface AuthFeatureFlags {
+  loginEnabled: boolean;
+  registrationEnabled: boolean;
+}
+
+// Default auth feature flags
+const DEFAULT_AUTH_FEATURES: AuthFeatureFlags = {
+  loginEnabled: true,
+  registrationEnabled: true
+};
+
+// Get auth feature flags from localStorage or environment variables
+export const getAuthFeatureFlags = (): AuthFeatureFlags => {
+  try {
+    // Check if we have flags in localStorage (admin has set them)
+    const savedFlags = localStorage.getItem('auth_feature_flags');
+    if (savedFlags) {
+      return JSON.parse(savedFlags);
+    }
+    
+    // Otherwise use environment variables if available
+    return {
+      loginEnabled: import.meta.env.VITE_AUTH_LOGIN_ENABLED !== 'false',
+      registrationEnabled: import.meta.env.VITE_AUTH_REGISTRATION_ENABLED !== 'false'
+    };
+  } catch (error) {
+    console.error('Error getting auth feature flags:', error);
+    return DEFAULT_AUTH_FEATURES;
+  }
+};
+
+// Set auth feature flags (admin only)
+export const setAuthFeatureFlags = (flags: Partial<AuthFeatureFlags>): void => {
+  try {
+    const currentFlags = getAuthFeatureFlags();
+    const updatedFlags = { ...currentFlags, ...flags };
+    localStorage.setItem('auth_feature_flags', JSON.stringify(updatedFlags));
+  } catch (error) {
+    console.error('Error setting auth feature flags:', error);
+  }
+};
+
 // Sign up with email and password
 export const signUp = async (email: string, password: string) => {
+  // Check if registration is enabled
+  const { registrationEnabled } = getAuthFeatureFlags();
+  if (!registrationEnabled) {
+    throw new Error('Registration is currently disabled');
+  }
+  
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -24,6 +73,12 @@ export const signUp = async (email: string, password: string) => {
 
 // Sign in with email and password
 export const signIn = async (email: string, password: string) => {
+  // Check if login is enabled
+  const { loginEnabled } = getAuthFeatureFlags();
+  if (!loginEnabled) {
+    throw new Error('Login is currently disabled');
+  }
+  
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
@@ -41,6 +96,12 @@ export const signOut = async () => {
 
 // Reset password
 export const resetPassword = async (email: string) => {
+  // Check if login is enabled (password reset is part of login flow)
+  const { loginEnabled } = getAuthFeatureFlags();
+  if (!loginEnabled) {
+    throw new Error('Password reset is currently disabled');
+  }
+  
   const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${window.location.origin}/reset-password`,
   });
@@ -85,11 +146,18 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
   };
 };
 
+// Check if user is admin
+export const isUserAdmin = async (): Promise<boolean> => {
+  const user = await getCurrentUser();
+  return user?.role === 'admin';
+};
+
 // Custom hook for authentication state
 export const useAuth = () => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState<Session | null>(null);
+  const [authFeatures, setAuthFeatures] = useState<AuthFeatureFlags>(getAuthFeatureFlags());
 
   useEffect(() => {
     // Get initial session
@@ -123,11 +191,21 @@ export const useAuth = () => {
       }
     );
 
-    // Cleanup subscription
+    // Listen for auth feature flag changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'auth_feature_flags') {
+        setAuthFeatures(getAuthFeatureFlags());
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+
+    // Cleanup subscriptions
     return () => {
       subscription.unsubscribe();
+      window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
 
-  return { user, loading, session };
+  return { user, loading, session, authFeatures };
 };

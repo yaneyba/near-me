@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { updatePassword } from '../lib/auth';
+import { updatePassword, getAuthFeatureFlags } from '../lib/auth';
 import { Lock, AlertCircle, CheckCircle, Shield } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -13,6 +13,14 @@ const ResetPasswordPage: React.FC = () => {
   const [hashPresent, setHashPresent] = useState(false);
   
   const navigate = useNavigate();
+  const { loginEnabled } = getAuthFeatureFlags();
+
+  // Redirect if login is disabled
+  useEffect(() => {
+    if (!loginEnabled) {
+      navigate('/', { replace: true });
+    }
+  }, [loginEnabled, navigate]);
 
   // Check if we have a hash in the URL (from password reset email)
   useEffect(() => {
@@ -57,6 +65,11 @@ const ResetPasswordPage: React.FC = () => {
       setError(null);
       setLoading(true);
       
+      // Check if login is still enabled (could have changed while on page)
+      if (!getAuthFeatureFlags().loginEnabled) {
+        throw new Error('Password reset is currently disabled');
+      }
+      
       await updatePassword(password);
       setSuccess(true);
       
@@ -72,7 +85,9 @@ const ResetPasswordPage: React.FC = () => {
     } catch (err: any) {
       console.error('Password reset error:', err);
       
-      if (err.message.includes('rate limit')) {
+      if (err.message.includes('Password reset is currently disabled')) {
+        setError('Password reset is currently disabled by the administrator');
+      } else if (err.message.includes('rate limit')) {
         setError('Too many requests. Please try again later.');
       } else {
         setError('An error occurred. Please try again or request a new reset link.');

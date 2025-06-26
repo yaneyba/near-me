@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { signIn } from '../lib/auth';
-import { Mail, Lock, AlertCircle, LogIn, ArrowRight, Building, Shield } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { signIn, getAuthFeatureFlags } from '../lib/auth';
+import { Mail, Lock, AlertCircle, LogIn, ArrowRight, Building, Shield, CheckCircle } from 'lucide-react';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -14,6 +13,14 @@ const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as any)?.from?.pathname || '/business-dashboard';
+  const { loginEnabled, registrationEnabled } = getAuthFeatureFlags();
+
+  // Redirect if login is disabled
+  useEffect(() => {
+    if (!loginEnabled) {
+      navigate('/', { replace: true });
+    }
+  }, [loginEnabled, navigate]);
 
   // Check for message in location state (e.g., from registration)
   useEffect(() => {
@@ -42,7 +49,9 @@ const LoginPage: React.FC = () => {
     } catch (err: any) {
       console.error('Login error:', err);
       
-      if (err.message.includes('Invalid login')) {
+      if (err.message.includes('Login is currently disabled')) {
+        setError('Login is currently disabled by the administrator');
+      } else if (err.message.includes('Invalid login')) {
         setError('Invalid email or password');
       } else if (err.message.includes('rate limit')) {
         setError('Too many login attempts. Please try again later.');
@@ -170,26 +179,28 @@ const LoginPage: React.FC = () => {
             </div>
           </form>
 
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Don't have an account?</span>
-              </div>
-            </div>
-
+          {registrationEnabled && (
             <div className="mt-6">
-              <Link
-                to="/register"
-                className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                <Building className="w-4 h-4 mr-2" />
-                Register your business
-              </Link>
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">Don't have an account?</span>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <Link
+                  to="/register"
+                  className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  <Building className="w-4 h-4 mr-2" />
+                  Register your business
+                </Link>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="mt-6 bg-blue-50 p-4 rounded-md">
             <div className="flex items-start">

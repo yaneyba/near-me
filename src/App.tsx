@@ -16,6 +16,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import AdminSettingsPage from './pages/AdminSettingsPage';
 import Layout from './components/Layout';
 import AuthGuard from './components/auth/AuthGuard';
 
@@ -91,6 +92,16 @@ function App() {
             element={
               <AuthGuard requireAuth={true}>
                 <BusinessDashboardPage />
+              </AuthGuard>
+            } 
+          />
+          
+          {/* Admin Routes */}
+          <Route 
+            path="/admin/settings" 
+            element={
+              <AuthGuard requireAuth={true}>
+                <AdminSettingsPage />
               </AuthGuard>
             } 
           />
