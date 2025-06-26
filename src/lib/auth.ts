@@ -14,13 +14,11 @@ export interface AuthUser {
 // Auth feature flags
 export interface AuthFeatureFlags {
   loginEnabled: boolean;
-  registrationEnabled: boolean;
 }
 
 // Default auth feature flags
 const DEFAULT_AUTH_FEATURES: AuthFeatureFlags = {
-  loginEnabled: true,
-  registrationEnabled: true
+  loginEnabled: true
 };
 
 // Get auth feature flags from localStorage or environment variables
@@ -34,8 +32,7 @@ export const getAuthFeatureFlags = (): AuthFeatureFlags => {
     
     // Otherwise use environment variables if available
     return {
-      loginEnabled: import.meta.env.VITE_AUTH_LOGIN_ENABLED !== 'false',
-      registrationEnabled: import.meta.env.VITE_AUTH_REGISTRATION_ENABLED !== 'false'
+      loginEnabled: import.meta.env.VITE_AUTH_LOGIN_ENABLED !== 'false'
     };
   } catch (error) {
     console.error('Error getting auth feature flags:', error);
@@ -52,23 +49,6 @@ export const setAuthFeatureFlags = (flags: Partial<AuthFeatureFlags>): void => {
   } catch (error) {
     console.error('Error setting auth feature flags:', error);
   }
-};
-
-// Sign up with email and password
-export const signUp = async (email: string, password: string) => {
-  // Check if registration is enabled
-  const { registrationEnabled } = getAuthFeatureFlags();
-  if (!registrationEnabled) {
-    throw new Error('Registration is currently disabled');
-  }
-  
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-  });
-  
-  if (error) throw error;
-  return data;
 };
 
 // Sign in with email and password
@@ -92,32 +72,6 @@ export const signIn = async (email: string, password: string) => {
 export const signOut = async () => {
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
-};
-
-// Reset password
-export const resetPassword = async (email: string) => {
-  // Check if login is enabled (password reset is part of login flow)
-  const { loginEnabled } = getAuthFeatureFlags();
-  if (!loginEnabled) {
-    throw new Error('Password reset is currently disabled');
-  }
-  
-  const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${window.location.origin}/reset-password`,
-  });
-  
-  if (error) throw error;
-  return data;
-};
-
-// Update password
-export const updatePassword = async (password: string) => {
-  const { data, error } = await supabase.auth.updateUser({
-    password,
-  });
-  
-  if (error) throw error;
-  return data;
 };
 
 // Get current user

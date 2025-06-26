@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, ToggleLeft, ToggleRight, Save, AlertCircle, CheckCircle, Lock, UserPlus, Settings, ArrowLeft } from 'lucide-react';
+import { Shield, ToggleLeft, ToggleRight, Save, AlertCircle, CheckCircle, Lock, Settings, ArrowLeft } from 'lucide-react';
 import { getAuthFeatureFlags, setAuthFeatureFlags, isUserAdmin } from '../lib/auth';
 
 const AdminSettingsPage: React.FC = () => {
   const [loginEnabled, setLoginEnabled] = useState(true);
-  const [registrationEnabled, setRegistrationEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -32,7 +31,6 @@ const AdminSettingsPage: React.FC = () => {
     const loadSettings = () => {
       const flags = getAuthFeatureFlags();
       setLoginEnabled(flags.loginEnabled);
-      setRegistrationEnabled(flags.registrationEnabled);
       setLoading(false);
     };
     
@@ -47,8 +45,7 @@ const AdminSettingsPage: React.FC = () => {
       setSuccess(null);
       
       setAuthFeatureFlags({
-        loginEnabled,
-        registrationEnabled
+        loginEnabled
       });
       
       setSuccess('Settings saved successfully');
@@ -152,40 +149,6 @@ const AdminSettingsPage: React.FC = () => {
                     } pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200`}
                   >
                     {loginEnabled ? (
-                      <ToggleRight className="h-5 w-5 text-blue-600" />
-                    ) : (
-                      <ToggleLeft className="h-5 w-5 text-gray-400" />
-                    )}
-                  </span>
-                </button>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-start">
-                  <div className="flex-shrink-0">
-                    <UserPlus className="w-6 h-6 text-gray-500" />
-                  </div>
-                  <div className="ml-3">
-                    <h3 className="text-base font-medium text-gray-900">User Registration</h3>
-                    <p className="text-sm text-gray-500">
-                      Allow new users to register. When disabled, users will be redirected to the home page if they try to access the registration page.
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setRegistrationEnabled(!registrationEnabled)}
-                  className={`${
-                    registrationEnabled ? 'bg-blue-600' : 'bg-gray-200'
-                  } relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
-                >
-                  <span className="sr-only">Toggle registration</span>
-                  <span
-                    className={`${
-                      registrationEnabled ? 'translate-x-5' : 'translate-x-0'
-                    } pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200`}
-                  >
-                    {registrationEnabled ? (
                       <ToggleRight className="h-5 w-5 text-blue-600" />
                     ) : (
                       <ToggleLeft className="h-5 w-5 text-gray-400" />

@@ -4,7 +4,7 @@ import { useAuth, getAuthFeatureFlags } from '../../lib/auth';
 import LoadingScreen from './LoadingScreen';
 
 interface AuthGuardProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   requireAuth?: boolean;
   redirectTo?: string;
 }
@@ -16,7 +16,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
 }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
-  const { loginEnabled, registrationEnabled } = getAuthFeatureFlags();
+  const { loginEnabled } = getAuthFeatureFlags();
 
   // Check if the current path is a disabled auth route
   const isDisabledAuthRoute = () => {
@@ -24,12 +24,13 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
     
     if (!loginEnabled) {
       // If login is disabled, block these routes
-      if (path === '/login' || path === '/forgot-password' || path === '/reset-password') {
+      if (path === '/login') {
         return true;
       }
     }
     
-    if (!registrationEnabled && path === '/register') {
+    // Handle register path - redirect to add-business
+    if (path === '/register') {
       return true;
     }
     
@@ -42,6 +43,12 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
 
   // If trying to access a disabled auth route, redirect to home
   if (isDisabledAuthRoute()) {
+    // If it's the register path, redirect to add-business
+    if (location.pathname === '/register') {
+      return <Navigate to="/add-business" replace />;
+    }
+    
+    // Otherwise redirect to home
     return <Navigate to="/" replace />;
   }
 

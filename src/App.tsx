@@ -13,9 +13,6 @@ import TermsOfServicePage from './pages/TermsOfServicePage';
 import BusinessOwnersPage from './pages/BusinessOwnersPage';
 import BusinessDashboardPage from './pages/BusinessDashboardPage';
 import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import ResetPasswordPage from './pages/ResetPasswordPage';
 import AdminSettingsPage from './pages/AdminSettingsPage';
 import Layout from './components/Layout';
 import AuthGuard from './components/auth/AuthGuard';
@@ -61,29 +58,11 @@ function App() {
               </AuthGuard>
             } 
           />
+          
+          {/* Redirect register to add-business */}
           <Route 
             path="/register" 
-            element={
-              <AuthGuard requireAuth={false} redirectTo="/business-dashboard">
-                <RegisterPage />
-              </AuthGuard>
-            } 
-          />
-          <Route 
-            path="/forgot-password" 
-            element={
-              <AuthGuard requireAuth={false} redirectTo="/business-dashboard">
-                <ForgotPasswordPage />
-              </AuthGuard>
-            } 
-          />
-          <Route 
-            path="/reset-password" 
-            element={
-              <AuthGuard requireAuth={false} redirectTo="/business-dashboard">
-                <ResetPasswordPage />
-              </AuthGuard>
-            } 
+            element={<AuthGuard requireAuth={false} redirectTo="/add-business" />} 
           />
           
           {/* Protected Routes - Require authentication */}
