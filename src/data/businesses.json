@@ -11,7 +11,12 @@
     "rating": 4.9,
     "reviewCount": 234,
     "description": "Trusted auto repair shop with certified mechanics and quality parts guarantee.",
-    "services": ["Oil Changes", "Brake Repair", "Engine Diagnostics", "Transmission Service"],
+    "services": [
+      "Oil Changes",
+      "Brake Repair",
+      "Engine Diagnostics",
+      "Transmission Service"
+    ],
     "neighborhood": "Capitol Hill",
     "hours": {
       "Monday": "7:00 AM - 6:00 PM",
@@ -37,7 +42,12 @@
     "rating": 4.7,
     "reviewCount": 178,
     "description": "Complete automotive care with modern equipment and experienced technicians.",
-    "services": ["Full Service Repairs", "Tire Service", "AC Repair", "Electrical Work"],
+    "services": [
+      "Full Service Repairs",
+      "Tire Service",
+      "AC Repair",
+      "Electrical Work"
+    ],
     "neighborhood": "Highland",
     "hours": {
       "Monday": "8:00 AM - 6:00 PM",
@@ -63,7 +73,12 @@
     "rating": 4.8,
     "reviewCount": 167,
     "description": "Family-owned auto repair shop serving Denver for over 20 years with honest service.",
-    "services": ["General Repairs", "Preventive Maintenance", "Brake Service", "Oil Changes"],
+    "services": [
+      "General Repairs",
+      "Preventive Maintenance",
+      "Brake Service",
+      "Oil Changes"
+    ],
     "neighborhood": "Highlands Ranch",
     "hours": {
       "Monday": "7:30 AM - 5:30 PM",
@@ -79,7 +94,7 @@
   },
   {
     "id": "nail-salons-austin-01",
-    "name": "MILANO NAIL SPA AUSTIN",
+    "name": "MILANO NAIL SPA AUSTIN (rank#1 BEST NAIL SALON ATX, rank#2 BEST NAIL SALON in AMERICA)",
     "category": "nail-salons",
     "city": "austin",
     "state": "Texas",
@@ -88,13 +103,28 @@
     "website": "https://milanonailspaatx.com/",
     "rating": 4.9,
     "reviewCount": 6050,
-    "description": "Modern nail bar with organic products and artistic nail designs. (rank#1 BEST NAIL SALON ATX, rank#2 BEST NAIL SALON in AMERICA)",
-    "services": ["Organic Manicures", "Designer Pedicures", "Nail Art", "Hand Treatments"],
+    "description": "Modern nail bar with organic products and artistic nail designs.",
+    "services": [
+      "Organic Manicures",
+      "Designer Pedicures",
+      "Nail Art",
+      "Hand Treatments"
+    ],
     "neighborhood": "South Austin",
-    "hours": {"Thursday":"9 AM–7:30 PM","Friday":"9 AM–7:30 PM","Saturday":"9 AM–7:30 PM","Sunday":"10 AM–6 PM","Monday":"9 AM–7:30 PM","Tuesday":"9 AM–7:30 PM","Wednesday":"9 AM–7:30 PM"},
+    "hours": {
+      "Thursday": "9 AM–7:30 PM",
+      "Friday": "9 AM–7:30 PM",
+      "Saturday": "9 AM–7:30 PM",
+      "Sunday": "10 AM–6 PM",
+      "Monday": "9 AM–7:30 PM",
+      "Tuesday": "9 AM–7:30 PM",
+      "Wednesday": "9 AM–7:30 PM"
+    },
     "image": "https://lh3.googleusercontent.com/p/AF1QipMUZpFRXOblXPNaJPAAlqIphutsC0ew81PgGj2D",
-    "premium": true,
-    "bookingLinks": ["https://www.lldtek.org/salon/appt/VkZoZk1EazVNREE9"],
+    "premium": false,
+    "bookingLinks": [
+      "https://www.lldtek.org/salon/appt/VkZoZk1EazVNREE9"
+    ],
     "latitude": 30.2596077,
     "longitude": -97.7104531
   },
@@ -110,7 +140,10 @@
     "rating": 4.6,
     "reviewCount": 1372,
     "description": "Uptown Nail Spa",
-    "services": ["Nail salon", "Massage spa"],
+    "services": [
+      "Nail salon",
+      "Massage spa"
+    ],
     "neighborhood": "",
     "hours": {
       "Thursday": "9:30 AM–8 PM",
@@ -138,7 +171,9 @@
     "rating": 4.8,
     "reviewCount": 901,
     "description": "Cosmo Nails & Spa",
-    "services": ["Nail salon"],
+    "services": [
+      "Nail salon"
+    ],
     "neighborhood": "",
     "hours": {
       "Thursday": "9:30 AM–7:30 PM",
@@ -166,7 +201,9 @@
     "rating": 4.5,
     "reviewCount": 1607,
     "description": "Rose Couture Nail Bar - Dallas",
-    "services": ["Nail salon"],
+    "services": [
+      "Nail salon"
+    ],
     "neighborhood": "",
     "hours": {
       "Thursday": "10 AM–7:30 PM",
@@ -194,7 +231,9 @@
     "rating": 4.9,
     "reviewCount": 1057,
     "description": "French Nails Luxury Spa & Bar",
-    "services": ["Nail salon"],
+    "services": [
+      "Nail salon"
+    ],
     "neighborhood": "",
     "hours": {
       "Thursday": "10 AM–7:30 PM",
@@ -222,7 +261,9 @@
     "rating": 4.5,
     "reviewCount": 211,
     "description": "Royal Nails Spa",
-    "services": ["Nail salon"],
+    "services": [
+      "Nail salon"
+    ],
     "neighborhood": "",
     "hours": {
       "Thursday": "9:30 AM–7:30 PM",
@@ -250,7 +291,14 @@
     "rating": 4.6,
     "reviewCount": 322,
     "description": "HIGHLAND NAIL BAR - BEST NAIL SALON IN DALLAS ( 15% OFF MON-THUR 12PM-3PM, 10% OFF BIRTHDAY, 10% OFF STUDENTS)",
-    "services": ["Nail salon", "Beauty salon", "Day spa", "Eyelash salon", "Facial spa", "Waxing hair removal service"],
+    "services": [
+      "Nail salon",
+      "Beauty salon",
+      "Day spa",
+      "Eyelash salon",
+      "Facial spa",
+      "Waxing hair removal service"
+    ],
     "neighborhood": "",
     "hours": {
       "Thursday": "10 AM–7 PM",
@@ -278,7 +326,10 @@
     "rating": 4.8,
     "reviewCount": 230,
     "description": "Nail Haus & Spa",
-    "services": ["Nail salon", "Facial spa"],
+    "services": [
+      "Nail salon",
+      "Facial spa"
+    ],
     "neighborhood": "",
     "hours": {
       "Thursday": "10 AM–7 PM",
@@ -306,7 +357,9 @@
     "rating": 4.8,
     "reviewCount": 951,
     "description": "French Nails Dallas",
-    "services": ["Nail salon"],
+    "services": [
+      "Nail salon"
+    ],
     "neighborhood": "",
     "hours": {
       "Thursday": "10 AM–7 PM",
@@ -334,7 +387,9 @@
     "rating": 3.5,
     "reviewCount": 171,
     "description": "The Best Nails Dallas",
-    "services": ["Nail salon"],
+    "services": [
+      "Nail salon"
+    ],
     "neighborhood": "",
     "hours": {
       "Thursday": "9 AM–9 PM",
@@ -362,7 +417,9 @@
     "rating": 4.7,
     "reviewCount": 523,
     "description": "3311 Nail Bar",
-    "services": ["Nail salon"],
+    "services": [
+      "Nail salon"
+    ],
     "neighborhood": "",
     "hours": {
       "Thursday": "10 AM–8 PM",
@@ -390,7 +447,9 @@
     "rating": 4.7,
     "reviewCount": 357,
     "description": "High Five Nail Bar",
-    "services": ["Nail salon"],
+    "services": [
+      "Nail salon"
+    ],
     "neighborhood": "",
     "hours": {
       "Thursday": "10 AM–8 PM",
@@ -418,7 +477,9 @@
     "rating": 4.3,
     "reviewCount": 324,
     "description": "Bliss Nail Spa Dallas ( Top Rated )",
-    "services": ["Nail salon"],
+    "services": [
+      "Nail salon"
+    ],
     "neighborhood": "",
     "hours": {
       "Thursday": "10 AM–8 PM",
@@ -446,7 +507,13 @@
     "rating": 4.8,
     "reviewCount": 156,
     "description": "Premium nail salon offering manicures, pedicures, and nail art services in a luxurious setting.",
-    "services": ["Manicures", "Pedicures", "Nail Art", "Gel Polish", "Acrylic Nails"],
+    "services": [
+      "Manicures",
+      "Pedicures",
+      "Nail Art",
+      "Gel Polish",
+      "Acrylic Nails"
+    ],
     "neighborhood": "Downtown",
     "hours": {
       "Monday": "9:00 AM - 7:00 PM",
@@ -472,7 +539,12 @@
     "rating": 4.6,
     "reviewCount": 89,
     "description": "Full-service nail salon and spa with experienced technicians and relaxing atmosphere.",
-    "services": ["Manicures", "Pedicures", "Spa Treatments", "Waxing"],
+    "services": [
+      "Manicures",
+      "Pedicures",
+      "Spa Treatments",
+      "Waxing"
+    ],
     "neighborhood": "Uptown",
     "hours": {
       "Monday": "10:00 AM - 8:00 PM",
@@ -498,7 +570,10 @@
     "rating": 4.3,
     "reviewCount": 939,
     "description": "Professional nail salon services in Frisco. Top-rated nail salon offering manicures, pedicures, and nail art",
-    "services": ["Manicure", "Pedicure"],
+    "services": [
+      "Manicure",
+      "Pedicure"
+    ],
     "neighborhood": "Central Frisco",
     "hours": {
       "Monday": "9:00 AM - 6:00 PM",
@@ -524,7 +599,10 @@
     "rating": 4.8,
     "reviewCount": 577,
     "description": "Professional nail salon services in Frisco. Top-rated nail salon offering manicures, pedicures, and nail art",
-    "services": ["Manicure", "Pedicure"],
+    "services": [
+      "Manicure",
+      "Pedicure"
+    ],
     "neighborhood": "North Frisco",
     "hours": {
       "Monday": "9:00 AM - 6:00 PM",
@@ -550,7 +628,10 @@
     "rating": 4.9,
     "reviewCount": 330,
     "description": "Professional nail salon services in Frisco. Top-rated nail salon offering manicures, pedicures, and nail art",
-    "services": ["Manicure", "Pedicure"],
+    "services": [
+      "Manicure",
+      "Pedicure"
+    ],
     "neighborhood": "East Frisco",
     "hours": {
       "Monday": "9:00 AM - 6:00 PM",
@@ -576,7 +657,10 @@
     "rating": 4.9,
     "reviewCount": 406,
     "description": "Professional nail salon services in Frisco. Top-rated nail salon offering manicures, pedicures, and nail art",
-    "services": ["Manicure", "Pedicure"],
+    "services": [
+      "Manicure",
+      "Pedicure"
+    ],
     "neighborhood": "South Frisco",
     "hours": {
       "Monday": "9:00 AM - 6:00 PM",
@@ -602,7 +686,10 @@
     "rating": 4.8,
     "reviewCount": 230,
     "description": "Professional nail salon services in Frisco. Top-rated nail salon offering manicures, pedicures, and nail art",
-    "services": ["Manicure", "Pedicure"],
+    "services": [
+      "Manicure",
+      "Pedicure"
+    ],
     "neighborhood": "Downtown Frisco",
     "hours": {
       "Monday": "9:00 AM - 6:00 PM",
@@ -628,7 +715,10 @@
     "rating": 4.8,
     "reviewCount": 689,
     "description": "Professional nail salon services in Frisco. Top-rated nail salon offering manicures, pedicures, and nail art",
-    "services": ["Manicure", "Pedicure"],
+    "services": [
+      "Manicure",
+      "Pedicure"
+    ],
     "neighborhood": "Legacy West",
     "hours": {
       "Monday": "9:00 AM - 6:00 PM",
@@ -654,9 +744,19 @@
     "rating": 4.5,
     "reviewCount": 876,
     "description": null,
-    "services": ["Nail salon"],
+    "services": [
+      "Nail salon"
+    ],
     "neighborhood": null,
-    "hours": {"Thursday":"9:30 AM–7:30 PM","Friday":"9:30 AM–7:30 PM","Saturday":"9 AM–7 PM","Sunday":"10:30 AM–6 PM","Monday":"9:30 AM–7:30 PM","Tuesday":"9:30 AM–7:30 PM","Wednesday":"9:30 AM–7:30 PM"},
+    "hours": {
+      "Thursday": "9:30 AM–7:30 PM",
+      "Friday": "9:30 AM–7:30 PM",
+      "Saturday": "9 AM–7 PM",
+      "Sunday": "10:30 AM–6 PM",
+      "Monday": "9:30 AM–7:30 PM",
+      "Tuesday": "9:30 AM–7:30 PM",
+      "Wednesday": "9:30 AM–7:30 PM"
+    },
     "image": "https://lh3.googleusercontent.com/p/AF1QipMNEhL_GDSYto6U3K-vcHQrXCBoVdSebUA3bZOg",
     "premium": false,
     "latitude": 33.1309964,
@@ -674,7 +774,10 @@
     "rating": 4.3,
     "reviewCount": 726,
     "description": "Professional nail salon services in Frisco. Top-rated nail salon offering manicures, pedicures, and nail art",
-    "services": ["Manicure", "Pedicure"],
+    "services": [
+      "Manicure",
+      "Pedicure"
+    ],
     "neighborhood": "The Star",
     "hours": {
       "Monday": "9:00 AM - 6:00 PM",
@@ -700,7 +803,10 @@
     "rating": 4.9,
     "reviewCount": 140,
     "description": "Professional nail salon services in Frisco. Top-rated nail salon offering manicures, pedicures, and nail art",
-    "services": ["Manicure", "Pedicure"],
+    "services": [
+      "Manicure",
+      "Pedicure"
+    ],
     "neighborhood": "Preston Road",
     "hours": {
       "Monday": "9:00 AM - 6:00 PM",
@@ -868,9 +974,24 @@
     "rating": 4.6,
     "reviewCount": 584,
     "description": null,
-    "services": ["Nail salon","Beauty salon","Day spa","Massage spa","Spa","Waxing hair removal service"],
+    "services": [
+      "Nail salon",
+      "Beauty salon",
+      "Day spa",
+      "Massage spa",
+      "Spa",
+      "Waxing hair removal service"
+    ],
     "neighborhood": null,
-    "hours": {"Thursday":"10 AM–7 PM","Friday":"10 AM–7 PM","Saturday":"9 AM–7 PM","Sunday":"11 AM–5 PM","Monday":"10 AM–7 PM","Tuesday":"10 AM–7 PM","Wednesday":"10 AM–7 PM"},
+    "hours": {
+      "Thursday": "10 AM–7 PM",
+      "Friday": "10 AM–7 PM",
+      "Saturday": "9 AM–7 PM",
+      "Sunday": "11 AM–5 PM",
+      "Monday": "10 AM–7 PM",
+      "Tuesday": "10 AM–7 PM",
+      "Wednesday": "10 AM–7 PM"
+    },
     "image": "https://lh3.googleusercontent.com/p/AF1QipOquT4M3i4pwPDKWAU6nGRFo8UGd1wmn_fXmq2p",
     "premium": false,
     "latitude": 33.1453214,
@@ -888,9 +1009,19 @@
     "rating": 4.7,
     "reviewCount": 480,
     "description": null,
-    "services": ["Nail salon"],
+    "services": [
+      "Nail salon"
+    ],
     "neighborhood": null,
-    "hours": {"Thursday":"9:30 AM–7 PM","Friday":"9:30 AM–7 PM","Saturday":"9:30 AM–6:30 PM","Sunday":"11:30 AM–6 PM","Monday":"9:30 AM–7 PM","Tuesday":"9:30 AM–7 PM","Wednesday":"9:30 AM–7 PM"},
+    "hours": {
+      "Thursday": "9:30 AM–7 PM",
+      "Friday": "9:30 AM–7 PM",
+      "Saturday": "9:30 AM–6:30 PM",
+      "Sunday": "11:30 AM–6 PM",
+      "Monday": "9:30 AM–7 PM",
+      "Tuesday": "9:30 AM–7 PM",
+      "Wednesday": "9:30 AM–7 PM"
+    },
     "image": "https://lh3.googleusercontent.com/p/AF1QipOYPCWKQsJQT_2RyuBHGISBmdnGw4QOA8P4JMSs",
     "premium": false,
     "latitude": 33.1219319,
@@ -908,9 +1039,20 @@
     "rating": 4.5,
     "reviewCount": 367,
     "description": null,
-    "services": ["Nail salon","Waxing hair removal service"],
+    "services": [
+      "Nail salon",
+      "Waxing hair removal service"
+    ],
     "neighborhood": null,
-    "hours": {"Thursday":"10 AM–6:30 PM","Friday":"10 AM–6:30 PM","Saturday":"9:30 AM–6:30 PM","Sunday":"11 AM–6 PM","Monday":"Closed","Tuesday":"10 AM–6:30 PM","Wednesday":"10 AM–6:30 PM"},
+    "hours": {
+      "Thursday": "10 AM–6:30 PM",
+      "Friday": "10 AM–6:30 PM",
+      "Saturday": "9:30 AM–6:30 PM",
+      "Sunday": "11 AM–6 PM",
+      "Monday": "Closed",
+      "Tuesday": "10 AM–6:30 PM",
+      "Wednesday": "10 AM–6:30 PM"
+    },
     "image": "https://lh3.googleusercontent.com/p/AF1QipNIIlPzyb-mwzaEZADHVjtkxXanRAjl94CuBvGs",
     "premium": false,
     "latitude": 33.1488227,
@@ -918,82 +1060,749 @@
   },
   {
     "id": "nail-salons-frisco-17",
-    "name": "Deluxe Nails & Spa",
+    "name": "Belle Vous Beyond Nail Spa",
+    "category": "nail-salons",
+    "city": "frisco",
+    "state": "Texas",
+    "address": "6363 Dallas Pkwy #117, Frisco, TX 75034",
+    "phone": "(469) 803-5545",
+    "website": "https://bellevousbeyondfrisco.com/",
+    "rating": 4.4,
+    "reviewCount": 379,
+    "description": null,
+    "services": [
+      "Nail salon",
+      "Eyelash salon"
+    ],
+    "neighborhood": null,
+    "hours": {
+      "Thursday": "9:30 AM–7:30 PM",
+      "Friday": "9:30 AM–7:30 PM",
+      "Saturday": "9 AM–7 PM",
+      "Sunday": "11:30 AM–6 PM",
+      "Monday": "9:30 AM–7:30 PM",
+      "Tuesday": "9:30 AM–7:30 PM",
+      "Wednesday": "9:30 AM–7:30 PM"
+    },
+    "image": "https://lh3.googleusercontent.com/p/AF1QipPFXpQfI2sb94sZ_xmpyZxxugDPulsLlTESlhlT",
+    "premium": false,
+    "latitude": 33.13001,
+    "longitude": -96.8262521
+  },
+  {
+    "id": "nail-salons-frisco-21",
+    "name": "D&N Nail Bar & Lashes - $20 off on Happy Hour $120 and up",
+    "category": "nail-salons",
+    "city": "frisco",
+    "state": "Texas",
+    "address": "9144 Prestmont Pl #240, Frisco, TX 75035",
+    "phone": "(469) 803-5889",
+    "website": "https://dandnnailbarandlashes.com/",
+    "rating": 4.6,
+    "reviewCount": 364,
+    "description": null,
+    "services": [
+      "Nail salon"
+    ],
+    "neighborhood": null,
+    "hours": {
+      "Thursday": "9:45 AM–8:30 PM",
+      "Friday": "9:45 AM–8:30 PM",
+      "Saturday": "9:30 AM–8 PM",
+      "Sunday": "10:45 AM–8 PM",
+      "Monday": "9:45 AM–8:30 PM",
+      "Tuesday": "9:45 AM–8:30 PM",
+      "Wednesday": "9:45 AM–8:30 PM"
+    },
+    "image": "https://lh3.googleusercontent.com/gps-cs-s/AC9h4npQuaqqJq01UihDR9iNWIf1Zj5ntAmXSre4a4PlgbYgDhBPrQxiNXvKaoha33OcxHLM68yz85D1gBFp6TiWE9nvdLRkh5LGERcY4R5XNFeqoqlkuf9XqUGyjeDPsqZTC40Be3SOhw",
+    "premium": false,
+    "latitude": 33.1112872,
+    "longitude": -96.8041726
+  },
+  {
+    "id": "nail-salons-frisco-23",
+    "name": "Ooh La La Nail and Spa",
+    "category": "nail-salons",
+    "city": "frisco",
+    "state": "Texas",
+    "address": "6363 Dallas Pkwy #117, Frisco, TX 75034",
+    "phone": "(469) 200-5115",
+    "website": "https://www.ooh-lala.org/",
+    "rating": 4.8,
+    "reviewCount": 584,
+    "description": null,
+    "services": [
+      "Nail salon"
+    ],
+    "neighborhood": null,
+    "hours": {
+      "Thursday": "9:30 AM–9 PM",
+      "Friday": "9:30 AM–9 PM",
+      "Saturday": "9 AM–7 PM",
+      "Sunday": "11 AM–6 PM",
+      "Monday": "9:30 AM–9 PM",
+      "Tuesday": "9:30 AM–9 PM",
+      "Wednesday": "9:30 AM–7:30 PM"
+    },
+    "image": "https://lh3.googleusercontent.com/gps-cs-s/AC9h4nogveegUa5-kxoyY_Q4SCV-XLxp8jLMP3Jv-0Db2nOMDtReAyZb8R1gePKZu1sUjWcBmAgxbEGFMjglFPFBBqlA64xXErKUYH2Wl9wB38EVPt603zOFeo-CFKyUk4ENj97t9e6hMA",
+    "premium": false,
+    "latitude": 33.1299166,
+    "longitude": -96.8261781
+  },
+  {
+    "id": "nail-salons-frisco-26",
+    "name": "Willow Nail Lounge",
+    "category": "nail-salons",
+    "city": "frisco",
+    "state": "Texas",
+    "address": "11901 Dallas Pkwy #300, Frisco, TX 75033",
+    "phone": "(469) 362-6373",
+    "website": "https://willownaillounge.com/",
+    "rating": 4.7,
+    "reviewCount": 517,
+    "description": "Professional nail salon services in Frisco. Top-rated nail salon offering manicures, pedicures, and nail art",
+    "services": [
+      "Nail salon"
+    ],
+    "neighborhood": "West Frisco",
+    "hours": {
+      "Thursday": "10 AM–7 PM",
+      "Friday": "10 AM–7 PM",
+      "Saturday": "9 AM–6 PM",
+      "Sunday": "12–6 PM",
+      "Monday": "10 AM–7 PM",
+      "Tuesday": "10 AM–7 PM",
+      "Wednesday": "10 AM–7 PM"
+    },
+    "image": "https://lh3.googleusercontent.com/p/AF1QipMinLoGOmcEeGhjNusArxhqicnIyH_MlhB4nIg",
+    "premium": false,
+    "latitude": 33.1770139,
+    "longitude": -96.8404792
+  },
+  {
+    "id": "nail-salons-frisco-29",
+    "name": "Modern Nails",
+    "category": "nail-salons",
+    "city": "frisco",
+    "state": "Texas",
+    "address": "7151 Preston Rd #341c, Frisco, TX 75034",
+    "phone": "(469) 200-5822",
+    "website": "https://modernnailsfrisco.com/",
+    "rating": 4.5,
+    "reviewCount": 197,
+    "description": null,
+    "services": [
+      "Nail salon"
+    ],
+    "neighborhood": null,
+    "hours": {
+      "Thursday": "10 AM–7 PM",
+      "Friday": "10 AM–7 PM",
+      "Saturday": "10 AM–7 PM",
+      "Sunday": "11:30 AM–5 PM",
+      "Monday": "10 AM–7 PM",
+      "Tuesday": "Closed",
+      "Wednesday": "10 AM–7 PM"
+    },
+    "image": "https://lh3.googleusercontent.com/p/AF1QipMjmM4_pYhfTPtcKU9GuTuFwDrbYWnRe0ENRgto",
+    "premium": false,
+    "latitude": 33.1379013,
+    "longitude": -96.8060684
+  },
+  {
+    "id": "nail-salons-austin-01",
+    "name": "MILANO NAIL SPA AUSTIN",
     "category": "nail-salons",
     "city": "austin",
     "state": "Texas",
-    "address": "10721 Research Blvd #B150, Austin, TX 78759",
-    "phone": "(512) 346-9999",
-    "website": "https://deluxenailsaustin.com/",
-    "rating": 4.6,
-    "reviewCount": 510,
-    "description": "Deluxe experience with a variety of nail and spa services.",
-    "services": ["Manicures", "Pedicures", "Acrylic Nails", "Waxing"],
+    "address": "2755 E 7th St, Austin, TX 78702",
+    "phone": "(737) 781-9036",
+    "website": "https://milanonailspaatx.com/",
+    "rating": 4.9,
+    "reviewCount": 6050,
+    "description": "Award-winning modern nail bar with organic products and artistic nail designs.",
+    "services": [
+      "Manicures",
+      "Pedicures",
+      "Beauty Treatments"
+    ],
     "neighborhood": "North Austin",
-    "hours": {"Monday": "9:30 AM–7 PM", "Tuesday": "9:30 AM–7 PM", "Wednesday": "9:30 AM–7 PM", "Thursday": "9:30 AM–7 PM", "Friday": "9:30 AM–7 PM", "Saturday": "9:30 AM–6 PM", "Sunday": "11 AM–5 PM"},
-    "image": "https://lh3.googleusercontent.com/p/AF1QipN16nail17",
+    "hours": {
+      "Thursday": "9:30 AM–7:30 PM",
+      "Friday": "9:30 AM–7:30 PM",
+      "Saturday": "9:30 AM–6:30 PM",
+      "Sunday": "11 AM–5:30 PM",
+      "Monday": "9:30 AM–7:30 PM",
+      "Tuesday": "9:30 AM–7:30 PM",
+      "Wednesday": "9:30 AM–7:30 PM"
+    },
+    "image": "https://lh3.googleusercontent.com/gps-cs-s/AC9h4npe3WQmwhDmPr36V7DoRamiHGAmhEfsEc4EU4oeYiStiQKbyK2u8x08uu7un8O0qK4S32ne1QBH74hi_hgO6CRlqpVnm_wThOiCXKcqAGhS9Ov03_CUrhmeDQ-Cy59SjwexOEWe",
+    "premium": true,
+    "bookingLinks": [
+      "https://adorenaillounge.com/contact"
+    ],
+    "latitude": 30.3126888,
+    "longitude": -97.7386093
+  },
+  {
+    "id": "nail-salons-austin-05",
+    "name": "Enza Nails & Lashes",
+    "category": "nail-salons",
+    "city": "austin",
+    "state": "Texas",
+    "address": "1100 S Lamar Blvd #1140, Austin, TX 78704",
+    "phone": "(512) 599-5678",
+    "website": "https://booking.galaxyaccess.us/enza8810",
+    "rating": 4.9,
+    "reviewCount": 1677,
+    "description": "Professional nail and lash services in a welcoming environment.",
+    "services": [
+      "Manicures",
+      "Pedicures",
+      "Eyelash Extensions"
+    ],
+    "neighborhood": "South Austin",
+    "hours": {
+      "Thursday": "10 AM–7 PM",
+      "Friday": "10 AM–7 PM",
+      "Saturday": "10 AM–7 PM",
+      "Sunday": "11 AM–5 PM",
+      "Monday": "10 AM–7 PM",
+      "Tuesday": "10 AM–7 PM",
+      "Wednesday": "10 AM–7 PM"
+    },
+    "image": "https://lh3.googleusercontent.com/p/AF1QipOWi6GzzsMnNPQLF5GkCrM7pEwUFXjqzDTZOkxl",
+    "premium": true,
+    "bookingLinks": [],
+    "latitude": 30.2556193,
+    "longitude": -97.7627384
+  },
+  {
+    "id": "nail-salons-austin-06",
+    "name": "Relax Nails & Spa",
+    "category": "nail-salons",
+    "city": "austin",
+    "state": "Texas",
+    "address": "3016 Guadalupe St b300, Austin, TX 78705",
+    "phone": "(512) 608-4016",
+    "website": "https://relaxnailsdowntown.com/",
+    "rating": 4.6,
+    "reviewCount": 450,
+    "description": "Relaxing nail spa offering comprehensive nail care and waxing services.",
+    "services": [
+      "Manicures",
+      "Pedicures",
+      "Waxing Services",
+      "Spa Treatments"
+    ],
+    "neighborhood": "Campus Area",
+    "hours": {
+      "Thursday": "10 AM–7:30 PM",
+      "Friday": "10 AM–7:30 PM",
+      "Saturday": "10 AM–7:30 PM",
+      "Sunday": "11 AM–5 PM",
+      "Monday": "10 AM–7:30 PM",
+      "Tuesday": "10 AM–7:30 PM",
+      "Wednesday": "10 AM–7:30 PM"
+    },
+    "image": "https://lh3.googleusercontent.com/p/AF1QipNQC5UJQmXI5koaluCX-etWhmF3sxXDZD9YCDvi",
     "premium": false,
-    "latitude": 30.3951,
-    "longitude": -97.7422
+    "bookingLinks": [
+      "https://www.m.me/107553681971522",
+      "https://relaxnailsdowntown.com/#contact-us"
+    ],
+    "latitude": 30.2976842,
+    "longitude": -97.7414966
+  },
+  {
+    "id": "nail-salons-austin-07",
+    "name": "Domain Nails & Spa",
+    "category": "nail-salons",
+    "city": "austin",
+    "state": "Texas",
+    "address": "3310 W Braker Ln Bldg 2, Ste 200, Austin, TX 78758",
+    "phone": "(737) 222-5259",
+    "website": "https://www.domainnailsandspa.com/",
+    "rating": 4.5,
+    "reviewCount": 715,
+    "description": "Full-service nail spa conveniently located in the Domain shopping area.",
+    "services": [
+      "Manicures",
+      "Pedicures",
+      "Spa Treatments"
+    ],
+    "neighborhood": "North Austin",
+    "hours": {
+      "Thursday": "9:30 AM–7:30 PM",
+      "Friday": "9:30 AM–7:30 PM",
+      "Saturday": "9:30 AM–7:30 PM",
+      "Sunday": "11 AM–6 PM",
+      "Monday": "9:30 AM–7:30 PM",
+      "Tuesday": "9:30 AM–7:30 PM",
+      "Wednesday": "9:30 AM–7:30 PM"
+    },
+    "image": "https://lh3.googleusercontent.com/p/AF1QipMeh-2rSjP5Q1uxdiSZ52h68Wk-R08A9KXzlRWI",
+    "premium": false,
+    "bookingLinks": [
+      "https://www.domainnailsandspa.com/contact"
+    ],
+    "latitude": 30.3927963,
+    "longitude": -97.7258778
+  },
+  {
+    "id": "nail-salons-austin-08",
+    "name": "Square Nails Austin",
+    "category": "nail-salons",
+    "city": "austin",
+    "state": "Texas",
+    "address": "9503 Research Blvd #550, Austin, TX 78759",
+    "phone": "(512) 514-0048",
+    "website": "https://squarenailsaustin.com/",
+    "rating": 4.9,
+    "reviewCount": 628,
+    "description": "Contemporary nail salon featuring modern techniques and trending designs.",
+    "services": [
+      "Manicures",
+      "Pedicures"
+    ],
+    "neighborhood": "North Central",
+    "hours": {
+      "Thursday": "9:30 AM–7:30 PM",
+      "Friday": "9:30 AM–7:30 PM",
+      "Saturday": "9:30 AM–7:30 PM",
+      "Sunday": "11 AM–5 PM",
+      "Monday": "9:30 AM–7:30 PM",
+      "Tuesday": "9:30 AM–7:30 PM",
+      "Wednesday": "9:30 AM–7:30 PM"
+    },
+    "image": "https://lh3.googleusercontent.com/p/AF1QipPAo5z-klw8oW3y1QBSbO31XqGztZM-glOrW097",
+    "premium": false,
+    "bookingLinks": [
+      "https://squarenailsaustin.com/"
+    ],
+    "latitude": 30.3867866,
+    "longitude": -97.7420734
+  },
+  {
+    "id": "nail-salons-austin-09",
+    "name": "Highland Nails & Spa",
+    "category": "nail-salons",
+    "city": "austin",
+    "state": "Texas",
+    "address": "109 Jacob Fontaine Ln #700, Austin, TX 78752",
+    "phone": "(512) 220-9510",
+    "website": "https://highlandnailsatx.com/",
+    "rating": 4.6,
+    "reviewCount": 533,
+    "description": "Neighborhood nail spa offering quality services with personal attention.",
+    "services": [
+      "Manicures",
+      "Pedicures",
+      "Spa Treatments"
+    ],
+    "neighborhood": "Central Austin",
+    "hours": {
+      "Thursday": "9:30 AM–7:30 PM",
+      "Friday": "9:30 AM–7:30 PM",
+      "Saturday": "9:30 AM–7 PM",
+      "Sunday": "11 AM–6 PM",
+      "Monday": "9:30 AM–7:30 PM",
+      "Tuesday": "9:30 AM–7:30 PM",
+      "Wednesday": "9:30 AM–7:30 PM"
+    },
+    "image": "https://lh3.googleusercontent.com/p/AF1QipNHBqD0bkNqefAYwrhxwcLuhvPKCygZojFXXZ4U",
+    "premium": false,
+    "bookingLinks": [
+      "https://www.facebook.com/highlandnailsatx/"
+    ],
+    "latitude": 30.3251382,
+    "longitude": -97.7150849
+  },
+  {
+    "id": "nail-salons-austin-10",
+    "name": "Arbor Nail Bar",
+    "category": "nail-salons",
+    "city": "austin",
+    "state": "Texas",
+    "address": "10515 N Mopac Expy Suite A126, Austin, TX 78759",
+    "phone": "(512) 514-0027",
+    "website": "http://arbornailbar.com/",
+    "rating": 4.6,
+    "reviewCount": 554,
+    "description": "Upscale nail bar providing premium treatments in a chic setting.",
+    "services": [
+      "Manicures",
+      "Pedicures"
+    ],
+    "neighborhood": "North Austin",
+    "hours": {
+      "Thursday": "9:30 AM–7 PM",
+      "Friday": "9:30 AM–7 PM",
+      "Saturday": "9:30 AM–7 PM",
+      "Sunday": "11 AM–5 PM",
+      "Monday": "9:30 AM–7 PM",
+      "Tuesday": "9:30 AM–7 PM",
+      "Wednesday": "9:30 AM–7 PM"
+    },
+    "image": "https://lh3.googleusercontent.com/p/AF1QipO2i1lWq24NaHWx1HI-TAf0n2G_J9xsnMMJDSrL",
+    "premium": false,
+    "bookingLinks": [
+      "https://arbornailbar.com?rwg_token=ACgRB3e6qx4R6eGaj-84acN1NU7Ws_4ykYgK456HtFKoucbnQLixf4ivHSBXdApG5RPVaen_h4CWIhmewOO5W0LA05Lcgvy0HyEdVgSInTk4MkGB8crOXBs%3D"
+    ],
+    "latitude": 30.3894557,
+    "longitude": -97.7324463
+  },
+  {
+    "id": "nail-salons-austin-11",
+    "name": "Designer Nails",
+    "category": "nail-salons",
+    "city": "austin",
+    "state": "Texas",
+    "address": "5716 W US Hwy 290 Service Rd, Austin, TX 78735",
+    "phone": "(512) 899-3015",
+    "website": "https://www.lldtek.org/salon/appt/VkZoZk1Ea3lPREk9",
+    "rating": 4.8,
+    "reviewCount": 469,
+    "description": "Designer nail salon offering nail services, beauty treatments, and waxing.",
+    "services": [
+      "Manicures",
+      "Pedicures",
+      "Beauty Treatments",
+      "Waxing Services"
+    ],
+    "neighborhood": "Southwest Austin",
+    "hours": {
+      "Thursday": "10:30 AM–7:30 PM",
+      "Friday": "10:30 AM–7:30 PM",
+      "Saturday": "10:30 AM–7:30 PM",
+      "Sunday": "11:30 AM–6:30 PM",
+      "Monday": "10:30 AM–7:30 PM",
+      "Tuesday": "10:30 AM–7:30 PM",
+      "Wednesday": "10:30 AM–7:30 PM"
+    },
+    "image": "https://lh3.googleusercontent.com/p/AF1QipMNVSyNAhCnExkHGEp9XrU3TFGqO9uRLazBA9GR",
+    "premium": false,
+    "bookingLinks": [],
+    "latitude": 30.2367957,
+    "longitude": -97.8472393
+  },
+  {
+    "id": "nail-salons-austin-12",
+    "name": "Queen Spa",
+    "category": "nail-salons",
+    "city": "austin",
+    "state": "Texas",
+    "address": "2110 S Lamar Blvd suite d, Austin, TX 78704",
+    "phone": "(512) 294-2093",
+    "website": "http://www.queenspa.com/",
+    "rating": 4.3,
+    "reviewCount": 616,
+    "description": "Comprehensive beauty destination with nail, facial, and eyelash services.",
+    "services": [
+      "Manicures",
+      "Pedicures",
+      "Beauty Treatments",
+      "Eyelash Extensions",
+      "Facial Treatments",
+      "Spa Treatments"
+    ],
+    "neighborhood": "South Austin",
+    "hours": {
+      "Thursday": "9 AM–7:30 PM",
+      "Friday": "9 AM–7:30 PM",
+      "Saturday": "9 AM–6 PM",
+      "Sunday": "10 AM–6 PM",
+      "Monday": "9 AM–7:30 PM",
+      "Tuesday": "9 AM–7:30 PM",
+      "Wednesday": "9 AM–7:30 PM"
+    },
+    "image": "https://lh3.googleusercontent.com/p/AF1QipOPJf-Oy8owcMCiR8iGlwN7YE2_zKQa0hho6ZZd",
+    "premium": false,
+    "bookingLinks": [],
+    "latitude": 30.248345,
+    "longitude": -97.771396
+  },
+  {
+    "id": "nail-salons-austin-13",
+    "name": "Cute Nail Studio",
+    "category": "nail-salons",
+    "city": "austin",
+    "state": "Texas",
+    "address": "1211 E 7th St, Austin, TX 78702",
+    "phone": "(512) 937-2659",
+    "website": "http://cutenailstudio.com/",
+    "rating": 4.5,
+    "reviewCount": 595,
+    "description": "Trendy nail studio offering comprehensive beauty services until late hours.",
+    "services": [
+      "Manicures",
+      "Pedicures",
+      "Beauty Treatments",
+      "Eyelash Extensions",
+      "Facial Treatments",
+      "Waxing Services"
+    ],
+    "neighborhood": "East Austin",
+    "hours": {
+      "Thursday": "10 AM–10 PM",
+      "Friday": "10 AM–10 PM",
+      "Saturday": "10 AM–4 PM",
+      "Sunday": "11 AM–8 PM",
+      "Monday": "10 AM–10 PM",
+      "Tuesday": "4–10 PM",
+      "Wednesday": "10 AM–10 PM"
+    },
+    "image": "https://lh3.googleusercontent.com/p/AF1QipMOBw9lM5b2Sjy1b1Jou6svPHwp0t2RWrFKfjS0",
+    "premium": false,
+    "bookingLinks": [
+      "https://www.vagaro.com/googlemap/U2FsdGVkX18oQ8qFOjXDsT-I4b7MWqExy2RxNvyFk8k=?rwg_token=ACgRB3dPtT8iLqaX0NdBcOtBKkPGqqdAnyxTsaONDbNP3gC8svFSWPF4qb0zZbV28sEfT30WDp42gu46mCqivgbDZZy-Eck_1oO_gf5A0T75ltH4r6ptqAo%3D"
+    ],
+    "latitude": 30.2646986,
+    "longitude": -97.729433
+  },
+  {
+    "id": "nail-salons-austin-14",
+    "name": "SugarCoat & Co Beauty Bar",
+    "category": "nail-salons",
+    "city": "austin",
+    "state": "Texas",
+    "address": "1000 E 41st St Suite 220, Austin, TX 78751",
+    "phone": "(512) 888-9462",
+    "website": "http://sugarcoatandcobeautybar.com/",
+    "rating": 4.9,
+    "reviewCount": 1052,
+    "description": "Boutique nail salon specializing in custom nail art and beauty services.",
+    "services": [
+      "Manicures",
+      "Pedicures",
+      "Nail Art"
+    ],
+    "neighborhood": "Central Austin",
+    "hours": {
+      "Thursday": "9:30 AM–7 PM",
+      "Friday": "9:30 AM–7 PM",
+      "Saturday": "9:30 AM–6:30 PM",
+      "Sunday": "11 AM–5:30 PM",
+      "Monday": "9:30 AM–7 PM",
+      "Tuesday": "9:30 AM–7 PM",
+      "Wednesday": "9:30 AM–7 PM"
+    },
+    "image": "https://lh3.googleusercontent.com/p/AF1QipOr_3hdfV--0uNinhK_ObcQ6o4cDPExcEFnvm1B",
+    "premium": true,
+    "bookingLinks": [
+      "https://sugarcoatandcobeautybar.com/booking/",
+      "https://booksy.com/en-us/rwg/1311318_sugarcoat-co-beauty-bar_nail-salon_134608_austin?rwg_token=ACgRB3fPO8Afxo6udXFKYkeE8aFvmB8SLJ1NseuVKBBgTRlk3Jd5BM5ZH-Ldd7gJWZh3ABzEqYwNKhCUB8UJfQ8tpmxKvztax_mutZu_7jt_pjKWQvXGnhw%3D"
+    ],
+    "latitude": 30.3001324,
+    "longitude": -97.7213968
+  },
+  {
+    "id": "nail-salons-austin-15",
+    "name": "Dream Spa Beauty lounge",
+    "category": "nail-salons",
+    "city": "austin",
+    "state": "Texas",
+    "address": "5301 Airport Blvd UNIT 200, Austin, TX 78751",
+    "phone": "(512) 382-7500",
+    "website": "https://www.dreamspaatx.net/",
+    "rating": 4.4,
+    "reviewCount": 330,
+    "description": "Complete spa and beauty lounge featuring nail services and wellness treatments.",
+    "services": [
+      "Manicures",
+      "Pedicures",
+      "Massage",
+      "Spa Treatments",
+      "Waxing Services"
+    ],
+    "neighborhood": "Central East",
+    "hours": {
+      "Thursday": "9:30 AM–7 PM",
+      "Friday": "9:30 AM–7:30 PM",
+      "Saturday": "9:35 AM–7 PM",
+      "Sunday": "9:30 AM–5 PM",
+      "Monday": "9:30 AM–7:30 PM",
+      "Tuesday": "Closed",
+      "Wednesday": "9:30 AM–7:30 PM"
+    },
+    "image": "https://lh3.googleusercontent.com/p/AF1QipOAZXEhJXpYrSSfnEvVJ0RDX76KS6oMqo1xE35M",
+    "premium": false,
+    "bookingLinks": [],
+    "latitude": 30.3140506,
+    "longitude": -97.7144728
+  },
+  {
+    "id": "nail-salons-austin-16",
+    "name": "In Fashion Nails",
+    "category": "nail-salons",
+    "city": "austin",
+    "state": "Texas",
+    "address": "9607 Research Blvd Suite 130, Austin, TX 78759",
+    "phone": "(512) 342-9780",
+    "website": "https://infashionnails.com/",
+    "rating": 4.8,
+    "reviewCount": 686,
+    "description": "Fashion-forward nail salon and spa keeping up with the latest trends.",
+    "services": [
+      "Manicures",
+      "Pedicures",
+      "Beauty Treatments",
+      "Spa Treatments",
+      "Waxing Services"
+    ],
+    "neighborhood": "North Central",
+    "hours": {
+      "Thursday": "10 AM–7:30 PM",
+      "Friday": "10 AM–7:30 PM",
+      "Saturday": "10 AM–7:30 PM",
+      "Sunday": "11 AM–5 PM",
+      "Monday": "10 AM–7:30 PM",
+      "Tuesday": "10 AM–7:30 PM",
+      "Wednesday": "10 AM–7:30 PM"
+    },
+    "image": "https://lh3.googleusercontent.com/p/AF1QipObK2jvwgo2jNW6m1aDrUff7R7Rgwl0ofprTSS1",
+    "premium": false,
+    "bookingLinks": [
+      "https://infashionnails.com/booking/"
+    ],
+    "latitude": 30.3896168,
+    "longitude": -97.7428267
+  },
+  {
+    "id": "nail-salons-austin-17",
+    "name": "Austin Regalia Nail & Spa",
+    "category": "nail-salons",
+    "city": "austin",
+    "state": "Texas",
+    "address": "4036 S Lamar Blvd APT 500, Austin, TX 78704",
+    "phone": "(512) 916-8989",
+    "website": "https://regalianailsandspaaustin.com/",
+    "rating": 4.5,
+    "reviewCount": 285,
+    "description": "Elegant nail and spa services in a luxurious setting.",
+    "services": [
+      "Manicures",
+      "Pedicures",
+      "Spa Treatments"
+    ],
+    "neighborhood": "South Austin",
+    "hours": {
+      "Thursday": "9:30 AM–7:30 PM",
+      "Friday": "9:30 AM–7:30 PM",
+      "Saturday": "9:30 AM–7:30 PM",
+      "Sunday": "11:30 AM–5:30 PM",
+      "Monday": "9:30 AM–7:30 PM",
+      "Tuesday": "9:30 AM–7:30 PM",
+      "Wednesday": "9:30 AM–7:30 PM"
+    },
+    "image": "https://lh3.googleusercontent.com/p/AF1QipPoHFodvrKlgusqHKnHVvajiqoQvgWFqf1gpr7w",
+    "premium": false,
+    "bookingLinks": [],
+    "latitude": 30.2371753,
+    "longitude": -97.7944689
   },
   {
     "id": "nail-salons-austin-18",
-    "name": "Happy Nails & Spa",
+    "name": "Organic Spa Nails",
     "category": "nail-salons",
     "city": "austin",
     "state": "Texas",
-    "address": "6001 W Parmer Ln #220, Austin, TX 78727",
-    "phone": "(512) 252-9999",
-    "website": "https://happynailsaustin.com/",
-    "rating": 4.5,
-    "reviewCount": 500,
-    "description": "Friendly staff and a clean, welcoming environment.",
-    "services": ["Manicures", "Pedicures", "Gel Nails", "Waxing"],
-    "neighborhood": "North Austin",
-    "hours": {"Monday": "9:30 AM–7 PM", "Tuesday": "9:30 AM–7 PM", "Wednesday": "9:30 AM–7 PM", "Thursday": "9:30 AM–7 PM", "Friday": "9:30 AM–7 PM", "Saturday": "9:30 AM–6 PM", "Sunday": "11 AM–5 PM"},
-    "image": "https://lh3.googleusercontent.com/p/AF1QipN17nail18",
+    "address": "1920 E Riverside Dr Ste 130, Austin, TX 78741",
+    "phone": "(512) 953-5262",
+    "website": "https://organicspaandnailsaustin.com/",
+    "rating": 4.3,
+    "reviewCount": 877,
+    "description": "Organic nail spa focusing on natural, eco-friendly treatments.",
+    "services": [
+      "Manicures",
+      "Pedicures",
+      "Organic Nail Treatments",
+      "Spa Treatments"
+    ],
+    "neighborhood": "Riverside",
+    "hours": {
+      "Thursday": "9 AM–7:30 PM",
+      "Friday": "9 AM–7:30 PM",
+      "Saturday": "9 AM–7:30 PM",
+      "Sunday": "10 AM–6 PM",
+      "Monday": "9:30 AM–7:30 PM",
+      "Tuesday": "9:30 AM–7:30 PM",
+      "Wednesday": "9:30 AM–7:30 PM"
+    },
+    "image": "https://lh3.googleusercontent.com/p/AF1QipPv_uUC9JbK-gxqTUGLJJzn2pQqoLJVEFGP9j43",
     "premium": false,
-    "latitude": 30.4421,
-    "longitude": -97.7032
+    "bookingLinks": [
+      "https://booking.fideliasolutions.com/TX65382"
+    ],
+    "latitude": 30.242215,
+    "longitude": -97.7273341
   },
   {
     "id": "nail-salons-austin-19",
-    "name": "Queen Nails & Spa",
+    "name": "V360 Nail Lounge",
     "category": "nail-salons",
     "city": "austin",
     "state": "Texas",
-    "address": "4301 W William Cannon Dr #B120, Austin, TX 78749",
-    "phone": "(512) 892-9999",
-    "website": "https://queennailsaustin.com/",
+    "address": "1414 S Lamar Blvd UNIT 107, Austin, TX 78704",
+    "phone": "(512) 995-7777",
+    "website": "https://v360austin.com/",
     "rating": 4.7,
-    "reviewCount": 490,
-    "description": "Quality nail care with a focus on customer satisfaction.",
-    "services": ["Manicures", "Pedicures", "Nail Art", "Waxing"],
-    "neighborhood": "Southwest Austin",
-    "hours": {"Monday": "9:30 AM–7 PM", "Tuesday": "9:30 AM–7 PM", "Wednesday": "9:30 AM–7 PM", "Thursday": "9:30 AM–7 PM", "Friday": "9:30 AM–7 PM", "Saturday": "9:30 AM–6 PM", "Sunday": "11 AM–5 PM"},
-    "image": "https://lh3.googleusercontent.com/p/AF1QipN18nail19",
+    "reviewCount": 432,
+    "description": "Modern nail lounge offering comprehensive nail services with style.",
+    "services": [
+      "Manicures",
+      "Pedicures"
+    ],
+    "neighborhood": "South Austin",
+    "hours": {
+      "Thursday": "11 AM–7 PM",
+      "Friday": "11 AM–7 PM",
+      "Saturday": "11 AM–7 PM",
+      "Sunday": "Closed",
+      "Monday": "11 AM–7 PM",
+      "Tuesday": "11 AM–7 PM",
+      "Wednesday": "11 AM–7 PM"
+    },
+    "image": "https://lh3.googleusercontent.com/p/AF1QipPhbcd03ygQ5yFDq6sqv5EyQY14aGh-HvpOFW5l",
     "premium": false,
-    "latitude": 30.2261,
-    "longitude": -97.8482
+    "bookingLinks": [
+      "http://booksy.info/thevenetian360"
+    ],
+    "latitude": 30.2528334,
+    "longitude": -97.7639172
   },
   {
     "id": "nail-salons-austin-20",
-    "name": "Signature Nails & Spa",
+    "name": "Moncheri Nails Lounge",
     "category": "nail-salons",
     "city": "austin",
     "state": "Texas",
-    "address": "9500 S IH 35 Frontage Rd #L500, Austin, TX 78748",
-    "phone": "(512) 280-9999",
-    "website": "https://signaturenailsaustin.com/",
-    "rating": 4.6,
-    "reviewCount": 480,
-    "description": "Signature experience with a variety of nail and spa services.",
-    "services": ["Manicures", "Pedicures", "Acrylic Nails", "Waxing"],
-    "neighborhood": "South Austin",
-    "hours": {"Monday": "9:30 AM–7 PM", "Tuesday": "9:30 AM–7 PM", "Wednesday": "9:30 AM–7 PM", "Thursday": "9:30 AM–7 PM", "Friday": "9:30 AM–7 PM", "Saturday": "9:30 AM–6 PM", "Sunday": "11 AM–5 PM"},
-    "image": "https://lh3.googleusercontent.com/p/AF1QipN19nail20",
+    "address": "2400 E 6th St #117, Austin, TX 78702",
+    "phone": "(512) 693-8185",
+    "website": "https://www.moncherinailslounge.com/",
+    "rating": 4.9,
+    "reviewCount": 381,
+    "description": "Boutique nail lounge providing personalized, high-quality nail services.",
+    "services": [
+      "Manicures",
+      "Pedicures"
+    ],
+    "neighborhood": "East Austin",
+    "hours": {
+      "Thursday": "10 AM–7 PM",
+      "Friday": "10 AM–7 PM",
+      "Saturday": "10 AM–6 PM",
+      "Sunday": "11 AM–6 PM",
+      "Monday": "10 AM–7 PM",
+      "Tuesday": "10 AM–7 PM",
+      "Wednesday": "10 AM–7 PM"
+    },
+    "image": "https://lh3.googleusercontent.com/p/AF1QipPSOpSyrogQdoYRxF7hIN5K4KCmUCZ7PxMUBT_A",
     "premium": false,
-    "latitude": 30.1721,
-    "longitude": -97.7882
+    "bookingLinks": [
+      "https://getabc.net/feedback/appointment?appid=tQf42zN"
+    ],
+    "latitude": 30.2597732,
+    "longitude": -97.716
   }
 ]
