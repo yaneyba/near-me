@@ -79,7 +79,7 @@
   },
   {
     "id": "nail-salons-austin-01",
-    "name": "MILANO NAIL SPA AUSTIN (rank#1 BEST NAIL SALON ATX, rank#2 BEST NAIL SALON in AMERICA)",
+    "name": "MILANO NAIL SPA AUSTIN",
     "category": "nail-salons",
     "city": "austin",
     "state": "Texas",
@@ -88,7 +88,7 @@
     "website": "https://milanonailspaatx.com/",
     "rating": 4.9,
     "reviewCount": 6050,
-    "description": "Modern nail bar with organic products and artistic nail designs.",
+    "description": "Modern nail bar with organic products and artistic nail designs. (rank#1 BEST NAIL SALON ATX, rank#2 BEST NAIL SALON in AMERICA)",
     "services": ["Organic Manicures", "Designer Pedicures", "Nail Art", "Hand Treatments"],
     "neighborhood": "South Austin",
     "hours": {"Thursday":"9 AM–7:30 PM","Friday":"9 AM–7:30 PM","Saturday":"9 AM–7:30 PM","Sunday":"10 AM–6 PM","Monday":"9 AM–7:30 PM","Tuesday":"9 AM–7:30 PM","Wednesday":"9 AM–7:30 PM"},
