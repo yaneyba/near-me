@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { signIn, getAuthFeatureFlags } from '../lib/auth';
+import { signIn, getAuthFeatureFlags, isUserAdmin } from '../lib/auth';
 import { Mail, Lock, AlertCircle, LogIn, ArrowRight, Building, Shield, CheckCircle } from 'lucide-react';
 
 const LoginPage: React.FC = () => {
@@ -57,7 +57,14 @@ const LoginPage: React.FC = () => {
       setLoading(true);
       
       await signIn(email, password);
-      navigate(from, { replace: true });
+      
+      // Check if user is admin and redirect accordingly
+      const admin = await isUserAdmin();
+      if (admin) {
+        navigate('/admin/settings', { replace: true });
+      } else {
+        navigate(from, { replace: true });
+      }
       
     } catch (err: any) {
       console.error('Login error:', err);
