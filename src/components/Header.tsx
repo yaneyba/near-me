@@ -128,7 +128,7 @@ const Header: React.FC<HeaderProps> = ({ category, city, state }) => {
                     className="flex items-center font-semibold transition-all duration-200 px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 shadow-md hover:shadow-lg"
                   >
                     <User className="w-4 h-4 mr-2" />
-                    Dashboard
+                    Admin Dashboard
                   </Link>
                 ) : (
                   <Link 
