@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Shield, ToggleLeft, ToggleRight, Save, AlertCircle, CheckCircle, Lock, Settings, ArrowLeft } from 'lucide-react';
+import { Shield, ToggleLeft, ToggleRight, Save, AlertCircle, CheckCircle, Lock, Settings, ArrowLeft, RefreshCw, Trash2 } from 'lucide-react';
 import { getAuthFeatureFlags, setAuthFeatureFlags, isUserAdmin } from '../lib/auth';
+import { clearCacheAndReload } from '../utils/cacheUtils';
 
 const AdminSettingsPage: React.FC = () => {
   const [loginEnabled, setLoginEnabled] = useState(true);
@@ -10,6 +11,7 @@ const AdminSettingsPage: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [clearingCache, setClearingCache] = useState(false);
   
   const navigate = useNavigate();
 
@@ -54,6 +56,23 @@ const AdminSettingsPage: React.FC = () => {
       setError('Failed to save settings');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleClearCache = async () => {
+    try {
+      setClearingCache(true);
+      setError(null);
+      setSuccess(null);
+      
+      await clearCacheAndReload();
+      
+      // Note: The page will reload, so this message won't be seen
+      setSuccess('Cache cleared successfully');
+    } catch (error) {
+      console.error('Error clearing cache:', error);
+      setError('Failed to clear cache');
+      setClearingCache(false);
     }
   };
 
@@ -112,7 +131,7 @@ const AdminSettingsPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white shadow rounded-lg overflow-hidden">
+        <div className="bg-white shadow rounded-lg overflow-hidden mb-6">
           <div className="px-4 py-5 sm:p-6">
             {error && (
               <div className="mb-4 bg-red-50 border border-red-200 rounded-md p-4 flex items-start">
@@ -186,6 +205,48 @@ const AdminSettingsPage: React.FC = () => {
                 </>
               )}
             </button>
+          </div>
+        </div>
+        
+        {/* Cache Management Section */}
+        <div className="bg-white shadow rounded-lg overflow-hidden mb-6">
+          <div className="px-4 py-5 sm:p-6">
+            <h2 className="text-lg font-medium text-gray-900 mb-4">Cache Management</h2>
+            
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <Trash2 className="w-6 h-6 text-gray-500" />
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-base font-medium text-gray-900">Clear Application Cache</h3>
+                    <p className="text-sm text-gray-500">
+                      Clear all cached data including local storage, session storage, and application cache. 
+                      This can help resolve issues with stale data or display problems.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleClearCache}
+                  disabled={clearingCache}
+                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:bg-red-400 disabled:cursor-not-allowed"
+                >
+                  {clearingCache ? (
+                    <>
+                      <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
+                      Clearing...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Clear Cache & Reload
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
         
