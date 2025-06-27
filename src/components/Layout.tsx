@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { DataProviderFactory } from '../providers';
-import { Business, SubdomainInfo } from '../types';
+import React, { useState } from 'react';
+import { SubdomainInfo } from '../types';
 import Header from './Header';
 import Footer from './Footer';
 import Breadcrumb from './Breadcrumb';
@@ -12,40 +11,12 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children, subdomainInfo }) => {
-  const [businesses, setBusinesses] = useState<Business[]>([]);
-  const [loading, setLoading] = useState(true);
   const [devPanelVisible, setDevPanelVisible] = useState(false);
-  
-  const dataProvider = DataProviderFactory.getProvider();
 
-  // Load businesses for search functionality
-  useEffect(() => {
-    if (subdomainInfo.category && subdomainInfo.city) {
-      loadBusinesses(subdomainInfo.category, subdomainInfo.city);
-    }
-  }, [subdomainInfo]);
-
-  const loadBusinesses = async (category: string, city: string) => {
-    setLoading(true);
-    try {
-      const businessData = await dataProvider.getBusinesses(category, city);
-      setBusinesses(businessData);
-    } catch (error) {
-      console.error('Error loading businesses:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDevSubdomainChange = (category: string, city: string) => {
+  const handleDevSubdomainChange = () => {
     // In a real app, this would update the URL/subdomain
-    // For now, we'll just reload the page with new data
+    // For now, we'll just reload the page
     window.location.reload();
-  };
-
-  const handleSearch = (query: string) => {
-    // Navigate to home page with search
-    window.location.href = `/?search=${encodeURIComponent(query)}`;
   };
 
   return (
@@ -54,8 +25,6 @@ const Layout: React.FC<LayoutProps> = ({ children, subdomainInfo }) => {
         category={subdomainInfo.category}
         city={subdomainInfo.city}
         state={subdomainInfo.state}
-        businesses={businesses}
-        onSearch={handleSearch}
       />
       
       <Breadcrumb subdomainInfo={subdomainInfo} />

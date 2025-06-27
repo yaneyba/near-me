@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, MapPin, Phone, Mail, Plus, User, LogIn, LogOut } from 'lucide-react';
-import SearchWithLiveResults from './SearchWithLiveResults';
-import { Business } from '../types';
 import { SITE_INFO } from '../siteInfo';
 import { useAuth, signOut } from '../lib/auth';
 
@@ -10,11 +8,9 @@ interface HeaderProps {
   category: string;
   city: string;
   state: string;
-  businesses: Business[];
-  onSearch: (query: string) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSearch }) => {
+const Header: React.FC<HeaderProps> = ({ category, city, state }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
