@@ -20,6 +20,38 @@ export const createCheckoutSession = async (
       };
     }
 
+    // Check if business is approved for subscriptions
+    const { data: businessProfile, error: profileError } = await supabase
+      .from('business_profiles')
+      .select('approval_status, role')
+      .eq('id', businessProfileId)
+      .single();
+
+    if (profileError || !businessProfile) {
+      return {
+        success: false,
+        message: 'Business profile not found',
+        error: 'BUSINESS_NOT_FOUND'
+      };
+    }
+
+    // Only approved businesses with owner role can subscribe
+    if (businessProfile.approval_status !== 'approved') {
+      return {
+        success: false,
+        message: 'Your business registration is still pending approval. Please wait for admin approval before subscribing.',
+        error: 'NOT_APPROVED'
+      };
+    }
+
+    if (businessProfile.role !== 'owner') {
+      return {
+        success: false,
+        message: 'Only business owners can manage subscriptions.',
+        error: 'INSUFFICIENT_PERMISSIONS'
+      };
+    }
+
     // Get the Supabase URL
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     if (!supabaseUrl) {
@@ -32,8 +64,8 @@ export const createCheckoutSession = async (
 
     // Create success and cancel URLs
     const origin = window.location.origin;
-    const successUrl = `${origin}/business-dashboard?checkout=success`;
-    const cancelUrl = `${origin}/business-dashboard?checkout=canceled`;
+    const successUrl = `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = `${origin}/checkout/cancel`;
 
     // Call the Supabase Edge Function to create a checkout session
     const { data, error } = await supabase.functions.invoke('create-checkout', {
@@ -66,27 +98,44 @@ export const createCheckoutSession = async (
       success: true,
       message: 'Checkout session created successfully',
       url: data.url
-    };
-  } catch (error) {
-    console.error('Error in createCheckoutSession:', error);
-    return {
-      success: false,
-      message: 'An unexpected error occurred. Please try again later.',
-      error: error.message
-    };
-  }
+    };    } catch (error) {
+      console.error('Error in createCheckoutSession:', error);
+      return {
+        success: false,
+        message: 'An unexpected error occurred. Please try again later.',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
 };
 
 /**
  * Get the current subscription for a business profile
  */
-export const getCurrentSubscription = async (businessProfileId: string): Promise<StripeSubscription | null> => {
+export const getCurrentSubscription = async (businessProfileId?: string): Promise<StripeSubscription | null> => {
   try {
+    // If no businessProfileId provided, try to get it from current user
+    let profileId = businessProfileId;
+    
+    if (!profileId) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      
+      // Get business profile for current user
+      const { data: profile } = await supabase
+        .from('business_profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (!profile) return null;
+      profileId = profile.id;
+    }
+
     // Get the business profile with subscription info
     const { data: profile, error } = await supabase
       .from('business_profiles')
-      .select('stripe_subscription_id, stripe_price_id, premium')
-      .eq('id', businessProfileId)
+      .select('stripe_subscription_id, stripe_price_id, premium, stripe_current_period_end')
+      .eq('id', profileId)
       .single();
 
     if (error || !profile) {
@@ -106,11 +155,10 @@ export const getCurrentSubscription = async (businessProfileId: string): Promise
     }
 
     // Create a subscription object with the information we have
-    // In a real implementation, you might call an Edge Function to get more details from Stripe
     const subscription: StripeSubscription = {
       id: profile.stripe_subscription_id,
       status: profile.premium ? 'active' : 'inactive',
-      current_period_end: Date.now() + 30 * 24 * 60 * 60 * 1000, // Placeholder: 30 days from now
+      current_period_end: profile.stripe_current_period_end || (Date.now() + 30 * 24 * 60 * 60 * 1000),
       product: {
         name: product.name,
         description: product.description

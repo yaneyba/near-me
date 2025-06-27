@@ -106,131 +106,96 @@ const AdminDashboardPage: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      // In a real implementation, these would be actual API calls
-      // For now, we'll use mock data
+      // Import supabase directly for admin operations
+      const { supabase } = await import('../lib/supabase');
       
-      // Load business submissions
-      const mockBusinessSubmissions = [
-        {
-          id: 'bs-1',
-          business_name: 'Elite Nails & Spa',
-          owner_name: 'Sarah Johnson',
-          email: 'sarah@elitenails.com',
-          category: 'nail-salons',
-          city: 'Dallas',
-          state: 'Texas',
-          status: 'pending',
-          submitted_at: '2025-06-25T14:30:00Z'
-        },
-        {
-          id: 'bs-2',
-          business_name: 'Quick Fix Auto',
-          owner_name: 'Mike Rodriguez',
-          email: 'mike@quickfixauto.com',
-          category: 'auto-repair',
-          city: 'Denver',
-          state: 'Colorado',
-          status: 'approved',
-          submitted_at: '2025-06-24T10:15:00Z'
-        },
-        {
-          id: 'bs-3',
-          business_name: 'Glamour Hair Studio',
-          owner_name: 'Lisa Chen',
-          email: 'lisa@glamourhair.com',
-          category: 'hair-salons',
-          city: 'Austin',
-          state: 'Texas',
-          status: 'pending',
-          submitted_at: '2025-06-26T09:45:00Z'
-        },
-        {
-          id: 'bs-4',
-          business_name: 'Taste of Italy',
-          owner_name: 'Marco Rossi',
-          email: 'marco@tasteofitaly.com',
-          category: 'restaurants',
-          city: 'Houston',
-          state: 'Texas',
-          status: 'rejected',
-          submitted_at: '2025-06-23T16:20:00Z'
-        }
-      ];
+      // Load real business submissions from database
+      const { data: businessSubmissionsData, error: submissionsError } = await supabase
+        .from('business_submissions')
+        .select(`
+          id,
+          business_name,
+          owner_name,
+          email,
+          phone,
+          address,
+          city,
+          state,
+          zip_code,
+          category,
+          website,
+          description,
+          services,
+          hours,
+          status,
+          submitted_at,
+          reviewed_at,
+          reviewer_notes,
+          site_id
+        `)
+        .order('submitted_at', { ascending: false });
       
-      // Load contact messages
-      const mockContactMessages = [
-        {
-          id: 'cm-1',
-          name: 'John Smith',
-          email: 'john@example.com',
-          subject: 'Question about nail salons in Dallas',
-          message: "I'm looking for nail salons that offer gel extensions. Can you recommend any?",
-          category: 'nail-salons',
-          city: 'Dallas',
-          status: 'new',
-          created_at: '2025-06-26T08:30:00Z'
-        },
-        {
-          id: 'cm-2',
-          name: 'Emily Johnson',
-          email: 'emily@example.com',
-          subject: 'Business listing issue',
-          message: 'I noticed my business hours are incorrect on your site. Can you please update them?',
-          category: 'restaurants',
-          city: 'Austin',
-          status: 'in_progress',
-          created_at: '2025-06-25T14:15:00Z'
-        },
-        {
-          id: 'cm-3',
-          name: 'David Williams',
-          email: 'david@example.com',
-          subject: 'Partnership opportunity',
-          message: 'I represent a local business association and would like to discuss a potential partnership.',
-          category: null,
-          city: null,
-          status: 'resolved',
-          created_at: '2025-06-24T11:45:00Z'
-        }
-      ];
+      if (submissionsError) {
+        console.error('Error loading business submissions:', submissionsError);
+        throw submissionsError;
+      }
       
-      // Load users
-      const mockUsers = [
-        {
-          id: 'user-1',
-          email: 'admin@near-me.us',
-          business_name: 'Admin',
-          role: 'admin',
-          created_at: '2025-01-15T10:00:00Z'
-        },
-        {
-          id: 'user-2',
-          email: 'sarah@elitenails.com',
-          business_name: 'Elite Nails & Spa',
-          role: 'owner',
-          created_at: '2025-06-20T14:30:00Z'
-        },
-        {
-          id: 'user-3',
-          email: 'mike@quickfixauto.com',
-          business_name: 'Quick Fix Auto',
-          role: 'owner',
-          created_at: '2025-06-18T09:15:00Z'
-        }
-      ];
+      // Load real business profiles for users data  
+      const { data: businessProfilesData, error: profilesError } = await supabase
+        .from('business_profiles')
+        .select(`
+          id,
+          user_id,
+          business_name,
+          email,
+          role,
+          approval_status,
+          premium,
+          created_at
+        `)
+        .order('created_at', { ascending: false });
+      
+      if (profilesError) {
+        console.error('Error loading business profiles:', profilesError);
+        throw profilesError;
+      }
+      
+      // Load real contact messages from database
+      const { data: contactMessagesData, error: messagesError } = await supabase
+        .from('contact_messages')
+        .select(`
+          id,
+          name,
+          email,
+          subject,
+          message,
+          category,
+          city,
+          status,
+          admin_notes,
+          resolved_at,
+          resolved_by,
+          created_at
+        `)
+        .order('created_at', { ascending: false });
+      
+      if (messagesError) {
+        console.error('Error loading contact messages:', messagesError);
+        // Continue without contact messages if they fail to load
+      }
       
       // Calculate stats
       const stats = {
-        pendingBusinesses: mockBusinessSubmissions.filter(b => b.status === 'pending').length,
-        totalBusinesses: mockBusinessSubmissions.length,
-        newMessages: mockContactMessages.filter(m => m.status === 'new').length,
-        totalUsers: mockUsers.length,
-        premiumBusinesses: 2 // Mock value
+        pendingBusinesses: businessSubmissionsData?.filter((b: any) => b.status === 'pending').length || 0,
+        totalBusinesses: businessSubmissionsData?.length || 0,
+        newMessages: contactMessagesData?.filter((m: any) => m.status === 'new').length || 0,
+        totalUsers: businessProfilesData?.length || 0,
+        premiumBusinesses: businessProfilesData?.filter((p: any) => p.premium === true).length || 0
       };
       
-      setBusinessSubmissions(mockBusinessSubmissions);
-      setContactMessages(mockContactMessages);
-      setUsers(mockUsers);
+      setBusinessSubmissions(businessSubmissionsData || []);
+      setContactMessages(contactMessagesData || []);
+      setUsers(businessProfilesData || []);
       setStats(stats);
       
     } catch (error) {
@@ -265,38 +230,170 @@ const AdminDashboardPage: React.FC = () => {
     }
   };
 
-  const handleApproveBusinessSubmission = (id: string) => {
-    // In a real implementation, this would call an API
-    setBusinessSubmissions(prev => 
-      prev.map(submission => 
-        submission.id === id 
-          ? { ...submission, status: 'approved' } 
-          : submission
-      )
-    );
-    
-    // Update stats
-    setStats(prev => ({
-      ...prev,
-      pendingBusinesses: prev.pendingBusinesses - 1
-    }));
+  const handleApproveBusinessSubmission = async (id: string) => {
+    try {
+      const { supabase } = await import('../lib/supabase');
+      
+      // Get the submission data first to pass to the creation function
+      const { data: submission, error: fetchError } = await supabase
+        .from('business_submissions')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (fetchError || !submission) {
+        console.error('Error fetching submission:', fetchError);
+        alert('Failed to find submission. Please try again.');
+        return;
+      }
+      
+      // Update the submission status in the database
+      const { error: updateError } = await supabase
+        .from('business_submissions')
+        .update({
+          status: 'approved',
+          reviewed_at: new Date().toISOString(),
+          reviewer_notes: 'Approved by admin'
+        })
+        .eq('id', id);
+      
+      if (updateError) {
+        console.error('Error approving business submission:', updateError);
+        alert('Failed to approve submission. Please try again.');
+        return;
+      }
+      
+      // Create business entry from submission
+      await createBusinessProfileFromSubmission(submission);
+      
+      // Update local state
+      setBusinessSubmissions(prev => 
+        prev.map(submission => 
+          submission.id === id 
+            ? { 
+                ...submission, 
+                status: 'approved', 
+                reviewed_at: new Date().toISOString(),
+                reviewer_notes: 'Approved by admin'
+              } 
+            : submission
+        )
+      );
+      
+      // Update stats
+      setStats(prev => ({
+        ...prev,
+        pendingBusinesses: prev.pendingBusinesses - 1
+      }));
+      
+      console.log('Business submission approved and business created successfully');
+      alert('Business submission approved successfully! Business has been added to the directory.');
+    } catch (error) {
+      console.error('Error approving business submission:', error);
+      alert('Failed to approve submission. Please try again.');
+    }
   };
 
-  const handleRejectBusinessSubmission = (id: string) => {
-    // In a real implementation, this would call an API
-    setBusinessSubmissions(prev => 
-      prev.map(submission => 
-        submission.id === id 
-          ? { ...submission, status: 'rejected' } 
-          : submission
-      )
-    );
-    
-    // Update stats
-    setStats(prev => ({
-      ...prev,
-      pendingBusinesses: prev.pendingBusinesses - 1
-    }));
+  // Helper function to create business profile after approval
+  const createBusinessProfileFromSubmission = async (submission: any) => {
+    try {
+      const { supabase } = await import('../lib/supabase');
+      
+      // Check if user already exists
+      const { data: existingProfile } = await supabase
+        .from('business_profiles')
+        .select('id')
+        .eq('email', submission.email)
+        .single();
+      
+      if (existingProfile) {
+        console.log('Business profile already exists for this email');
+        return;
+      }
+      
+      // For now, we'll create a business profile without a user_id
+      // In a full implementation, you'd want to invite the user to create an account
+      // or create the user account automatically
+      
+      // Create business entry in the businesses table first
+      const { data: businessData, error: businessError } = await supabase
+        .from('businesses')
+        .insert({
+          business_id: `${submission.city.toLowerCase().replace(/\s+/g, '-')}-${submission.business_name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
+          name: submission.business_name,
+          description: submission.description,
+          address: submission.address,
+          phone: submission.phone,
+          website: submission.website,
+          email: submission.email,
+          category: submission.category,
+          city: submission.city,
+          state: submission.state,
+          services: submission.services || [],
+          hours: submission.hours,
+          site_id: submission.site_id || 'near-me-us',
+          status: 'active',
+          verified: true // Auto-verify approved submissions
+        })
+        .select('business_id')
+        .single();
+      
+      if (businessError) {
+        console.error('Error creating business entry:', businessError);
+        return;
+      }
+      
+      console.log('Business entry created successfully:', businessData.business_id);
+    } catch (error) {
+      console.error('Error creating business profile:', error);
+    }
+  };
+
+  const handleRejectBusinessSubmission = async (id: string, notes?: string) => {
+    try {
+      const { supabase } = await import('../lib/supabase');
+      
+      // Update the submission status in the database
+      const { error: updateError } = await supabase
+        .from('business_submissions')
+        .update({
+          status: 'rejected',
+          reviewed_at: new Date().toISOString(),
+          reviewer_notes: notes || 'Rejected by admin'
+        })
+        .eq('id', id);
+      
+      if (updateError) {
+        console.error('Error rejecting business submission:', updateError);
+        alert('Failed to reject submission. Please try again.');
+        return;
+      }
+      
+      // Update local state
+      setBusinessSubmissions(prev => 
+        prev.map(submission => 
+          submission.id === id 
+            ? { 
+                ...submission, 
+                status: 'rejected', 
+                reviewed_at: new Date().toISOString(),
+                reviewer_notes: notes || 'Rejected by admin'
+              } 
+            : submission
+        )
+      );
+      
+      // Update stats
+      setStats(prev => ({
+        ...prev,
+        pendingBusinesses: prev.pendingBusinesses - 1
+      }));
+      
+      console.log('Business submission rejected successfully');
+    } catch (error) {
+      console.error('Error rejecting business submission:', error);
+      alert('Failed to reject submission. Please try again.');
+    }
   };
 
   const handleResolveContactMessage = (id: string) => {

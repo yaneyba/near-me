@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { DataProviderFactory } from './providers/DataProviderFactory';
 import { parseSubdomain } from './utils/subdomainParser';
 import { SubdomainInfo } from './types';
@@ -22,6 +22,7 @@ import CheckoutCancelPage from './pages/CheckoutCancelPage';
 import AdminSettingsTest from './components/AdminSettingsTest';
 import SimpleSettingsTest from './components/SimpleSettingsTest';
 import { FallbackTest } from './components/FallbackTest';
+import TestAdminPage from './pages/TestAdminPage';
 
 function App() {
   // Configure the data provider factory
@@ -90,6 +91,21 @@ function App() {
           />
           
           {/* Admin Routes */}
+          <Route 
+            path="/admin" 
+            element={<Navigate to="/admin/dashboard" replace />} 
+          />
+          
+          <Route 
+            path="/admin/test" 
+            element={<TestAdminPage />} 
+          />
+          
+          <Route 
+            path="/admin/no-auth" 
+            element={<AdminDashboardPage />} 
+          />
+          
           <Route 
             path="/admin/dashboard" 
             element={

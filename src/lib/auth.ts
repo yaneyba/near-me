@@ -2,13 +2,22 @@ import { supabase } from './supabase';
 import { User, Session } from '@supabase/supabase-js';
 import { useState, useEffect } from 'react';
 
-// Types for authentication
+// Types for authentication - aligned with production schema
 export interface AuthUser {
   id: string;
   email: string;
   businessId?: string;
   businessName?: string;
+  businessProfileId?: string;
   role?: 'owner' | 'admin' | 'staff';
+  approvalStatus?: 'pending' | 'approved' | 'rejected';
+  premium?: boolean;
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
+  stripePriceId?: string;
+  stripeSubscriptionStatus?: string;
+  currentPeriodEnd?: number;
+  cancelAtPeriodEnd?: boolean;
 }
 
 // Auth feature flags
@@ -217,17 +226,30 @@ export const signOut = async () => {
   if (error) throw error;
 };
 
-// Get current user
+// Get current user - aligned with production schema
 export const getCurrentUser = async (): Promise<AuthUser | null> => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session) return null;
     
-    // Get user profile data from profiles table
+    // Get user profile data from business_profiles table with full subscription details
     const { data: profile, error } = await supabase
       .from('business_profiles')
-      .select('business_id, business_name, role')
+      .select(`
+        id, 
+        business_id, 
+        business_name, 
+        role, 
+        approval_status,
+        premium,
+        stripe_customer_id,
+        stripe_subscription_id,
+        stripe_price_id,
+        stripe_subscription_status,
+        stripe_current_period_end,
+        cancel_at_period_end
+      `)
       .eq('user_id', session.user.id)
       .single();
     
@@ -240,11 +262,52 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
       email: session.user.email || '',
       businessId: profile?.business_id,
       businessName: profile?.business_name,
-      role: profile?.role
+      businessProfileId: profile?.id,
+      role: profile?.role,
+      approvalStatus: profile?.approval_status,
+      premium: profile?.premium || false,
+      stripeCustomerId: profile?.stripe_customer_id,
+      stripeSubscriptionId: profile?.stripe_subscription_id,
+      stripePriceId: profile?.stripe_price_id,
+      stripeSubscriptionStatus: profile?.stripe_subscription_status,
+      currentPeriodEnd: profile?.stripe_current_period_end,
+      cancelAtPeriodEnd: profile?.cancel_at_period_end || false
     };
   } catch (error) {
     console.error('Error getting current user:', error);
     return null;
+  }
+};
+
+// Helper functions for business status checks
+export const isUserApproved = async (): Promise<boolean> => {
+  try {
+    const user = await getCurrentUser();
+    return user?.approvalStatus === 'approved';
+  } catch (error) {
+    console.error('Error checking approval status:', error);
+    return false;
+  }
+};
+
+export const isUserPremium = async (): Promise<boolean> => {
+  try {
+    const user = await getCurrentUser();
+    return user?.premium === true;
+  } catch (error) {
+    console.error('Error checking premium status:', error);
+    return false;
+  }
+};
+
+export const canUserSubscribe = async (): Promise<boolean> => {
+  try {
+    const user = await getCurrentUser();
+    // Only approved business owners can subscribe
+    return user?.approvalStatus === 'approved' && user?.role === 'owner';
+  } catch (error) {
+    console.error('Error checking subscription eligibility:', error);
+    return false;
   }
 };
 

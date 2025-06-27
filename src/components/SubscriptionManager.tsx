@@ -19,7 +19,7 @@ import { createCheckoutSession, getCurrentSubscription, getAvailableProducts } f
 import { formatPrice } from '../stripe-config';
 
 interface SubscriptionManagerProps {
-  businessProfileId: string;
+  businessProfileId?: string;
   onSubscriptionChange?: (hasSubscription: boolean) => void;
 }
 
@@ -58,7 +58,7 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
       setError(null);
       
       try {
-        // Get current subscription
+        // Get current subscription (businessProfileId is optional now)
         const currentSubscription = await getCurrentSubscription(businessProfileId);
         setSubscription(currentSubscription);
         
@@ -83,9 +83,8 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
       }
     };
     
-    if (businessProfileId) {
-      loadData();
-    }
+    // Always load data, businessProfileId is now optional
+    loadData();
   }, [businessProfileId, onSubscriptionChange]);
 
   const handleProductSelect = (priceId: string) => {
@@ -95,6 +94,11 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
   const handleCheckout = async () => {
     if (!selectedProductId) {
       setError('Please select a subscription plan');
+      return;
+    }
+
+    if (!businessProfileId) {
+      setError('Business profile not found. Please try logging out and back in.');
       return;
     }
     

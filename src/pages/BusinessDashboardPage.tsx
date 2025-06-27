@@ -439,7 +439,7 @@ const BusinessDashboardPage: React.FC = () => {
         {/* Subscription Tab */}
         {activeTab === 'subscription' && (
           <SubscriptionManager 
-            businessProfileId={user?.id || ''}
+            businessProfileId={user?.businessProfileId || undefined}
             onSubscriptionChange={handleSubscriptionChange}
           />
         )}

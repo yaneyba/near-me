@@ -27,6 +27,7 @@ const CheckoutSuccessPage: React.FC = () => {
         // Wait a moment to allow webhook processing
         await new Promise(resolve => setTimeout(resolve, 2000));
         
+        // Get current subscription (will automatically find user's business profile)
         const subscriptionData = await getCurrentSubscription();
         setSubscription(subscriptionData);
       } catch (error) {
