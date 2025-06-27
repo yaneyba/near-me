@@ -26,10 +26,10 @@ import {
   Star,
   Flag,
   RefreshCw,
-  Save,
-  Lock,
   ToggleLeft,
-  ToggleRight
+  ToggleRight,
+  Save,
+  Lock
 } from 'lucide-react';
 import { DataProviderFactory } from '../providers';
 import { useAuth, isUserAdmin, getAuthFeatureFlags, setAuthFeatureFlags } from '../lib/auth';
@@ -59,7 +59,7 @@ const AdminDashboardPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   
-  // Authentication settings state
+  // Settings state
   const [loginEnabled, setLoginEnabled] = useState(true);
   const [saving, setSaving] = useState(false);
   const [settingsError, setSettingsError] = useState<string | null>(null);
@@ -517,7 +517,7 @@ const AdminDashboardPage: React.FC = () => {
                 <p className="text-sm font-medium text-gray-500 mb-1">Pending Businesses</p>
                 <h3 className="text-2xl font-bold text-gray-900">{stats.pendingBusinesses}</h3>
               </div>
-              <div className="p-3 rounded-lg bg-blue-100">
+              <div className="bg-blue-100 p-3 rounded-full">
                 <Building className="w-6 h-6 text-blue-600" />
               </div>
             </div>
@@ -529,7 +529,7 @@ const AdminDashboardPage: React.FC = () => {
                 <p className="text-sm font-medium text-gray-500 mb-1">Total Businesses</p>
                 <h3 className="text-2xl font-bold text-gray-900">{stats.totalBusinesses}</h3>
               </div>
-              <div className="p-3 rounded-lg bg-green-100">
+              <div className="bg-green-100 p-3 rounded-full">
                 <Building className="w-6 h-6 text-green-600" />
               </div>
             </div>
@@ -541,7 +541,7 @@ const AdminDashboardPage: React.FC = () => {
                 <p className="text-sm font-medium text-gray-500 mb-1">New Messages</p>
                 <h3 className="text-2xl font-bold text-gray-900">{stats.newMessages}</h3>
               </div>
-              <div className="p-3 rounded-lg bg-yellow-100">
+              <div className="bg-yellow-100 p-3 rounded-full">
                 <MessageSquare className="w-6 h-6 text-yellow-600" />
               </div>
             </div>
@@ -553,7 +553,7 @@ const AdminDashboardPage: React.FC = () => {
                 <p className="text-sm font-medium text-gray-500 mb-1">Total Users</p>
                 <h3 className="text-2xl font-bold text-gray-900">{stats.totalUsers}</h3>
               </div>
-              <div className="p-3 rounded-lg bg-purple-100">
+              <div className="bg-purple-100 p-3 rounded-full">
                 <Users className="w-6 h-6 text-purple-600" />
               </div>
             </div>
@@ -565,7 +565,7 @@ const AdminDashboardPage: React.FC = () => {
                 <p className="text-sm font-medium text-gray-500 mb-1">Premium Businesses</p>
                 <h3 className="text-2xl font-bold text-gray-900">{stats.premiumBusinesses}</h3>
               </div>
-              <div className="p-3 rounded-lg bg-orange-100">
+              <div className="bg-orange-100 p-3 rounded-full">
                 <Star className="w-6 h-6 text-orange-600" />
               </div>
             </div>
@@ -1120,90 +1120,127 @@ const AdminDashboardPage: React.FC = () => {
           {/* Settings Tab */}
           {activeTab === 'settings' && (
             <div>
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Authentication Settings</h2>
-              
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-semibold text-gray-900">System Settings</h2>
+              </div>
+
               {settingsError && (
-                <div className="mb-4 bg-red-50 border border-red-200 rounded-md p-4 flex items-start">
+                <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start">
                   <AlertCircle className="w-5 h-5 text-red-500 mr-3 flex-shrink-0 mt-0.5" />
                   <div className="text-sm text-red-700">{settingsError}</div>
                 </div>
               )}
               
               {settingsSuccess && (
-                <div className="mb-4 bg-green-50 border border-green-200 rounded-md p-4 flex items-start">
+                <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-start">
                   <CheckCircle className="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
                   <div className="text-sm text-green-700">{settingsSuccess}</div>
                 </div>
               )}
-              
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <Lock className="w-6 h-6 text-gray-500" />
+
+              <div className="space-y-8">
+                {/* Authentication Settings */}
+                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                    <h3 className="text-lg font-medium text-gray-900">Authentication Settings</h3>
+                  </div>
+                  <div className="p-6 space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0">
+                          <Lock className="w-6 h-6 text-gray-500" />
+                        </div>
+                        <div className="ml-3">
+                          <h3 className="text-base font-medium text-gray-900">User Login</h3>
+                          <p className="text-sm text-gray-500">
+                            Allow users to log in to their accounts. When disabled, users will be redirected to the home page if they try to access the login page.
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setLoginEnabled(!loginEnabled)}
+                        className={`${
+                          loginEnabled ? 'bg-blue-600' : 'bg-gray-200'
+                        } relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+                      >
+                        <span className="sr-only">Toggle login</span>
+                        <span
+                          className={`${
+                            loginEnabled ? 'translate-x-5' : 'translate-x-0'
+                          } pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200`}
+                        >
+                          {loginEnabled ? (
+                            <ToggleRight className="h-5 w-5 text-blue-600" />
+                          ) : (
+                            <ToggleLeft className="h-5 w-5 text-gray-400" />
+                          )}
+                        </span>
+                      </button>
                     </div>
-                    <div className="ml-3">
-                      <h3 className="text-base font-medium text-gray-900">User Login</h3>
-                      <p className="text-sm text-gray-500">
-                        Allow users to log in to their accounts. When disabled, users will be redirected to the home page if they try to access the login page.
-                      </p>
+
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                      <div className="flex items-start">
+                        <Shield className="w-5 h-5 text-yellow-600 mr-3 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <h3 className="text-sm font-medium text-yellow-800">Important Note</h3>
+                          <p className="mt-1 text-sm text-yellow-700">
+                            Disabling login will prevent all users from accessing their accounts, including business owners.
+                            This should only be used for maintenance or security purposes.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={handleSaveSettings}
+                        disabled={saving}
+                        className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed"
+                      >
+                        {saving ? (
+                          <>
+                            <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="w-4 h-4 mr-2" />
+                            Save Settings
+                          </>
+                        )}
+                      </button>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setLoginEnabled(!loginEnabled)}
-                    className={`${
-                      loginEnabled ? 'bg-blue-600' : 'bg-gray-200'
-                    } relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
-                  >
-                    <span className="sr-only">Toggle login</span>
-                    <span
-                      className={`${
-                        loginEnabled ? 'translate-x-5' : 'translate-x-0'
-                      } pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200`}
-                    >
-                      {loginEnabled ? (
-                        <ToggleRight className="h-5 w-5 text-blue-600" />
-                      ) : (
-                        <ToggleLeft className="h-5 w-5 text-gray-400" />
-                      )}
-                    </span>
-                  </button>
                 </div>
-              </div>
-              
-              <div className="mt-8 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <div className="flex items-start">
-                  <Shield className="w-5 h-5 text-yellow-600 mr-3 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <h3 className="text-sm font-medium text-yellow-800">Important Note</h3>
-                    <p className="mt-1 text-sm text-yellow-700">
-                      Disabling login will prevent all users from accessing their accounts, including business owners.
-                      This should only be used for maintenance or security purposes.
-                    </p>
+
+                {/* Future Settings Sections */}
+                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                    <h3 className="text-lg font-medium text-gray-900">System Information</h3>
+                  </div>
+                  <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500 mb-2">Application Version</h4>
+                        <p className="text-base font-medium text-gray-900">1.0.0</p>
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500 mb-2">Last Updated</h4>
+                        <p className="text-base font-medium text-gray-900">{new Date().toLocaleDateString()}</p>
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500 mb-2">Environment</h4>
+                        <p className="text-base font-medium text-gray-900">Production</p>
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500 mb-2">Database Status</h4>
+                        <p className="text-base font-medium text-green-600">Connected</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={handleSaveSettings}
-                  disabled={saving}
-                  className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed"
-                >
-                  {saving ? (
-                    <>
-                      <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4 mr-2" />
-                      Save Settings
-                    </>
-                  )}
-                </button>
               </div>
             </div>
           )}
