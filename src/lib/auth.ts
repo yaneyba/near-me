@@ -65,6 +65,31 @@ export const signIn = async (email: string, password: string) => {
   });
   
   if (error) throw error;
+  
+  // Get user profile data from profiles table
+  if (data.user) {
+    const { data: profile, error: profileError } = await supabase
+      .from('business_profiles')
+      .select('business_id, business_name, role')
+      .eq('user_id', data.user.id)
+      .single();
+    
+    if (profileError && profileError.code !== 'PGRST116') {
+      console.error('Error fetching user profile:', profileError);
+    }
+    
+    return {
+      user: {
+        id: data.user.id,
+        email: data.user.email || '',
+        businessId: profile?.business_id,
+        businessName: profile?.business_name,
+        role: profile?.role
+      },
+      session: data.session
+    };
+  }
+  
   return data;
 };
 
@@ -135,8 +160,31 @@ export const useAuth = () => {
         setSession(session);
         
         if (session) {
-          const user = await getCurrentUser();
-          setUser(user);
+          try {
+            const { data: profile, error } = await supabase
+              .from('business_profiles')
+              .select('business_id, business_name, role')
+              .eq('user_id', session.user.id)
+              .single();
+            
+            if (error && error.code !== 'PGRST116') {
+              console.error('Error fetching user profile:', error);
+            }
+            
+            setUser({
+              id: session.user.id,
+              email: session.user.email || '',
+              businessId: profile?.business_id,
+              businessName: profile?.business_name,
+              role: profile?.role
+            });
+          } catch (error) {
+            console.error('Error fetching user data:', error);
+            setUser({
+              id: session.user.id,
+              email: session.user.email || ''
+            });
+          }
         } else {
           setUser(null);
         }

@@ -43,17 +43,27 @@ const LoginPage: React.FC = () => {
       setError(null);
       setLoading(true);
       
-      await signIn(email, password);
-      navigate(from, { replace: true });
+      const { user } = await signIn(email, password);
+      
+      if (user) {
+        // Check if user is admin to redirect to admin dashboard
+        if (user.role === 'admin') {
+          navigate('/admin/dashboard', { replace: true });
+        } else {
+          navigate(from, { replace: true });
+        }
+      } else {
+        throw new Error('Login failed');
+      }
       
     } catch (err: any) {
       console.error('Login error:', err);
       
-      if (err.message.includes('Login is currently disabled')) {
+      if (err.message?.includes('Login is currently disabled')) {
         setError('Login is currently disabled by the administrator');
-      } else if (err.message.includes('Invalid login')) {
+      } else if (err.message?.includes('Invalid login')) {
         setError('Invalid email or password');
-      } else if (err.message.includes('rate limit')) {
+      } else if (err.message?.includes('rate limit')) {
         setError('Too many login attempts. Please try again later.');
       } else {
         setError('An error occurred during login. Please try again.');
