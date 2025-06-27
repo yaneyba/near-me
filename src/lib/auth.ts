@@ -76,34 +76,44 @@ export const signOut = async () => {
 
 // Get current user
 export const getCurrentUser = async (): Promise<AuthUser | null> => {
-  const { data: { session } } = await supabase.auth.getSession();
-  
-  if (!session) return null;
-  
-  // Get user profile data from profiles table
-  const { data: profile, error } = await supabase
-    .from('business_profiles')
-    .select('business_id, business_name, role')
-    .eq('user_id', session.user.id)
-    .single();
-  
-  if (error && error.code !== 'PGRST116') {
-    console.error('Error fetching user profile:', error);
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) return null;
+    
+    // Get user profile data from profiles table
+    const { data: profile, error } = await supabase
+      .from('business_profiles')
+      .select('business_id, business_name, role')
+      .eq('user_id', session.user.id)
+      .single();
+    
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error fetching user profile:', error);
+    }
+    
+    return {
+      id: session.user.id,
+      email: session.user.email || '',
+      businessId: profile?.business_id,
+      businessName: profile?.business_name,
+      role: profile?.role
+    };
+  } catch (error) {
+    console.error('Error getting current user:', error);
+    return null;
   }
-  
-  return {
-    id: session.user.id,
-    email: session.user.email || '',
-    businessId: profile?.business_id,
-    businessName: profile?.business_name,
-    role: profile?.role
-  };
 };
 
 // Check if user is admin
 export const isUserAdmin = async (): Promise<boolean> => {
-  const user = await getCurrentUser();
-  return user?.role === 'admin';
+  try {
+    const user = await getCurrentUser();
+    return user?.role === 'admin';
+  } catch (error) {
+    console.error('Error checking admin status:', error);
+    return false;
+  }
 };
 
 // Custom hook for authentication state
@@ -112,16 +122,19 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState<Session | null>(null);
   const [authFeatures, setAuthFeatures] = useState<AuthFeatureFlags>(getAuthFeatureFlags());
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
       try {
         setLoading(true);
+        setError(null);
         const user = await getCurrentUser();
         setUser(user);
       } catch (error) {
         console.error('Error getting initial session:', error);
+        setError(error instanceof Error ? error : new Error('Unknown error'));
       } finally {
         setLoading(false);
       }
@@ -132,16 +145,21 @@ export const useAuth = () => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
-        setSession(session);
-        
-        if (session) {
-          const user = await getCurrentUser();
-          setUser(user);
-        } else {
-          setUser(null);
+        try {
+          setSession(session);
+          
+          if (session) {
+            const user = await getCurrentUser();
+            setUser(user);
+          } else {
+            setUser(null);
+          }
+        } catch (error) {
+          console.error('Error in auth state change:', error);
+          setError(error instanceof Error ? error : new Error('Unknown error'));
+        } finally {
+          setLoading(false);
         }
-        
-        setLoading(false);
       }
     );
 
@@ -161,5 +179,5 @@ export const useAuth = () => {
     };
   }, []);
 
-  return { user, loading, session, authFeatures };
+  return { user, loading, session, authFeatures, error };
 };

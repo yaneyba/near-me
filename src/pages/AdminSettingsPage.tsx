@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Shield, ToggleLeft, ToggleRight, Save, AlertCircle, CheckCircle, Lock, Settings, ArrowLeft } from 'lucide-react';
 import { getAuthFeatureFlags, setAuthFeatureFlags, isUserAdmin } from '../lib/auth';
 
@@ -95,13 +95,21 @@ const AdminSettingsPage: React.FC = () => {
             <Settings className="w-8 h-8 text-blue-600 mr-3" />
             <h1 className="text-2xl font-bold text-gray-900">Admin Settings</h1>
           </div>
-          <button
-            onClick={() => navigate('/')}
-            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Home
-          </button>
+          <div className="flex space-x-4">
+            <Link
+              to="/admin/dashboard"
+              className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+            >
+              Dashboard
+            </Link>
+            <button
+              onClick={() => navigate('/')}
+              className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Home
+            </button>
+          </div>
         </div>
 
         <div className="bg-white shadow rounded-lg overflow-hidden">

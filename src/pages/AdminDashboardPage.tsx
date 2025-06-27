@@ -16,7 +16,6 @@ import {
   MessageSquare, 
   Clock, 
   Calendar, 
-  LogOut,
   ChevronDown,
   ChevronUp,
   Eye,
@@ -29,7 +28,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { DataProviderFactory } from '../providers';
-import { useAuth, signOut, isUserAdmin } from '../lib/auth';
+import { useAuth, isUserAdmin } from '../lib/auth';
 
 const AdminDashboardPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'businesses' | 'contacts' | 'users' | 'analytics'>('businesses');
@@ -218,15 +217,6 @@ const AdminDashboardPage: React.FC = () => {
       console.error('Error loading admin data:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      navigate('/login');
-    } catch (error) {
-      console.error('Error signing out:', error);
     }
   };
 
@@ -478,12 +468,6 @@ const AdminDashboardPage: React.FC = () => {
                   Administrator
                 </div>
               </div>
-              <button
-                onClick={handleLogout}
-                className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
             </div>
           </div>
         </div>

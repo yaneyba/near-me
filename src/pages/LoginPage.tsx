@@ -9,6 +9,7 @@ const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -22,7 +23,7 @@ const LoginPage: React.FC = () => {
     }
   }, [loginEnabled, navigate]);
 
-  // Check for message in location state (e.g., from registration)
+  // Check if message in location state (e.g., from registration)
   useEffect(() => {
     if (location.state && (location.state as any).message) {
       setMessage((location.state as any).message);
@@ -30,6 +31,16 @@ const LoginPage: React.FC = () => {
       window.history.replaceState({}, document.title);
     }
   }, [location]);
+
+  // Check if Supabase is configured
+  useEffect(() => {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseKey) {
+      setAuthError('Supabase configuration is missing. Please set up your environment variables.');
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +73,37 @@ const LoginPage: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // If there's a configuration error, show a helpful message
+  if (authError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          <div className="flex justify-center">
+            <AlertCircle className="w-12 h-12 text-red-600" />
+          </div>
+          <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
+            Configuration Error
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            {authError}
+          </p>
+        </div>
+        <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+          <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+            <div className="mt-6">
+              <Link
+                to="/"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Return to Home
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">

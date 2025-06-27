@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, MapPin, Phone, Mail, Plus, User, LogIn, Shield, LogOut } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Menu, X, MapPin, Phone, Mail, Plus, User, LogIn, LogOut } from 'lucide-react';
 import SearchWithLiveResults from './SearchWithLiveResults';
 import { Business } from '../types';
 import { SITE_INFO } from '../siteInfo';
 import { useAuth, signOut } from '../lib/auth';
-import AdminBadge from './auth/AdminBadge';
 
 interface HeaderProps {
   category: string;
@@ -18,6 +17,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSearch }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { user } = useAuth();
 
   const toggleMenu = () => {
@@ -34,7 +34,7 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSe
   const handleLogout = async () => {
     try {
       await signOut();
-      window.location.href = '/';
+      navigate('/');
     } catch (error) {
       console.error('Error signing out:', error);
     }
@@ -122,22 +122,13 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSe
             
             {/* Auth links */}
             {user ? (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-4">
                 <Link 
-                  to={user.role === 'admin' ? '/admin/dashboard' : '/business-dashboard'} 
+                  to="/business-dashboard" 
                   className="flex items-center font-medium transition-colors px-4 py-2 rounded-lg bg-green-50 text-green-600 hover:bg-green-100"
                 >
-                  {user.role === 'admin' ? (
-                    <>
-                      <Shield className="w-4 h-4 mr-1" />
-                      Admin Panel
-                    </>
-                  ) : (
-                    <>
-                      <User className="w-4 h-4 mr-1" />
-                      Dashboard
-                    </>
-                  )}
+                  <User className="w-4 h-4 mr-1" />
+                  Dashboard
                 </Link>
                 <button
                   onClick={handleLogout}
@@ -146,7 +137,6 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSe
                   <LogOut className="w-4 h-4 mr-1" />
                   Sign Out
                 </button>
-                <AdminBadge />
               </div>
             ) : (
               <Link 
@@ -158,19 +148,6 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSe
               </Link>
             )}
           </nav>
-
-          {/* Search bar - Desktop */}
-          {import.meta.env.VITE_SHOW_SEARCH_BAR_ON_HEADER !== 'false' && (
-            <div className="hidden lg:block">
-              <SearchWithLiveResults
-                businesses={businesses}
-                category={category}
-                city={city}
-                onSearch={onSearch}
-                className="w-80"
-              />
-            </div>
-          )}
 
           {/* Mobile menu button */}
           <div className="md:hidden">
@@ -188,18 +165,6 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSe
       {isMenuOpen && (
         <div className="md:hidden bg-white border-t border-gray-200">
           <div className="px-4 pt-2 pb-3 space-y-1">
-            {/* Mobile search */}
-            {import.meta.env.VITE_SHOW_SEARCH_BAR_ON_HEADER !== 'false' && (
-              <div className="mb-4">
-                <SearchWithLiveResults
-                  businesses={businesses}
-                  category={category}
-                  city={city}
-                  onSearch={onSearch}
-                />
-              </div>
-            )}
-
             {/* Mobile navigation */}
             <Link
               to="/"
@@ -248,42 +213,26 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSe
             
             {/* Auth links for mobile */}
             {user ? (
-              <div className="pt-2 border-t border-gray-100">
-                <div className="flex items-center px-3 py-1">
-                  <AdminBadge />
-                </div>
+              <>
                 <Link
-                  to={user.role === 'admin' ? '/admin/dashboard' : '/business-dashboard'}
-                  className={`flex items-center px-3 py-2 font-medium ${
-                    user.role === 'admin' 
-                      ? 'text-red-600 hover:text-red-700' 
-                      : 'text-green-600 hover:text-green-700'
-                  }`}
+                  to="/business-dashboard"
+                  className="flex items-center px-3 py-2 font-medium text-green-600 hover:text-green-700"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  {user.role === 'admin' ? (
-                    <>
-                      <Shield className="w-4 h-4 mr-2" />
-                      Admin Panel
-                    </>
-                  ) : (
-                    <>
-                      <User className="w-4 h-4 mr-2" />
-                      Dashboard
-                    </>
-                  )}
+                  <User className="w-4 h-4 mr-2" />
+                  Dashboard
                 </Link>
                 <button
                   onClick={() => {
-                    setIsMenuOpen(false);
                     handleLogout();
+                    setIsMenuOpen(false);
                   }}
-                  className="flex items-center w-full text-left px-3 py-2 font-medium text-gray-700 hover:text-red-600"
+                  className="flex items-center w-full text-left px-3 py-2 font-medium text-gray-700 hover:text-blue-600"
                 >
                   <LogOut className="w-4 h-4 mr-2" />
                   Sign Out
                 </button>
-              </div>
+              </>
             ) : (
               <Link
                 to="/login"
