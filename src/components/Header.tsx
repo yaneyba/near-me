@@ -135,12 +135,6 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSe
                       <User className="w-4 h-4 mr-1" />
                       Admin Dashboard
                     </Link>
-                    <Link 
-                      to="/admin/settings-test" 
-                      className="flex items-center font-medium transition-colors px-3 py-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 text-sm"
-                    >
-                      Settings Test
-                    </Link>
                   </>
                 ) : (
                   <Link 
