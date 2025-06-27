@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Crown, Star, TrendingUp, ArrowRight } from 'lucide-react';
-import { getUserSubscription } from '../lib/stripe';
+import { getCurrentSubscription } from '../lib/stripe';
 import { getProductByPriceId } from '../stripe-config';
 
 interface SubscriptionBannerProps {
@@ -16,7 +16,7 @@ const SubscriptionBanner: React.FC<SubscriptionBannerProps> = ({ className = '' 
     const fetchSubscription = async () => {
       try {
         setLoading(true);
-        const data = await getUserSubscription();
+        const data = await getCurrentSubscription();
         setSubscription(data);
       } catch (error) {
         console.error('Error fetching subscription:', error);

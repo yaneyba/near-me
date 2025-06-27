@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle, ArrowRight, Home, Building } from 'lucide-react';
-import { getUserSubscription } from '../lib/stripe';
+import { getCurrentSubscription } from '../lib/stripe';
 import { getProductByPriceId } from '../stripe-config';
 
 const CheckoutSuccessPage: React.FC = () => {
@@ -27,7 +27,7 @@ const CheckoutSuccessPage: React.FC = () => {
         // Wait a moment to allow webhook processing
         await new Promise(resolve => setTimeout(resolve, 2000));
         
-        const subscriptionData = await getUserSubscription();
+        const subscriptionData = await getCurrentSubscription();
         setSubscription(subscriptionData);
       } catch (error) {
         console.error('Error fetching subscription:', error);
