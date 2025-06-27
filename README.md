@@ -1,19 +1,18 @@
-# Dynamic Subdomain React Application with SEO
+# Near Me Business Directory - React Application
 
-A React application that creates unique, SEO-optimized pages for different business categories and cities using dynamic subdomains.
+A modern React application that creates SEO-optimized business directory pages with admin approval workflows and subscription management.
 
-## Features
+## ✨ Key Features
 
-- **Dynamic Subdomains**: `category.city.near-me.us` structure
-- **SEO Optimized**: Unique HTML files with proper meta tags for each subdomain
-- **Real-time Search**: Live search with suggestions
-- **Supabase Integration**: Contact forms and business submissions stored in Supabase
-- **Hybrid Data Strategy**: JSON for business listings (fast), Supabase for forms (persistent)
+- **Business Approval Workflow**: Admin review system for business submissions
+- **Stripe Subscription Integration**: Monthly subscriptions for business owners
+- **Role-Based Authentication**: Admin and business owner dashboards
+- **SEO Optimized**: Dynamic subdomain structure with unique meta tags
+- **Real-time Search**: Live search with business suggestions
 - **Mobile Responsive**: Optimized for all devices
-- **Production Ready**: Cache busting, CDN optimization, and deployment ready
-- **Authentication**: Business owner login and admin controls
+- **Production Ready**: Built for scalable deployment
 
-## Quick Start
+## 🚀 Quick Start
 
 ### 1. Install Dependencies
 
@@ -21,31 +20,35 @@ A React application that creates unique, SEO-optimized pages for different busin
 npm install
 ```
 
-### 2. Set Up Supabase
+### 2. Environment Setup
 
-1. Create a new Supabase project at [supabase.com](https://supabase.com)
-2. Copy your project URL and anon key
-3. Create a `.env` file based on `.env.example`:
-
-```bash
-cp .env.example .env
-```
-
-4. Update `.env` with your Supabase credentials:
+Create a `.env` file with your Supabase credentials:
 
 ```env
+# Supabase Configuration
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your_anon_key_here
+VITE_SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
+
+# Site Configuration
+VITE_SITE_ID=near-me-us
+
+# Stripe Configuration (for subscriptions)
+VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key
+VITE_STRIPE_SECRET_KEY=sk_test_your_secret_key
 ```
 
 ### 3. Database Setup
 
-Your existing database schema is already compatible! The application will use your existing:
+Apply the database migrations to set up the required tables:
 
-- `contact_messages` table for contact form submissions
-- `business_submissions` table for business applications
+```bash
+# Option 1: Use Supabase CLI (if you have Docker)
+supabase db reset
 
-**No migration needed** - the application works with your current schema.
+# Option 2: Manual SQL execution
+# Copy SQL from supabase/migrations/ and run in Supabase SQL Editor
+```
 
 ### 4. Start Development
 
@@ -53,192 +56,252 @@ Your existing database schema is already compatible! The application will use yo
 npm run dev
 ```
 
-## Admin Setup
+## 👨‍💼 Admin Setup
 
-### Creating an Admin User
+### Admin User Creation
 
-To create an admin user with full access to the admin settings:
+Create an admin user with full dashboard access:
 
 ```bash
 npm run create-admin
 ```
 
-Follow the prompts to enter your Supabase URL, service role key, and admin user details.
+### Business Owner Creation
 
-### Toggling Authentication Features
+Create business owner accounts:
 
-To enable or disable login functionality:
+```bash
+npm run create-business-owner
+```
+
+### Authentication Controls
+
+Toggle authentication features on/off:
 
 ```bash
 npm run toggle-auth
 ```
 
-This script allows you to toggle authentication features without accessing the admin dashboard.
+## 🏗️ Application Architecture
 
-## Data Architecture
+### Business Approval Workflow
 
-### Hybrid Data Strategy
+1. **Business Submission**: Businesses submit registration forms
+2. **Admin Review**: Admins review submissions in dashboard
+3. **Approval Process**: Approve/reject with notes
+4. **Business Profile Creation**: Approved businesses get user accounts
+5. **Subscription Management**: Business owners can manage Stripe subscriptions
 
-The application uses a **hybrid data approach**:
+### Database Schema
 
-- **Business Listings**: Served from JSON files (fast, static)
-  - `src/data/businesses.json`
-  - `src/data/services.json` 
-  - `src/data/neighborhoods.json`
+The application uses several key tables:
 
-- **Form Submissions**: Stored in your existing Supabase tables (persistent, real data)
-  - Contact form messages → `contact_messages` table
-  - Business applications → `business_submissions` table
+- **business_submissions**: Pending business registrations
+- **business_profiles**: Approved businesses with user accounts
+- **admin_settings**: System configuration (login enabled, etc.)
+- **contact_messages**: Contact form submissions
 
-### Why Hybrid?
+### Role-Based Access
 
-1. **Performance**: Business listings load instantly from JSON
-2. **Real Data**: Form submissions are properly stored and managed in your existing database
-3. **Scalability**: Easy to migrate business data to Supabase later
-4. **Development**: Fast iteration without database dependencies for listings
-5. **Compatibility**: Works with your existing database schema
+- **Admin Users**: Manage submissions, approve businesses, system settings
+- **Business Owners**: Access dashboard, manage subscriptions, update profiles
+- **Anonymous Users**: Submit businesses, contact forms
 
-## Supabase Integration
+## 🔌 Supabase Integration
 
-### Contact Forms
+### Authentication & Authorization
 
-Contact form submissions are stored in your existing `contact_messages` table with:
-- User information (name, email)
-- Message details (subject, message)
-- Context (category, city)
-- Admin management (status, notes, resolution)
+- **Supabase Auth**: Email/password authentication
+- **Row Level Security**: Database-level access control
+- **Admin Detection**: Email-based admin identification
+- **Role Management**: Admin vs business owner permissions
 
-### Business Applications
+### Real-time Data
 
-Business submissions are stored in your existing `business_submissions` table with:
-- Complete business information
-- Services and hours
-- Review workflow (pending → approved/rejected)
-- Admin notes and tracking
+All form submissions and business data are stored in Supabase:
+- Business registration submissions
+- Contact form messages  
+- User profiles and authentication
+- Subscription status and billing
 
-### Authentication
+### Security Features
 
-User authentication is handled through Supabase Auth with:
-- Email/password login for business owners
-- Role-based access control
-- Admin settings for enabling/disabling authentication
+- RLS policies protect user data
+- Admin-only access to sensitive operations
+- Secure API endpoints for Stripe integration
+- Environment-based configuration
 
-### Security
-
-Your existing Row Level Security (RLS) policies are used:
-- **Public insert** allowed for form submissions
-- **User access** to their own submissions only
-- **Admin access** to all data for management
-
-## Development
+## 🛠️ Development
 
 ### Available Scripts
 
 ```bash
-npm run dev              # Start development server
-npm run build            # Build for production with SEO
-npm run build:production # Build with production optimizations
-npm run preview          # Preview production build
-npm run lint             # Run ESLint
-npm run create-admin     # Create an admin user
-npm run toggle-auth      # Toggle authentication features
+npm run dev                    # Start development server
+npm run build                  # Build for production with SEO
+npm run build:production       # Build with optimizations
+npm run preview               # Preview production build
+npm run lint                  # Run ESLint
+
+# Admin & Setup Scripts
+npm run create-admin          # Create admin user
+npm run create-business-owner # Create business owner
+npm run toggle-auth          # Toggle authentication
+
+# Testing & Data Scripts
+npm run test:supabase        # Test Supabase connection
+npm run add:samples          # Add sample data
 ```
 
-### Adding New Content
+### Project Structure
 
-1. **New Cities**: Add to `cityStateMap` in `src/utils/subdomainParser.ts`
-2. **New Categories**: Add services to `src/data/services.json`
-3. **New Businesses**: Add to `src/data/businesses.json`
+```
+src/
+├── components/           # Reusable UI components
+│   ├── auth/            # Authentication components
+│   └── ads/             # Advertisement components
+├── pages/               # Page components
+├── lib/                 # Utility libraries (auth, supabase)
+├── providers/           # Data providers
+├── types/               # TypeScript type definitions
+├── utils/               # Helper utilities
+└── data/                # Static business data (JSON)
 
-### Environment Variables
+supabase/
+├── migrations/          # Database migrations
+└── functions/           # Edge functions (Stripe webhooks)
 
-Required for Supabase integration:
+docs/                    # Documentation
+scripts/                 # Build and utility scripts
+```
+
+## 🚀 Deployment
+
+### Cloudflare Pages Setup
+
+1. **Connect Repository**: Link your GitHub repo to Cloudflare Pages
+2. **Build Settings**:
+   - Build command: `npm run build:production`
+   - Output directory: `dist`
+3. **Environment Variables**: Add in Cloudflare dashboard
+4. **Custom Domain**: Configure with wildcard DNS for subdomains
+
+### Production Environment Variables
 
 ```env
-VITE_SUPABASE_URL=your_supabase_project_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-VITE_AUTH_LOGIN_ENABLED=true
-```
-
-## Deployment
-
-### Cloudflare Pages
-
-1. Connect your repository to Cloudflare Pages
-2. Set build command: `npm run build:production`
-3. Set output directory: `dist`
-4. Add environment variables in Cloudflare Pages dashboard
-5. Configure custom domain with wildcard DNS
-
-### Environment Variables in Production
-
-Add these in your Cloudflare Pages dashboard:
-
-```
 VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your_anon_key_here
-VITE_AUTH_LOGIN_ENABLED=true
+VITE_SUPABASE_ANON_KEY=your_production_anon_key
+VITE_SUPABASE_SERVICE_ROLE_KEY=your_production_service_key
+VITE_STRIPE_PUBLISHABLE_KEY=pk_live_your_live_key
+VITE_STRIPE_SECRET_KEY=sk_live_your_live_key
+VITE_SITE_ID=near-me-us
 ```
 
-## SEO Strategy
+### Database Migrations
 
-### Build-Time HTML Generation
+Apply migrations to production database:
 
-Each subdomain gets a unique HTML file:
-- `nail-salons.dallas.html` → "Best Nail Salons in Dallas, Texas"
+1. Copy SQL from `supabase/migrations/`
+2. Execute in Supabase SQL Editor for production project
+3. Verify tables and RLS policies are created correctly
+
+## 📊 Key Database Tables
+
+### business_submissions
+Stores pending business registration requests:
+- Business information (name, address, contact)
+- Services and hours
+- Approval status (pending/approved/rejected)
+- Admin review notes
+
+### business_profiles  
+Approved businesses with user accounts:
+- Links to Supabase Auth users
+- Subscription status and Stripe data
+- Business details and settings
+- Role management (owner/admin)
+
+### admin_settings
+System configuration:
+- Feature toggles (login enabled, ads enabled)
+- Global settings and preferences
+- Admin-controlled functionality
+
+## 🎯 SEO Strategy
+
+### Dynamic HTML Generation
+
+Each business category/city combination gets optimized HTML:
+- `nail-salons.dallas.html` → "Best Nail Salons in Dallas, Texas"  
 - `auto-repair.denver.html` → "Best Auto Repair in Denver, Colorado"
 
-### Cache Strategy
+### Performance Optimization
 
-- **HTML Files**: 1 hour browser cache, 1 day CDN cache
-- **Static Assets**: 1 year cache with immutable headers
-- **API Endpoints**: No cache for real-time data
+- **Static HTML**: Pre-generated for instant loading
+- **React Hydration**: Interactive functionality after load
+- **CDN Friendly**: Optimized for edge caching
+- **Meta Tags**: Unique titles and descriptions per page
 
-### Benefits
+## 📋 Admin Features
 
-✅ **Perfect SEO**: Each subdomain has unique, descriptive titles  
-✅ **Fast Performance**: Static HTML + React hydration  
-✅ **Real Data**: Form submissions properly stored in your existing database  
-✅ **Scalable**: Easy to add new cities and categories  
-✅ **Production Ready**: Optimized for CDN deployment  
-✅ **Compatible**: Works with your existing database schema
+### Business Management
+- Review and approve business submissions
+- Manage business profiles and subscriptions
+- View analytics and engagement data
 
-## Database Schema
+### System Administration  
+- Toggle authentication on/off
+- Manage global settings
+- Monitor form submissions
+- Control feature availability
 
-### business_profiles
+## 💰 Business Owner Features
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | uuid | Primary key |
-| user_id | uuid | References auth.users |
-| business_id | text | Business identifier |
-| business_name | text | Business name |
-| email | text | Contact email |
-| role | text | 'owner', 'admin', or 'staff' |
-| created_at | timestamptz | Creation timestamp |
-| updated_at | timestamptz | Update timestamp |
+### Dashboard Access
+- View subscription status
+- Manage billing and payments
+- Update business profile
+- Access engagement analytics
 
-### user_engagement_events
+### Subscription Management
+- Stripe-powered monthly subscriptions
+- Automatic billing and renewals
+- Cancel or modify subscriptions
+- Usage tracking and limits
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | uuid | Primary key |
-| business_id | text | Business identifier |
-| business_name | text | Business name |
-| event_type | text | Type of engagement event |
-| event_data | jsonb | Additional event data |
-| timestamp | timestamptz | Event timestamp |
-| ip_address | text | User IP address |
-| user_session_id | text | Session identifier |
-| created_at | timestamptz | Creation timestamp |
+## 🔍 Troubleshooting
 
-## Support
+### Common Issues
+
+1. **RLS Policy Errors**: Check Supabase RLS policies are applied
+2. **Environment Variables**: Verify all required vars are set
+3. **Migration Issues**: Ensure all migrations are applied in order
+4. **Stripe Webhooks**: Configure webhook endpoints for subscription events
+
+### Debug Tools
+
+- Use browser dev tools for React debugging
+- Check Supabase logs for database errors
+- Monitor Stripe dashboard for payment issues
+- Review Cloudflare logs for deployment problems
+
+## 📚 Documentation
+
+Comprehensive guides are available in the `docs/` folder:
+
+- **ADMIN-GUIDE.md**: Complete admin functionality guide
+- **ARCHITECTURE.md**: System architecture overview  
+- **DEPLOYMENT-GUIDE.md**: Production deployment instructions
+- **ADS-HOW-TO-GUIDE.md**: Advertisement integration
+- **SEO-EXPLANATION.md**: SEO strategy and implementation
+
+## 🤝 Support
 
 For questions or issues:
-1. Check the documentation in the `docs/` folder
-2. Review the code comments in the source files
-3. Use the development panel for testing different configurations
+1. Check documentation in `docs/` folder
+2. Review error logs in browser console
+3. Verify environment variables and database setup
+4. Test with sample data using `npm run add:samples`
 
-## License
+## 📄 License
 
 This project is licensed under the MIT License.
