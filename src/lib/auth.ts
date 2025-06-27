@@ -61,13 +61,13 @@ export const getSettingsFromDatabase = async (): Promise<AuthFeatureFlags> => {
       .from('admin_settings')
       .select('value')
       .eq('key', 'login_enabled')
-      .single();
+      .maybeSingle();
     
     const { data: trackingSetting, error: trackingError } = await supabase
       .from('admin_settings')
       .select('value')
       .eq('key', 'tracking_enabled')
-      .single();
+      .maybeSingle();
     
     if (loginError || trackingError) {
       console.error('Error fetching settings:', loginError || trackingError);
@@ -75,8 +75,8 @@ export const getSettingsFromDatabase = async (): Promise<AuthFeatureFlags> => {
     }
     
     return {
-      loginEnabled: loginSetting?.value === 'true',
-      trackingEnabled: trackingSetting?.value === 'true'
+      loginEnabled: loginSetting?.value === 'true' ?? DEFAULT_AUTH_FEATURES.loginEnabled,
+      trackingEnabled: trackingSetting?.value === 'true' ?? DEFAULT_AUTH_FEATURES.trackingEnabled
     };
   } catch (error) {
     console.error('Error getting settings from database:', error);

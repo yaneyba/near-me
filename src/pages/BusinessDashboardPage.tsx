@@ -28,6 +28,7 @@ import { DataProviderFactory } from '../providers';
 import { BusinessAnalytics } from '../types';
 import { useAuth, signOut } from '../lib/auth';
 import { useNavigate } from 'react-router-dom';
+import SubscriptionManager from '../components/SubscriptionManager';
 
 const BusinessDashboardPage: React.FC = () => {
   const [period, setPeriod] = useState<'day' | 'week' | 'month' | 'year'>('week');
@@ -35,7 +36,7 @@ const BusinessDashboardPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [businessId, setBusinessId] = useState('nail-salons-dallas-01'); // Default value
   const [businessName, setBusinessName] = useState('Elegant Nails Studio'); // Default value
-  const [isPremium, setIsPremium] = useState(true);
+  const [isPremium, setIsPremium] = useState(false);
   const [customDateRange, setCustomDateRange] = useState(false);
   const [startDate, setStartDate] = useState<string>(
     new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
@@ -43,6 +44,8 @@ const BusinessDashboardPage: React.FC = () => {
   const [endDate, setEndDate] = useState<string>(
     new Date().toISOString().split('T')[0]
   );
+  const [activeTab, setActiveTab] = useState<'analytics' | 'subscription'>('analytics');
+  const [showSubscriptionManager, setShowSubscriptionManager] = useState(false);
 
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -371,6 +374,10 @@ const BusinessDashboardPage: React.FC = () => {
     );
   };
 
+  const handleSubscriptionChange = (hasSubscription: boolean) => {
+    setIsPremium(hasSubscription);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -392,41 +399,29 @@ const BusinessDashboardPage: React.FC = () => {
           </div>
           
           <div className="mt-4 md:mt-0 flex flex-col sm:flex-row gap-3">
-            {/* Period selector */}
-            <div className="flex items-center space-x-2">
-              <select
-                value={period}
-                onChange={(e) => {
-                  setPeriod(e.target.value as any);
-                  setCustomDateRange(false);
-                }}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                disabled={customDateRange}
-              >
-                <option value="day">Last 24 Hours</option>
-                <option value="week">Last 7 Days</option>
-                <option value="month">Last 30 Days</option>
-                <option value="year">Last 12 Months</option>
-              </select>
-            </div>
-            
-            {/* Custom date range toggle */}
-            <div className="flex items-center">
+            {/* Tab navigation */}
+            <div className="flex rounded-lg border border-gray-300 overflow-hidden">
               <button
-                onClick={() => setCustomDateRange(!customDateRange)}
-                className={`flex items-center px-4 py-2 border rounded-lg transition-colors ${
-                  customDateRange 
-                    ? 'border-blue-500 bg-blue-50 text-blue-600' 
-                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                onClick={() => setActiveTab('analytics')}
+                className={`px-4 py-2 text-sm font-medium ${
+                  activeTab === 'analytics'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                <Calendar className="w-4 h-4 mr-2" />
-                Custom Range
-                {customDateRange ? (
-                  <ChevronUp className="w-4 h-4 ml-2" />
-                ) : (
-                  <ChevronDown className="w-4 h-4 ml-2" />
-                )}
+                <BarChart3 className="w-4 h-4 inline mr-1" />
+                Analytics
+              </button>
+              <button
+                onClick={() => setActiveTab('subscription')}
+                className={`px-4 py-2 text-sm font-medium ${
+                  activeTab === 'subscription'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <Crown className="w-4 h-4 inline mr-1" />
+                Subscription
               </button>
             </div>
             
@@ -441,192 +436,248 @@ const BusinessDashboardPage: React.FC = () => {
           </div>
         </div>
         
-        {/* Custom date range inputs */}
-        {customDateRange && (
-          <div className="bg-white rounded-xl shadow-sm p-4 mb-6 flex flex-col sm:flex-row items-center gap-4">
-            <div className="flex items-center space-x-2">
-              <label className="text-sm font-medium text-gray-700">Start Date:</label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <label className="text-sm font-medium text-gray-700">End Date:</label>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <button
-              onClick={loadAnalytics}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Apply
-            </button>
-          </div>
+        {/* Subscription Tab */}
+        {activeTab === 'subscription' && (
+          <SubscriptionManager 
+            businessProfileId={user?.id || ''}
+            onSubscriptionChange={handleSubscriptionChange}
+          />
         )}
-
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          </div>
-        ) : !analytics ? (
-          <div className="bg-white rounded-xl shadow-sm p-8 text-center">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Data Available</h3>
-            <p className="text-gray-600">
-              We don't have any analytics data for this time period yet. Check back later or try a different date range.
-            </p>
-          </div>
-        ) : (
+        
+        {/* Analytics Tab */}
+        {activeTab === 'analytics' && (
           <>
-            {/* Key Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              {renderMetricCard(
-                'Total Views', 
-                analytics.metrics.totalViews, 
-                <Eye className="w-5 h-5 text-blue-600" />, 
-                'border-blue-600',
-                getPreviousPeriodData(analytics.metrics.totalViews)
-              )}
+            {/* Period selector */}
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+              <div className="flex items-center space-x-2">
+                <select
+                  value={period}
+                  onChange={(e) => {
+                    setPeriod(e.target.value as any);
+                    setCustomDateRange(false);
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  disabled={customDateRange}
+                >
+                  <option value="day">Last 24 Hours</option>
+                  <option value="week">Last 7 Days</option>
+                  <option value="month">Last 30 Days</option>
+                  <option value="year">Last 12 Months</option>
+                </select>
+              </div>
               
-              {renderMetricCard(
-                'Phone Calls', 
-                analytics.metrics.phoneClicks, 
-                <Phone className="w-5 h-5 text-green-600" />, 
-                'border-green-600',
-                getPreviousPeriodData(analytics.metrics.phoneClicks)
-              )}
-              
-              {renderMetricCard(
-                'Website Clicks', 
-                analytics.metrics.websiteClicks, 
-                <Globe className="w-5 h-5 text-purple-600" />, 
-                'border-purple-600',
-                getPreviousPeriodData(analytics.metrics.websiteClicks)
-              )}
-              
-              {renderMetricCard(
-                'Conversion Rate', 
-                analytics.metrics.conversionRate, 
-                <Zap className="w-5 h-5 text-orange-600" />, 
-                'border-orange-600',
-                getPreviousPeriodData(analytics.metrics.conversionRate)
-              )}
+              {/* Custom date range toggle */}
+              <div className="flex items-center">
+                <button
+                  onClick={() => setCustomDateRange(!customDateRange)}
+                  className={`flex items-center px-4 py-2 border rounded-lg transition-colors ${
+                    customDateRange 
+                      ? 'border-blue-500 bg-blue-50 text-blue-600' 
+                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Custom Range
+                  {customDateRange ? (
+                    <ChevronUp className="w-4 h-4 ml-2" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 ml-2" />
+                  )}
+                </button>
+              </div>
             </div>
             
-            {/* Premium Metrics */}
-            {isPremium && (
-              <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl p-4 border border-yellow-200 mb-8">
-                <div className="flex items-center mb-4">
-                  <Crown className="w-5 h-5 text-yellow-600 mr-2" />
-                  <h3 className="text-lg font-semibold text-yellow-800">Premium Insights</h3>
+            {/* Custom date range inputs */}
+            {customDateRange && (
+              <div className="bg-white rounded-xl shadow-sm p-4 mb-6 flex flex-col sm:flex-row items-center gap-4">
+                <div className="flex items-center space-x-2">
+                  <label className="text-sm font-medium text-gray-700">Start Date:</label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
                 </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {renderMetricCard(
-                    'Booking Clicks', 
-                    analytics.metrics.bookingClicks, 
-                    <Calendar className="w-5 h-5 text-yellow-600" />, 
-                    'border-yellow-600',
-                    getPreviousPeriodData(analytics.metrics.bookingClicks)
-                  )}
-                  
-                  {renderMetricCard(
-                    'Directions Clicks', 
-                    analytics.metrics.directionsClicks, 
-                    <Navigation className="w-5 h-5 text-yellow-600" />, 
-                    'border-yellow-600',
-                    getPreviousPeriodData(analytics.metrics.directionsClicks)
-                  )}
-                  
-                  {renderMetricCard(
-                    'Services Viewed', 
-                    analytics.metrics.servicesExpands, 
-                    <Search className="w-5 h-5 text-yellow-600" />, 
-                    'border-yellow-600',
-                    getPreviousPeriodData(analytics.metrics.servicesExpands)
-                  )}
-                  
-                  {renderMetricCard(
-                    'Engagement Rate', 
-                    analytics.metrics.engagementRate, 
-                    <Star className="w-5 h-5 text-yellow-600" />, 
-                    'border-yellow-600',
-                    getPreviousPeriodData(analytics.metrics.engagementRate)
-                  )}
+                <div className="flex items-center space-x-2">
+                  <label className="text-sm font-medium text-gray-700">End Date:</label>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
                 </div>
+                <button
+                  onClick={loadAnalytics}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Apply
+                </button>
               </div>
             )}
-            
-            {/* Charts and Detailed Analytics */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-              {renderHourlyChart()}
-              {renderDeviceBreakdown()}
-            </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-              {renderTopSources()}
-              {renderTopSearchQueries()}
-            </div>
-            
-            {/* Recommendations */}
-            <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Recommendations</h3>
-              
-              <div className="space-y-4">
-                <div className="flex items-start space-x-4 p-4 bg-blue-50 rounded-lg">
-                  <div className="bg-blue-100 p-2 rounded-full">
-                    <TrendingUp className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-blue-900">Improve Your Conversion Rate</h4>
-                    <p className="text-sm text-blue-700 mt-1">
-                      Your phone call conversion rate is {formatNumber(analytics.metrics.conversionRate)}%. 
-                      Consider adding more detailed service information to encourage more calls.
-                    </p>
-                  </div>
+
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              </div>
+            ) : !analytics ? (
+              <div className="bg-white rounded-xl shadow-sm p-8 text-center">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Data Available</h3>
+                <p className="text-gray-600">
+                  We don't have any analytics data for this time period yet. Check back later or try a different date range.
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Key Metrics */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                  {renderMetricCard(
+                    'Total Views', 
+                    analytics.metrics.totalViews, 
+                    <Eye className="w-5 h-5 text-blue-600" />, 
+                    'border-blue-600',
+                    getPreviousPeriodData(analytics.metrics.totalViews)
+                  )}
+                  
+                  {renderMetricCard(
+                    'Phone Calls', 
+                    analytics.metrics.phoneClicks, 
+                    <Phone className="w-5 h-5 text-green-600" />, 
+                    'border-green-600',
+                    getPreviousPeriodData(analytics.metrics.phoneClicks)
+                  )}
+                  
+                  {renderMetricCard(
+                    'Website Clicks', 
+                    analytics.metrics.websiteClicks, 
+                    <Globe className="w-5 h-5 text-purple-600" />, 
+                    'border-purple-600',
+                    getPreviousPeriodData(analytics.metrics.websiteClicks)
+                  )}
+                  
+                  {renderMetricCard(
+                    'Conversion Rate', 
+                    analytics.metrics.conversionRate, 
+                    <Zap className="w-5 h-5 text-orange-600" />, 
+                    'border-orange-600',
+                    getPreviousPeriodData(analytics.metrics.conversionRate)
+                  )}
                 </div>
                 
-                <div className="flex items-start space-x-4 p-4 bg-green-50 rounded-lg">
-                  <div className="bg-green-100 p-2 rounded-full">
-                    <Users className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-green-900">Optimize for Mobile Users</h4>
-                    <p className="text-sm text-green-700 mt-1">
-                      {Math.round((analytics.deviceBreakdown.mobile / 
-                        (analytics.deviceBreakdown.mobile + 
-                         analytics.deviceBreakdown.tablet + 
-                         analytics.deviceBreakdown.desktop)) * 100)}% 
-                      of your visitors are on mobile devices. Ensure your business information is mobile-friendly.
-                    </p>
-                  </div>
-                </div>
-                
-                {!isPremium && (
-                  <div className="flex items-start space-x-4 p-4 bg-yellow-50 rounded-lg">
-                    <div className="bg-yellow-100 p-2 rounded-full">
-                      <Crown className="w-5 h-5 text-yellow-600" />
+                {/* Premium Metrics */}
+                {isPremium && (
+                  <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl p-4 border border-yellow-200 mb-8">
+                    <div className="flex items-center mb-4">
+                      <Crown className="w-5 h-5 text-yellow-600 mr-2" />
+                      <h3 className="text-lg font-semibold text-yellow-800">Premium Insights</h3>
                     </div>
-                    <div>
-                      <h4 className="font-medium text-yellow-900">Upgrade to Premium</h4>
-                      <p className="text-sm text-yellow-700 mt-1">
-                        Premium businesses receive 3x more engagement. Upgrade to get priority placement, 
-                        booking links, and detailed analytics.
-                      </p>
-                      <button className="mt-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                        Upgrade Now
-                      </button>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                      {renderMetricCard(
+                        'Booking Clicks', 
+                        analytics.metrics.bookingClicks, 
+                        <Calendar className="w-5 h-5 text-yellow-600" />, 
+                        'border-yellow-600',
+                        getPreviousPeriodData(analytics.metrics.bookingClicks)
+                      )}
+                      
+                      {renderMetricCard(
+                        'Directions Clicks', 
+                        analytics.metrics.directionsClicks, 
+                        <Navigation className="w-5 h-5 text-yellow-600" />, 
+                        'border-yellow-600',
+                        getPreviousPeriodData(analytics.metrics.directionsClicks)
+                      )}
+                      
+                      {renderMetricCard(
+                        'Services Viewed', 
+                        analytics.metrics.servicesExpands, 
+                        <Search className="w-5 h-5 text-yellow-600" />, 
+                        'border-yellow-600',
+                        getPreviousPeriodData(analytics.metrics.servicesExpands)
+                      )}
+                      
+                      {renderMetricCard(
+                        'Engagement Rate', 
+                        analytics.metrics.engagementRate, 
+                        <Star className="w-5 h-5 text-yellow-600" />, 
+                        'border-yellow-600',
+                        getPreviousPeriodData(analytics.metrics.engagementRate)
+                      )}
                     </div>
                   </div>
                 )}
-              </div>
-            </div>
+                
+                {/* Charts and Detailed Analytics */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                  {renderHourlyChart()}
+                  {renderDeviceBreakdown()}
+                </div>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                  {renderTopSources()}
+                  {renderTopSearchQueries()}
+                </div>
+                
+                {/* Recommendations */}
+                <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Recommendations</h3>
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-start space-x-4 p-4 bg-blue-50 rounded-lg">
+                      <div className="bg-blue-100 p-2 rounded-full">
+                        <TrendingUp className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-blue-900">Improve Your Conversion Rate</h4>
+                        <p className="text-sm text-blue-700 mt-1">
+                          Your phone call conversion rate is {formatNumber(analytics.metrics.conversionRate)}%. 
+                          Consider adding more detailed service information to encourage more calls.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start space-x-4 p-4 bg-green-50 rounded-lg">
+                      <div className="bg-green-100 p-2 rounded-full">
+                        <Users className="w-5 h-5 text-green-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-green-900">Optimize for Mobile Users</h4>
+                        <p className="text-sm text-green-700 mt-1">
+                          {Math.round((analytics.deviceBreakdown.mobile / 
+                            (analytics.deviceBreakdown.mobile + 
+                             analytics.deviceBreakdown.tablet + 
+                             analytics.deviceBreakdown.desktop)) * 100)}% 
+                          of your visitors are on mobile devices. Ensure your business information is mobile-friendly.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {!isPremium && (
+                      <div className="flex items-start space-x-4 p-4 bg-yellow-50 rounded-lg">
+                        <div className="bg-yellow-100 p-2 rounded-full">
+                          <Crown className="w-5 h-5 text-yellow-600" />
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-yellow-900">Upgrade to Premium</h4>
+                          <p className="text-sm text-yellow-700 mt-1">
+                            Premium businesses receive 3x more engagement. Upgrade to get priority placement, 
+                            booking links, and detailed analytics.
+                          </p>
+                          <button 
+                            onClick={() => setActiveTab('subscription')}
+                            className="mt-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                          >
+                            Upgrade Now
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
           </>
         )}
       </div>

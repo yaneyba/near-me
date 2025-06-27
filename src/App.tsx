@@ -17,6 +17,8 @@ import LoginPage from './pages/LoginPage';
 import Layout from './components/Layout';
 import AuthGuard from './components/auth/AuthGuard';
 import { useAuth } from './lib/auth';
+import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
+import CheckoutCancelPage from './pages/CheckoutCancelPage';
 
 function App() {
   // Configure the data provider factory
@@ -57,6 +59,10 @@ function App() {
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/terms-of-service" element={<TermsOfServicePage />} />
           <Route path="/business-owners" element={<BusinessOwnersPage />} />
+          
+          {/* Checkout Routes */}
+          <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
+          <Route path="/checkout/cancel" element={<CheckoutCancelPage />} />
           
           {/* Auth Routes - Accessible only when NOT logged in */}
           <Route 

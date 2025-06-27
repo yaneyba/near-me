@@ -158,3 +158,39 @@ export interface SubdomainInfo {
   city: string;
   state: string;
 }
+
+// Stripe related interfaces
+export interface StripeProduct {
+  priceId: string;
+  name: string;
+  description: string;
+  price: number;
+  mode: 'subscription' | 'payment';
+  interval?: 'month' | 'year';
+  currency?: string;
+}
+
+export interface StripeCheckoutResult {
+  success: boolean;
+  message: string;
+  url?: string;
+  error?: string;
+}
+
+export interface StripeSubscription {
+  id: string;
+  status: string;
+  current_period_end: number;
+  product: {
+    name: string;
+    description: string;
+  };
+  price: {
+    unit_amount: number;
+    currency: string;
+    recurring?: {
+      interval: string;
+    };
+  };
+  created: number;
+}

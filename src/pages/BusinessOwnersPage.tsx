@@ -33,6 +33,7 @@ import {
 import businessesData from '../data/businesses.json';
 import { Business } from '../types';
 import { SITE_INFO } from '../siteInfo';
+import PricingSection from '../components/PricingSection';
 
 const BusinessOwnersPage: React.FC = () => {
   const [businesses] = useState<Business[]>(businessesData);
@@ -95,49 +96,6 @@ const BusinessOwnersPage: React.FC = () => {
       title: 'Verified Listings',
       description: 'Build trust with verified business information',
       color: 'indigo'
-    }
-  ];
-
-  const premiumFeatures = [
-    {
-      icon: Crown,
-      title: 'Premium Badge',
-      description: 'Stand out with a premium crown badge on your listing'
-    },
-    {
-      icon: TrendingUp,
-      title: 'Priority Placement',
-      description: 'Appear first in search results and category listings'
-    },
-    {
-      icon: Calendar,
-      title: 'Online Booking',
-      description: 'Direct booking links to capture customers instantly'
-    },
-    {
-      icon: MapPin,
-      title: 'GPS Directions',
-      description: 'One-click directions to your business location'
-    },
-    {
-      icon: Camera,
-      title: 'Enhanced Photos',
-      description: 'Showcase multiple high-quality business photos'
-    },
-    {
-      icon: MessageSquare,
-      title: 'Customer Reviews',
-      description: 'Advanced review management and response tools'
-    },
-    {
-      icon: BarChart3,
-      title: 'Analytics Dashboard',
-      description: 'Detailed insights on views, clicks, and customer engagement'
-    },
-    {
-      icon: Zap,
-      title: 'Featured Promotions',
-      description: 'Highlight special offers and seasonal promotions'
     }
   ];
 
@@ -398,62 +356,8 @@ const BusinessOwnersPage: React.FC = () => {
       </div>
 
       {/* Premium Features Section */}
-      <div id="premium" className="py-16 bg-gradient-to-br from-yellow-50 to-orange-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-4 py-2 rounded-full text-sm font-bold mb-4">
-              <Crown className="w-4 h-4 mr-2" />
-              PREMIUM FEATURES
-            </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Upgrade to Premium for Maximum Visibility
-            </h2>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Take your business to the next level with premium features designed to increase 
-              customer engagement and drive more business.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            {premiumFeatures.map((feature, index) => {
-              const IconComponent = feature.icon;
-              return (
-                <div key={index} className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border-2 border-yellow-200 hover:border-yellow-300">
-                  <div className="w-12 h-12 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center mb-4">
-                    <IconComponent className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{feature.title}</h3>
-                  <p className="text-gray-600 text-sm">{feature.description}</p>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="text-center">
-            <div className="bg-white rounded-2xl shadow-xl p-8 max-w-2xl mx-auto">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Ready to Go Premium?</h3>
-              <p className="text-gray-600 mb-6">
-                Contact us to learn about premium pricing and get your business featured today.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <a
-                  href={`mailto:${SITE_INFO.email}?subject=Premium Business Listing Inquiry`}
-                  className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors inline-flex items-center justify-center"
-                >
-                  <Mail className="w-5 h-5 mr-2" />
-                  Contact Sales
-                </a>
-                <a
-                  href={`tel:${SITE_INFO.phone.replace(/[^\d+]/g, '')}`}
-                  className="border-2 border-gray-300 hover:border-gray-400 text-gray-700 px-8 py-3 rounded-lg font-semibold transition-colors inline-flex items-center justify-center"
-                >
-                  <Phone className="w-5 h-5 mr-2" />
-                  Call Us
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div id="premium" className="py-16">
+        <PricingSection />
       </div>
 
       {/* Testimonials Section */}
