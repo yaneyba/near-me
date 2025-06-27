@@ -145,7 +145,7 @@ const AdminDashboardPage: React.FC = () => {
           name: 'John Smith',
           email: 'john@example.com',
           subject: 'Question about nail salons in Dallas',
-          message: 'I\'m looking for nail salons that offer gel extensions. Can you recommend any?',
+          message: "I'm looking for nail salons that offer gel extensions. Can you recommend any?",
           category: 'nail-salons',
           city: 'Dallas',
           status: 'new',
