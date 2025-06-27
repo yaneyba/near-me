@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { DataProviderFactory } from './providers/DataProviderFactory';
 import { parseSubdomain } from './utils/subdomainParser';
 import { SubdomainInfo } from './types';
@@ -35,10 +35,14 @@ function App() {
 
   // Parse subdomain info once at app level
   const subdomainInfo: SubdomainInfo = parseSubdomain();
-
-  // Get auth context
   const { user } = useAuth();
-  const isAdmin = user?.role === 'admin';
+
+  // Redirect admin users to admin dashboard
+  React.useEffect(() => {
+    if (user?.role === 'admin' && window.location.pathname === '/') {
+      window.location.href = '/admin/settings';
+    }
+  }, [user]);
 
   return (
     <Router>
@@ -53,20 +57,13 @@ function App() {
           <Route path="/add-business" element={<AddBusinessPage subdomainInfo={subdomainInfo} />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/terms-of-service" element={<TermsOfServicePage />} />
-          
-          {/* Business Owners Page - Redirect admins to admin settings */}
-          <Route 
-            path="/business-owners" 
-            element={
-              isAdmin ? <Navigate to="/admin/settings" replace /> : <BusinessOwnersPage />
-            } 
-          />
+          <Route path="/business-owners" element={<BusinessOwnersPage />} />
           
           {/* Auth Routes - Accessible only when NOT logged in */}
           <Route 
             path="/login" 
             element={
-              <AuthGuard requireAuth={false} redirectTo={isAdmin ? "/admin/settings" : "/business-dashboard"}>
+              <AuthGuard requireAuth={false} redirectTo="/business-dashboard">
                 <LoginPage />
               </AuthGuard>
             } 
@@ -83,7 +80,7 @@ function App() {
             path="/business-dashboard" 
             element={
               <AuthGuard requireAuth={true}>
-                {isAdmin ? <Navigate to="/admin/settings" replace /> : <BusinessDashboardPage />}
+                <BusinessDashboardPage />
               </AuthGuard>
             } 
           />
@@ -93,7 +90,7 @@ function App() {
             path="/admin/dashboard" 
             element={
               <AuthGuard requireAuth={true}>
-                {isAdmin ? <AdminDashboardPage /> : <Navigate to="/business-dashboard" replace />}
+                <AdminDashboardPage />
               </AuthGuard>
             } 
           />
@@ -102,7 +99,7 @@ function App() {
             path="/admin/settings" 
             element={
               <AuthGuard requireAuth={true}>
-                {isAdmin ? <AdminSettingsPage /> : <Navigate to="/business-dashboard" replace />}
+                <AdminSettingsPage />
               </AuthGuard>
             } 
           />
