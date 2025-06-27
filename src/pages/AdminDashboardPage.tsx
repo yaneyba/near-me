@@ -26,14 +26,14 @@ import {
   Star,
   Flag,
   RefreshCw,
-  Save,
   ToggleLeft,
   ToggleRight,
+  Save,
   Lock,
   Activity
 } from 'lucide-react';
 import { DataProviderFactory } from '../providers';
-import { useAuth, isUserAdmin, updateDatabaseSettings } from '../lib/auth';
+import { useAuth, isUserAdmin, getAuthFeatureFlags, setAuthFeatureFlags, updateDatabaseSettings } from '../lib/auth';
 
 const AdminDashboardPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'businesses' | 'contacts' | 'users' | 'analytics' | 'settings'>('businesses');
@@ -63,7 +63,7 @@ const AdminDashboardPage: React.FC = () => {
   // Settings state
   const [loginEnabled, setLoginEnabled] = useState(true);
   const [trackingEnabled, setTrackingEnabled] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [savingSettings, setSavingSettings] = useState(false);
   const [settingsError, setSettingsError] = useState<string | null>(null);
   const [settingsSuccess, setSettingsSuccess] = useState<string | null>(null);
 
@@ -83,6 +83,7 @@ const AdminDashboardPage: React.FC = () => {
           navigate('/', { replace: true });
         } else {
           loadData();
+          loadSettings();
         }
       } catch (error) {
         console.error('Error checking admin status:', error);
@@ -94,14 +95,13 @@ const AdminDashboardPage: React.FC = () => {
     
     checkAdmin();
   }, [navigate]);
-  
+
   // Load settings from auth features
-  useEffect(() => {
-    if (authFeatures) {
-      setLoginEnabled(authFeatures.loginEnabled);
-      setTrackingEnabled(authFeatures.trackingEnabled ?? true);
-    }
-  }, [authFeatures]);
+  const loadSettings = () => {
+    const features = getAuthFeatureFlags();
+    setLoginEnabled(features.loginEnabled);
+    setTrackingEnabled(features.trackingEnabled ?? true);
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -237,6 +237,31 @@ const AdminDashboardPage: React.FC = () => {
       console.error('Error loading admin data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    try {
+      setSavingSettings(true);
+      setSettingsError(null);
+      setSettingsSuccess(null);
+      
+      // Update settings in database
+      const success = await updateDatabaseSettings({
+        loginEnabled,
+        trackingEnabled
+      });
+      
+      if (success) {
+        setSettingsSuccess('Settings saved successfully');
+      } else {
+        setSettingsError('Failed to save settings to database');
+      }
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      setSettingsError('An unexpected error occurred');
+    } finally {
+      setSavingSettings(false);
     }
   };
 
@@ -434,30 +459,6 @@ const AdminDashboardPage: React.FC = () => {
             {status}
           </span>
         );
-    }
-  };
-  
-  const handleSaveSettings = async () => {
-    try {
-      setSaving(true);
-      setSettingsError(null);
-      setSettingsSuccess(null);
-      
-      const success = await updateDatabaseSettings({
-        loginEnabled,
-        trackingEnabled
-      });
-      
-      if (success) {
-        setSettingsSuccess('Settings saved successfully');
-      } else {
-        setSettingsError('Failed to save settings');
-      }
-    } catch (error) {
-      console.error('Error saving settings:', error);
-      setSettingsError('An unexpected error occurred');
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -1125,47 +1126,50 @@ const AdminDashboardPage: React.FC = () => {
               </div>
             </div>
           )}
-          
+
           {/* Settings Tab */}
           {activeTab === 'settings' && (
             <div>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-semibold text-gray-900">System Settings</h2>
               </div>
-              
+
               {settingsError && (
-                <div className="mb-4 bg-red-50 border border-red-200 rounded-md p-4 flex items-start">
+                <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start">
                   <AlertCircle className="w-5 h-5 text-red-500 mr-3 flex-shrink-0 mt-0.5" />
                   <div className="text-sm text-red-700">{settingsError}</div>
                 </div>
               )}
               
               {settingsSuccess && (
-                <div className="mb-4 bg-green-50 border border-green-200 rounded-md p-4 flex items-start">
+                <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-start">
                   <CheckCircle className="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
                   <div className="text-sm text-green-700">{settingsSuccess}</div>
                 </div>
               )}
-              
-              <div className="space-y-6">
+
+              <div className="space-y-8">
                 {/* Authentication Settings */}
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                    <Lock className="w-5 h-5 mr-2 text-blue-600" />
-                    Authentication Settings
-                  </h3>
-                  
-                  <div className="space-y-4">
+                <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                  <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                    <h3 className="text-base font-semibold text-gray-900 flex items-center">
+                      <Lock className="w-5 h-5 mr-2 text-gray-500" />
+                      Authentication Settings
+                    </h3>
+                  </div>
+                  <div className="p-6">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-start">
-                        <div className="flex-shrink-0">
-                          <Lock className="w-6 h-6 text-gray-500" />
-                        </div>
-                        <div className="ml-3">
-                          <h3 className="text-base font-medium text-gray-900">User Login</h3>
-                          <p className="text-sm text-gray-500">
-                            Allow users to log in to their accounts. When disabled, users will be redirected to the home page if they try to access the login page.
-                          </p>
+                      <div className="flex-1">
+                        <div className="flex items-start">
+                          <div className="flex-shrink-0">
+                            <Lock className="w-6 h-6 text-gray-500" />
+                          </div>
+                          <div className="ml-3">
+                            <h3 className="text-base font-medium text-gray-900">User Login</h3>
+                            <p className="text-sm text-gray-500">
+                              Allow users to log in to their accounts. When disabled, users will be redirected to the home page if they try to access the login page.
+                            </p>
+                          </div>
                         </div>
                       </div>
                       <button
@@ -1191,25 +1195,28 @@ const AdminDashboardPage: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Tracking Settings */}
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                    <Activity className="w-5 h-5 mr-2 text-blue-600" />
-                    Tracking Settings
-                  </h3>
-                  
-                  <div className="space-y-4">
+                <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                  <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                    <h3 className="text-base font-semibold text-gray-900 flex items-center">
+                      <Activity className="w-5 h-5 mr-2 text-gray-500" />
+                      Tracking Settings
+                    </h3>
+                  </div>
+                  <div className="p-6">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-start">
-                        <div className="flex-shrink-0">
-                          <Activity className="w-6 h-6 text-gray-500" />
-                        </div>
-                        <div className="ml-3">
-                          <h3 className="text-base font-medium text-gray-900">User Engagement Tracking</h3>
-                          <p className="text-sm text-gray-500">
-                            Track user interactions with business listings. When disabled, no engagement data will be collected across all sites.
-                          </p>
+                      <div className="flex-1">
+                        <div className="flex items-start">
+                          <div className="flex-shrink-0">
+                            <Activity className="w-6 h-6 text-gray-500" />
+                          </div>
+                          <div className="ml-3">
+                            <h3 className="text-base font-medium text-gray-900">User Engagement Tracking</h3>
+                            <p className="text-sm text-gray-500">
+                              Track user interactions with business listings, including views, phone calls, website clicks, and other engagement metrics. When disabled, no user activity will be recorded.
+                            </p>
+                          </div>
                         </div>
                       </div>
                       <button
@@ -1235,16 +1242,16 @@ const AdminDashboardPage: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Save Button */}
                 <div className="flex justify-end">
                   <button
                     type="button"
                     onClick={handleSaveSettings}
-                    disabled={saving}
+                    disabled={savingSettings}
                     className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed"
                   >
-                    {saving ? (
+                    {savingSettings ? (
                       <>
                         <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
                         Saving...
@@ -1257,21 +1264,21 @@ const AdminDashboardPage: React.FC = () => {
                     )}
                   </button>
                 </div>
-                
+
                 {/* Important Notes */}
-                <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div className="mt-8 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                   <div className="flex items-start">
                     <AlertCircle className="w-5 h-5 text-yellow-600 mr-3 flex-shrink-0 mt-0.5" />
                     <div>
                       <h3 className="text-sm font-medium text-yellow-800">Important Notes</h3>
-                      <div className="mt-2 text-sm text-yellow-700 space-y-1">
+                      <div className="mt-2 text-sm text-yellow-700 space-y-2">
                         <p>
-                          <strong>Login Toggle:</strong> Disabling login will prevent all users from accessing their accounts, including business owners.
+                          <strong>Login Setting:</strong> Disabling login will prevent all users from accessing their accounts, including business owners.
                           This should only be used for maintenance or security purposes.
                         </p>
                         <p>
-                          <strong>Tracking Toggle:</strong> Disabling tracking will stop all user engagement data collection across all sites.
-                          This affects analytics for all businesses and may impact premium features.
+                          <strong>Tracking Setting:</strong> Disabling tracking will stop all user engagement data collection across all sites.
+                          This will affect analytics and reporting for all businesses.
                         </p>
                       </div>
                     </div>
