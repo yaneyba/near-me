@@ -1,5 +1,6 @@
 import { UserEngagementEvent } from '../types';
 import { DataProviderFactory } from '../providers';
+import { getAuthFeatureFlags } from '../lib/auth';
 
 class EngagementTracker {
   private sessionId: string;
@@ -73,6 +74,19 @@ class EngagementTracker {
     eventData?: UserEngagementEvent['eventData']
   ): Promise<void> {
     try {
+      // Check if tracking is enabled
+      const { trackingEnabled } = getAuthFeatureFlags();
+      if (trackingEnabled === false) {
+        // Skip tracking if disabled
+        if (process.env.NODE_ENV === 'development') {
+          console.log('📊 Tracking disabled, event not recorded:', {
+            business: businessName,
+            event: eventType
+          });
+        }
+        return;
+      }
+
       const location = await this.getLocationData();
       
       const event: UserEngagementEvent = {
