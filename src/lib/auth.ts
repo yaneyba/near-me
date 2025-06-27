@@ -14,11 +14,13 @@ export interface AuthUser {
 // Auth feature flags
 export interface AuthFeatureFlags {
   loginEnabled: boolean;
+  trackingEnabled?: boolean;
 }
 
 // Default auth feature flags
 const DEFAULT_AUTH_FEATURES: AuthFeatureFlags = {
-  loginEnabled: true
+  loginEnabled: true,
+  trackingEnabled: true
 };
 
 // Get auth feature flags from localStorage or environment variables
@@ -32,7 +34,8 @@ export const getAuthFeatureFlags = (): AuthFeatureFlags => {
     
     // Otherwise use environment variables if available
     return {
-      loginEnabled: import.meta.env.VITE_AUTH_LOGIN_ENABLED !== 'false'
+      loginEnabled: import.meta.env.VITE_AUTH_LOGIN_ENABLED !== 'false',
+      trackingEnabled: import.meta.env.VITE_TRACKING_ENABLED !== 'false'
     };
   } catch (error) {
     console.error('Error getting auth feature flags:', error);
