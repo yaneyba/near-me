@@ -12,7 +12,7 @@ import {
   Loader2, 
   AlertCircle 
 } from 'lucide-react';
-import { PRODUCTS } from '../stripe-config';
+import { STRIPE_PRODUCTS } from '../stripe-config';
 import { createCheckoutSession } from '../lib/stripe';
 import { useAuth } from '../lib/auth';
 
@@ -76,7 +76,7 @@ const PricingSection: React.FC = () => {
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden border-2 border-yellow-200 transform transition-all duration-300 hover:scale-105 hover:shadow-2xl">
             <div className="bg-gradient-to-r from-yellow-400 to-orange-500 p-6">
               <div className="flex items-center justify-between">
-                <h3 className="text-2xl font-bold text-white">{PRODUCTS.PREMIUM_BUSINESS.name}</h3>
+                <h3 className="text-2xl font-bold text-white">{STRIPE_PRODUCTS.PREMIUM_BUSINESS.name}</h3>
                 <Crown className="w-8 h-8 text-white" />
               </div>
               <div className="mt-4 flex items-baseline">
@@ -87,7 +87,7 @@ const PricingSection: React.FC = () => {
             
             <div className="p-6">
               <p className="text-gray-600 mb-6">
-                {PRODUCTS.PREMIUM_BUSINESS.description}
+                {STRIPE_PRODUCTS.PREMIUM_BUSINESS.description}
               </p>
               
               <div className="space-y-4 mb-8">
@@ -129,11 +129,11 @@ const PricingSection: React.FC = () => {
               </div>
               
               <button
-                onClick={() => handleSubscribe(PRODUCTS.PREMIUM_BUSINESS.priceId, PRODUCTS.PREMIUM_BUSINESS.name)}
+                onClick={() => handleSubscribe(STRIPE_PRODUCTS.PREMIUM_BUSINESS.priceId, STRIPE_PRODUCTS.PREMIUM_BUSINESS.name)}
                 disabled={loading !== null}
                 className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white py-3 px-6 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                {loading === PRODUCTS.PREMIUM_BUSINESS.priceId ? (
+                {loading === STRIPE_PRODUCTS.PREMIUM_BUSINESS.priceId ? (
                   <>
                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                     Processing...
@@ -152,7 +152,7 @@ const PricingSection: React.FC = () => {
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden border-2 border-purple-200 transform transition-all duration-300 hover:scale-105 hover:shadow-2xl">
             <div className="bg-gradient-to-r from-purple-500 to-indigo-600 p-6">
               <div className="flex items-center justify-between">
-                <h3 className="text-2xl font-bold text-white">{PRODUCTS.FEATURED_BUSINESS.name}</h3>
+                <h3 className="text-2xl font-bold text-white">{STRIPE_PRODUCTS.FEATURED_BUSINESS.name}</h3>
                 <TrendingUp className="w-8 h-8 text-white" />
               </div>
               <div className="mt-4 flex items-baseline">
@@ -163,7 +163,7 @@ const PricingSection: React.FC = () => {
             
             <div className="p-6">
               <p className="text-gray-600 mb-6">
-                {PRODUCTS.FEATURED_BUSINESS.description}
+                {STRIPE_PRODUCTS.FEATURED_BUSINESS.description}
               </p>
               
               <div className="space-y-4 mb-8">
@@ -205,11 +205,11 @@ const PricingSection: React.FC = () => {
               </div>
               
               <button
-                onClick={() => handleSubscribe(PRODUCTS.FEATURED_BUSINESS.priceId, PRODUCTS.FEATURED_BUSINESS.name)}
+                onClick={() => handleSubscribe(STRIPE_PRODUCTS.FEATURED_BUSINESS.priceId, STRIPE_PRODUCTS.FEATURED_BUSINESS.name)}
                 disabled={loading !== null}
                 className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white py-3 px-6 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                {loading === PRODUCTS.FEATURED_BUSINESS.priceId ? (
+                {loading === STRIPE_PRODUCTS.FEATURED_BUSINESS.priceId ? (
                   <>
                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                     Processing...
