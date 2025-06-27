@@ -14,6 +14,8 @@ const AdminSettingsPage: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    document.title = 'Admin Settings - Near Me Directory';
+    
     const checkAdmin = async () => {
       try {
         const admin = await isUserAdmin();

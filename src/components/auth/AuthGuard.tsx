@@ -77,6 +77,12 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
     return <Navigate to="/" replace />;
   }
 
+  // Admin users accessing admin routes
+  if (requireAuth && user?.role === 'admin' && location.pathname === '/business-dashboard') {
+    return <Navigate to="/admin/settings" replace />;
+  }
+
+  // Regular authentication check
   if (requireAuth && !user) {
     // If login is disabled and auth is required, redirect to home instead of login
     if (!loginEnabled) {
@@ -90,7 +96,11 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   if (!requireAuth && user) {
     // If we're on a page that doesn't require auth but user is logged in
     // (like login page), redirect to dashboard
-    return <Navigate to="/business-dashboard" replace />;
+    if (user.role === 'admin') {
+      return <Navigate to="/admin/settings" replace />;
+    } else {
+      return <Navigate to="/business-dashboard" replace />;
+    }
   }
 
   return <>{children}</>;
