@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, MapPin, Phone, Mail, Plus, User, LogIn, Shield, LogOut } from 'lucide-react';
-import SearchWithLiveResults from './SearchWithLiveResults';
 import { Business } from '../types';
 import { SITE_INFO } from '../siteInfo';
 import { useAuth, signOut } from '../lib/auth';
@@ -28,9 +27,6 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSe
     return location.pathname === path;
   };
 
-  // Check if we're on the add-business page
-  const isAddBusinessPage = location.pathname === '/add-business';
-
   const handleLogout = async () => {
     try {
       await signOut();
@@ -39,6 +35,9 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSe
       console.error('Error signing out:', error);
     }
   };
+
+  // Check if we're on the add-business page
+  const isAddBusinessPage = location.pathname === '/add-business';
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
@@ -159,19 +158,6 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSe
             )}
           </nav>
 
-          {/* Search bar - Desktop */}
-          {import.meta.env.VITE_SHOW_SEARCH_BAR_ON_HEADER !== 'false' && (
-            <div className="hidden lg:block">
-              <SearchWithLiveResults
-                businesses={businesses}
-                category={category}
-                city={city}
-                onSearch={onSearch}
-                className="w-80"
-              />
-            </div>
-          )}
-
           {/* Mobile menu button */}
           <div className="md:hidden">
             <button
@@ -188,18 +174,6 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSe
       {isMenuOpen && (
         <div className="md:hidden bg-white border-t border-gray-200">
           <div className="px-4 pt-2 pb-3 space-y-1">
-            {/* Mobile search */}
-            {import.meta.env.VITE_SHOW_SEARCH_BAR_ON_HEADER !== 'false' && (
-              <div className="mb-4">
-                <SearchWithLiveResults
-                  businesses={businesses}
-                  category={category}
-                  city={city}
-                  onSearch={onSearch}
-                />
-              </div>
-            )}
-
             {/* Mobile navigation */}
             <Link
               to="/"
