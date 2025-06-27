@@ -25,13 +25,17 @@ import {
   UserX,
   Star,
   Flag,
-  RefreshCw
+  RefreshCw,
+  Save,
+  Lock,
+  ToggleLeft,
+  ToggleRight
 } from 'lucide-react';
 import { DataProviderFactory } from '../providers';
-import { useAuth, isUserAdmin } from '../lib/auth';
+import { useAuth, isUserAdmin, getAuthFeatureFlags, setAuthFeatureFlags } from '../lib/auth';
 
 const AdminDashboardPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'businesses' | 'contacts' | 'users' | 'analytics'>('businesses');
+  const [activeTab, setActiveTab] = useState<'businesses' | 'contacts' | 'users' | 'analytics' | 'settings'>('businesses');
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [businessSubmissions, setBusinessSubmissions] = useState<any[]>([]);
@@ -54,6 +58,12 @@ const AdminDashboardPage: React.FC = () => {
   );
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  
+  // Authentication settings state
+  const [loginEnabled, setLoginEnabled] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [settingsError, setSettingsError] = useState<string | null>(null);
+  const [settingsSuccess, setSettingsSuccess] = useState<string | null>(null);
 
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -71,6 +81,7 @@ const AdminDashboardPage: React.FC = () => {
           navigate('/', { replace: true });
         } else {
           loadData();
+          loadAuthSettings();
         }
       } catch (error) {
         console.error('Error checking admin status:', error);
@@ -217,6 +228,30 @@ const AdminDashboardPage: React.FC = () => {
       console.error('Error loading admin data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadAuthSettings = () => {
+    const flags = getAuthFeatureFlags();
+    setLoginEnabled(flags.loginEnabled);
+  };
+
+  const handleSaveSettings = () => {
+    try {
+      setSaving(true);
+      setSettingsError(null);
+      setSettingsSuccess(null);
+      
+      setAuthFeatureFlags({
+        loginEnabled
+      });
+      
+      setSettingsSuccess('Settings saved successfully');
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      setSettingsError('Failed to save settings');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -598,8 +633,12 @@ const AdminDashboardPage: React.FC = () => {
               </button>
               
               <button
-                onClick={() => navigate('/admin/settings')}
-                className="py-4 px-6 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                onClick={() => setActiveTab('settings')}
+                className={`py-4 px-6 font-medium text-sm border-b-2 ${
+                  activeTab === 'settings'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
               >
                 <div className="flex items-center">
                   <Settings className="w-5 h-5 mr-2" />
@@ -611,57 +650,59 @@ const AdminDashboardPage: React.FC = () => {
         </div>
 
         {/* Search and Filter */}
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder={`Search ${activeTab}...`}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <Filter className="w-5 h-5 text-gray-400" />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        {activeTab !== 'settings' && (
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder={`Search ${activeTab}...`}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Filter className="w-5 h-5 text-gray-400" />
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">All Statuses</option>
+                {activeTab === 'businesses' && (
+                  <>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                  </>
+                )}
+                {activeTab === 'contacts' && (
+                  <>
+                    <option value="new">New</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="resolved">Resolved</option>
+                  </>
+                )}
+                {activeTab === 'users' && (
+                  <>
+                    <option value="admin">Admins</option>
+                    <option value="owner">Business Owners</option>
+                  </>
+                )}
+              </select>
+            </div>
+            
+            <button
+              onClick={loadData}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
             >
-              <option value="all">All Statuses</option>
-              {activeTab === 'businesses' && (
-                <>
-                  <option value="pending">Pending</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                </>
-              )}
-              {activeTab === 'contacts' && (
-                <>
-                  <option value="new">New</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="resolved">Resolved</option>
-                </>
-              )}
-              {activeTab === 'users' && (
-                <>
-                  <option value="admin">Admins</option>
-                  <option value="owner">Business Owners</option>
-                </>
-              )}
-            </select>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Refresh
+            </button>
           </div>
-          
-          <button
-            onClick={loadData}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
-          >
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Refresh
-          </button>
-        </div>
+        )}
 
         {/* Content Tabs */}
         <div className="bg-white rounded-xl shadow-sm p-6">
@@ -1072,6 +1113,97 @@ const AdminDashboardPage: React.FC = () => {
                   In a production environment, this section would display charts and metrics for platform usage, 
                   user growth, business submissions, and other key performance indicators.
                 </p>
+              </div>
+            </div>
+          )}
+
+          {/* Settings Tab */}
+          {activeTab === 'settings' && (
+            <div>
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Authentication Settings</h2>
+              
+              {settingsError && (
+                <div className="mb-4 bg-red-50 border border-red-200 rounded-md p-4 flex items-start">
+                  <AlertCircle className="w-5 h-5 text-red-500 mr-3 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm text-red-700">{settingsError}</div>
+                </div>
+              )}
+              
+              {settingsSuccess && (
+                <div className="mb-4 bg-green-50 border border-green-200 rounded-md p-4 flex items-start">
+                  <CheckCircle className="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm text-green-700">{settingsSuccess}</div>
+                </div>
+              )}
+              
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0">
+                      <Lock className="w-6 h-6 text-gray-500" />
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-base font-medium text-gray-900">User Login</h3>
+                      <p className="text-sm text-gray-500">
+                        Allow users to log in to their accounts. When disabled, users will be redirected to the home page if they try to access the login page.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setLoginEnabled(!loginEnabled)}
+                    className={`${
+                      loginEnabled ? 'bg-blue-600' : 'bg-gray-200'
+                    } relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+                  >
+                    <span className="sr-only">Toggle login</span>
+                    <span
+                      className={`${
+                        loginEnabled ? 'translate-x-5' : 'translate-x-0'
+                      } pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200`}
+                    >
+                      {loginEnabled ? (
+                        <ToggleRight className="h-5 w-5 text-blue-600" />
+                      ) : (
+                        <ToggleLeft className="h-5 w-5 text-gray-400" />
+                      )}
+                    </span>
+                  </button>
+                </div>
+              </div>
+              
+              <div className="mt-8 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div className="flex items-start">
+                  <Shield className="w-5 h-5 text-yellow-600 mr-3 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h3 className="text-sm font-medium text-yellow-800">Important Note</h3>
+                    <p className="mt-1 text-sm text-yellow-700">
+                      Disabling login will prevent all users from accessing their accounts, including business owners.
+                      This should only be used for maintenance or security purposes.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={handleSaveSettings}
+                  disabled={saving}
+                  className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed"
+                >
+                  {saving ? (
+                    <>
+                      <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Settings
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           )}

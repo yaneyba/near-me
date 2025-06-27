@@ -40,7 +40,7 @@ function App() {
   // Redirect admin users to admin dashboard
   React.useEffect(() => {
     if (user?.role === 'admin' && window.location.pathname === '/') {
-      window.location.href = '/admin/settings';
+      window.location.href = '/admin/dashboard';
     }
   }, [user]);
 
