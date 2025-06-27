@@ -4,11 +4,15 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+// Check if Supabase credentials are available
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
+  console.warn('Missing Supabase environment variables. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file.');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(
+  supabaseUrl || 'https://example.supabase.co',
+  supabaseAnonKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example_key'
+);
 
 // Database types matching your existing schema with submission_status enum
 export interface Database {
@@ -165,6 +169,38 @@ export interface Database {
           ip_address?: string | null;
           user_session_id?: string;
           created_at?: string | null;
+        };
+      };
+      business_profiles: {
+        Row: {
+          id: string;
+          user_id: string;
+          business_id: string | null;
+          business_name: string;
+          email: string;
+          role: string;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          business_id?: string | null;
+          business_name: string;
+          email: string;
+          role?: string;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          business_id?: string | null;
+          business_name?: string;
+          email?: string;
+          role?: string;
+          created_at?: string | null;
+          updated_at?: string | null;
         };
       };
     };
