@@ -4,6 +4,7 @@ import { Business } from '../types';
 import { AdUnit, SponsoredContent } from './ads';
 import PremiumUpgrade from './PremiumUpgrade';
 import { engagementTracker } from '../utils/engagementTracker';
+import { useAuth } from '../lib/auth';
 
 interface BusinessListingsProps {
   businesses: Business[];
@@ -33,6 +34,9 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
   const [paginatedBusinesses, setPaginatedBusinesses] = useState<Business[]>([]);
   const [showPageJump, setShowPageJump] = useState(false);
   const [jumpToPage, setJumpToPage] = useState('');
+  
+  // Get auth features for ads control
+  const { authFeatures } = useAuth();
 
   // Real-time filtering and sorting
   useEffect(() => {
@@ -466,9 +470,9 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
   };
 
   // Insert ads strategically in the business grid
-  const renderBusinessGrid = () => {
-    const businessesWithAds = [];
-    const adsEnabled = import.meta.env.VITE_ENABLE_ADS === 'true';
+  const renderBusinessGrid = (): React.ReactNode[] => {
+    const businessesWithAds: React.ReactNode[] = [];
+    const adsEnabled = authFeatures?.adsEnabled ?? false;
 
     paginatedBusinesses.forEach((business, index) => {
       businessesWithAds.push(

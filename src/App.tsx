@@ -19,6 +19,9 @@ import AuthGuard from './components/auth/AuthGuard';
 import { useAuth } from './lib/auth';
 import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
 import CheckoutCancelPage from './pages/CheckoutCancelPage';
+import AdminSettingsTest from './components/AdminSettingsTest';
+import SimpleSettingsTest from './components/SimpleSettingsTest';
+import { FallbackTest } from './components/FallbackTest';
 
 function App() {
   // Configure the data provider factory
@@ -96,6 +99,28 @@ function App() {
             element={
               <AuthGuard requireAuth={true}>
                 <AdminDashboardPage />
+              </AuthGuard>
+            } 
+          />
+          
+          {/* Simple Settings Test Route (no auth required) */}
+          <Route 
+            path="/settings-test" 
+            element={<SimpleSettingsTest />}
+          />
+          
+          {/* Fallback Test Route (no auth required) */}
+          <Route 
+            path="/fallback-test" 
+            element={<FallbackTest />}
+          />
+          
+          {/* Admin Settings Test Route (temporary for testing) */}
+          <Route 
+            path="/admin/settings-test" 
+            element={
+              <AuthGuard requireAuth={true}>
+                <AdminSettingsTest />
               </AuthGuard>
             } 
           />

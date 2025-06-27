@@ -1,5 +1,6 @@
 import React from 'react';
 import { Star, ExternalLink, Crown } from 'lucide-react';
+import { useAuth } from '../../lib/auth';
 
 interface SponsoredContentProps {
   className?: string;
@@ -12,8 +13,11 @@ const SponsoredContent: React.FC<SponsoredContentProps> = ({
   category, 
   city 
 }) => {
+  // Get auth features for ads control
+  const { authFeatures } = useAuth();
+  
   // Check if ads are enabled
-  const adsEnabled = import.meta.env.VITE_ENABLE_ADS === 'true';
+  const adsEnabled = authFeatures?.adsEnabled ?? false;
 
   if (!adsEnabled) return null;
 

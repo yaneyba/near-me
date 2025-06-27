@@ -15,49 +15,71 @@ export interface AuthUser {
 export interface AuthFeatureFlags {
   loginEnabled: boolean;
   trackingEnabled?: boolean;
+  adsEnabled?: boolean;
 }
 
-// Default auth feature flags
-const DEFAULT_AUTH_FEATURES: AuthFeatureFlags = {
-  loginEnabled: true,
-  trackingEnabled: true
+// Get auth feature flags from localStorage or environment variables (synchronous fallback)
+// Get environment variable based fallback settings
+export const getEnvironmentFallbackSettings = (): AuthFeatureFlags => {
+  return {
+    loginEnabled: import.meta.env.VITE_SETTINGS_AUTH_LOGIN_ENABLED !== 'false',
+    trackingEnabled: import.meta.env.VITE_SETTINGS_TRACKING_ENABLED !== 'false',
+    adsEnabled: import.meta.env.VITE_SETTINGS_ENABLE_ADS !== 'false'
+  };
 };
 
-// Get auth feature flags from localStorage or environment variables (synchronous fallback)
 export const getAuthFeatureFlags = (): AuthFeatureFlags => {
   try {
     // Check if we have flags in localStorage (admin has set them)
     const savedFlags = localStorage.getItem('auth_feature_flags');
     if (savedFlags) {
-      return JSON.parse(savedFlags);
+      const parsed = JSON.parse(savedFlags);
+      // Verify the saved flags have valid values, otherwise fall back to env
+      if (typeof parsed.loginEnabled === 'boolean' && 
+          typeof parsed.trackingEnabled === 'boolean' &&
+          typeof parsed.adsEnabled === 'boolean') {
+        return parsed;
+      }
     }
     
-    // Otherwise use environment variables if available
-    return {
-      loginEnabled: import.meta.env.VITE_AUTH_LOGIN_ENABLED !== 'false',
-      trackingEnabled: import.meta.env.VITE_TRACKING_ENABLED !== 'false'
-    };
+    // Fall back to environment variables if localStorage is empty or invalid
+    return getEnvironmentFallbackSettings();
   } catch (error) {
-    console.error('Error getting auth feature flags:', error);
-    return DEFAULT_AUTH_FEATURES;
+    console.error('Error getting auth feature flags, using environment fallback:', error);
+    return getEnvironmentFallbackSettings();
   }
 };
 
 // Get auth feature flags with database priority (async)
 export const getAuthFeatureFlagsAsync = async (): Promise<AuthFeatureFlags> => {
   try {
-    // First try to get from database
-    const dbSettings = await getSettingsFromDatabase();
+    // Add timeout to prevent hanging
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Database timeout after 2 seconds')), 2000);
+    });
+    
+    // Race between database call and timeout
+    const dbSettings = await Promise.race([
+      getSettingsFromDatabase(),
+      timeoutPromise
+    ]);
     
     // Cache the database settings in localStorage for faster access
     localStorage.setItem('auth_feature_flags', JSON.stringify(dbSettings));
     
     return dbSettings;
   } catch (error) {
-    console.error('Error getting auth feature flags from database, falling back:', error);
+    console.warn('Database settings unavailable, using environment variables:', error instanceof Error ? error.message : String(error));
     
-    // Fallback to synchronous method (localStorage/env vars)
-    return getAuthFeatureFlags();
+    // Clear localStorage cache if database is unavailable to force env var usage
+    try {
+      localStorage.removeItem('auth_feature_flags');
+    } catch (storageError) {
+      // Ignore localStorage errors
+    }
+    
+    // Fallback directly to environment variables for reliability
+    return getEnvironmentFallbackSettings();
   }
 };
 
@@ -87,9 +109,15 @@ export const getSettingsFromDatabase = async (): Promise<AuthFeatureFlags> => {
       .eq('key', 'tracking_enabled')
       .maybeSingle();
     
-    if (loginError || trackingError) {
-      console.error('Error fetching settings:', loginError || trackingError);
-      return DEFAULT_AUTH_FEATURES;
+    const { data: adsSetting, error: adsError } = await supabase
+      .from('admin_settings')
+      .select('value')
+      .eq('key', 'ads_enabled')
+      .maybeSingle();
+    
+    if (loginError || trackingError || adsError) {
+      console.error('Error fetching settings:', loginError || trackingError || adsError);
+      return getEnvironmentFallbackSettings();
     }
     
     // Handle jsonb values - they could be boolean, string, or null
@@ -110,13 +138,15 @@ export const getSettingsFromDatabase = async (): Promise<AuthFeatureFlags> => {
       return defaultValue;
     };
     
+    const envFallback = getEnvironmentFallbackSettings();
     return {
-      loginEnabled: parseSettingValue(loginSetting, DEFAULT_AUTH_FEATURES.loginEnabled),
-      trackingEnabled: parseSettingValue(trackingSetting, DEFAULT_AUTH_FEATURES.trackingEnabled ?? true)
+      loginEnabled: parseSettingValue(loginSetting, envFallback.loginEnabled),
+      trackingEnabled: parseSettingValue(trackingSetting, envFallback.trackingEnabled ?? true),
+      adsEnabled: parseSettingValue(adsSetting, envFallback.adsEnabled ?? false)
     };
   } catch (error) {
     console.error('Error getting settings from database:', error);
-    return DEFAULT_AUTH_FEATURES;
+    return getEnvironmentFallbackSettings();
   }
 };
 
@@ -140,6 +170,15 @@ export const updateDatabaseSettings = async (settings: Partial<AuthFeatureFlags>
           .from('admin_settings')
           .update({ value: String(settings.trackingEnabled) })
           .eq('key', 'tracking_enabled')
+      );
+    }
+    
+    if (settings.adsEnabled !== undefined) {
+      updates.push(
+        supabase
+          .from('admin_settings')
+          .update({ value: String(settings.adsEnabled) })
+          .eq('key', 'ads_enabled')
       );
     }
     
@@ -243,17 +282,23 @@ export const useAuth = () => {
           return;
         }
         
-        // Load auth features from database first
-        try {
-          const dbSettings = await getAuthFeatureFlagsAsync();
-          setAuthFeatures(dbSettings);
-        } catch (settingsError) {
-          console.error('Error loading auth settings:', settingsError);
-          // Continue with defaults if settings fail
-        }
+        // Start with fallback settings immediately to prevent hanging
+        const fallbackSettings = getAuthFeatureFlags();
+        setAuthFeatures(fallbackSettings);
         
         const user = await getCurrentUser();
         setUser(user);
+        
+        // Load database settings in background after auth is complete
+        setTimeout(async () => {
+          try {
+            const dbSettings = await getAuthFeatureFlagsAsync();
+            setAuthFeatures(dbSettings);
+          } catch (bgError) {
+            // Keep fallback settings if database fails
+          }
+        }, 100);
+        
       } catch (error) {
         console.error('Error getting initial session:', error);
         setError(error instanceof Error ? error : new Error('Unknown error'));

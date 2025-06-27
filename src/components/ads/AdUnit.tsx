@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { ExternalLink, X } from 'lucide-react';
+import { useAuth } from '../../lib/auth';
 
 interface AdUnitProps {
   slot: string;
@@ -19,9 +20,12 @@ const AdUnit: React.FC<AdUnitProps> = ({
   const adRef = useRef<HTMLDivElement>(null);
   const [isLoaded, setIsLoaded] = React.useState(false);
   const [isVisible, setIsVisible] = React.useState(true);
+  
+  // Get auth features for ads control
+  const { authFeatures } = useAuth();
 
   // Check if ads are enabled
-  const adsEnabled = import.meta.env.VITE_ENABLE_ADS === 'true';
+  const adsEnabled = authFeatures?.adsEnabled ?? false;
   const adsProvider = import.meta.env.VITE_ADS_PROVIDER || 'google';
   const clientId = import.meta.env.VITE_GOOGLE_ADS_CLIENT_ID;
 
