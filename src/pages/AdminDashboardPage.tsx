@@ -26,11 +26,9 @@ import {
   Star,
   Flag,
   RefreshCw,
-  Lock,
-  Save,
   ToggleLeft,
   ToggleRight,
-  Activity
+  Save
 } from 'lucide-react';
 import { DataProviderFactory } from '../providers';
 import { useAuth, isUserAdmin, getAuthFeatureFlags, setAuthFeatureFlags } from '../lib/auth';
@@ -59,7 +57,7 @@ const AdminDashboardPage: React.FC = () => {
   );
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-
+  
   // Settings state
   const [loginEnabled, setLoginEnabled] = useState(true);
   const [trackingEnabled, setTrackingEnabled] = useState(true);
@@ -234,13 +232,9 @@ const AdminDashboardPage: React.FC = () => {
   };
 
   const loadSettings = () => {
-    try {
-      const flags = getAuthFeatureFlags();
-      setLoginEnabled(flags.loginEnabled);
-      setTrackingEnabled(flags.trackingEnabled !== false); // Default to true if not set
-    } catch (error) {
-      console.error('Error loading settings:', error);
-    }
+    const flags = getAuthFeatureFlags();
+    setLoginEnabled(flags.loginEnabled);
+    setTrackingEnabled(flags.trackingEnabled !== false); // Default to true if undefined
   };
 
   const handleSaveSettings = () => {
@@ -1146,84 +1140,82 @@ const AdminDashboardPage: React.FC = () => {
                 </div>
               )}
 
-              <div className="space-y-8">
+              <div className="space-y-6">
                 {/* Authentication Settings */}
                 <div className="bg-white border border-gray-200 rounded-lg p-6">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">Authentication Settings</h3>
                   
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-start">
-                        <div className="flex-shrink-0">
-                          <Lock className="w-6 h-6 text-gray-500" />
-                        </div>
-                        <div className="ml-3">
-                          <h3 className="text-base font-medium text-gray-900">User Login</h3>
-                          <p className="text-sm text-gray-500">
-                            Allow users to log in to their accounts. When disabled, users will be redirected to the home page if they try to access the login page.
-                          </p>
-                        </div>
+                  <div className="flex items-center justify-between py-3 border-b border-gray-200">
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0">
+                        <Shield className="w-6 h-6 text-gray-500" />
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setLoginEnabled(!loginEnabled)}
-                        className={`${
-                          loginEnabled ? 'bg-blue-600' : 'bg-gray-200'
-                        } relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
-                      >
-                        <span className="sr-only">Toggle login</span>
-                        <span
-                          className={`${
-                            loginEnabled ? 'translate-x-5' : 'translate-x-0'
-                          } pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200`}
-                        >
-                          {loginEnabled ? (
-                            <ToggleRight className="h-5 w-5 text-blue-600" />
-                          ) : (
-                            <ToggleLeft className="h-5 w-5 text-gray-400" />
-                          )}
-                        </span>
-                      </button>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-start">
-                        <div className="flex-shrink-0">
-                          <Activity className="w-6 h-6 text-gray-500" />
-                        </div>
-                        <div className="ml-3">
-                          <h3 className="text-base font-medium text-gray-900">User Engagement Tracking</h3>
-                          <p className="text-sm text-gray-500">
-                            Track user interactions with business listings. When disabled, no engagement data will be collected.
-                          </p>
-                        </div>
+                      <div className="ml-3">
+                        <h3 className="text-base font-medium text-gray-900">User Login</h3>
+                        <p className="text-sm text-gray-500">
+                          Allow users to log in to their accounts. When disabled, users will be redirected to the home page if they try to access the login page.
+                        </p>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setTrackingEnabled(!trackingEnabled)}
-                        className={`${
-                          trackingEnabled ? 'bg-blue-600' : 'bg-gray-200'
-                        } relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
-                      >
-                        <span className="sr-only">Toggle tracking</span>
-                        <span
-                          className={`${
-                            trackingEnabled ? 'translate-x-5' : 'translate-x-0'
-                          } pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200`}
-                        >
-                          {trackingEnabled ? (
-                            <ToggleRight className="h-5 w-5 text-blue-600" />
-                          ) : (
-                            <ToggleLeft className="h-5 w-5 text-gray-400" />
-                          )}
-                        </span>
-                      </button>
                     </div>
-                  </div>
-
-                  <div className="mt-6 pt-6 border-t border-gray-200">
                     <button
                       type="button"
+                      onClick={() => setLoginEnabled(!loginEnabled)}
+                      className={`${
+                        loginEnabled ? 'bg-blue-600' : 'bg-gray-200'
+                      } relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+                    >
+                      <span className="sr-only">Toggle login</span>
+                      <span
+                        className={`${
+                          loginEnabled ? 'translate-x-5' : 'translate-x-0'
+                        } pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200`}
+                      >
+                        {loginEnabled ? (
+                          <ToggleRight className="h-5 w-5 text-blue-600" />
+                        ) : (
+                          <ToggleLeft className="h-5 w-5 text-gray-400" />
+                        )}
+                      </span>
+                    </button>
+                  </div>
+
+                  {/* User Tracking Toggle */}
+                  <div className="flex items-center justify-between py-3 border-b border-gray-200">
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0">
+                        <Eye className="w-6 h-6 text-gray-500" />
+                      </div>
+                      <div className="ml-3">
+                        <h3 className="text-base font-medium text-gray-900">User Engagement Tracking</h3>
+                        <p className="text-sm text-gray-500">
+                          Track user interactions with business listings. When disabled, no engagement data will be collected across all sites.
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setTrackingEnabled(!trackingEnabled)}
+                      className={`${
+                        trackingEnabled ? 'bg-blue-600' : 'bg-gray-200'
+                      } relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+                    >
+                      <span className="sr-only">Toggle tracking</span>
+                      <span
+                        className={`${
+                          trackingEnabled ? 'translate-x-5' : 'translate-x-0'
+                        } pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200`}
+                      >
+                        {trackingEnabled ? (
+                          <ToggleRight className="h-5 w-5 text-blue-600" />
+                        ) : (
+                          <ToggleLeft className="h-5 w-5 text-gray-400" />
+                        )}
+                      </span>
+                    </button>
+                  </div>
+
+                  <div className="mt-6">
+                    <button
                       onClick={handleSaveSettings}
                       disabled={saving}
                       className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed"
@@ -1243,45 +1235,17 @@ const AdminDashboardPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Important Notes */}
+                {/* Settings Info */}
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                   <div className="flex items-start">
                     <AlertCircle className="w-5 h-5 text-yellow-600 mr-3 flex-shrink-0 mt-0.5" />
                     <div>
                       <h3 className="text-sm font-medium text-yellow-800">Important Notes</h3>
-                      <div className="mt-2 text-sm text-yellow-700 space-y-1">
-                        <p>
-                          <strong>Disabling login</strong> will prevent all users from accessing their accounts, including business owners.
-                          This should only be used for maintenance or security purposes.
-                        </p>
-                        <p>
-                          <strong>Disabling tracking</strong> will stop all user engagement data collection. This will affect analytics
-                          and business performance metrics. Historical data will still be available.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* System Information */}
-                <div className="bg-gray-50 rounded-lg p-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">System Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-white p-4 rounded-lg border border-gray-200">
-                      <div className="text-sm font-medium text-gray-500">Application Version</div>
-                      <div className="text-lg font-semibold text-gray-900">1.0.0</div>
-                    </div>
-                    <div className="bg-white p-4 rounded-lg border border-gray-200">
-                      <div className="text-sm font-medium text-gray-500">Last Updated</div>
-                      <div className="text-lg font-semibold text-gray-900">{new Date().toLocaleDateString()}</div>
-                    </div>
-                    <div className="bg-white p-4 rounded-lg border border-gray-200">
-                      <div className="text-sm font-medium text-gray-500">Environment</div>
-                      <div className="text-lg font-semibold text-gray-900">Production</div>
-                    </div>
-                    <div className="bg-white p-4 rounded-lg border border-gray-200">
-                      <div className="text-sm font-medium text-gray-500">Database Status</div>
-                      <div className="text-lg font-semibold text-green-600">Connected</div>
+                      <ul className="mt-2 text-sm text-yellow-700 space-y-1 list-disc pl-5">
+                        <li>Disabling login will prevent all users from accessing their accounts, including business owners.</li>
+                        <li>Disabling tracking will stop all user engagement data collection across all sites.</li>
+                        <li>These settings take effect immediately and apply to all users.</li>
+                      </ul>
                     </div>
                   </div>
                 </div>
