@@ -1,21 +1,37 @@
 // Stripe product configuration
-export const PRODUCTS = {
-  FEATURED_BUSINESS: {
-    priceId: 'price_1Reci7Rm3Nqz0dttn41prphm',
+import { StripeProduct } from './types';
+
+export const STRIPE_PRODUCTS: StripeProduct[] = [
+  {
+    priceId: 'price_featured_business',
     name: 'Featured Business Listing',
     description: 'Top-tier placement with guaranteed top 3 positioning, highlighted design, and monthly performance reports.',
-    mode: 'subscription'
+    price: 30000, // $300.00 in cents
+    mode: 'subscription',
+    interval: 'month',
+    currency: 'usd'
   },
-  PREMIUM_BUSINESS: {
-    priceId: 'price_1RecixRm3Nqz0dttwAZL9AJ7',
+  {
+    priceId: 'price_premium_business',
     name: 'Premium Business Listing',
     description: 'Featured placement with photo gallery, online booking integration, and priority support for maximum visibility.',
-    mode: 'subscription'
+    price: 15000, // $150.00 in cents
+    mode: 'subscription',
+    interval: 'month',
+    currency: 'usd'
   }
+];
+
+// Helper function to get product by price ID
+export const getProductByPriceId = (priceId: string): StripeProduct | undefined => {
+  return STRIPE_PRODUCTS.find(product => product.priceId === priceId);
 };
 
-// Stripe API endpoints
-export const STRIPE_API = {
-  CHECKOUT: '/functions/v1/stripe-checkout',
-  PORTAL: '/functions/v1/stripe-portal'
+// Helper function to format price for display
+export const formatPrice = (price: number, currency: string = 'usd'): string => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currency.toUpperCase(),
+    minimumFractionDigits: 2
+  }).format(price / 100);
 };
