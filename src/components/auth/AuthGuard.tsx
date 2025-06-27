@@ -14,7 +14,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   requireAuth = true,
   redirectTo = '/login'
 }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, error } = useAuth();
   const location = useLocation();
   const { loginEnabled } = getAuthFeatureFlags();
   const [loadingTimeout, setLoadingTimeout] = useState(false);
@@ -58,6 +58,12 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   // Show loading screen for a reasonable time
   if (loading && !loadingTimeout) {
     return <LoadingScreen />;
+  }
+
+  // If there was an auth error, redirect to home
+  if (error) {
+    console.error('Authentication error:', error);
+    return <Navigate to="/" replace />;
   }
 
   // If trying to access a disabled auth route, redirect to home

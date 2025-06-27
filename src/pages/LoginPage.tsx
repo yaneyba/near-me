@@ -23,7 +23,7 @@ const LoginPage: React.FC = () => {
     }
   }, [loginEnabled, navigate]);
 
-  // Check for message in location state (e.g., from registration)
+  // Check if message in location state (e.g., from registration)
   useEffect(() => {
     if (location.state && (location.state as any).message) {
       setMessage((location.state as any).message);
