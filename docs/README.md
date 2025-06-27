@@ -6,15 +6,18 @@ This folder contains comprehensive documentation for the Near Me Business Direct
 
 ### Core System Guides
 - **[ADMIN-GUIDE.md](./ADMIN-GUIDE.md)**: Complete admin functionality and user management
+- **[ADMIN-DASHBOARD-IMPLEMENTATION.md](./ADMIN-DASHBOARD-IMPLEMENTATION.md)**: Admin dashboard implementation details
 - **[ARCHITECTURE.md](./ARCHITECTURE.md)**: System architecture and technical overview
 - **[DEPLOYMENT-GUIDE.md](./DEPLOYMENT-GUIDE.md)**: Production deployment instructions
 - **[HOW-IT-WORKS.md](./HOW-IT-WORKS.md)**: Application functionality explanation
 
+### Recent Refactoring (COMPLETED ✅)
+- **[SQL-REFACTORING-COMPLETE.md](./SQL-REFACTORING-COMPLETE.md)**: Complete SQL refactoring summary
+- **[FIXING-OVER-ENGINEERED-AUTH.md](./FIXING-OVER-ENGINEERED-AUTH.md)**: Authentication refactoring details
+
 ### Feature-Specific Guides
-- **[BUSINESS-SUBMISSION-IMPLEMENTATION.md](./BUSINESS-SUBMISSION-IMPLEMENTATION.md)**: Business approval workflow
 - **[ADS-HOW-TO-GUIDE.md](./ADS-HOW-TO-GUIDE.md)**: Advertisement integration setup
 - **[DYNAMIC-SUBDOMAIN-GUIDE.md](./DYNAMIC-SUBDOMAIN-GUIDE.md)**: Subdomain system functionality
-- **[USER-ENGAGEMENT-TRACKING-GUIDE.md](./USER-ENGAGEMENT-TRACKING-GUIDE.md)**: Analytics and tracking
 
 ### SEO & Content Management
 - **[SEO-EXPLANATION.md](./SEO-EXPLANATION.md)**: SEO strategy and implementation
@@ -23,8 +26,11 @@ This folder contains comprehensive documentation for the Near Me Business Direct
 - **[ADDING-NEW-CONTENT-GUIDE.md](./ADDING-NEW-CONTENT-GUIDE.md)**: Content management procedures
 
 ### Database Reference
-- **[production-ddl-reference.sql](../supabase/sqls/production-ddl-reference.sql)**: Complete database schema reference
+- **[production-ddl-refactored.sql](../supabase/sqls/production-ddl-refactored.sql)**: Current database schema reference (NEW STANDARD)
 - **[SQL Files Documentation](../supabase/sqls/README.md)**: All SQL files and usage instructions
+
+### Development Tools (PROTECTED - DO NOT DELETE)
+- **[DevPanel Component](../src/components/DevPanel.tsx)**: ⚠️ **CRITICAL DEV TOOL** - Dynamic testing interface for categories/cities
 
 ## 🚀 Quick Start Guide
 
@@ -36,7 +42,8 @@ This folder contains comprehensive documentation for the Near Me Business Direct
 ### For Developers  
 1. **Architecture**: Start with [ARCHITECTURE.md](./ARCHITECTURE.md)
 2. **System Overview**: Read [HOW-IT-WORKS.md](./HOW-IT-WORKS.md)
-3. **Content Management**: Check [ADDING-NEW-CONTENT-GUIDE.md](./ADDING-NEW-CONTENT-GUIDE.md)
+3. **Development Tools**: Use DevPanel component for testing categories/cities
+4. **Content Management**: Check [ADDING-NEW-CONTENT-GUIDE.md](./ADDING-NEW-CONTENT-GUIDE.md)
 
 ### For SEO/Marketing
 1. **SEO Strategy**: Review [SEO-EXPLANATION.md](./SEO-EXPLANATION.md)
@@ -148,6 +155,17 @@ npm run add:samples        # Add sample data
 npm run test:supabase:detailed    # Detailed database testing
 node scripts/debug-env.cjs        # Environment variable checking
 ```
+
+### Development Panel (DevPanel)
+⚠️ **CRITICAL DEVELOPMENT TOOL - DO NOT DELETE**
+- **Location**: `src/components/DevPanel.tsx`
+- **Purpose**: Dynamic testing interface for categories and cities
+- **Usage**: Press gear icon in development mode to access
+- **Features**: 
+  - Switch between different business categories
+  - Test different city configurations
+  - Real-time subdomain simulation
+  - Essential for content testing and debugging
 
 ---
 

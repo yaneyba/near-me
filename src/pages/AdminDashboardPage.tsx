@@ -11,7 +11,6 @@ import {
   Search, 
   Filter, 
   Download, 
-  FileText, 
   Mail, 
   MessageSquare, 
   Clock, 
@@ -21,10 +20,7 @@ import {
   Eye,
   Edit,
   Trash2,
-  UserCheck,
-  UserX,
   Star,
-  Flag,
   RefreshCw,
   ToggleLeft,
   ToggleRight,
@@ -33,7 +29,7 @@ import {
   Activity
 } from 'lucide-react';
 import { DataProviderFactory } from '../providers';
-import { useAuth, isUserAdmin, getAuthFeatureFlags, setAuthFeatureFlags, updateDatabaseSettings } from '../lib/auth';
+import { useAuth, isUserAdmin, getAuthFeatureFlags, updateDatabaseSettings } from '../lib/auth';
 
 const AdminDashboardPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'businesses' | 'contacts' | 'users' | 'analytics' | 'settings'>('businesses');
@@ -74,19 +70,53 @@ const AdminDashboardPage: React.FC = () => {
   useEffect(() => {
     document.title = 'Admin Dashboard - Near Me Directory';
     
+    // Debug function for browser console
+    (window as any).debugAdminDashboard = {
+      checkAuth: async () => {
+        console.log('🔍 Checking admin authentication...');
+        console.log('Current user:', user);
+        console.log('Auth features:', authFeatures);
+        
+        try {
+          const admin = await isUserAdmin();
+          console.log('Is admin:', admin);
+          return admin;
+        } catch (error) {
+          console.error('Admin check error:', error);
+          return false;
+        }
+      },
+      loadData: () => {
+        console.log('🔄 Manually triggering data load...');
+        loadData();
+      },
+      showStats: () => {
+        console.log('📊 Current stats:', stats);
+        console.log('📋 Business submissions:', businessSubmissions.length);
+        console.log('💬 Contact messages:', contactMessages.length);
+        console.log('👥 Users:', users.length);
+      }
+    };
+    
+    console.log('🐛 Debug functions available: window.debugAdminDashboard');
+    
     const checkAdmin = async () => {
       try {
+        console.log('🔐 Checking admin status...');
         const admin = await isUserAdmin();
+        console.log('Admin status:', admin);
         setIsAdmin(admin);
         
         if (!admin) {
+          console.log('❌ Not admin, redirecting to home');
           navigate('/', { replace: true });
         } else {
+          console.log('✅ Admin verified, loading data and settings');
           loadData();
           loadSettings();
         }
       } catch (error) {
-        console.error('Error checking admin status:', error);
+        console.error('❌ Error checking admin status:', error);
         navigate('/', { replace: true });
       } finally {
         setLoading(false);
@@ -106,100 +136,34 @@ const AdminDashboardPage: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      // Import supabase directly for admin operations
-      const { supabase } = await import('../lib/supabase');
+      console.log('🔄 Starting to load admin data...');
       
-      // Load real business submissions from database
-      const { data: businessSubmissionsData, error: submissionsError } = await supabase
-        .from('business_submissions')
-        .select(`
-          id,
-          business_name,
-          owner_name,
-          email,
-          phone,
-          address,
-          city,
-          state,
-          zip_code,
-          category,
-          website,
-          description,
-          services,
-          hours,
-          status,
-          submitted_at,
-          reviewed_at,
-          reviewer_notes,
-          site_id
-        `)
-        .order('submitted_at', { ascending: false });
+      // Use data provider for all admin operations
+      console.log('📋 Loading business submissions...');
+      const businessSubmissionsData = await dataProvider.getBusinessSubmissions();
+      console.log('✅ Loaded', businessSubmissionsData.length, 'business submissions');
       
-      if (submissionsError) {
-        console.error('Error loading business submissions:', submissionsError);
-        throw submissionsError;
-      }
+      console.log('👥 Loading business profiles...');
+      const businessProfilesData = await dataProvider.getBusinessProfiles();
+      console.log('✅ Loaded', businessProfilesData.length, 'business profiles');
       
-      // Load real business profiles for users data  
-      const { data: businessProfilesData, error: profilesError } = await supabase
-        .from('business_profiles')
-        .select(`
-          id,
-          user_id,
-          business_name,
-          email,
-          role,
-          approval_status,
-          premium,
-          created_at
-        `)
-        .order('created_at', { ascending: false });
+      console.log('💬 Loading contact messages...');
+      const contactMessagesData = await dataProvider.getContactMessages();
+      console.log('✅ Loaded', contactMessagesData.length, 'contact messages');
       
-      if (profilesError) {
-        console.error('Error loading business profiles:', profilesError);
-        throw profilesError;
-      }
+      console.log('📊 Loading admin stats...');
+      const adminStats = await dataProvider.getAdminStats();
+      console.log('✅ Loaded admin stats:', adminStats);
       
-      // Load real contact messages from database
-      const { data: contactMessagesData, error: messagesError } = await supabase
-        .from('contact_messages')
-        .select(`
-          id,
-          name,
-          email,
-          subject,
-          message,
-          category,
-          city,
-          status,
-          admin_notes,
-          resolved_at,
-          resolved_by,
-          created_at
-        `)
-        .order('created_at', { ascending: false });
+      setBusinessSubmissions(businessSubmissionsData);
+      setContactMessages(contactMessagesData);
+      setUsers(businessProfilesData);
+      setStats(adminStats);
       
-      if (messagesError) {
-        console.error('Error loading contact messages:', messagesError);
-        // Continue without contact messages if they fail to load
-      }
-      
-      // Calculate stats
-      const stats = {
-        pendingBusinesses: businessSubmissionsData?.filter((b: any) => b.status === 'pending').length || 0,
-        totalBusinesses: businessSubmissionsData?.length || 0,
-        newMessages: contactMessagesData?.filter((m: any) => m.status === 'new').length || 0,
-        totalUsers: businessProfilesData?.length || 0,
-        premiumBusinesses: businessProfilesData?.filter((p: any) => p.premium === true).length || 0
-      };
-      
-      setBusinessSubmissions(businessSubmissionsData || []);
-      setContactMessages(contactMessagesData || []);
-      setUsers(businessProfilesData || []);
-      setStats(stats);
+      console.log('✅ Admin data loaded successfully!');
       
     } catch (error) {
-      console.error('Error loading admin data:', error);
+      console.error('❌ Error loading admin data:', error);
     } finally {
       setLoading(false);
     }
@@ -232,39 +196,14 @@ const AdminDashboardPage: React.FC = () => {
 
   const handleApproveBusinessSubmission = async (id: string) => {
     try {
-      const { supabase } = await import('../lib/supabase');
-      
-      // Get the submission data first to pass to the creation function
-      const { data: submission, error: fetchError } = await supabase
-        .from('business_submissions')
-        .select('*')
-        .eq('id', id)
-        .single();
-      
-      if (fetchError || !submission) {
-        console.error('Error fetching submission:', fetchError);
-        alert('Failed to find submission. Please try again.');
+      const submission = businessSubmissions.find(s => s.id === id);
+      if (!submission) {
+        alert('Submission not found. Please refresh and try again.');
         return;
       }
       
-      // Update the submission status in the database
-      const { error: updateError } = await supabase
-        .from('business_submissions')
-        .update({
-          status: 'approved',
-          reviewed_at: new Date().toISOString(),
-          reviewer_notes: 'Approved by admin'
-        })
-        .eq('id', id);
-      
-      if (updateError) {
-        console.error('Error approving business submission:', updateError);
-        alert('Failed to approve submission. Please try again.');
-        return;
-      }
-      
-      // Create business entry from submission
-      await createBusinessProfileFromSubmission(submission);
+      // Use data provider to approve submission
+      await dataProvider.approveBusinessSubmission(id, 'Approved by admin');
       
       // Update local state
       setBusinessSubmissions(prev => 
@@ -294,80 +233,10 @@ const AdminDashboardPage: React.FC = () => {
     }
   };
 
-  // Helper function to create business profile after approval
-  const createBusinessProfileFromSubmission = async (submission: any) => {
-    try {
-      const { supabase } = await import('../lib/supabase');
-      
-      // Check if user already exists
-      const { data: existingProfile } = await supabase
-        .from('business_profiles')
-        .select('id')
-        .eq('email', submission.email)
-        .single();
-      
-      if (existingProfile) {
-        console.log('Business profile already exists for this email');
-        return;
-      }
-      
-      // For now, we'll create a business profile without a user_id
-      // In a full implementation, you'd want to invite the user to create an account
-      // or create the user account automatically
-      
-      // Create business entry in the businesses table first
-      const { data: businessData, error: businessError } = await supabase
-        .from('businesses')
-        .insert({
-          business_id: `${submission.city.toLowerCase().replace(/\s+/g, '-')}-${submission.business_name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
-          name: submission.business_name,
-          description: submission.description,
-          address: submission.address,
-          phone: submission.phone,
-          website: submission.website,
-          email: submission.email,
-          category: submission.category,
-          city: submission.city,
-          state: submission.state,
-          services: submission.services || [],
-          hours: submission.hours,
-          site_id: submission.site_id || 'near-me-us',
-          status: 'active',
-          verified: true // Auto-verify approved submissions
-        })
-        .select('business_id')
-        .single();
-      
-      if (businessError) {
-        console.error('Error creating business entry:', businessError);
-        return;
-      }
-      
-      console.log('Business entry created successfully:', businessData.business_id);
-    } catch (error) {
-      console.error('Error creating business profile:', error);
-    }
-  };
-
   const handleRejectBusinessSubmission = async (id: string, notes?: string) => {
     try {
-      const { supabase } = await import('../lib/supabase');
-      
-      // Update the submission status in the database
-      const { error: updateError } = await supabase
-        .from('business_submissions')
-        .update({
-          status: 'rejected',
-          reviewed_at: new Date().toISOString(),
-          reviewer_notes: notes || 'Rejected by admin'
-        })
-        .eq('id', id);
-      
-      if (updateError) {
-        console.error('Error rejecting business submission:', updateError);
-        alert('Failed to reject submission. Please try again.');
-        return;
-      }
+      // Use data provider to reject submission
+      await dataProvider.rejectBusinessSubmission(id, notes || 'Rejected by admin');
       
       // Update local state
       setBusinessSubmissions(prev => 
@@ -396,21 +265,36 @@ const AdminDashboardPage: React.FC = () => {
     }
   };
 
-  const handleResolveContactMessage = (id: string) => {
-    // In a real implementation, this would call an API
-    setContactMessages(prev => 
-      prev.map(message => 
-        message.id === id 
-          ? { ...message, status: 'resolved' } 
-          : message
-      )
-    );
-    
-    // Update stats
-    setStats(prev => ({
-      ...prev,
-      newMessages: prev.newMessages - 1
-    }));
+  const handleResolveContactMessage = async (id: string) => {
+    try {
+      // Use data provider to resolve message
+      await dataProvider.resolveContactMessage(id, user?.email || 'admin');
+      
+      // Update local state
+      setContactMessages(prev => 
+        prev.map(message => 
+          message.id === id 
+            ? { 
+                ...message, 
+                status: 'resolved',
+                resolved_at: new Date().toISOString(),
+                resolved_by: user?.email || 'admin'
+              } 
+            : message
+        )
+      );
+      
+      // Update stats
+      setStats(prev => ({
+        ...prev,
+        newMessages: prev.newMessages - 1
+      }));
+      
+      console.log('Contact message resolved successfully');
+    } catch (error) {
+      console.error('Error resolving contact message:', error);
+      alert('Failed to resolve message. Please try again.');
+    }
   };
 
   const getFilteredBusinessSubmissions = () => {

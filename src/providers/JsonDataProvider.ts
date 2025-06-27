@@ -544,6 +544,102 @@ We'll contact you at ${businessData.email} with updates on your application stat
     };
   }
 
+  // Admin methods - mock implementations for development
+  async getBusinessSubmissions(): Promise<any[]> {
+    // Return mock data for development
+    return [
+      {
+        id: 'mock-1',
+        business_name: 'Mock Business 1',
+        owner_name: 'John Doe',
+        email: 'john@mockbusiness.com',
+        phone: '555-0123',
+        address: '123 Main St',
+        city: 'Seattle',
+        state: 'WA',
+        zip_code: '98101',
+        category: 'nail-salons',
+        website: 'https://mockbusiness.com',
+        description: 'A mock business for development',
+        services: ['Manicure', 'Pedicure'],
+        hours: { monday: '9:00 AM - 6:00 PM' },
+        status: 'pending',
+        submitted_at: new Date().toISOString(),
+        reviewed_at: null,
+        reviewer_notes: null,
+        site_id: 'nail-salons.seattle'
+      }
+    ];
+  }
+
+  async getBusinessProfiles(): Promise<any[]> {
+    // Return mock data for development
+    return [
+      {
+        id: 'profile-1',
+        user_id: 'user-1',
+        business_name: 'Mock Business Profile',
+        email: 'profile@mockbusiness.com',
+        role: 'owner',
+        approval_status: 'approved',
+        premium: false,
+        created_at: new Date().toISOString()
+      }
+    ];
+  }
+
+  async getContactMessages(): Promise<any[]> {
+    // Return mock data for development
+    return [
+      {
+        id: 'msg-1',
+        name: 'Jane Smith',
+        email: 'jane@example.com',
+        subject: 'Mock Contact Message',
+        message: 'This is a mock contact message for development',
+        category: 'nail-salons',
+        city: 'Seattle',
+        status: 'new',
+        admin_notes: null,
+        resolved_at: null,
+        resolved_by: null,
+        created_at: new Date().toISOString()
+      }
+    ];
+  }
+
+  async getAdminStats(): Promise<{
+    pendingBusinesses: number;
+    totalBusinesses: number;
+    newMessages: number;
+    totalUsers: number;
+    premiumBusinesses: number;
+  }> {
+    // Return mock stats for development
+    return {
+      pendingBusinesses: 1,
+      totalBusinesses: 1,
+      newMessages: 1,
+      totalUsers: 1,
+      premiumBusinesses: 0
+    };
+  }
+
+  async approveBusinessSubmission(id: string, reviewerNotes?: string): Promise<void> {
+    console.log('Mock: Approving business submission', id, reviewerNotes);
+    // Mock implementation - just log for development
+  }
+
+  async rejectBusinessSubmission(id: string, reviewerNotes?: string): Promise<void> {
+    console.log('Mock: Rejecting business submission', id, reviewerNotes);
+    // Mock implementation - just log for development
+  }
+
+  async resolveContactMessage(id: string, resolvedBy?: string, adminNotes?: string): Promise<void> {
+    console.log('Mock: Resolving contact message', id, resolvedBy, adminNotes);
+    // Mock implementation - just log for development
+  }
+
   private isValidEmail(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);

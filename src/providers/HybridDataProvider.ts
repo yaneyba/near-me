@@ -63,4 +63,39 @@ export class HybridDataProvider implements IDataProvider {
       return await this.jsonProvider.getBusinessAnalytics(businessId, period, startDate, endDate);
     }
   }
+
+  // Admin methods - delegate to Supabase provider
+  async getBusinessSubmissions(): Promise<any[]> {
+    return this.supabaseProvider.getBusinessSubmissions();
+  }
+
+  async getBusinessProfiles(): Promise<any[]> {
+    return this.supabaseProvider.getBusinessProfiles();
+  }
+
+  async getContactMessages(): Promise<any[]> {
+    return this.supabaseProvider.getContactMessages();
+  }
+
+  async getAdminStats(): Promise<{
+    pendingBusinesses: number;
+    totalBusinesses: number;
+    newMessages: number;
+    totalUsers: number;
+    premiumBusinesses: number;
+  }> {
+    return this.supabaseProvider.getAdminStats();
+  }
+
+  async approveBusinessSubmission(id: string, reviewerNotes?: string): Promise<void> {
+    return this.supabaseProvider.approveBusinessSubmission(id, reviewerNotes);
+  }
+
+  async rejectBusinessSubmission(id: string, reviewerNotes?: string): Promise<void> {
+    return this.supabaseProvider.rejectBusinessSubmission(id, reviewerNotes);
+  }
+
+  async resolveContactMessage(id: string, resolvedBy?: string, adminNotes?: string): Promise<void> {
+    return this.supabaseProvider.resolveContactMessage(id, resolvedBy, adminNotes);
+  }
 }

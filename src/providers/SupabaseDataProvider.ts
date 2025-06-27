@@ -1,4 +1,5 @@
 import { supabase, type Database } from '../lib/supabase';
+import { adminService } from '../lib/admin-service';
 import { ContactSubmission, BusinessSubmission, SubmissionResult, UserEngagementEvent, BusinessAnalytics } from '../types';
 
 export class SupabaseDataProvider {
@@ -590,5 +591,293 @@ We'll contact you at ${businessData.email} with updates on your application stat
   private isValidEmail(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
+  }
+
+  // ===== ADMIN METHODS =====
+
+  /**
+   * Get all business submissions for admin dashboard
+   */
+  async getBusinessSubmissions(): Promise<any[]> {
+    try {
+      const { data, error } = await supabase
+        .from('business_submissions')
+        .select(`
+          id,
+          business_name,
+          owner_name,
+          email,
+          phone,
+          address,
+          city,
+          state,
+          zip_code,
+          category,
+          website,
+          description,
+          services,
+          hours,
+          status,
+          submitted_at,
+          reviewed_at,
+          reviewer_notes,
+          site_id
+        `)
+        .order('submitted_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching business submissions:', error);
+        throw error;
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Failed to get business submissions:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get all business profiles for admin dashboard
+   */
+  async getBusinessProfiles(): Promise<any[]> {
+    try {
+      const { data, error } = await supabase
+        .from('business_profiles')
+        .select(`
+          id,
+          user_id,
+          business_name,
+          email,
+          role,
+          approval_status,
+          premium,
+          created_at
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching business profiles:', error);
+        throw error;
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Failed to get business profiles:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get all contact messages for admin dashboard
+   */
+  async getContactMessages(): Promise<any[]> {
+    try {
+      const { data, error } = await supabase
+        .from('contact_messages')
+        .select(`
+          id,
+          name,
+          email,
+          subject,
+          message,
+          category,
+          city,
+          status,
+          admin_notes,
+          resolved_at,
+          resolved_by,
+          created_at
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching contact messages:', error);
+        throw error;
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Failed to get contact messages:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Approve a business submission
+   */
+  async approveBusinessSubmission(id: string, reviewerNotes?: string): Promise<void> {
+    try {
+      // Get the submission data first
+      const { data: submission, error: fetchError } = await supabase
+        .from('business_submissions')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (fetchError || !submission) {
+        console.error('Error fetching submission:', fetchError);
+        throw new Error('Failed to find submission');
+      }
+
+      // Update the submission status
+      const { error: updateError } = await supabase
+        .from('business_submissions')
+        .update({
+          status: 'approved',
+          reviewed_at: new Date().toISOString(),
+          reviewer_notes: reviewerNotes || 'Approved by admin'
+        })
+        .eq('id', id);
+
+      if (updateError) {
+        console.error('Error approving business submission:', updateError);
+        throw updateError;
+      }
+
+      // Create business entry from submission
+      await this.createBusinessFromSubmission(submission);
+    } catch (error) {
+      console.error('Failed to approve business submission:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Reject a business submission
+   */
+  async rejectBusinessSubmission(id: string, reviewerNotes?: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('business_submissions')
+        .update({
+          status: 'rejected',
+          reviewed_at: new Date().toISOString(),
+          reviewer_notes: reviewerNotes || 'Rejected by admin'
+        })
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error rejecting business submission:', error);
+        throw error;
+      }
+    } catch (error) {
+      console.error('Failed to reject business submission:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Resolve a contact message
+   */
+  async resolveContactMessage(id: string, resolvedBy?: string, adminNotes?: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('contact_messages')
+        .update({
+          status: 'resolved',
+          resolved_at: new Date().toISOString(),
+          resolved_by: resolvedBy || 'admin',
+          admin_notes: adminNotes
+        })
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error resolving contact message:', error);
+        throw error;
+      }
+    } catch (error) {
+      console.error('Failed to resolve contact message:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get admin dashboard statistics
+   */
+  async getAdminStats(): Promise<{
+    pendingBusinesses: number;
+    totalBusinesses: number;
+    newMessages: number;
+    totalUsers: number;
+    premiumBusinesses: number;
+  }> {
+    try {
+      // Get counts in parallel
+      const [submissions, profiles, messages] = await Promise.all([
+        this.getBusinessSubmissions(),
+        this.getBusinessProfiles(),
+        this.getContactMessages()
+      ]);
+
+      return {
+        pendingBusinesses: submissions.filter(s => s.status === 'pending').length,
+        totalBusinesses: submissions.length,
+        newMessages: messages.filter(m => m.status === 'new').length,
+        totalUsers: profiles.length,
+        premiumBusinesses: profiles.filter(p => p.premium === true).length
+      };
+    } catch (error) {
+      console.error('Failed to get admin stats:', error);
+      // Return empty stats on error
+      return {
+        pendingBusinesses: 0,
+        totalBusinesses: 0,
+        newMessages: 0,
+        totalUsers: 0,
+        premiumBusinesses: 0
+      };
+    }
+  }
+
+  /**
+   * Helper to create business entry from approved submission
+   */
+  private async createBusinessFromSubmission(submission: any): Promise<void> {
+    try {
+      // Check if business already exists
+      const { data: existingBusiness } = await supabase
+        .from('businesses')
+        .select('id')
+        .eq('email', submission.email)
+        .eq('name', submission.business_name)
+        .single();
+
+      if (existingBusiness) {
+        console.log('Business already exists in directory');
+        return;
+      }
+
+      // Create business entry
+      const { error: businessError } = await supabase
+        .from('businesses')
+        .insert({
+          business_id: `${submission.city.toLowerCase().replace(/\s+/g, '-')}-${submission.business_name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
+          name: submission.business_name,
+          description: submission.description,
+          address: submission.address,
+          phone: submission.phone,
+          website: submission.website,
+          email: submission.email,
+          category: submission.category,
+          city: submission.city,
+          state: submission.state,
+          services: submission.services || [],
+          hours: submission.hours,
+          site_id: submission.site_id || 'near-me-us',
+          status: 'active',
+          verified: true
+        });
+
+      if (businessError) {
+        console.error('Error creating business entry:', businessError);
+        throw businessError;
+      }
+
+      console.log('Business entry created successfully');
+    } catch (error) {
+      console.error('Error creating business from submission:', error);
+      throw error;
+    }
   }
 }

@@ -234,7 +234,7 @@ To re-enable login functionality, run the toggle script again and select `y` whe
 Once you've created an admin user, you can access the admin dashboard:
 
 1. Log in with your admin credentials at `/login`
-2. Navigate to `/admin/settings` to access the admin settings panel
+2. Navigate to `/admin/dashboard` to access the admin dashboard
 
 ### Available Admin Settings
 

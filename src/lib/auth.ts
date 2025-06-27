@@ -2,10 +2,15 @@ import { supabase } from './supabase';
 import { Session } from '@supabase/supabase-js';
 import { useState, useEffect } from 'react';
 
-// Admin helper function
+// Admin helper function - now uses environment variables
 export const isAdminEmail = (email: string): boolean => {
-  const adminEmails = ['yaneyba@finderhubs.com']; // Add more admin emails as needed
-  return adminEmails.includes(email);
+  const adminEmails = import.meta.env.VITE_ADMIN_EMAILS;
+  if (!adminEmails) {
+    console.warn('VITE_ADMIN_EMAILS not set in environment variables');
+    return false;
+  }
+  const emailList = adminEmails.split(',').map((e: string) => e.trim().toLowerCase());
+  return emailList.includes(email.toLowerCase());
 };
 
 // Types for authentication - aligned with production schema

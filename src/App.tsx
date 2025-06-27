@@ -14,6 +14,7 @@ import BusinessOwnersPage from './pages/BusinessOwnersPage';
 import BusinessDashboardPage from './pages/BusinessDashboardPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import LoginPage from './pages/LoginPage';
+import { TestLoginPage } from './pages/TestLoginPage';
 import Layout from './components/Layout';
 import AuthGuard from './components/auth/AuthGuard';
 import { useAuth, isAdminEmail } from './lib/auth';
@@ -68,6 +69,12 @@ function App() {
           <Route 
             path="/login" 
             element={<LoginPage />} 
+          />
+          
+          {/* Test login with simplified auth */}
+          <Route 
+            path="/test-login" 
+            element={<TestLoginPage />} 
           />
           
           {/* Redirect register to add-business */}

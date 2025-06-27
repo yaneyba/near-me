@@ -151,6 +151,20 @@ export interface IDataProvider {
   // New tracking methods
   trackEngagement(event: UserEngagementEvent): Promise<void>;
   getBusinessAnalytics(businessId: string, period: 'day' | 'week' | 'month' | 'year', startDate?: Date, endDate?: Date): Promise<BusinessAnalytics>;
+  // Admin methods
+  getBusinessSubmissions(): Promise<any[]>;
+  getBusinessProfiles(): Promise<any[]>;
+  getContactMessages(): Promise<any[]>;
+  getAdminStats(): Promise<{
+    pendingBusinesses: number;
+    totalBusinesses: number;
+    newMessages: number;
+    totalUsers: number;
+    premiumBusinesses: number;
+  }>;
+  approveBusinessSubmission(id: string, reviewerNotes?: string): Promise<void>;
+  rejectBusinessSubmission(id: string, reviewerNotes?: string): Promise<void>;
+  resolveContactMessage(id: string, resolvedBy?: string, adminNotes?: string): Promise<void>;
 }
 
 export interface SubdomainInfo {
