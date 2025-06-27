@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth, getAuthFeatureFlags } from '../../lib/auth';
+import { useAuth } from '../../lib/auth';
 import LoadingScreen from './LoadingScreen';
 
 interface AuthGuardProps {
@@ -14,21 +14,29 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   requireAuth = true,
   redirectTo = '/login'
 }) => {
-  const { user, loading, error } = useAuth();
+  const { user, loading, error, authFeatures } = useAuth();
   const location = useLocation();
-  const { loginEnabled } = getAuthFeatureFlags();
-  const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const [isStable, setIsStable] = useState(false);
 
-  // Add timeout to prevent infinite loading
+  // Add a small delay to prevent flashing on initial load
   useEffect(() => {
-    if (loading) {
-      const timer = setTimeout(() => {
-        setLoadingTimeout(true);
-      }, 5000); // 5 second timeout
-      
-      return () => clearTimeout(timer);
-    }
-  }, [loading]);
+    const timer = setTimeout(() => setIsStable(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Get login enabled from auth features
+  const loginEnabled = authFeatures?.loginEnabled ?? true;
+
+  // Show loading screen while authentication is being checked or during initial stabilization
+  if (loading || !isStable) {
+    return <LoadingScreen />;
+  }
+
+  // If there was an auth error, redirect to home
+  if (error) {
+    console.error('Authentication error:', error);
+    return <Navigate to="/" replace />;
+  }
 
   // Check if the current path is a disabled auth route
   const isDisabledAuthRoute = () => {
@@ -49,23 +57,6 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
     return false;
   };
 
-  // If loading timed out, redirect to home
-  if (loadingTimeout) {
-    console.error('Authentication loading timed out');
-    return <Navigate to="/" replace />;
-  }
-
-  // Show loading screen for a reasonable time
-  if (loading && !loadingTimeout) {
-    return <LoadingScreen />;
-  }
-
-  // If there was an auth error, redirect to home
-  if (error) {
-    console.error('Authentication error:', error);
-    return <Navigate to="/" replace />;
-  }
-
   // If trying to access a disabled auth route, redirect to home
   if (isDisabledAuthRoute()) {
     // If it's the register path, redirect to add-business
@@ -77,33 +68,42 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
     return <Navigate to="/" replace />;
   }
 
-  // Admin users accessing admin routes
-  if (requireAuth && user?.role === 'admin' && location.pathname === '/business-dashboard') {
-    return <Navigate to="/admin/settings" replace />;
-  }
-
-  // Regular authentication check
-  if (requireAuth && !user) {
-    // If login is disabled and auth is required, redirect to home instead of login
-    if (!loginEnabled) {
-      return <Navigate to="/" replace />;
+  // Handle authentication requirements
+  if (requireAuth) {
+    // Page requires authentication
+    if (!user) {
+      // User not logged in, redirect to login
+      if (!loginEnabled) {
+        return <Navigate to="/" replace />;
+      }
+      return <Navigate to={redirectTo} state={{ from: location }} replace />;
+    }
+    // User is logged in and page requires auth - allow access
+    return <>{children}</>;
+  } else {
+    // Page doesn't require authentication
+    if (!user) {
+      // User not logged in - allow access (e.g., login page)
+      return <>{children}</>;
     }
     
-    // Otherwise redirect to login page but save the current location
-    return <Navigate to={redirectTo} state={{ from: location }} replace />;
-  }
-
-  if (!requireAuth && user) {
-    // If we're on a page that doesn't require auth but user is logged in
-    // (like login page), redirect to dashboard
+    // User is logged in but accessing a page that doesn't require auth
+    // Only redirect if we're NOT on the login page (allow users to access login to switch accounts)
+    if (location.pathname === '/login') {
+      // Allow access to login page for account switching
+      return <>{children}</>;
+    }
+    
+    // For other pages that don't require auth, redirect to appropriate dashboard
     if (user.role === 'admin') {
       return <Navigate to="/admin/settings" replace />;
+    } else if (user.role === 'owner') {
+      return <Navigate to="/business-dashboard" replace />;
     } else {
+      // Default to business dashboard for other roles
       return <Navigate to="/business-dashboard" replace />;
     }
   }
-
-  return <>{children}</>;
 };
 
 export default AuthGuard;

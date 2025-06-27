@@ -143,6 +143,13 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSe
                     Dashboard
                   </Link>
                 )}
+                <Link 
+                  to="/login" 
+                  className="flex items-center font-medium transition-colors px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+                >
+                  <LogIn className="w-4 h-4 mr-1" />
+                  Switch Account
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="flex items-center font-medium transition-colors px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
@@ -246,6 +253,14 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSe
                     Dashboard
                   </Link>
                 )}
+                <Link
+                  to="/login"
+                  className="flex items-center px-3 py-2 font-medium text-gray-700 hover:text-blue-600"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Switch Account
+                </Link>
                 <button
                   onClick={() => {
                     handleLogout();

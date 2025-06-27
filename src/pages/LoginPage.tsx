@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { signIn, getAuthFeatureFlags, isUserAdmin } from '../lib/auth';
+import { signIn, useAuth, getCurrentUser } from '../lib/auth';
 import { Mail, Lock, AlertCircle, LogIn, ArrowRight, Building, Shield, CheckCircle } from 'lucide-react';
 
 const LoginPage: React.FC = () => {
@@ -14,7 +14,8 @@ const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as any)?.from?.pathname || '/business-dashboard';
-  const { loginEnabled } = getAuthFeatureFlags();
+  const { authFeatures } = useAuth();
+  const loginEnabled = authFeatures?.loginEnabled ?? true;
 
   // Redirect if login is disabled
   useEffect(() => {
@@ -58,11 +59,15 @@ const LoginPage: React.FC = () => {
       
       await signIn(email, password);
       
-      // Check if user is admin and redirect accordingly
-      const admin = await isUserAdmin();
-      if (admin) {
+      // Get user info to determine redirect destination
+      const currentUser = await getCurrentUser();
+      
+      if (currentUser?.role === 'admin') {
         navigate('/admin/settings', { replace: true });
+      } else if (currentUser?.role === 'owner') {
+        navigate('/business-dashboard', { replace: true });
       } else {
+        // Default redirect or use intended destination
         navigate(from, { replace: true });
       }
       

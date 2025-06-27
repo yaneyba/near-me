@@ -23,7 +23,7 @@ const DEFAULT_AUTH_FEATURES: AuthFeatureFlags = {
   trackingEnabled: true
 };
 
-// Get auth feature flags from localStorage or environment variables
+// Get auth feature flags from localStorage or environment variables (synchronous fallback)
 export const getAuthFeatureFlags = (): AuthFeatureFlags => {
   try {
     // Check if we have flags in localStorage (admin has set them)
@@ -40,6 +40,24 @@ export const getAuthFeatureFlags = (): AuthFeatureFlags => {
   } catch (error) {
     console.error('Error getting auth feature flags:', error);
     return DEFAULT_AUTH_FEATURES;
+  }
+};
+
+// Get auth feature flags with database priority (async)
+export const getAuthFeatureFlagsAsync = async (): Promise<AuthFeatureFlags> => {
+  try {
+    // First try to get from database
+    const dbSettings = await getSettingsFromDatabase();
+    
+    // Cache the database settings in localStorage for faster access
+    localStorage.setItem('auth_feature_flags', JSON.stringify(dbSettings));
+    
+    return dbSettings;
+  } catch (error) {
+    console.error('Error getting auth feature flags from database, falling back:', error);
+    
+    // Fallback to synchronous method (localStorage/env vars)
+    return getAuthFeatureFlags();
   }
 };
 
@@ -74,9 +92,27 @@ export const getSettingsFromDatabase = async (): Promise<AuthFeatureFlags> => {
       return DEFAULT_AUTH_FEATURES;
     }
     
+    // Handle jsonb values - they could be boolean, string, or null
+    const parseSettingValue = (setting: any, defaultValue: boolean): boolean => {
+      if (!setting || setting.value === null || setting.value === undefined) {
+        return defaultValue;
+      }
+      
+      // Handle different possible value types in jsonb
+      if (typeof setting.value === 'boolean') {
+        return setting.value;
+      }
+      
+      if (typeof setting.value === 'string') {
+        return setting.value.toLowerCase() === 'true';
+      }
+      
+      return defaultValue;
+    };
+    
     return {
-      loginEnabled: loginSetting?.value === 'true' ?? DEFAULT_AUTH_FEATURES.loginEnabled,
-      trackingEnabled: trackingSetting?.value === 'true' ?? DEFAULT_AUTH_FEATURES.trackingEnabled
+      loginEnabled: parseSettingValue(loginSetting, DEFAULT_AUTH_FEATURES.loginEnabled),
+      trackingEnabled: parseSettingValue(trackingSetting, DEFAULT_AUTH_FEATURES.trackingEnabled ?? true)
     };
   } catch (error) {
     console.error('Error getting settings from database:', error);
@@ -193,7 +229,7 @@ export const useAuth = () => {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    // Get initial session
+    // Get initial session and auth features
     const getInitialSession = async () => {
       try {
         setLoading(true);
@@ -205,6 +241,15 @@ export const useAuth = () => {
           setError(new Error('Supabase configuration missing'));
           setLoading(false);
           return;
+        }
+        
+        // Load auth features from database first
+        try {
+          const dbSettings = await getAuthFeatureFlagsAsync();
+          setAuthFeatures(dbSettings);
+        } catch (settingsError) {
+          console.error('Error loading auth settings:', settingsError);
+          // Continue with defaults if settings fail
         }
         
         const user = await getCurrentUser();
