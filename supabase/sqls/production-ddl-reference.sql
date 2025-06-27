@@ -2,6 +2,28 @@
 -- This is the actual production DDL extracted from the live database
 -- Use this as the authoritative reference for schema alignment
 -- Generated: June 27, 2025
+-- Updated: June 27, 2025 - Fixed all storage parameters, foreign keys, and admin policies
+
+-- ========================================
+-- ADMIN FUNCTIONS
+-- ========================================
+
+-- Email-only admin detection function
+CREATE OR REPLACE FUNCTION is_admin_user() RETURNS BOOLEAN AS $$
+BEGIN
+    -- Admins detected purely by email - no database table lookups needed
+    RETURN (auth.jwt() ->> 'email') IN (
+        'yaneyba@finderhubs.com'
+        -- Add more admin emails here as needed
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+COMMENT ON FUNCTION is_admin_user() IS 'Email-only admin detection - admins exist only in auth.users, not business_profiles';
+
+-- ========================================
+-- ENUMS
+-- ========================================
 
 create type submission_status as enum ('pending', 'approved', 'rejected');
 
@@ -40,22 +62,22 @@ create table business_submissions
     created_at     timestamp with time zone default now(),
     updated_at     timestamp with time zone default now()
 )
-    using ???;
+    using heap;
 
 alter table business_submissions
     owner to postgres;
 
 create index idx_business_submissions_status
-    on business_submissions using ??? (status);
+    on business_submissions using btree (status);
 
 create index idx_business_submissions_site_id
-    on business_submissions using ??? (site_id);
+    on business_submissions using btree (site_id);
 
 create index idx_business_submissions_submitted_at
-    on business_submissions using ??? (submitted_at desc);
+    on business_submissions using btree (submitted_at desc);
 
 create index idx_business_submissions_email
-    on business_submissions using ??? (email);
+    on business_submissions using btree (email);
 
 create policy "Authenticated users can insert submissions" on business_submissions
     as permissive
@@ -69,13 +91,23 @@ create policy "Users can view their own submissions" on business_submissions
     to authenticated
     using (email = (auth.jwt() ->> 'email'::text));
 
-create policy "Admins can select all submissions" on business_submissions
+create policy "Email-based admins can select all submissions" on business_submissions
     as permissive
     for select
     to authenticated
-    using (EXISTS (SELECT 1
-                   FROM auth.users
-                   WHERE ((users.id = auth.uid()) AND ((users.raw_app_meta_data ->> 'role'::text) = 'admin'::text))));
+    using (is_admin_user());
+
+create policy "Email-based admins can update all submissions" on business_submissions
+    as permissive
+    for update
+    to authenticated
+    using (is_admin_user());
+
+create policy "Email-based admins can insert submissions" on business_submissions
+    as permissive
+    for insert
+    to authenticated
+    with check (is_admin_user());
 
 create policy "Anon can insert" on business_submissions
     as permissive
@@ -119,13 +151,13 @@ create table categories
     created_at         timestamp with time zone default now(),
     updated_at         timestamp with time zone default now()
 )
-    using ???;
+    using heap;
 
 alter table categories
     owner to postgres;
 
 create index idx_categories_name
-    on categories using ??? (name);
+    on categories using btree (name);
 
 create policy "Anyone can read categories" on categories
     as permissive
@@ -137,9 +169,7 @@ create policy "Admins can manage categories" on categories
     as permissive
     for all
     to authenticated
-    using (EXISTS (SELECT 1
-                   FROM auth.users
-                   WHERE ((users.id = auth.uid()) AND ((users.raw_app_meta_data ->> 'role'::text) = 'admin'::text))));
+    using (is_admin_user());
 
 grant delete, insert, references, select, trigger, truncate, update on categories to anon;
 
@@ -161,16 +191,16 @@ create table cities
     updated_at    timestamp with time zone default now(),
     unique (name, state)
 )
-    using ???;
+    using heap;
 
 alter table cities
     owner to postgres;
 
 create index idx_cities_name_state
-    on cities using ??? (name, state);
+    on cities using btree (name, state);
 
 create index idx_cities_state
-    on cities using ??? (state);
+    on cities using btree (state);
 
 create policy "Anyone can read cities" on cities
     as permissive
@@ -182,9 +212,7 @@ create policy "Admins can manage cities" on cities
     as permissive
     for all
     to authenticated
-    using (EXISTS (SELECT 1
-                   FROM auth.users
-                   WHERE ((users.id = auth.uid()) AND ((users.raw_app_meta_data ->> 'role'::text) = 'admin'::text))));
+    using (is_admin_user());
 
 grant delete, insert, references, select, trigger, truncate, update on cities to anon;
 
@@ -221,31 +249,31 @@ create table businesses
     updated_at   timestamp with time zone default now(),
     premium      boolean                  default false
 )
-    using ???;
+    using heap;
 
 alter table businesses
     owner to postgres;
 
 create index idx_businesses_business_id
-    on businesses using ??? (business_id);
+    on businesses using btree (business_id);
 
 create index idx_businesses_category
-    on businesses using ??? (category);
+    on businesses using btree (category);
 
 create index idx_businesses_city_state
-    on businesses using ??? (city, state);
+    on businesses using btree (city, state);
 
 create index idx_businesses_site_id
-    on businesses using ??? (site_id);
+    on businesses using btree (site_id);
 
 create index idx_businesses_status
-    on businesses using ??? (status);
+    on businesses using btree (status);
 
 create index idx_businesses_rating
-    on businesses using ??? (rating desc);
+    on businesses using btree (rating desc);
 
 create index idx_businesses_verified
-    on businesses using ??? (verified);
+    on businesses using btree (verified);
 
 create policy "Anyone can read active businesses" on businesses
     as permissive
@@ -257,9 +285,7 @@ create policy "Admins can manage all businesses" on businesses
     as permissive
     for all
     to authenticated
-    using (EXISTS (SELECT 1
-                   FROM auth.users
-                   WHERE ((users.id = auth.uid()) AND ((users.raw_app_meta_data ->> 'role'::text) = 'admin'::text))));
+    using (is_admin_user());
 
 grant delete, insert, references, select, trigger, truncate, update on businesses to anon;
 
@@ -284,7 +310,7 @@ create table contact_messages
     created_at  timestamp with time zone default now(),
     updated_at  timestamp with time zone default now()
 )
-    using ???;
+    using heap;
 
 comment on table contact_messages is 'Stores contact form submissions from users';
 
@@ -302,16 +328,34 @@ alter table contact_messages
     owner to postgres;
 
 create index idx_contact_messages_email
-    on contact_messages using ??? (email);
+    on contact_messages using btree (email);
 
 create index idx_contact_messages_status
-    on contact_messages using ??? (status);
+    on contact_messages using btree (status);
 
 create index idx_contact_messages_category
-    on contact_messages using ??? (category);
+    on contact_messages using btree (category);
 
 create index idx_contact_messages_created_at
-    on contact_messages using ??? (created_at desc);
+    on contact_messages using btree (created_at desc);
+
+create policy "Anonymous users can submit contact messages" on contact_messages
+    as permissive
+    for insert
+    to anon
+    with check true;
+
+create policy "Admins can read all contact messages" on contact_messages
+    as permissive
+    for select
+    to authenticated
+    using (is_admin_user());
+
+create policy "Admins can update contact messages" on contact_messages
+    as permissive
+    for update
+    to authenticated
+    using (is_admin_user());
 
 grant delete, insert, references, select, trigger, truncate, update on contact_messages to anon;
 
@@ -326,7 +370,7 @@ create table debug_log
     message    text,
     created_at timestamp default now()
 )
-    using ???;
+    using heap;
 
 alter table debug_log
     owner to postgres;
@@ -376,25 +420,25 @@ create table user_engagement_events
     user_session_id text                                               not null,
     created_at      timestamp with time zone default now()
 )
-    using ???;
+    using heap;
 
 alter table user_engagement_events
     owner to postgres;
 
 create index idx_user_engagement_events_business_id
-    on user_engagement_events using ??? (business_id);
+    on user_engagement_events using btree (business_id);
 
 create index idx_user_engagement_events_timestamp
-    on user_engagement_events using ??? (timestamp desc);
+    on user_engagement_events using btree (timestamp desc);
 
 create index idx_user_engagement_events_event_type
-    on user_engagement_events using ??? (event_type);
+    on user_engagement_events using btree (event_type);
 
 create index idx_user_engagement_events_session_id
-    on user_engagement_events using ??? (user_session_id);
+    on user_engagement_events using btree (user_session_id);
 
 create index idx_user_engagement_events_business_timestamp
-    on user_engagement_events using ??? (business_id asc, timestamp desc);
+    on user_engagement_events using btree (business_id asc, timestamp desc);
 
 create policy "Allow anonymous insert for user engagement events" on user_engagement_events
     as permissive
@@ -418,7 +462,7 @@ create table business_profiles
     id                     uuid                     default gen_random_uuid() not null
         primary key,
     user_id                uuid                                               not null
-        references ??? (),
+        references auth.users (id),
     business_id            text,
     business_name          text                                               not null,
     email                  text                                               not null,
@@ -430,22 +474,22 @@ create table business_profiles
     stripe_price_id        text,
     premium                boolean                  default false
 )
-    using ???;
+    using heap;
 
 alter table business_profiles
     owner to postgres;
 
 create index idx_business_profiles_user_id
-    on business_profiles using ??? (user_id);
+    on business_profiles using btree (user_id);
 
 create index idx_business_profiles_stripe_customer_id
-    on business_profiles using ??? (stripe_customer_id);
+    on business_profiles using btree (stripe_customer_id);
 
 create index idx_business_profiles_stripe_subscription_id
-    on business_profiles using ??? (stripe_subscription_id);
+    on business_profiles using btree (stripe_subscription_id);
 
 create index idx_business_profiles_premium
-    on business_profiles using ??? (premium);
+    on business_profiles using btree (premium);
 
 create policy "Users can read own profile" on business_profiles
     as permissive
@@ -482,9 +526,9 @@ create table admin_settings
     created_at  timestamp with time zone default now(),
     updated_at  timestamp with time zone default now(),
     updated_by  uuid
-        references ??? ()
+        references auth.users (id)
 )
-    using ???;
+    using heap;
 
 alter table admin_settings
     owner to postgres;
@@ -493,25 +537,19 @@ create policy "Admin users can read all settings" on admin_settings
     as permissive
     for select
     to authenticated
-    using (EXISTS (SELECT 1
-                   FROM business_profiles
-                   WHERE ((business_profiles.user_id = auth.uid()) AND (business_profiles.role = 'admin'::text))));
+    using (is_admin_user());
 
 create policy "Admin users can update settings" on admin_settings
     as permissive
     for update
     to authenticated
-    using (EXISTS (SELECT 1
-                   FROM business_profiles
-                   WHERE ((business_profiles.user_id = auth.uid()) AND (business_profiles.role = 'admin'::text))));
+    using (is_admin_user());
 
 create policy "Admin users can insert settings" on admin_settings
     as permissive
     for insert
     to authenticated
-    with check (EXISTS (SELECT 1
-                        FROM business_profiles
-                        WHERE ((business_profiles.user_id = auth.uid()) AND (business_profiles.role = 'admin'::text))));
+    with check (is_admin_user());
 
 create policy "All users can read public settings" on admin_settings
     as permissive
@@ -531,7 +569,7 @@ create table stripe_customers
         primary key,
     user_id             uuid not null
         unique
-        references ??? (),
+        references auth.users (id),
     customer_id         text not null
         unique,
     created_at          timestamp with time zone default now(),
@@ -540,7 +578,7 @@ create table stripe_customers
     business_profile_id uuid
         references business_profiles
 )
-    using ???;
+    using heap;
 
 alter table stripe_customers
     owner to postgres;
@@ -584,7 +622,7 @@ create table stripe_subscriptions
     updated_at           timestamp with time zone default now(),
     deleted_at           timestamp with time zone
 )
-    using ???;
+    using heap;
 
 alter table stripe_subscriptions
     owner to postgres;
@@ -626,7 +664,7 @@ create table stripe_orders
     updated_at          timestamp with time zone default now(),
     deleted_at          timestamp with time zone
 )
-    using ???;
+    using heap;
 
 alter table stripe_orders
     owner to postgres;
@@ -651,6 +689,53 @@ grant delete, insert, references, select, trigger, truncate, update on stripe_or
 grant delete, insert, references, select, trigger, truncate, update on stripe_orders to authenticated;
 
 grant delete, insert, references, select, trigger, truncate, update on stripe_orders to service_role;
+
+create table aggregated_metrics
+(
+    id            uuid                     default gen_random_uuid() not null
+        primary key,
+    business_id   text                                               not null,
+    business_name text                                               not null,
+    date          date                                               not null,
+    metrics       jsonb                                              not null,
+    created_at    timestamp with time zone default now(),
+    updated_at    timestamp with time zone default now(),
+    unique (business_id, date)
+)
+    using heap;
+
+alter table aggregated_metrics
+    owner to postgres;
+
+create index idx_aggregated_metrics_business_id
+    on aggregated_metrics using btree (business_id);
+
+create index idx_aggregated_metrics_date
+    on aggregated_metrics using btree (date desc);
+
+create index idx_aggregated_metrics_business_date
+    on aggregated_metrics using btree (business_id, date desc);
+
+create policy "Admins can read all aggregated metrics" on aggregated_metrics
+    as permissive
+    for select
+    to authenticated
+    using (is_admin_user());
+
+create policy "Business owners can read their own metrics" on aggregated_metrics
+    as permissive
+    for select
+    to authenticated
+    using (business_id IN (SELECT bp.business_id 
+                          FROM business_profiles bp 
+                          WHERE bp.user_id = auth.uid() 
+                          AND bp.business_id IS NOT NULL));
+
+grant delete, insert, references, select, trigger, truncate, update on aggregated_metrics to anon;
+
+grant delete, insert, references, select, trigger, truncate, update on aggregated_metrics to authenticated;
+
+grant delete, insert, references, select, trigger, truncate, update on aggregated_metrics to service_role;
 
 create view stripe_user_subscriptions
             (customer_id, subscription_id, subscription_status, price_id, current_period_start, current_period_end,
@@ -753,6 +838,12 @@ execute procedure update_updated_at_column();
 create trigger update_contact_messages_updated_at
     before update
     on contact_messages
+    for each row
+execute procedure update_updated_at_column();
+
+create trigger update_aggregated_metrics_updated_at
+    before update
+    on aggregated_metrics
     for each row
 execute procedure update_updated_at_column();
 
@@ -1504,3 +1595,9 @@ grant execute on function migrate_stripe_customers_to_business_profiles() to ano
 grant execute on function migrate_stripe_customers_to_business_profiles() to authenticated;
 
 grant execute on function migrate_stripe_customers_to_business_profiles() to service_role;
+
+grant execute on function is_admin_user() to anon;
+
+grant execute on function is_admin_user() to authenticated;
+
+grant execute on function is_admin_user() to service_role;
