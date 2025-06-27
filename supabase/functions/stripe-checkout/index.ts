@@ -74,16 +74,36 @@ Deno.serve(async (req) => {
       return corsResponse({ error: 'User not found' }, 404);
     }
 
+    // Get the user's business profile
+    const { data: businessProfile, error: profileError } = await supabase
+      .from('business_profiles')
+      .select('id')
+      .eq('user_id', user.id)
+      .is('deleted_at', null)
+      .maybeSingle();
+
+    if (profileError) {
+      console.error('Failed to fetch business profile', profileError);
+      return corsResponse({ error: 'Failed to fetch business profile' }, 500);
+    }
+
+    if (!businessProfile) {
+      console.error('No business profile found for user', user.id);
+      return corsResponse({ error: 'No business profile found' }, 404);
+    }
+
+    const businessProfileId = businessProfile.id;
+
+    // Check if customer exists for this business profile
     const { data: customer, error: getCustomerError } = await supabase
       .from('stripe_customers')
       .select('customer_id')
-      .eq('user_id', user.id)
+      .eq('business_profile_id', businessProfileId)
       .is('deleted_at', null)
       .maybeSingle();
 
     if (getCustomerError) {
       console.error('Failed to fetch customer information from the database', getCustomerError);
-
       return corsResponse({ error: 'Failed to fetch customer information' }, 500);
     }
 
@@ -97,13 +117,15 @@ Deno.serve(async (req) => {
         email: user.email,
         metadata: {
           userId: user.id,
+          businessProfileId: businessProfileId,
         },
       });
 
-      console.log(`Created new Stripe customer ${newCustomer.id} for user ${user.id}`);
+      console.log(`Created new Stripe customer ${newCustomer.id} for business profile ${businessProfileId}`);
 
       const { error: createCustomerError } = await supabase.from('stripe_customers').insert({
         user_id: user.id,
+        business_profile_id: businessProfileId,
         customer_id: newCustomer.id,
       });
 
