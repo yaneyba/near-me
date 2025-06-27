@@ -11,9 +11,9 @@ export interface Business {
   website?: string | null;
   rating: number;
   reviewCount: number;
-  description: string;
+  description: string| null;
   services: string[];
-  neighborhood: string;
+  neighborhood: string| null;
   hours: {
     [key: string]: string;
   };
