@@ -67,14 +67,10 @@ function App() {
           <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
           <Route path="/checkout/cancel" element={<CheckoutCancelPage />} />
           
-          {/* Auth Routes - Accessible only when NOT logged in */}
+          {/* Auth Routes - Direct access to login */}
           <Route 
             path="/login" 
-            element={
-              <AuthGuard requireAuth={false} redirectTo="/business-dashboard">
-                <LoginPage />
-              </AuthGuard>
-            } 
+            element={<LoginPage />} 
           />
           
           {/* Redirect register to add-business */}
