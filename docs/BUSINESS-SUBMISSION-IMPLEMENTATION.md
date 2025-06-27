@@ -112,7 +112,7 @@ The business submission workflow has been implemented to allow businesses to reg
 - `src/components/BusinessSubmissionForm.tsx`
 - `src/pages/AddBusinessSubmissionPage.tsx`
 - `supabase/migrations/20250627200000_align_with_production_schema.sql`
-- `docs/PRODUCTION-DDL-REFERENCE.sql`
+- `../supabase/sqls/production-ddl-reference.sql`
 - `scripts/add-sample-submissions.js`
 
 ### Modified Files

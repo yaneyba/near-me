@@ -98,10 +98,10 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
     if (user.role === 'admin' || isAdminEmail(user.email)) {
       return <Navigate to="/admin/dashboard" replace />;
     } else if (user.role === 'owner') {
-      return <Navigate to="/business-dashboard" replace />;
+      return <Navigate to="/business/dashboard" replace />;
     } else {
       // Default to business dashboard for other roles
-      return <Navigate to="/business-dashboard" replace />;
+      return <Navigate to="/business/dashboard" replace />;
     }
   }
 };

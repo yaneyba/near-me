@@ -63,7 +63,7 @@ const SubscriptionBanner: React.FC<SubscriptionBannerProps> = ({ className = '' 
             </p>
           </div>
           <Link
-            to="/business-dashboard"
+            to="/business/dashboard"
             className="text-purple-600 hover:text-purple-800 text-sm font-medium flex items-center"
           >
             Manage

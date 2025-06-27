@@ -23,7 +23,8 @@ This folder contains comprehensive documentation for the Near Me Business Direct
 - **[ADDING-NEW-CONTENT-GUIDE.md](./ADDING-NEW-CONTENT-GUIDE.md)**: Content management procedures
 
 ### Database Reference
-- **[PRODUCTION-DDL-REFERENCE.sql](./PRODUCTION-DDL-REFERENCE.sql)**: Complete database schema reference
+- **[production-ddl-reference.sql](../supabase/sqls/production-ddl-reference.sql)**: Complete database schema reference
+- **[SQL Files Documentation](../supabase/sqls/README.md)**: All SQL files and usage instructions
 
 ## 🚀 Quick Start Guide
 

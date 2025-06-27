@@ -7,8 +7,8 @@ BEGIN
     -- Check if the current user's email is in our admin email list
     -- Using the same logic as src/lib/auth.ts isAdminEmail function
     RETURN (auth.jwt() ->> 'email') IN (
-        'admin@near-me.us',
-        'yanbanga@gmail.com'
+        'yaneyba@finderhubs.com',
+        'admin@near-me.us'
     );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -68,6 +68,32 @@ GRANT SELECT, INSERT, UPDATE ON admin_settings TO authenticated;
 CREATE POLICY "Allow anon to check admin status" ON business_profiles
     FOR SELECT TO anon
     USING (true);
+
+-- CRITICAL: Add proper RLS policies for business_profiles table
+-- Users can read their own profiles
+CREATE POLICY "Users can read own profile" ON business_profiles
+    FOR SELECT TO authenticated
+    USING (user_id = auth.uid());
+
+-- Users can update their own profiles
+CREATE POLICY "Users can update own profile" ON business_profiles
+    FOR UPDATE TO authenticated
+    USING (user_id = auth.uid());
+
+-- Admin users can read all profiles
+CREATE POLICY "Admins can read all profiles" ON business_profiles
+    FOR SELECT TO authenticated
+    USING (is_admin_user());
+
+-- Admin users can update all profiles
+CREATE POLICY "Admins can update all profiles" ON business_profiles
+    FOR UPDATE TO authenticated
+    USING (is_admin_user());
+
+-- Admin users can insert new profiles
+CREATE POLICY "Admins can insert profiles" ON business_profiles
+    FOR INSERT TO authenticated
+    WITH CHECK (is_admin_user());
 
 -- Comments for documentation
 COMMENT ON FUNCTION is_admin_user() IS 'Checks if current user is an admin based on email address';

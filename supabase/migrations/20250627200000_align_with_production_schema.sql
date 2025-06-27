@@ -1,6 +1,6 @@
 -- Align local schema with production DDL reference
 -- This migration adds the business_submissions table and related approval workflow
--- Based on the production DDL in docs/PRODUCTION-DDL-REFERENCE.sql
+-- Based on the production DDL in ../sqls/production-ddl-reference.sql
 
 -- Create submission_status enum if it doesn't exist
 DO $$ 

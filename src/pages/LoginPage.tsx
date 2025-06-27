@@ -13,7 +13,7 @@ const LoginPage: React.FC = () => {
   
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as any)?.from?.pathname || '/business-dashboard';
+  const from = (location.state as any)?.from?.pathname || '/business/dashboard';
   const { authFeatures } = useAuth();
   const loginEnabled = authFeatures?.loginEnabled ?? true;
 
@@ -81,7 +81,7 @@ const LoginPage: React.FC = () => {
       
       if (currentUser?.role === 'owner') {
         console.log('Business owner detected, redirecting to business dashboard');
-        navigate('/business-dashboard', { replace: true });
+        navigate('/business/dashboard', { replace: true });
       } else {
         console.log('Default redirect to:', from);
         navigate(from, { replace: true });

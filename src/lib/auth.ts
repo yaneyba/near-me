@@ -251,45 +251,69 @@ export const signOut = async () => {
 // Get current user - separated admin vs business logic
 export const getCurrentUser = async (): Promise<AuthUser | null> => {
   try {
+    console.log('getCurrentUser: Starting...');
     const { data: { session } } = await supabase.auth.getSession();
     
-    if (!session) return null;
+    if (!session) {
+      console.log('getCurrentUser: No session found');
+      return null;
+    }
     
-    // Check if this is an admin user first (by email or separate admin table)
-    const adminEmails = ['yaneyba@finderhubs.com']; // Add more admin emails as needed
-    if (adminEmails.includes(session.user.email || '')) {
+    console.log('getCurrentUser: Session found for email:', session.user.email);
+    
+    // Check if this is an admin user first (by email)
+    // Admins are NOT businesses and don't need business_profiles entries
+    if (isAdminEmail(session.user.email || '')) {
+      console.log('getCurrentUser: Admin user detected - returning admin data without business profile');
       return {
         id: session.user.id,
         email: session.user.email || '',
         role: 'admin',
-        businessName: 'Admin',
-        premium: false
+        businessName: undefined, // Admins don't have business names
+        businessId: undefined,
+        businessProfileId: undefined,
+        approvalStatus: undefined, // Admins don't need approval
+        premium: false, // Admins don't have premium subscriptions
+        stripeCustomerId: undefined,
+        stripeSubscriptionId: undefined,
+        stripePriceId: undefined,
+        stripeSubscriptionStatus: undefined,
+        currentPeriodEnd: undefined,
+        cancelAtPeriodEnd: false
       };
     }
+    
+    console.log('getCurrentUser: Non-admin user - fetching business profile...');
     
     // For non-admin users, get business profile data
     const { data: profile, error } = await supabase
       .from('business_profiles')
-      .select(`
-        id, 
-        business_id, 
-        business_name, 
-        role, 
-        approval_status,
-        premium,
-        stripe_customer_id,
-        stripe_subscription_id,
-        stripe_price_id,
-        stripe_subscription_status,
-        stripe_current_period_end,
-        cancel_at_period_end
-      `)
+      .select('id, business_id, business_name, role, approval_status, premium')
       .eq('user_id', session.user.id)
-      .single();
+      .maybeSingle(); // Use maybeSingle to handle no results gracefully
     
-    if (error && error.code !== 'PGRST116') {
+    if (error) {
       console.error('Error fetching user profile:', error);
+      // Return basic user data without profile for non-admin users
+      return {
+        id: session.user.id,
+        email: session.user.email || '',
+        role: undefined, // No role for users without profiles
+        businessName: undefined,
+        businessId: undefined,
+        businessProfileId: undefined,
+        approvalStatus: undefined,
+        premium: false,
+        stripeCustomerId: undefined,
+        stripeSubscriptionId: undefined,
+        stripePriceId: undefined,
+        stripeSubscriptionStatus: undefined,
+        currentPeriodEnd: undefined,
+        cancelAtPeriodEnd: false
+      };
     }
+    
+    console.log('getCurrentUser: Business profile fetched successfully');
     
     return {
       id: session.user.id,
@@ -300,12 +324,13 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
       role: profile?.role,
       approvalStatus: profile?.approval_status,
       premium: profile?.premium || false,
-      stripeCustomerId: profile?.stripe_customer_id,
-      stripeSubscriptionId: profile?.stripe_subscription_id,
-      stripePriceId: profile?.stripe_price_id,
-      stripeSubscriptionStatus: profile?.stripe_subscription_status,
-      currentPeriodEnd: profile?.stripe_current_period_end,
-      cancelAtPeriodEnd: profile?.cancel_at_period_end || false
+      // Stripe data not needed for basic auth flow
+      stripeCustomerId: undefined,
+      stripeSubscriptionId: undefined,
+      stripePriceId: undefined,
+      stripeSubscriptionStatus: undefined,
+      currentPeriodEnd: undefined,
+      cancelAtPeriodEnd: false
     };
   } catch (error) {
     console.error('Error getting current user:', error);
@@ -345,13 +370,32 @@ export const canUserSubscribe = async (): Promise<boolean> => {
   }
 };
 
-// Check if user is admin
+// Check if user is admin - use email-based detection, not business_profiles
 export const isUserAdmin = async (): Promise<boolean> => {
   try {
-    const user = await getCurrentUser();
-    return user?.role === 'admin';
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session?.user?.email) {
+      return false;
+    }
+    
+    // Direct email check - admins are NOT businesses
+    return isAdminEmail(session.user.email);
   } catch (error) {
     console.error('Error checking admin status:', error);
+    return false;
+  }
+};
+
+// Synchronous admin check for immediate use
+export const isCurrentUserAdmin = (): boolean => {
+  // This can only work if we have the user data already loaded
+  // Use this for UI decisions, use isUserAdmin() for authorization
+  try {
+    // Check if we have user data in localStorage or similar
+    // For now, return false and rely on isUserAdmin() for actual checks
+    return false;
+  } catch (error) {
     return false;
   }
 };

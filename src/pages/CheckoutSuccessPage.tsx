@@ -92,7 +92,7 @@ const CheckoutSuccessPage: React.FC = () => {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
-              onClick={() => navigate('/business-dashboard')}
+              onClick={() => navigate('/business/dashboard')}
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center"
             >
               <Building className="w-5 h-5 mr-2" />

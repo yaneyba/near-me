@@ -112,47 +112,39 @@ const Header: React.FC<HeaderProps> = ({ category, city, state }) => {
             {!isAddBusinessPage && (
               <Link 
                 to="/add-business" 
-                className="flex items-center font-medium transition-colors px-4 py-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100"
+                className="flex items-center font-medium transition-all duration-200 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg"
               >
-                <Plus className="w-4 h-4 mr-1" />
+                <Plus className="w-4 h-4 mr-2" />
                 Add Your Business
               </Link>
             )}
             
             {/* Auth links */}
             {user ? (
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3">
                 {isAdmin ? (
-                  <>
-                    <Link 
-                      to="/admin/dashboard" 
-                      className="flex items-center font-medium transition-colors px-4 py-2 rounded-lg bg-green-50 text-green-600 hover:bg-green-100"
-                    >
-                      <User className="w-4 h-4 mr-1" />
-                      Admin Dashboard
-                    </Link>
-                  </>
+                  <Link 
+                    to="/admin/dashboard" 
+                    className="flex items-center font-semibold transition-all duration-200 px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 shadow-md hover:shadow-lg"
+                  >
+                    <User className="w-4 h-4 mr-2" />
+                    Dashboard
+                  </Link>
                 ) : (
                   <Link 
-                    to="/business-dashboard" 
-                    className="flex items-center font-medium transition-colors px-4 py-2 rounded-lg bg-green-50 text-green-600 hover:bg-green-100"
+                    to="/business/dashboard" 
+                    className="flex items-center font-medium transition-all duration-200 px-4 py-2 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200"
                   >
-                    <User className="w-4 h-4 mr-1" />
+                    <User className="w-4 h-4 mr-2" />
                     Dashboard
                   </Link>
                 )}
-                <Link 
-                  to="/login" 
-                  className="flex items-center font-medium transition-colors px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
-                >
-                  <LogIn className="w-4 h-4 mr-1" />
-                  Switch Account
-                </Link>
                 <button
                   onClick={handleLogout}
-                  className="flex items-center font-medium transition-colors px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  className="flex items-center font-medium transition-all duration-200 px-3 py-2 rounded-md text-gray-600 hover:text-red-600 hover:bg-red-50"
+                  title="Sign out of current account"
                 >
-                  <LogOut className="w-4 h-4 mr-1" />
+                  <LogOut className="w-4 h-4 mr-2" />
                   Sign Out
                 </button>
               </div>
@@ -221,10 +213,10 @@ const Header: React.FC<HeaderProps> = ({ category, city, state }) => {
             {!isAddBusinessPage && (
               <Link
                 to="/add-business"
-                className="flex items-center px-3 py-2 font-medium text-gray-700 hover:text-blue-600"
+                className="flex items-center px-3 py-3 mb-2 font-medium bg-blue-600 text-white rounded-lg mx-2 shadow-md"
                 onClick={() => setIsMenuOpen(false)}
               >
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus className="w-4 h-4 mr-3" />
                 Add Your Business
               </Link>
             )}
@@ -235,40 +227,34 @@ const Header: React.FC<HeaderProps> = ({ category, city, state }) => {
                 {isAdmin ? (
                   <Link
                     to="/admin/dashboard"
-                    className="flex items-center px-3 py-2 font-medium text-green-600 hover:text-green-700"
+                    className="flex items-center px-3 py-3 mb-2 font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg mx-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <User className="w-4 h-4 mr-2" />
-                    Admin Dashboard
+                    <User className="w-5 h-5 mr-3" />
+                    Dashboard
                   </Link>
                 ) : (
                   <Link
-                    to="/business-dashboard"
-                    className="flex items-center px-3 py-2 font-medium text-green-600 hover:text-green-700"
+                    to="/business/dashboard"
+                    className="flex items-center px-3 py-3 mb-2 font-medium bg-emerald-50 text-emerald-700 rounded-lg mx-2 border border-emerald-200"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <User className="w-4 h-4 mr-2" />
+                    <User className="w-5 h-5 mr-3" />
                     Dashboard
                   </Link>
                 )}
-                <Link
-                  to="/login"
-                  className="flex items-center px-3 py-2 font-medium text-gray-700 hover:text-blue-600"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <LogIn className="w-4 h-4 mr-2" />
-                  Switch Account
-                </Link>
-                <button
-                  onClick={() => {
-                    handleLogout();
-                    setIsMenuOpen(false);
-                  }}
-                  className="flex items-center w-full text-left px-3 py-2 font-medium text-gray-700 hover:text-blue-600"
-                >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Sign Out
-                </button>
+                <div className="border-t border-gray-200 mt-2 pt-2">
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setIsMenuOpen(false);
+                    }}
+                    className="flex items-center w-full text-left px-3 py-2 font-medium text-gray-600 hover:text-red-600"
+                  >
+                    <LogOut className="w-4 h-4 mr-3" />
+                    Sign Out
+                  </button>
+                </div>
               </>
             ) : (
               <Link

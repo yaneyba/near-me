@@ -77,13 +77,25 @@ function App() {
           />
           
           {/* Protected Routes - Require authentication */}
+          {/* Business Routes */}
           <Route 
-            path="/business-dashboard" 
+            path="/business" 
+            element={<Navigate to="/business/dashboard" replace />} 
+          />
+          
+          <Route 
+            path="/business/dashboard" 
             element={
               <AuthGuard requireAuth={true}>
                 <BusinessDashboardPage />
               </AuthGuard>
             } 
+          />
+          
+          {/* Legacy redirect for old business-dashboard URL */}
+          <Route 
+            path="/business-dashboard" 
+            element={<Navigate to="/business/dashboard" replace />} 
           />
           
           {/* Admin Routes */}
