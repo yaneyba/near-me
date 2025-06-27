@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth, getAuthFeatureFlags } from '../../lib/auth';
 import LoadingScreen from './LoadingScreen';
@@ -17,6 +17,18 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   const { user, loading } = useAuth();
   const location = useLocation();
   const { loginEnabled } = getAuthFeatureFlags();
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+
+  // Add timeout to prevent infinite loading
+  useEffect(() => {
+    if (loading) {
+      const timer = setTimeout(() => {
+        setLoadingTimeout(true);
+      }, 5000); // 5 second timeout
+      
+      return () => clearTimeout(timer);
+    }
+  }, [loading]);
 
   // Check if the current path is a disabled auth route
   const isDisabledAuthRoute = () => {
@@ -37,7 +49,14 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
     return false;
   };
 
-  if (loading) {
+  // If loading timed out, redirect to home
+  if (loadingTimeout) {
+    console.error('Authentication loading timed out');
+    return <Navigate to="/" replace />;
+  }
+
+  // Show loading screen for a reasonable time
+  if (loading && !loadingTimeout) {
     return <LoadingScreen />;
   }
 
