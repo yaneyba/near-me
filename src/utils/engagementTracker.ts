@@ -2,6 +2,11 @@ import { UserEngagementEvent } from '../types';
 import { DataProviderFactory } from '../providers';
 import { getAuthFeatureFlags } from '../lib/auth';
 
+// Declare gtag function for TypeScript
+declare global {
+  function gtag(...args: any[]): void;
+}
+
 class EngagementTracker {
   private sessionId: string;
   private dataProvider = DataProviderFactory.getProvider();
@@ -74,14 +79,15 @@ class EngagementTracker {
     eventData?: UserEngagementEvent['eventData']
   ): Promise<void> {
     try {
-      // Check if tracking is enabled
+      // Check if tracking is enabled - early return if disabled
       const { trackingEnabled } = getAuthFeatureFlags();
-      if (trackingEnabled === false) {
-        // Skip tracking if disabled
+      if (!trackingEnabled) {
+        // Skip all tracking if disabled - no database inserts, no analytics
         if (process.env.NODE_ENV === 'development') {
           console.log('📊 Tracking disabled, event not recorded:', {
             business: businessName,
-            event: eventType
+            event: eventType,
+            trackingEnabled
           });
         }
         return;
@@ -139,6 +145,10 @@ class EngagementTracker {
 
   // Convenience methods for common tracking events
   async trackView(businessId: string, businessName: string, source?: string, searchQuery?: string): Promise<void> {
+    // Double-check tracking is enabled before proceeding
+    const { trackingEnabled } = getAuthFeatureFlags();
+    if (!trackingEnabled) return;
+    
     return this.trackEvent(businessId, businessName, 'view', {
       source,
       searchQuery
@@ -146,44 +156,68 @@ class EngagementTracker {
   }
 
   async trackPhoneClick(businessId: string, businessName: string, phoneNumber: string): Promise<void> {
+    const { trackingEnabled } = getAuthFeatureFlags();
+    if (!trackingEnabled) return;
+    
     return this.trackEvent(businessId, businessName, 'phone_click', {
       clickedUrl: `tel:${phoneNumber}`
     });
   }
 
   async trackWebsiteClick(businessId: string, businessName: string, websiteUrl: string): Promise<void> {
+    const { trackingEnabled } = getAuthFeatureFlags();
+    if (!trackingEnabled) return;
+    
     return this.trackEvent(businessId, businessName, 'website_click', {
       clickedUrl: websiteUrl
     });
   }
 
   async trackBookingClick(businessId: string, businessName: string, bookingUrl: string): Promise<void> {
+    const { trackingEnabled } = getAuthFeatureFlags();
+    if (!trackingEnabled) return;
+    
     return this.trackEvent(businessId, businessName, 'booking_click', {
       clickedUrl: bookingUrl
     });
   }
 
   async trackDirectionsClick(businessId: string, businessName: string, directionsUrl: string): Promise<void> {
+    const { trackingEnabled } = getAuthFeatureFlags();
+    if (!trackingEnabled) return;
+    
     return this.trackEvent(businessId, businessName, 'directions_click', {
       clickedUrl: directionsUrl
     });
   }
 
   async trackEmailClick(businessId: string, businessName: string, emailAddress: string): Promise<void> {
+    const { trackingEnabled } = getAuthFeatureFlags();
+    if (!trackingEnabled) return;
+    
     return this.trackEvent(businessId, businessName, 'email_click', {
       clickedUrl: `mailto:${emailAddress}`
     });
   }
 
   async trackHoursView(businessId: string, businessName: string): Promise<void> {
+    const { trackingEnabled } = getAuthFeatureFlags();
+    if (!trackingEnabled) return;
+    
     return this.trackEvent(businessId, businessName, 'hours_view');
   }
 
   async trackServicesExpand(businessId: string, businessName: string): Promise<void> {
+    const { trackingEnabled } = getAuthFeatureFlags();
+    if (!trackingEnabled) return;
+    
     return this.trackEvent(businessId, businessName, 'services_expand');
   }
 
   async trackPhotoView(businessId: string, businessName: string, photoUrl: string): Promise<void> {
+    const { trackingEnabled } = getAuthFeatureFlags();
+    if (!trackingEnabled) return;
+    
     return this.trackEvent(businessId, businessName, 'photo_view', {
       clickedUrl: photoUrl
     });
