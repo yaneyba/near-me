@@ -40,6 +40,9 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSe
     }
   };
 
+  // Check if user is admin
+  const isAdmin = user?.role === 'admin';
+
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
       {/* Top bar with contact info */}
@@ -123,13 +126,23 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSe
             {/* Auth links */}
             {user ? (
               <div className="flex items-center space-x-4">
-                <Link 
-                  to="/business-dashboard" 
-                  className="flex items-center font-medium transition-colors px-4 py-2 rounded-lg bg-green-50 text-green-600 hover:bg-green-100"
-                >
-                  <User className="w-4 h-4 mr-1" />
-                  Dashboard
-                </Link>
+                {isAdmin ? (
+                  <Link 
+                    to="/admin/dashboard" 
+                    className="flex items-center font-medium transition-colors px-4 py-2 rounded-lg bg-green-50 text-green-600 hover:bg-green-100"
+                  >
+                    <User className="w-4 h-4 mr-1" />
+                    Admin Dashboard
+                  </Link>
+                ) : (
+                  <Link 
+                    to="/business-dashboard" 
+                    className="flex items-center font-medium transition-colors px-4 py-2 rounded-lg bg-green-50 text-green-600 hover:bg-green-100"
+                  >
+                    <User className="w-4 h-4 mr-1" />
+                    Dashboard
+                  </Link>
+                )}
                 <button
                   onClick={handleLogout}
                   className="flex items-center font-medium transition-colors px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
@@ -214,14 +227,25 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSe
             {/* Auth links for mobile */}
             {user ? (
               <>
-                <Link
-                  to="/business-dashboard"
-                  className="flex items-center px-3 py-2 font-medium text-green-600 hover:text-green-700"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <User className="w-4 h-4 mr-2" />
-                  Dashboard
-                </Link>
+                {isAdmin ? (
+                  <Link
+                    to="/admin/dashboard"
+                    className="flex items-center px-3 py-2 font-medium text-green-600 hover:text-green-700"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <User className="w-4 h-4 mr-2" />
+                    Admin Dashboard
+                  </Link>
+                ) : (
+                  <Link
+                    to="/business-dashboard"
+                    className="flex items-center px-3 py-2 font-medium text-green-600 hover:text-green-700"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <User className="w-4 h-4 mr-2" />
+                    Dashboard
+                  </Link>
+                )}
                 <button
                   onClick={() => {
                     handleLogout();
