@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../lib/auth';
+import { useAuth, isAdminEmail } from '../../lib/auth';
 import LoadingScreen from './LoadingScreen';
 
 interface AuthGuardProps {
@@ -95,8 +95,8 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
     }
     
     // For other pages that don't require auth, redirect to appropriate dashboard
-    if (user.role === 'admin') {
-      return <Navigate to="/admin/settings" replace />;
+    if (user.role === 'admin' || isAdminEmail(user.email)) {
+      return <Navigate to="/admin/dashboard" replace />;
     } else if (user.role === 'owner') {
       return <Navigate to="/business-dashboard" replace />;
     } else {

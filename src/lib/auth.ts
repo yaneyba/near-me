@@ -1,6 +1,12 @@
 import { supabase } from './supabase';
-import { User, Session } from '@supabase/supabase-js';
+import { Session } from '@supabase/supabase-js';
 import { useState, useEffect } from 'react';
+
+// Admin helper function
+export const isAdminEmail = (email: string): boolean => {
+  const adminEmails = ['yaneyba@finderhubs.com']; // Add more admin emails as needed
+  return adminEmails.includes(email);
+};
 
 // Types for authentication - aligned with production schema
 export interface AuthUser {
@@ -205,19 +211,35 @@ export const updateDatabaseSettings = async (settings: Partial<AuthFeatureFlags>
 
 // Sign in with email and password
 export const signIn = async (email: string, password: string) => {
+  console.log('signIn called with email:', email);
+  
   // Check if login is enabled
   const { loginEnabled } = getAuthFeatureFlags();
   if (!loginEnabled) {
     throw new Error('Login is currently disabled');
   }
   
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+  console.log('Login is enabled, proceeding with Supabase auth');
   
-  if (error) throw error;
-  return data;
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    
+    console.log('Supabase auth response:', { data: !!data, error: error?.message });
+    
+    if (error) {
+      console.error('Supabase auth error:', error);
+      throw error;
+    }
+    
+    console.log('Login successful');
+    return data;
+  } catch (error) {
+    console.error('signIn error:', error);
+    throw error;
+  }
 };
 
 // Sign out
@@ -226,14 +248,26 @@ export const signOut = async () => {
   if (error) throw error;
 };
 
-// Get current user - aligned with production schema
+// Get current user - separated admin vs business logic
 export const getCurrentUser = async (): Promise<AuthUser | null> => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session) return null;
     
-    // Get user profile data from business_profiles table with full subscription details
+    // Check if this is an admin user first (by email or separate admin table)
+    const adminEmails = ['yaneyba@finderhubs.com']; // Add more admin emails as needed
+    if (adminEmails.includes(session.user.email || '')) {
+      return {
+        id: session.user.id,
+        email: session.user.email || '',
+        role: 'admin',
+        businessName: 'Admin',
+        premium: false
+      };
+    }
+    
+    // For non-admin users, get business profile data
     const { data: profile, error } = await supabase
       .from('business_profiles')
       .select(`

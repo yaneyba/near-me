@@ -16,13 +16,9 @@ import AdminDashboardPage from './pages/AdminDashboardPage';
 import LoginPage from './pages/LoginPage';
 import Layout from './components/Layout';
 import AuthGuard from './components/auth/AuthGuard';
-import { useAuth } from './lib/auth';
+import { useAuth, isAdminEmail } from './lib/auth';
 import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
 import CheckoutCancelPage from './pages/CheckoutCancelPage';
-import AdminSettingsTest from './components/AdminSettingsTest';
-import SimpleSettingsTest from './components/SimpleSettingsTest';
-import { FallbackTest } from './components/FallbackTest';
-import TestAdminPage from './pages/TestAdminPage';
 
 function App() {
   // Configure the data provider factory
@@ -44,7 +40,7 @@ function App() {
 
   // Redirect admin users to admin dashboard
   React.useEffect(() => {
-    if (user?.role === 'admin' && window.location.pathname === '/') {
+    if ((user?.role === 'admin' || (user?.email && isAdminEmail(user.email))) && window.location.pathname === '/') {
       window.location.href = '/admin/dashboard';
     }
   }, [user]);
@@ -97,42 +93,10 @@ function App() {
           />
           
           <Route 
-            path="/admin/test" 
-            element={<TestAdminPage />} 
-          />
-          
-          <Route 
-            path="/admin/no-auth" 
-            element={<AdminDashboardPage />} 
-          />
-          
-          <Route 
             path="/admin/dashboard" 
             element={
               <AuthGuard requireAuth={true}>
                 <AdminDashboardPage />
-              </AuthGuard>
-            } 
-          />
-          
-          {/* Simple Settings Test Route (no auth required) */}
-          <Route 
-            path="/settings-test" 
-            element={<SimpleSettingsTest />}
-          />
-          
-          {/* Fallback Test Route (no auth required) */}
-          <Route 
-            path="/fallback-test" 
-            element={<FallbackTest />}
-          />
-          
-          {/* Admin Settings Test Route (temporary for testing) */}
-          <Route 
-            path="/admin/settings-test" 
-            element={
-              <AuthGuard requireAuth={true}>
-                <AdminSettingsTest />
               </AuthGuard>
             } 
           />
