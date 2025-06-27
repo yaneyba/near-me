@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, MapPin, Phone, Mail, Plus, User, LogIn } from 'lucide-react';
+import { Menu, X, MapPin, Phone, Mail, Plus, User, LogIn, Shield } from 'lucide-react';
 import SearchWithLiveResults from './SearchWithLiveResults';
 import { Business } from '../types';
 import { SITE_INFO } from '../siteInfo';
 import { useAuth } from '../lib/auth';
+import AdminBadge from './auth/AdminBadge';
 
 interface HeaderProps {
   category: string;
@@ -112,13 +113,25 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSe
             
             {/* Auth links */}
             {user ? (
-              <Link 
-                to="/business-dashboard" 
-                className="flex items-center font-medium transition-colors px-4 py-2 rounded-lg bg-green-50 text-green-600 hover:bg-green-100"
-              >
-                <User className="w-4 h-4 mr-1" />
-                Dashboard
-              </Link>
+              <div className="flex items-center space-x-2">
+                <Link 
+                  to={user.role === 'admin' ? '/admin/dashboard' : '/business-dashboard'} 
+                  className="flex items-center font-medium transition-colors px-4 py-2 rounded-lg bg-green-50 text-green-600 hover:bg-green-100"
+                >
+                  {user.role === 'admin' ? (
+                    <>
+                      <Shield className="w-4 h-4 mr-1" />
+                      Admin Panel
+                    </>
+                  ) : (
+                    <>
+                      <User className="w-4 h-4 mr-1" />
+                      Dashboard
+                    </>
+                  )}
+                </Link>
+                <AdminBadge />
+              </div>
             ) : (
               <Link 
                 to="/login" 
@@ -219,14 +232,32 @@ const Header: React.FC<HeaderProps> = ({ category, city, state, businesses, onSe
             
             {/* Auth links for mobile */}
             {user ? (
-              <Link
-                to="/business-dashboard"
-                className="flex items-center px-3 py-2 font-medium text-green-600 hover:text-green-700"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <User className="w-4 h-4 mr-2" />
-                Dashboard
-              </Link>
+              <div className="pt-2 border-t border-gray-100">
+                <div className="flex items-center px-3 py-1">
+                  <AdminBadge />
+                </div>
+                <Link
+                  to={user.role === 'admin' ? '/admin/dashboard' : '/business-dashboard'}
+                  className={`flex items-center px-3 py-2 font-medium ${
+                    user.role === 'admin' 
+                      ? 'text-red-600 hover:text-red-700' 
+                      : 'text-green-600 hover:text-green-700'
+                  }`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {user.role === 'admin' ? (
+                    <>
+                      <Shield className="w-4 h-4 mr-2" />
+                      Admin Panel
+                    </>
+                  ) : (
+                    <>
+                      <User className="w-4 h-4 mr-2" />
+                      Dashboard
+                    </>
+                  )}
+                </Link>
+              </div>
             ) : (
               <Link
                 to="/login"

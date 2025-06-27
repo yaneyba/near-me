@@ -12,6 +12,7 @@ import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import TermsOfServicePage from './pages/TermsOfServicePage';
 import BusinessOwnersPage from './pages/BusinessOwnersPage';
 import BusinessDashboardPage from './pages/BusinessDashboardPage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
 import LoginPage from './pages/LoginPage';
 import AdminSettingsPage from './pages/AdminSettingsPage';
 import Layout from './components/Layout';
@@ -76,6 +77,15 @@ function App() {
           />
           
           {/* Admin Routes */}
+          <Route 
+            path="/admin/dashboard" 
+            element={
+              <AuthGuard requireAuth={true}>
+                <AdminDashboardPage />
+              </AuthGuard>
+            } 
+          />
+          
           <Route 
             path="/admin/settings" 
             element={
