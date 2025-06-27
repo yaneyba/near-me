@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   BarChart3, 
   TrendingUp, 
@@ -22,12 +23,18 @@ import {
   Zap,
   Crown,
   Star,
-  LogOut
+  LogOut,
+  CreditCard,
+  Settings,
+  AlertCircle
 } from 'lucide-react';
 import { DataProviderFactory } from '../providers';
 import { BusinessAnalytics } from '../types';
 import { useAuth, signOut } from '../lib/auth';
 import { useNavigate } from 'react-router-dom';
+import { getUserSubscription, getProductNameFromPriceId, createCheckoutSession } from '../lib/stripe';
+import { PRODUCTS } from '../stripe-config';
+import SubscriptionBanner from '../components/SubscriptionBanner';
 
 const BusinessDashboardPage: React.FC = () => {
   const [period, setPeriod] = useState<'day' | 'week' | 'month' | 'year'>('week');
@@ -35,7 +42,7 @@ const BusinessDashboardPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [businessId, setBusinessId] = useState('nail-salons-dallas-01'); // Default value
   const [businessName, setBusinessName] = useState('Elegant Nails Studio'); // Default value
-  const [isPremium, setIsPremium] = useState(true);
+  const [isPremium, setIsPremium] = useState(false);
   const [customDateRange, setCustomDateRange] = useState(false);
   const [startDate, setStartDate] = useState<string>(
     new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
@@ -43,6 +50,10 @@ const BusinessDashboardPage: React.FC = () => {
   const [endDate, setEndDate] = useState<string>(
     new Date().toISOString().split('T')[0]
   );
+  const [subscription, setSubscription] = useState<any>(null);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(true);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -62,6 +73,7 @@ const BusinessDashboardPage: React.FC = () => {
     }
     
     loadAnalytics();
+    loadSubscription();
   }, [period, customDateRange, startDate, endDate, user]);
 
   const loadAnalytics = async () => {
@@ -90,12 +102,50 @@ const BusinessDashboardPage: React.FC = () => {
     }
   };
 
+  const loadSubscription = async () => {
+    setSubscriptionLoading(true);
+    try {
+      const data = await getUserSubscription();
+      setSubscription(data);
+      
+      // Set premium status based on subscription
+      setIsPremium(
+        data?.subscription_status === 'active' || 
+        data?.subscription_status === 'trialing'
+      );
+    } catch (error) {
+      console.error('Error loading subscription:', error);
+    } finally {
+      setSubscriptionLoading(false);
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await signOut();
-      navigate('/login');
+      navigate('/');
     } catch (error) {
       console.error('Error signing out:', error);
+    }
+  };
+
+  const handleUpgrade = async (priceId: string) => {
+    try {
+      setCheckoutLoading(true);
+      setCheckoutError(null);
+      
+      const { url } = await createCheckoutSession(priceId);
+      
+      if (url) {
+        window.location.href = url;
+      } else {
+        throw new Error('Failed to create checkout session');
+      }
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
+      setCheckoutError('Failed to start checkout process. Please try again.');
+    } finally {
+      setCheckoutLoading(false);
     }
   };
 
@@ -371,6 +421,136 @@ const BusinessDashboardPage: React.FC = () => {
     );
   };
 
+  const renderSubscriptionSection = () => {
+    if (subscriptionLoading) {
+      return (
+        <div className="bg-white rounded-xl shadow-sm p-6 animate-pulse">
+          <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2 mb-6"></div>
+          <div className="h-10 bg-gray-200 rounded w-1/3"></div>
+        </div>
+      );
+    }
+
+    if (subscription?.subscription_status === 'active' || subscription?.subscription_status === 'trialing') {
+      const productName = subscription.price_id 
+        ? getProductNameFromPriceId(subscription.price_id)
+        : 'Premium Plan';
+
+      const nextBillingDate = subscription.current_period_end 
+        ? new Date(subscription.current_period_end * 1000).toLocaleDateString()
+        : 'Unknown';
+
+      const paymentMethod = subscription.payment_method_brand && subscription.payment_method_last4
+        ? `${subscription.payment_method_brand.toUpperCase()} ending in ${subscription.payment_method_last4}`
+        : 'Not available';
+
+      return (
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <Crown className="w-5 h-5 text-yellow-500 mr-2" />
+            Subscription Status
+          </h3>
+          
+          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-4 mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="font-semibold text-purple-900">{productName}</div>
+              <div className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
+                {subscription.subscription_status}
+              </div>
+            </div>
+            <div className="text-sm text-purple-700 space-y-1">
+              <div>Next billing date: {nextBillingDate}</div>
+              <div>Payment method: {paymentMethod}</div>
+              {subscription.cancel_at_period_end && (
+                <div className="text-orange-600 font-medium">
+                  Your subscription will end on {nextBillingDate}
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={() => {/* This would open a customer portal */}}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-colors flex items-center justify-center"
+            >
+              <CreditCard className="w-4 h-4 mr-2" />
+              Manage Payment
+            </button>
+            
+            <button
+              onClick={() => {/* This would open subscription settings */}}
+              className="flex-1 border border-gray-300 hover:bg-gray-50 text-gray-700 py-2 px-4 rounded-lg font-medium transition-colors flex items-center justify-center"
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              Subscription Settings
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="bg-white rounded-xl shadow-sm p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <Star className="w-5 h-5 text-yellow-500 mr-2" />
+          Upgrade Your Listing
+        </h3>
+        
+        <p className="text-gray-600 mb-6">
+          Upgrade to a premium plan to get more visibility, attract more customers, and grow your business.
+        </p>
+        
+        {checkoutError && (
+          <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3 flex items-start">
+            <AlertCircle className="w-5 h-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-red-700">{checkoutError}</div>
+          </div>
+        )}
+        
+        <div className="flex flex-col sm:flex-row gap-3">
+          <button
+            onClick={() => handleUpgrade(PRODUCTS.PREMIUM_BUSINESS.priceId)}
+            disabled={checkoutLoading}
+            className="flex-1 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white py-2 px-4 rounded-lg font-medium transition-colors flex items-center justify-center disabled:opacity-70"
+          >
+            {checkoutLoading ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Processing...
+              </>
+            ) : (
+              <>
+                <Star className="w-4 h-4 mr-2" />
+                Premium Plan ($150/mo)
+              </>
+            )}
+          </button>
+          
+          <button
+            onClick={() => handleUpgrade(PRODUCTS.FEATURED_BUSINESS.priceId)}
+            disabled={checkoutLoading}
+            className="flex-1 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white py-2 px-4 rounded-lg font-medium transition-colors flex items-center justify-center disabled:opacity-70"
+          >
+            {checkoutLoading ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Processing...
+              </>
+            ) : (
+              <>
+                <Crown className="w-4 h-4 mr-2" />
+                Featured Plan ($300/mo)
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -470,6 +650,11 @@ const BusinessDashboardPage: React.FC = () => {
             </button>
           </div>
         )}
+
+        {/* Subscription Section */}
+        <div className="mb-8">
+          {renderSubscriptionSection()}
+        </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-12">
@@ -619,8 +804,19 @@ const BusinessDashboardPage: React.FC = () => {
                         Premium businesses receive 3x more engagement. Upgrade to get priority placement, 
                         booking links, and detailed analytics.
                       </p>
-                      <button className="mt-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                        Upgrade Now
+                      <button 
+                        onClick={() => handleUpgrade(PRODUCTS.PREMIUM_BUSINESS.priceId)}
+                        disabled={checkoutLoading}
+                        className="mt-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-70"
+                      >
+                        {checkoutLoading ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2 inline-block"></div>
+                            Processing...
+                          </>
+                        ) : (
+                          'Upgrade Now'
+                        )}
                       </button>
                     </div>
                   </div>
