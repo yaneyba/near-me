@@ -26,12 +26,14 @@ import {
   Star,
   Flag,
   RefreshCw,
+  Save,
   ToggleLeft,
   ToggleRight,
-  Save
+  Lock,
+  Activity
 } from 'lucide-react';
 import { DataProviderFactory } from '../providers';
-import { useAuth, isUserAdmin, getAuthFeatureFlags, setAuthFeatureFlags } from '../lib/auth';
+import { useAuth, isUserAdmin, updateDatabaseSettings } from '../lib/auth';
 
 const AdminDashboardPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'businesses' | 'contacts' | 'users' | 'analytics' | 'settings'>('businesses');
@@ -65,7 +67,7 @@ const AdminDashboardPage: React.FC = () => {
   const [settingsError, setSettingsError] = useState<string | null>(null);
   const [settingsSuccess, setSettingsSuccess] = useState<string | null>(null);
 
-  const { user } = useAuth();
+  const { user, authFeatures } = useAuth();
   const navigate = useNavigate();
   const dataProvider = DataProviderFactory.getProvider();
 
@@ -81,7 +83,6 @@ const AdminDashboardPage: React.FC = () => {
           navigate('/', { replace: true });
         } else {
           loadData();
-          loadSettings();
         }
       } catch (error) {
         console.error('Error checking admin status:', error);
@@ -93,6 +94,14 @@ const AdminDashboardPage: React.FC = () => {
     
     checkAdmin();
   }, [navigate]);
+  
+  // Load settings from auth features
+  useEffect(() => {
+    if (authFeatures) {
+      setLoginEnabled(authFeatures.loginEnabled);
+      setTrackingEnabled(authFeatures.trackingEnabled ?? true);
+    }
+  }, [authFeatures]);
 
   const loadData = async () => {
     setLoading(true);
@@ -228,32 +237,6 @@ const AdminDashboardPage: React.FC = () => {
       console.error('Error loading admin data:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadSettings = () => {
-    const flags = getAuthFeatureFlags();
-    setLoginEnabled(flags.loginEnabled);
-    setTrackingEnabled(flags.trackingEnabled !== false); // Default to true if undefined
-  };
-
-  const handleSaveSettings = () => {
-    try {
-      setSaving(true);
-      setSettingsError(null);
-      setSettingsSuccess(null);
-      
-      setAuthFeatureFlags({
-        loginEnabled,
-        trackingEnabled
-      });
-      
-      setSettingsSuccess('Settings saved successfully');
-    } catch (error) {
-      console.error('Error saving settings:', error);
-      setSettingsError('Failed to save settings');
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -451,6 +434,30 @@ const AdminDashboardPage: React.FC = () => {
             {status}
           </span>
         );
+    }
+  };
+  
+  const handleSaveSettings = async () => {
+    try {
+      setSaving(true);
+      setSettingsError(null);
+      setSettingsSuccess(null);
+      
+      const success = await updateDatabaseSettings({
+        loginEnabled,
+        trackingEnabled
+      });
+      
+      if (success) {
+        setSettingsSuccess('Settings saved successfully');
+      } else {
+        setSettingsError('Failed to save settings');
+      }
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      setSettingsError('An unexpected error occurred');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -1118,14 +1125,14 @@ const AdminDashboardPage: React.FC = () => {
               </div>
             </div>
           )}
-
+          
           {/* Settings Tab */}
           {activeTab === 'settings' && (
             <div>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-semibold text-gray-900">System Settings</h2>
               </div>
-
+              
               {settingsError && (
                 <div className="mb-4 bg-red-50 border border-red-200 rounded-md p-4 flex items-start">
                   <AlertCircle className="w-5 h-5 text-red-500 mr-3 flex-shrink-0 mt-0.5" />
@@ -1139,113 +1146,134 @@ const AdminDashboardPage: React.FC = () => {
                   <div className="text-sm text-green-700">{settingsSuccess}</div>
                 </div>
               )}
-
+              
               <div className="space-y-6">
                 {/* Authentication Settings */}
                 <div className="bg-white border border-gray-200 rounded-lg p-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Authentication Settings</h3>
+                  <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                    <Lock className="w-5 h-5 mr-2 text-blue-600" />
+                    Authentication Settings
+                  </h3>
                   
-                  <div className="flex items-center justify-between py-3 border-b border-gray-200">
-                    <div className="flex items-start">
-                      <div className="flex-shrink-0">
-                        <Shield className="w-6 h-6 text-gray-500" />
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0">
+                          <Lock className="w-6 h-6 text-gray-500" />
+                        </div>
+                        <div className="ml-3">
+                          <h3 className="text-base font-medium text-gray-900">User Login</h3>
+                          <p className="text-sm text-gray-500">
+                            Allow users to log in to their accounts. When disabled, users will be redirected to the home page if they try to access the login page.
+                          </p>
+                        </div>
                       </div>
-                      <div className="ml-3">
-                        <h3 className="text-base font-medium text-gray-900">User Login</h3>
-                        <p className="text-sm text-gray-500">
-                          Allow users to log in to their accounts. When disabled, users will be redirected to the home page if they try to access the login page.
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setLoginEnabled(!loginEnabled)}
-                      className={`${
-                        loginEnabled ? 'bg-blue-600' : 'bg-gray-200'
-                      } relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
-                    >
-                      <span className="sr-only">Toggle login</span>
-                      <span
+                      <button
+                        type="button"
+                        onClick={() => setLoginEnabled(!loginEnabled)}
                         className={`${
-                          loginEnabled ? 'translate-x-5' : 'translate-x-0'
-                        } pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200`}
+                          loginEnabled ? 'bg-blue-600' : 'bg-gray-200'
+                        } relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
                       >
-                        {loginEnabled ? (
-                          <ToggleRight className="h-5 w-5 text-blue-600" />
-                        ) : (
-                          <ToggleLeft className="h-5 w-5 text-gray-400" />
-                        )}
-                      </span>
-                    </button>
-                  </div>
-
-                  {/* User Tracking Toggle */}
-                  <div className="flex items-center justify-between py-3 border-b border-gray-200">
-                    <div className="flex items-start">
-                      <div className="flex-shrink-0">
-                        <Eye className="w-6 h-6 text-gray-500" />
-                      </div>
-                      <div className="ml-3">
-                        <h3 className="text-base font-medium text-gray-900">User Engagement Tracking</h3>
-                        <p className="text-sm text-gray-500">
-                          Track user interactions with business listings. When disabled, no engagement data will be collected across all sites.
-                        </p>
-                      </div>
+                        <span className="sr-only">Toggle login</span>
+                        <span
+                          className={`${
+                            loginEnabled ? 'translate-x-5' : 'translate-x-0'
+                          } pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200`}
+                        >
+                          {loginEnabled ? (
+                            <ToggleRight className="h-5 w-5 text-blue-600" />
+                          ) : (
+                            <ToggleLeft className="h-5 w-5 text-gray-400" />
+                          )}
+                        </span>
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setTrackingEnabled(!trackingEnabled)}
-                      className={`${
-                        trackingEnabled ? 'bg-blue-600' : 'bg-gray-200'
-                      } relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
-                    >
-                      <span className="sr-only">Toggle tracking</span>
-                      <span
-                        className={`${
-                          trackingEnabled ? 'translate-x-5' : 'translate-x-0'
-                        } pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200`}
-                      >
-                        {trackingEnabled ? (
-                          <ToggleRight className="h-5 w-5 text-blue-600" />
-                        ) : (
-                          <ToggleLeft className="h-5 w-5 text-gray-400" />
-                        )}
-                      </span>
-                    </button>
-                  </div>
-
-                  <div className="mt-6">
-                    <button
-                      onClick={handleSaveSettings}
-                      disabled={saving}
-                      className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed"
-                    >
-                      {saving ? (
-                        <>
-                          <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          <Save className="w-4 h-4 mr-2" />
-                          Save Settings
-                        </>
-                      )}
-                    </button>
                   </div>
                 </div>
-
-                {/* Settings Info */}
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                
+                {/* Tracking Settings */}
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                    <Activity className="w-5 h-5 mr-2 text-blue-600" />
+                    Tracking Settings
+                  </h3>
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0">
+                          <Activity className="w-6 h-6 text-gray-500" />
+                        </div>
+                        <div className="ml-3">
+                          <h3 className="text-base font-medium text-gray-900">User Engagement Tracking</h3>
+                          <p className="text-sm text-gray-500">
+                            Track user interactions with business listings. When disabled, no engagement data will be collected across all sites.
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setTrackingEnabled(!trackingEnabled)}
+                        className={`${
+                          trackingEnabled ? 'bg-blue-600' : 'bg-gray-200'
+                        } relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+                      >
+                        <span className="sr-only">Toggle tracking</span>
+                        <span
+                          className={`${
+                            trackingEnabled ? 'translate-x-5' : 'translate-x-0'
+                          } pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200`}
+                        >
+                          {trackingEnabled ? (
+                            <ToggleRight className="h-5 w-5 text-blue-600" />
+                          ) : (
+                            <ToggleLeft className="h-5 w-5 text-gray-400" />
+                          )}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Save Button */}
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={handleSaveSettings}
+                    disabled={saving}
+                    className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed"
+                  >
+                    {saving ? (
+                      <>
+                        <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4 mr-2" />
+                        Save Settings
+                      </>
+                    )}
+                  </button>
+                </div>
+                
+                {/* Important Notes */}
+                <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                   <div className="flex items-start">
                     <AlertCircle className="w-5 h-5 text-yellow-600 mr-3 flex-shrink-0 mt-0.5" />
                     <div>
                       <h3 className="text-sm font-medium text-yellow-800">Important Notes</h3>
-                      <ul className="mt-2 text-sm text-yellow-700 space-y-1 list-disc pl-5">
-                        <li>Disabling login will prevent all users from accessing their accounts, including business owners.</li>
-                        <li>Disabling tracking will stop all user engagement data collection across all sites.</li>
-                        <li>These settings take effect immediately and apply to all users.</li>
-                      </ul>
+                      <div className="mt-2 text-sm text-yellow-700 space-y-1">
+                        <p>
+                          <strong>Login Toggle:</strong> Disabling login will prevent all users from accessing their accounts, including business owners.
+                          This should only be used for maintenance or security purposes.
+                        </p>
+                        <p>
+                          <strong>Tracking Toggle:</strong> Disabling tracking will stop all user engagement data collection across all sites.
+                          This affects analytics for all businesses and may impact premium features.
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>

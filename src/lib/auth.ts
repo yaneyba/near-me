@@ -54,6 +54,71 @@ export const setAuthFeatureFlags = (flags: Partial<AuthFeatureFlags>): void => {
   }
 };
 
+// Get settings from database
+export const getSettingsFromDatabase = async (): Promise<AuthFeatureFlags> => {
+  try {
+    const { data: loginSetting, error: loginError } = await supabase
+      .from('admin_settings')
+      .select('value')
+      .eq('key', 'login_enabled')
+      .single();
+    
+    const { data: trackingSetting, error: trackingError } = await supabase
+      .from('admin_settings')
+      .select('value')
+      .eq('key', 'tracking_enabled')
+      .single();
+    
+    if (loginError || trackingError) {
+      console.error('Error fetching settings:', loginError || trackingError);
+      return DEFAULT_AUTH_FEATURES;
+    }
+    
+    return {
+      loginEnabled: loginSetting?.value === 'true',
+      trackingEnabled: trackingSetting?.value === 'true'
+    };
+  } catch (error) {
+    console.error('Error getting settings from database:', error);
+    return DEFAULT_AUTH_FEATURES;
+  }
+};
+
+// Update settings in database (admin only)
+export const updateDatabaseSettings = async (settings: Partial<AuthFeatureFlags>): Promise<boolean> => {
+  try {
+    const updates = [];
+    
+    if (settings.loginEnabled !== undefined) {
+      updates.push(
+        supabase
+          .from('admin_settings')
+          .update({ value: String(settings.loginEnabled) })
+          .eq('key', 'login_enabled')
+      );
+    }
+    
+    if (settings.trackingEnabled !== undefined) {
+      updates.push(
+        supabase
+          .from('admin_settings')
+          .update({ value: String(settings.trackingEnabled) })
+          .eq('key', 'tracking_enabled')
+      );
+    }
+    
+    await Promise.all(updates);
+    
+    // Also update local storage for immediate effect
+    setAuthFeatureFlags(settings);
+    
+    return true;
+  } catch (error) {
+    console.error('Error updating database settings:', error);
+    return false;
+  }
+};
+
 // Sign in with email and password
 export const signIn = async (email: string, password: string) => {
   // Check if login is enabled
@@ -184,10 +249,30 @@ export const useAuth = () => {
     
     window.addEventListener('storage', handleStorageChange);
 
+    // Fetch settings from database periodically
+    const fetchDatabaseSettings = async () => {
+      try {
+        const dbSettings = await getSettingsFromDatabase();
+        setAuthFeatures(prev => ({...prev, ...dbSettings}));
+        
+        // Update localStorage to match database
+        setAuthFeatureFlags(dbSettings);
+      } catch (error) {
+        console.error('Error fetching database settings:', error);
+      }
+    };
+    
+    // Initial fetch
+    fetchDatabaseSettings();
+    
+    // Set up interval to check for settings changes
+    const interval = setInterval(fetchDatabaseSettings, 60000); // Check every minute
+
     // Cleanup subscriptions
     return () => {
       subscription.unsubscribe();
       window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
     };
   }, []);
 
