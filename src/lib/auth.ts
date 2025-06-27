@@ -130,6 +130,15 @@ export const useAuth = () => {
       try {
         setLoading(true);
         setError(null);
+        
+        // Check if Supabase is properly configured
+        if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+          console.error('Supabase configuration missing. Check your .env file.');
+          setError(new Error('Supabase configuration missing'));
+          setLoading(false);
+          return;
+        }
+        
         const user = await getCurrentUser();
         setUser(user);
       } catch (error) {
