@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Crown, Star, TrendingUp, ArrowRight } from 'lucide-react';
-import { getUserSubscription, getProductNameFromPriceId } from '../lib/stripe';
+import { getUserSubscription } from '../lib/stripe';
+import { getProductByPriceId } from '../stripe-config';
 
 interface SubscriptionBannerProps {
   className?: string;
@@ -40,7 +41,7 @@ const SubscriptionBanner: React.FC<SubscriptionBannerProps> = ({ className = '' 
   // If user has an active subscription, show subscription info
   if (subscription?.subscription_status === 'active' || subscription?.subscription_status === 'trialing') {
     const productName = subscription.price_id 
-      ? getProductNameFromPriceId(subscription.price_id)
+      ? getProductByPriceId(subscription.price_id)?.name
       : 'Premium Plan';
 
     const nextBillingDate = subscription.current_period_end 

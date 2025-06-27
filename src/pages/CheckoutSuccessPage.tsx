@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle, ArrowRight, Home, Building } from 'lucide-react';
-import { getUserSubscription, getProductNameFromPriceId } from '../lib/stripe';
+import { getUserSubscription } from '../lib/stripe';
+import { getProductByPriceId } from '../stripe-config';
 
 const CheckoutSuccessPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -39,7 +40,7 @@ const CheckoutSuccessPage: React.FC = () => {
   }, [sessionId, navigate]);
 
   const productName = subscription?.price_id 
-    ? getProductNameFromPriceId(subscription.price_id)
+    ? getProductByPriceId(subscription.price_id)?.name
     : 'Business Listing';
 
   return (
