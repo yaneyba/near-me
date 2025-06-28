@@ -7,13 +7,10 @@ import {
   Globe, 
   Calendar, 
   Navigation, 
-  Clock, 
   Search, 
   Eye, 
   ChevronDown, 
   ChevronUp, 
-  Filter, 
-  Download, 
   Smartphone, 
   Tablet, 
   Monitor, 
@@ -26,7 +23,6 @@ import {
 } from 'lucide-react';
 import { DataProviderFactory } from '../providers';
 import { BusinessAnalytics } from '../types';
-// import { useAuth, signOut } from '../lib/auth';
 import { useNavigate } from 'react-router-dom';
 import SubscriptionManager from '../components/SubscriptionManager';
 import { signOut, useAuth } from '../lib/auth';
@@ -46,7 +42,6 @@ const BusinessDashboardPage: React.FC = () => {
     new Date().toISOString().split('T')[0]
   );
   const [activeTab, setActiveTab] = useState<'analytics' | 'subscription'>('analytics');
-  const [showSubscriptionManager, setShowSubscriptionManager] = useState(false);
 
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -88,6 +83,7 @@ const BusinessDashboardPage: React.FC = () => {
       
       setAnalytics(data);
     } catch (error) {
+      // Could add user-facing error handling here if needed
       console.error('Error loading analytics:', error);
     } finally {
       setLoading(false);
@@ -99,6 +95,7 @@ const BusinessDashboardPage: React.FC = () => {
       await signOut();
       navigate('/login');
     } catch (error) {
+      // Could add user-facing error handling here if needed
       console.error('Error signing out:', error);
     }
   };
@@ -113,13 +110,6 @@ const BusinessDashboardPage: React.FC = () => {
     if (previous === 0) return { value: 0, isPositive: true };
     const change = ((current - previous) / previous) * 100;
     return { value: Math.abs(change), isPositive: change >= 0 };
-  };
-
-  // Generate some mock previous period data for comparison
-  const getPreviousPeriodData = (metric: number): number => {
-    // Randomize previous data within a reasonable range
-    const factor = 0.7 + Math.random() * 0.6; // Between 70% and 130% of current
-    return metric * factor;
   };
 
   const renderMetricCard = (
@@ -537,32 +527,28 @@ const BusinessDashboardPage: React.FC = () => {
                     'Total Views', 
                     analytics.metrics.totalViews, 
                     <Eye className="w-5 h-5 text-blue-600" />, 
-                    'border-blue-600',
-                    getPreviousPeriodData(analytics.metrics.totalViews)
+                    'border-blue-600'
                   )}
                   
                   {renderMetricCard(
                     'Phone Calls', 
                     analytics.metrics.phoneClicks, 
                     <Phone className="w-5 h-5 text-green-600" />, 
-                    'border-green-600',
-                    getPreviousPeriodData(analytics.metrics.phoneClicks)
+                    'border-green-600'
                   )}
                   
                   {renderMetricCard(
                     'Website Clicks', 
                     analytics.metrics.websiteClicks, 
                     <Globe className="w-5 h-5 text-purple-600" />, 
-                    'border-purple-600',
-                    getPreviousPeriodData(analytics.metrics.websiteClicks)
+                    'border-purple-600'
                   )}
                   
                   {renderMetricCard(
                     'Conversion Rate', 
                     analytics.metrics.conversionRate, 
                     <Zap className="w-5 h-5 text-orange-600" />, 
-                    'border-orange-600',
-                    getPreviousPeriodData(analytics.metrics.conversionRate)
+                    'border-orange-600'
                   )}
                 </div>
                 
@@ -579,32 +565,28 @@ const BusinessDashboardPage: React.FC = () => {
                         'Booking Clicks', 
                         analytics.metrics.bookingClicks, 
                         <Calendar className="w-5 h-5 text-yellow-600" />, 
-                        'border-yellow-600',
-                        getPreviousPeriodData(analytics.metrics.bookingClicks)
+                        'border-yellow-600'
                       )}
                       
                       {renderMetricCard(
                         'Directions Clicks', 
                         analytics.metrics.directionsClicks, 
                         <Navigation className="w-5 h-5 text-yellow-600" />, 
-                        'border-yellow-600',
-                        getPreviousPeriodData(analytics.metrics.directionsClicks)
+                        'border-yellow-600'
                       )}
                       
                       {renderMetricCard(
                         'Services Viewed', 
                         analytics.metrics.servicesExpands, 
                         <Search className="w-5 h-5 text-yellow-600" />, 
-                        'border-yellow-600',
-                        getPreviousPeriodData(analytics.metrics.servicesExpands)
+                        'border-yellow-600'
                       )}
                       
                       {renderMetricCard(
                         'Engagement Rate', 
                         analytics.metrics.engagementRate, 
                         <Star className="w-5 h-5 text-yellow-600" />, 
-                        'border-yellow-600',
-                        getPreviousPeriodData(analytics.metrics.engagementRate)
+                        'border-yellow-600'
                       )}
                     </div>
                   </div>

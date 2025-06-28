@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { signIn, useAuth, getCurrentUser, isAdminEmail } from '../lib/auth';
+import { signIn, useAuth } from '../lib/auth';
 import { Mail, Lock, AlertCircle, LogIn, ArrowRight, Building, Shield, CheckCircle } from 'lucide-react';
 
 const LoginPage: React.FC = () => {
@@ -13,9 +13,19 @@ const LoginPage: React.FC = () => {
   
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as any)?.from?.pathname || '/business/dashboard';
-  const { authFeatures } = useAuth();
+  const { user, authFeatures } = useAuth();
   const loginEnabled = authFeatures?.loginEnabled ?? true;
+
+  // Redirect after successful login
+  useEffect(() => {
+    if (user) {
+      if (user.isAdmin) {
+        navigate('/admin/dashboard', { replace: true });
+      } else {
+        navigate('/business/dashboard', { replace: true });
+      }
+    }
+  }, [user, navigate]);
 
   // Redirect if login is disabled
   useEffect(() => {
@@ -38,10 +48,8 @@ const LoginPage: React.FC = () => {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
     
-    if (!supabaseUrl || !supabaseKey || 
-        supabaseUrl === 'https://example.supabase.co' || 
-        supabaseKey.includes('example_key')) {
-      setAuthError('Supabase configuration is missing or using placeholder values. Please set up your environment variables.');
+    if (!supabaseUrl || !supabaseKey) {
+      setAuthError('Supabase configuration is missing. Please set up your environment variables.');
     }
   }, []);
 
@@ -57,53 +65,11 @@ const LoginPage: React.FC = () => {
       setError(null);
       setLoading(true);
       
-      console.log('Starting login process for:', email);
-      
-      // Add timeout to prevent hanging
-      const loginPromise = signIn(email, password);
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Login timeout after 10 seconds')), 10000);
-      });
-      
-      await Promise.race([loginPromise, timeoutPromise]);
-      console.log('Sign in successful');
-      
-      // Check if admin by email first (most reliable)
-      if (isAdminEmail(email)) {
-        console.log('Admin email detected, redirecting to admin dashboard');
-        navigate('/admin/dashboard', { replace: true });
-        return;
-      }
-      
-      // For non-admin users, redirect to business dashboard by default
-      const currentUser = await getCurrentUser();
-      console.log('Current user data:', currentUser);
-      
-      if (currentUser && !currentUser.isAdmin) {
-        console.log('Business user detected, redirecting to business dashboard');
-        navigate('/business/dashboard', { replace: true });
-      } else {
-        console.log('Default redirect to:', from);
-        navigate(from, { replace: true });
-      }
+      await signIn(email, password);
+      // The useEffect above will handle the redirect after user state updates
       
     } catch (err: any) {
-      console.error('Login error:', err);
-      setLoading(false); // Make sure to reset loading state
-      
-      if (err.message.includes('timeout')) {
-        setError('Login is taking too long. Please check your connection and try again.');
-      } else if (err.message.includes('Login is currently disabled')) {
-        setError('Login is currently disabled by the administrator');
-      } else if (err.message.includes('Invalid login')) {
-        setError('Invalid email or password');
-      } else if (err.message.includes('Email not confirmed')) {
-        setError('Please check your email and click the confirmation link before logging in');
-      } else if (err.message.includes('Too many requests')) {
-        setError('Too many login attempts. Please wait a few minutes and try again');
-      } else {
-        setError(err.message || 'Login failed. Please try again.');
-      }
+      setError(err.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
