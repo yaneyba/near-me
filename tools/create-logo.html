@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Near Me Logo Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .logo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        #logoCanvas {
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 8px;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        button {
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .info {
+            text-align: center;
+            color: #666;
+            max-width: 600px;
+        }
+    </style>
+</head>
+<body>
+    <div class="logo-container">
+        <h1>Near Me US Logo Generator</h1>
+        <canvas id="logoCanvas" width="400" height="400"></canvas>
+        <div class="controls">
+            <button onclick="generateLogo('blue')">Blue Theme</button>
+            <button onclick="generateLogo('green')">Green Theme</button>
+            <button onclick="generateLogo('orange')">Orange Theme</button>
+            <button onclick="downloadLogo()">Download PNG</button>
+        </div>
+        <div class="info">
+            <p>Professional logo for Near Me US - Local Business Directory Platform</p>
+            <p>Click a color theme to generate, then download your logo!</p>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('logoCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function generateLogo(theme = 'blue') {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Set colors based on theme
+            const colors = {
+                blue: {
+                    primary: '#3b82f6',
+                    secondary: '#1e40af',
+                    accent: '#60a5fa',
+                    background: '#eff6ff'
+                },
+                green: {
+                    primary: '#10b981',
+                    secondary: '#047857',
+                    accent: '#34d399',
+                    background: '#ecfdf5'
+                },
+                orange: {
+                    primary: '#f97316',
+                    secondary: '#c2410c',
+                    accent: '#fb923c',
+                    background: '#fff7ed'
+                }
+            };
+            
+            const color = colors[theme];
+            
+            // Background
+            ctx.fillStyle = color.background;
+            ctx.fillRect(0, 0, 400, 400);
+            
+            // Main circle background
+            ctx.beginPath();
+            ctx.arc(200, 200, 180, 0, 2 * Math.PI);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+            ctx.strokeStyle = color.primary;
+            ctx.lineWidth = 4;
+            ctx.stroke();
+            
+            // Location pin icon
+            ctx.beginPath();
+            ctx.arc(200, 160, 40, 0, 2 * Math.PI);
+            ctx.fillStyle = color.primary;
+            ctx.fill();
+            
+            // Pin point
+            ctx.beginPath();
+            ctx.moveTo(200, 200);
+            ctx.lineTo(180, 240);
+            ctx.lineTo(220, 240);
+            ctx.closePath();
+            ctx.fillStyle = color.primary;
+            ctx.fill();
+            
+            // Inner pin circle
+            ctx.beginPath();
+            ctx.arc(200, 160, 20, 0, 2 * Math.PI);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+            
+            // Small accent dots around the pin
+            const dots = [
+                {x: 150, y: 140, size: 8},
+                {x: 250, y: 140, size: 8},
+                {x: 130, y: 180, size: 6},
+                {x: 270, y: 180, size: 6},
+                {x: 140, y: 220, size: 5},
+                {x: 260, y: 220, size: 5}
+            ];
+            
+            dots.forEach(dot => {
+                ctx.beginPath();
+                ctx.arc(dot.x, dot.y, dot.size, 0, 2 * Math.PI);
+                ctx.fillStyle = color.accent;
+                ctx.fill();
+            });
+            
+            // Text: "NEAR ME"
+            ctx.fillStyle = color.secondary;
+            ctx.font = 'bold 32px Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('NEAR ME', 200, 310);
+            
+            // Text: ".US"
+            ctx.fillStyle = color.primary;
+            ctx.font = 'bold 20px Arial, sans-serif';
+            ctx.fillText('.US', 200, 340);
+            
+            // Subtitle
+            ctx.fillStyle = '#666';
+            ctx.font = '12px Arial, sans-serif';
+            ctx.fillText('Local Business Directory', 200, 365);
+        }
+
+        function downloadLogo() {
+            const link = document.createElement('a');
+            link.download = 'near-me.us.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+
+        // Generate initial logo
+        generateLogo('blue');
+    </script>
+</body>
+</html>
