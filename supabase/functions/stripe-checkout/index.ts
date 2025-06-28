@@ -1,8 +1,7 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import Stripe from 'npm:stripe@17.7.0';
-import { createClient } from 'npm:@supabase/supabase-js@2.49.1';
+import { getSupabaseService } from '../_shared/supabase-service.ts';
 
-const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
 const stripeSecret = Deno.env.get('STRIPE_SECRET_KEY')!;
 const stripe = new Stripe(stripeSecret, {
   appInfo: {
@@ -10,6 +9,8 @@ const stripe = new Stripe(stripeSecret, {
     version: '1.0.0',
   },
 });
+
+const supabaseService = getSupabaseService();
 
 // Helper function to create responses with CORS headers
 function corsResponse(body: string | object | null, status = 200) {
@@ -61,10 +62,7 @@ Deno.serve(async (req) => {
 
     const authHeader = req.headers.get('Authorization')!;
     const token = authHeader.replace('Bearer ', '');
-    const {
-      data: { user },
-      error: getUserError,
-    } = await supabase.auth.getUser(token);
+    const { data: user, error: getUserError } = await supabaseService.getUserFromToken(token);
 
     if (getUserError) {
       return corsResponse({ error: 'Failed to authenticate user' }, 401);
@@ -75,12 +73,7 @@ Deno.serve(async (req) => {
     }
 
     // Get the user's business profile
-    const { data: businessProfile, error: profileError } = await supabase
-      .from('business_profiles')
-      .select('id')
-      .eq('user_id', user.id)
-      .is('deleted_at', null)
-      .maybeSingle();
+    const { data: businessProfile, error: profileError } = await supabaseService.getBusinessProfileByUserId(user.id);
 
     if (profileError) {
       console.error('Failed to fetch business profile', profileError);
@@ -95,12 +88,9 @@ Deno.serve(async (req) => {
     const businessProfileId = businessProfile.id;
 
     // Check if customer exists for this business profile
-    const { data: customer, error: getCustomerError } = await supabase
-      .from('stripe_customers')
-      .select('customer_id')
-      .eq('business_profile_id', businessProfileId)
-      .is('deleted_at', null)
-      .maybeSingle();
+    const { data: customer, error: getCustomerError } = await supabaseService.getStripeCustomer(businessProfileId);
+    // Check if customer exists for this business profile
+    const { data: customer, error: getCustomerError } = await supabaseService.getStripeCustomer(businessProfileId);
 
     if (getCustomerError) {
       console.error('Failed to fetch customer information from the database', getCustomerError);
@@ -123,19 +113,19 @@ Deno.serve(async (req) => {
 
       console.log(`Created new Stripe customer ${newCustomer.id} for business profile ${businessProfileId}`);
 
-      const { error: createCustomerError } = await supabase.from('stripe_customers').insert({
-        user_id: user.id,
-        business_profile_id: businessProfileId,
-        customer_id: newCustomer.id,
-      });
+      const { success: createCustomerSuccess, error: createCustomerError } = await supabaseService.createStripeCustomer(
+        user.id,
+        businessProfileId,
+        newCustomer.id
+      );
 
-      if (createCustomerError) {
+      if (!createCustomerSuccess || createCustomerError) {
         console.error('Failed to save customer information in the database', createCustomerError);
 
         // Try to clean up both the Stripe customer and subscription record
         try {
           await stripe.customers.del(newCustomer.id);
-          await supabase.from('stripe_subscriptions').delete().eq('customer_id', newCustomer.id);
+          // Note: We can't easily clean up subscription records without direct DB access
         } catch (deleteError) {
           console.error('Failed to clean up after customer mapping error:', deleteError);
         }
@@ -144,12 +134,11 @@ Deno.serve(async (req) => {
       }
 
       if (mode === 'subscription') {
-        const { error: createSubscriptionError } = await supabase.from('stripe_subscriptions').insert({
-          customer_id: newCustomer.id,
-          status: 'not_started',
-        });
+        const { success: createSubscriptionSuccess, error: createSubscriptionError } = await supabaseService.createStripeSubscription(
+          newCustomer.id
+        );
 
-        if (createSubscriptionError) {
+        if (!createSubscriptionSuccess || createSubscriptionError) {
           console.error('Failed to save subscription in the database', createSubscriptionError);
 
           // Try to clean up the Stripe customer since we couldn't create the subscription
@@ -171,11 +160,7 @@ Deno.serve(async (req) => {
 
       if (mode === 'subscription') {
         // Verify subscription exists for existing customer
-        const { data: subscription, error: getSubscriptionError } = await supabase
-          .from('stripe_subscriptions')
-          .select('status')
-          .eq('customer_id', customerId)
-          .maybeSingle();
+        const { data: subscription, error: getSubscriptionError } = await supabaseService.getStripeSubscription(customerId);
 
         if (getSubscriptionError) {
           console.error('Failed to fetch subscription information from the database', getSubscriptionError);
@@ -185,12 +170,11 @@ Deno.serve(async (req) => {
 
         if (!subscription) {
           // Create subscription record for existing customer if missing
-          const { error: createSubscriptionError } = await supabase.from('stripe_subscriptions').insert({
-            customer_id: customerId,
-            status: 'not_started',
-          });
+          const { success: createSubscriptionSuccess, error: createSubscriptionError } = await supabaseService.createStripeSubscription(
+            customerId
+          );
 
-          if (createSubscriptionError) {
+          if (!createSubscriptionSuccess || createSubscriptionError) {
             console.error('Failed to create subscription record for existing customer', createSubscriptionError);
 
             return corsResponse({ error: 'Failed to create subscription record for existing customer' }, 500);

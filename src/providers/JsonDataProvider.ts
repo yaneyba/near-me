@@ -545,6 +545,36 @@ We'll contact you at ${businessData.email} with updates on your application stat
   }
 
   // Admin methods - mock implementations for development
+  async getAllBusinesses(): Promise<any[]> {
+    // Return all businesses from the JSON data for admin view
+    // Convert the Business objects to match the admin interface expectations
+    return this.businesses.map(business => ({
+      id: business.id,
+      business_name: business.name,
+      category: business.category,
+      city: business.city,
+      state: business.state,
+      address: business.address,
+      phone: business.phone,
+      website: business.website,
+      rating: business.rating,
+      review_count: business.reviewCount,
+      description: business.description,
+      services: business.services,
+      neighborhood: business.neighborhood,
+      hours: business.hours,
+      image: business.image,
+      premium: business.premium,
+      booking_links: business.bookingLinks,
+      latitude: business.latitude,
+      longitude: business.longitude,
+      created_at: new Date().toISOString(), // Mock timestamp
+      updated_at: new Date().toISOString(), // Mock timestamp
+      approved: true, // All JSON businesses are considered approved
+      approval_status: 'approved'
+    }));
+  }
+
   async getBusinessSubmissions(): Promise<any[]> {
     // Return mock data for development
     return [

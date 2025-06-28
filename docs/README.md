@@ -14,6 +14,9 @@ This folder contains comprehensive documentation for the Near Me Business Direct
 ### Recent Refactoring (COMPLETED ✅)
 - **[SQL-REFACTORING-COMPLETE.md](./SQL-REFACTORING-COMPLETE.md)**: Complete SQL refactoring summary
 - **[FIXING-OVER-ENGINEERED-AUTH.md](./FIXING-OVER-ENGINEERED-AUTH.md)**: Authentication refactoring details
+- **[SUPABASE-CONSOLIDATION.md](./SUPABASE-CONSOLIDATION.md)**: Edge Functions Supabase client consolidation
+- **[PAGINATION-IMPLEMENTATION.md](./PAGINATION-IMPLEMENTATION.md)**: Reusable pagination component implementation
+- **[SUPABASE-SECURITY-FIXES.md](./SUPABASE-SECURITY-FIXES.md)**: Supabase security improvements and fixes
 
 ### Feature-Specific Guides
 - **[ADS-HOW-TO-GUIDE.md](./ADS-HOW-TO-GUIDE.md)**: Advertisement integration setup
@@ -25,9 +28,13 @@ This folder contains comprehensive documentation for the Near Me Business Direct
 - **[ADDING-NEW-CITY-GUIDE.md](./ADDING-NEW-CITY-GUIDE.md)**: Adding new cities and regions
 - **[ADDING-NEW-CONTENT-GUIDE.md](./ADDING-NEW-CONTENT-GUIDE.md)**: Content management procedures
 
+### Database & Infrastructure
+- **[Database Documentation](./database/)**: Complete database documentation
+  - **[production-ddl-fixes-summary.md](./database/production-ddl-fixes-summary.md)**: Database schema fixes and improvements
+  - **[README.md](./database/README.md)**: SQL files usage and reference
+
 ### Database Reference
 - **[production-ddl-refactored.sql](../supabase/sqls/production-ddl-refactored.sql)**: Current database schema reference (NEW STANDARD)
-- **[SQL Files Documentation](../supabase/sqls/README.md)**: All SQL files and usage instructions
 
 ### Development Tools (PROTECTED - DO NOT DELETE)
 - **[DevPanel Component](../src/components/DevPanel.tsx)**: ⚠️ **CRITICAL DEV TOOL** - Dynamic testing interface for categories/cities

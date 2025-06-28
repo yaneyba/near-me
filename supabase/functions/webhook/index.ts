@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "npm:@supabase/supabase-js@2.50.0";
 import Stripe from "npm:stripe@14.20.0";
+import { getSupabaseService } from "../_shared/supabase-service.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,17 +19,15 @@ serve(async (req) => {
 
   try {
     // Get environment variables
-    const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
     const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY") || "";
     const endpointSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") || "";
 
-    if (!supabaseUrl || !supabaseServiceKey || !stripeSecretKey) {
+    if (!stripeSecretKey) {
       throw new Error("Missing environment variables");
     }
 
-    // Initialize Supabase client with service role key
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // Initialize services
+    const supabaseService = getSupabaseService();
     
     // Initialize Stripe
     const stripe = new Stripe(stripeSecretKey, {
@@ -71,19 +69,18 @@ serve(async (req) => {
           const priceId = subscription.items.data[0].price.id;
 
           // Update the business profile with subscription info
-          const { error } = await supabase
-            .from("business_profiles")
-            .update({
+          const { success: updateSuccess, error: updateError } = await supabaseService.updateBusinessProfile(
+            businessProfileId,
+            {
               stripe_customer_id: customerId,
               stripe_subscription_id: subscriptionId,
               stripe_price_id: priceId,
               premium: true,
-              updated_at: new Date().toISOString(),
-            })
-            .eq("id", businessProfileId);
+            }
+          );
 
-          if (error) {
-            console.error("Error updating business profile:", error);
+          if (!updateSuccess || updateError) {
+            console.error("Error updating business profile:", updateError);
             throw new Error("Failed to update business profile");
           }
         }
@@ -98,29 +95,25 @@ serve(async (req) => {
         const status = subscription.status;
 
         // Update the business profile with the new subscription status
-        const { data: profiles, error: fetchError } = await supabase
-          .from("business_profiles")
-          .select("*")
-          .eq("stripe_customer_id", customerId);
+        const { data: profiles, error: fetchError } = await supabaseService.getBusinessProfileByStripeCustomer(customerId);
 
-        if (fetchError || !profiles || profiles.length === 0) {
+        if (fetchError || !profiles) {
           console.error("Error fetching business profile:", fetchError);
           throw new Error("Failed to fetch business profile");
         }
 
-        const profile = profiles[0];
-        const { error } = await supabase
-          .from("business_profiles")
-          .update({
+        const profile = profiles;
+        const { success: updateSuccess, error: updateError } = await supabaseService.updateBusinessProfile(
+          profile.id,
+          {
             stripe_subscription_id: subscriptionId,
             stripe_price_id: priceId,
             premium: status === "active" || status === "trialing",
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", profile.id);
+          }
+        );
 
-        if (error) {
-          console.error("Error updating business profile:", error);
+        if (!updateSuccess || updateError) {
+          console.error("Error updating business profile:", updateError);
           throw new Error("Failed to update business profile");
         }
         break;
@@ -131,27 +124,23 @@ serve(async (req) => {
         const customerId = subscription.customer;
 
         // Update the business profile to remove premium status
-        const { data: profiles, error: fetchError } = await supabase
-          .from("business_profiles")
-          .select("*")
-          .eq("stripe_customer_id", customerId);
+        const { data: profiles, error: fetchError } = await supabaseService.getBusinessProfileByStripeCustomer(customerId);
 
-        if (fetchError || !profiles || profiles.length === 0) {
+        if (fetchError || !profiles) {
           console.error("Error fetching business profile:", fetchError);
           throw new Error("Failed to fetch business profile");
         }
 
-        const profile = profiles[0];
-        const { error } = await supabase
-          .from("business_profiles")
-          .update({
+        const profile = profiles;
+        const { success: updateSuccess, error: updateError } = await supabaseService.updateBusinessProfile(
+          profile.id,
+          {
             premium: false,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", profile.id);
+          }
+        );
 
-        if (error) {
-          console.error("Error updating business profile:", error);
+        if (!updateSuccess || updateError) {
+          console.error("Error updating business profile:", updateError);
           throw new Error("Failed to update business profile");
         }
         break;
