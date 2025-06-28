@@ -26,9 +26,10 @@ import {
 } from 'lucide-react';
 import { DataProviderFactory } from '../providers';
 import { BusinessAnalytics } from '../types';
-import { useAuth, signOut } from '../lib/auth';
+// import { useAuth, signOut } from '../lib/auth';
 import { useNavigate } from 'react-router-dom';
 import SubscriptionManager from '../components/SubscriptionManager';
+import { signOut, useAuth } from '../lib/auth';
 
 const BusinessDashboardPage: React.FC = () => {
   const [period, setPeriod] = useState<'day' | 'week' | 'month' | 'year'>('week');

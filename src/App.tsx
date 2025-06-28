@@ -14,10 +14,9 @@ import BusinessOwnersPage from './pages/BusinessOwnersPage';
 import BusinessDashboardPage from './pages/BusinessDashboardPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import LoginPage from './pages/LoginPage';
-import { TestLoginPage } from './pages/TestLoginPage';
 import Layout from './components/Layout';
 import AuthGuard from './components/auth/AuthGuard';
-import { useAuth, isAdminEmail } from './lib/auth';
+import { useAuth } from './lib/auth';
 import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
 import CheckoutCancelPage from './pages/CheckoutCancelPage';
 
@@ -41,7 +40,7 @@ function App() {
 
   // Redirect admin users to admin dashboard
   React.useEffect(() => {
-    if ((user?.role === 'admin' || (user?.email && isAdminEmail(user.email))) && window.location.pathname === '/') {
+    if (user?.isAdmin && window.location.pathname === '/') {
       window.location.href = '/admin/dashboard';
     }
   }, [user]);
@@ -69,12 +68,6 @@ function App() {
           <Route 
             path="/login" 
             element={<LoginPage />} 
-          />
-          
-          {/* Test login with simplified auth */}
-          <Route 
-            path="/test-login" 
-            element={<TestLoginPage />} 
           />
           
           {/* Redirect register to add-business */}

@@ -75,12 +75,12 @@ const LoginPage: React.FC = () => {
         return;
       }
       
-      // For non-admin users, get their business profile
+      // For non-admin users, redirect to business dashboard by default
       const currentUser = await getCurrentUser();
       console.log('Current user data:', currentUser);
       
-      if (currentUser?.role === 'owner') {
-        console.log('Business owner detected, redirecting to business dashboard');
+      if (currentUser && !currentUser.isAdmin) {
+        console.log('Business user detected, redirecting to business dashboard');
         navigate('/business/dashboard', { replace: true });
       } else {
         console.log('Default redirect to:', from);

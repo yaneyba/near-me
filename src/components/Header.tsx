@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, MapPin, Phone, Mail, Plus, User, LogIn, LogOut } from 'lucide-react';
 import { SITE_INFO } from '../siteInfo';
-import { useAuth, signOut } from '../lib/auth';
+import { signOut, useAuth } from '../lib/auth';
+// Force refresh
 
 interface HeaderProps {
   category: string;
@@ -37,7 +38,7 @@ const Header: React.FC<HeaderProps> = ({ category, city, state }) => {
   };
 
   // Check if user is admin
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.isAdmin;
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">

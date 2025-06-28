@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import businessesData from '../data/businesses.json';
 import { Business } from '../types';
 import { SITE_INFO } from '../siteInfo';
-import { useAuth } from '../lib/auth';
 
 interface FooterProps {
   category: string;
@@ -15,10 +14,6 @@ interface FooterProps {
 const Footer: React.FC<FooterProps> = ({ category, city, state }) => {
   const currentYear = new Date().getFullYear();
   const businesses = businessesData as Business[];
-  const { user } = useAuth();
-  
-  // Check if user is admin
-  const isAdmin = user?.role === 'admin';
 
   // Get categories that actually exist in the CURRENT CITY
   const getExistingCategoriesInCurrentCity = (): string[] => {
@@ -198,11 +193,9 @@ const Footer: React.FC<FooterProps> = ({ category, city, state }) => {
               <Link to="/sitemap" className="text-gray-400 hover:text-white transition-colors">
                 Sitemap
               </Link>
-              {!isAdmin && (
-                <Link to="/business-owners" className="text-gray-400 hover:text-white transition-colors">
-                  For Business Owners
-                </Link>
-              )}
+              <Link to="/business-owners" className="text-gray-400 hover:text-white transition-colors">
+                For Business Owners
+              </Link>
             </div>
           </div>
         </div>

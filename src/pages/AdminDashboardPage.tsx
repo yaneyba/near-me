@@ -29,7 +29,7 @@ import {
   Activity
 } from 'lucide-react';
 import { DataProviderFactory } from '../providers';
-import { useAuth, isUserAdmin, getAuthFeatureFlags, updateDatabaseSettings } from '../lib/auth';
+import { getAuthFeatureFlags, isUserAdmin, updateDatabaseSettings, useAuth } from '../lib/auth';
 
 const AdminDashboardPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'businesses' | 'contacts' | 'users' | 'analytics' | 'settings'>('businesses');
