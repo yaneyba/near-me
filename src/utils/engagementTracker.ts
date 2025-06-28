@@ -1,8 +1,8 @@
 import { UserEngagementEvent } from '../types';
 import { DataProviderFactory } from '../providers';
 
-// Simple tracking configuration - in production this could come from environment variables
-const TRACKING_ENABLED = true;
+// Read tracking configuration from environment variables
+const TRACKING_ENABLED = import.meta.env.VITE_SETTINGS_TRACKING_ENABLED === 'true';
 
 // Declare gtag function for TypeScript
 declare global {
@@ -15,6 +15,12 @@ class EngagementTracker {
 
   constructor() {
     this.sessionId = this.generateSessionId();
+    
+    // Log tracking status on initialization
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`📊 Engagement Tracker initialized - Tracking ${TRACKING_ENABLED ? 'ENABLED' : 'DISABLED'}`);
+      console.log(`📊 Environment variable VITE_SETTINGS_TRACKING_ENABLED: ${import.meta.env.VITE_SETTINGS_TRACKING_ENABLED}`);
+    }
   }
 
   private generateSessionId(): string {
