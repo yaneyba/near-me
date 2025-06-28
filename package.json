@@ -21,6 +21,7 @@
     "add:samples": "node scripts/add-sample-submissions.js"
   },
   "dependencies": {
+    "@stripe/stripe-js": "^7.4.0",
     "@supabase/supabase-js": "^2.50.0",
     "dotenv": "^16.6.1",
     "lucide-react": "^0.344.0",
