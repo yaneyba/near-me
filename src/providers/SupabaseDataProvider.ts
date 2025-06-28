@@ -1,4 +1,5 @@
-import { supabase, supabaseAdmin, type Database } from '../lib/supabase';
+import { Database } from '../lib/database';
+import { supabase, supabaseAdmin } from '../lib/supabase';
 import { ContactSubmission, BusinessSubmission, SubmissionResult, UserEngagementEvent, BusinessAnalytics } from '../types';
 
 export class SupabaseDataProvider {
