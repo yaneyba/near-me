@@ -5,19 +5,31 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const supabaseServiceRoleKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
 
-// Check if Supabase credentials are available
-if (!supabaseUrl || !supabaseAnonKey) {
+// Validate required environment variables
+const validateEnvironment = () => {
+  const required = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'];
+  const missing = required.filter(key => !import.meta.env[key]);
+  
+  if (missing.length > 0) {
+    throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
+  }
+};
+
+// Validate environment in non-development environments
+if (import.meta.env.MODE !== 'development') {
+  validateEnvironment();
+} else if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('Missing Supabase environment variables. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file.');
 }
 
 export const supabase = createClient(
-  supabaseUrl || 'https://example.supabase.co',
-  supabaseAnonKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example_key'
+  supabaseUrl!,
+  supabaseAnonKey!
 );
 
 // Service role client for admin operations (bypasses RLS)
 export const supabaseAdmin = supabaseServiceRoleKey ? createClient(
-  supabaseUrl || 'https://example.supabase.co',
+  supabaseUrl!,
   supabaseServiceRoleKey,
   {
     auth: {
@@ -26,6 +38,43 @@ export const supabaseAdmin = supabaseServiceRoleKey ? createClient(
     }
   }
 ) : null;
+
+// Helper functions
+export const isAdminClientAvailable = (): boolean => {
+  return supabaseAdmin !== null;
+};
+
+// Validate service role key format (basic check)
+if (supabaseServiceRoleKey && !supabaseServiceRoleKey.includes('service_role')) {
+  console.warn('Service role key may be incorrect - should contain "service_role"');
+}
+
+// Connection health check
+export const testConnection = async () => {
+  try {
+    const { error } = await supabase.from('businesses').select('count').limit(1);
+    return { success: !error, error };
+  } catch (error) {
+    return { success: false, error };
+  }
+};
+
+// Type definitions for better type safety
+export interface BusinessHours {
+  [day: string]: {
+    open: string;
+    close: string;
+    closed?: boolean;
+  } | null;
+}
+
+export interface EventData {
+  [key: string]: unknown;
+}
+
+export interface AdminSettingValue {
+  [key: string]: unknown;
+}
 
 // Database types matching your existing schema with submission_status enum
 export interface Database {
@@ -93,7 +142,7 @@ export interface Database {
           website: string | null;
           description: string | null;
           services: string[] | null;
-          hours: any | null;
+          hours: BusinessHours | null;
           status: Database['public']['Enums']['submission_status'] | null;
           submitted_at: string | null;
           reviewed_at: string | null;
@@ -155,7 +204,7 @@ export interface Database {
           business_id: string;
           business_name: string;
           event_type: string;
-          event_data: any | null;
+          event_data: EventData | null;
           timestamp: string;
           ip_address: string | null;
           user_session_id: string;
@@ -263,7 +312,7 @@ export interface Database {
           state: string;
           services: string[] | null;
           verified: boolean | null;
-          hours: any | null;
+          hours: BusinessHours | null;
           image: string | null;
           established: number | null;
           site_id: string;
@@ -327,7 +376,7 @@ export interface Database {
         Row: {
           id: string;
           key: string;
-          value: any;
+          value: AdminSettingValue;
           description: string | null;
           created_at: string | null;
           updated_at: string | null;
@@ -336,7 +385,7 @@ export interface Database {
         Insert: {
           id?: string;
           key: string;
-          value: any;
+          value: AdminSettingValue;
           description?: string | null;
           created_at?: string | null;
           updated_at?: string | null;
