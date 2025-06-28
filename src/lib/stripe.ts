@@ -1,6 +1,7 @@
 import { StripeProduct, StripeCheckoutResult, StripeSubscription } from '../types';
 import { supabase } from './supabase';
 import { STRIPE_PRODUCTS, getProductByPriceId } from '../stripe-config';
+import { DataProviderFactory } from '../providers';
 
 /**
  * Create a checkout session for a business profile
@@ -20,14 +21,14 @@ export const createCheckoutSession = async (
       };
     }
 
+    // Get data provider to check business profile
+    const dataProvider = DataProviderFactory.getProvider();
+    
     // Check if business is approved for subscriptions
-    const { data: businessProfile, error: profileError } = await supabase
-      .from('business_profiles')
-      .select('approval_status, role')
-      .eq('id', businessProfileId)
-      .single();
+    const businessProfiles = await dataProvider.getBusinessProfiles();
+    const businessProfile = businessProfiles.find(profile => profile.id === businessProfileId);
 
-    if (profileError || !businessProfile) {
+    if (!businessProfile) {
       return {
         success: false,
         message: 'Business profile not found',
@@ -120,26 +121,22 @@ export const getCurrentSubscription = async (businessProfileId?: string): Promis
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
       
-      // Get business profile for current user
-      const { data: profile } = await supabase
-        .from('business_profiles')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
+      // Get business profile for current user using DataProviderFactory
+      const dataProvider = DataProviderFactory.getProvider();
+      const businessProfiles = await dataProvider.getBusinessProfiles();
+      const profile = businessProfiles.find(p => p.user_id === user.id);
       
       if (!profile) return null;
       profileId = profile.id;
     }
 
-    // Get the business profile with subscription info
-    const { data: profile, error } = await supabase
-      .from('business_profiles')
-      .select('stripe_subscription_id, stripe_price_id, premium, stripe_current_period_end')
-      .eq('id', profileId)
-      .single();
+    // Get the business profile with subscription info using DataProviderFactory
+    const dataProvider = DataProviderFactory.getProvider();
+    const businessProfiles = await dataProvider.getBusinessProfiles();
+    const profile = businessProfiles.find(p => p.id === profileId);
 
-    if (error || !profile) {
-      console.error('Error fetching business profile:', error);
+    if (!profile) {
+      console.error('Business profile not found:', profileId);
       return null;
     }
 

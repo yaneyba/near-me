@@ -651,6 +651,9 @@ We'll contact you at ${businessData.email} with updates on your application stat
           role,
           approval_status,
           premium,
+          stripe_subscription_id,
+          stripe_price_id,
+          stripe_current_period_end,
           created_at
         `)
         .order('created_at', { ascending: false });
