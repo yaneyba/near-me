@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth, isAdminEmail } from '../../lib/auth';
 import LoadingScreen from './LoadingScreen';
+import { useAuth } from '../../lib/auth';
 
 interface AuthGuardProps {
   children?: React.ReactNode;
@@ -14,57 +14,19 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   requireAuth = true,
   redirectTo = '/login'
 }) => {
-  const { user, loading, error, authFeatures } = useAuth();
+  const { user, loading, authFeatures } = useAuth();
   const location = useLocation();
-  const [isStable, setIsStable] = useState(false);
-
-  // Add a small delay to prevent flashing on initial load
-  useEffect(() => {
-    const timer = setTimeout(() => setIsStable(true), 100);
-    return () => clearTimeout(timer);
-  }, []);
 
   // Get login enabled from auth features
   const loginEnabled = authFeatures?.loginEnabled ?? true;
 
-  // Show loading screen while authentication is being checked or during initial stabilization
-  if (loading || !isStable) {
+  // Show loading screen while authentication is being checked
+  if (loading) {
     return <LoadingScreen />;
   }
 
-  // If there was an auth error, redirect to home
-  if (error) {
-    console.error('Authentication error:', error);
-    return <Navigate to="/" replace />;
-  }
-
-  // Check if the current path is a disabled auth route
-  const isDisabledAuthRoute = () => {
-    const path = location.pathname;
-    
-    if (!loginEnabled) {
-      // If login is disabled, block these routes
-      if (path === '/login') {
-        return true;
-      }
-    }
-    
-    // Handle register path - redirect to add-business
-    if (path === '/register') {
-      return true;
-    }
-    
-    return false;
-  };
-
-  // If trying to access a disabled auth route, redirect to home
-  if (isDisabledAuthRoute()) {
-    // If it's the register path, redirect to add-business
-    if (location.pathname === '/register') {
-      return <Navigate to="/add-business" replace />;
-    }
-    
-    // Otherwise redirect to home
+  // If login is disabled and trying to access login page, redirect to home
+  if (!loginEnabled && location.pathname === '/login') {
     return <Navigate to="/" replace />;
   }
 
@@ -83,26 +45,20 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   } else {
     // Page doesn't require authentication
     if (!user) {
-      // User not logged in - allow access (e.g., login page)
+      // User not logged in - allow access to public pages
       return <>{children}</>;
     }
     
     // User is logged in but accessing a page that doesn't require auth
-    // Only redirect if we're NOT on the login page (allow users to access login to switch accounts)
+    // For auth-specific pages like login, redirect to dashboard
     if (location.pathname === '/login') {
-      // Allow access to login page for account switching
-      return <>{children}</>;
+      return user.isAdmin 
+        ? <Navigate to="/admin/dashboard" replace />
+        : <Navigate to="/business/dashboard" replace />;
     }
     
-    // For other pages that don't require auth, redirect to appropriate dashboard
-    if (user.role === 'admin' || isAdminEmail(user.email)) {
-      return <Navigate to="/admin/dashboard" replace />;
-    } else if (user.role === 'owner') {
-      return <Navigate to="/business/dashboard" replace />;
-    } else {
-      // Default to business dashboard for other roles
-      return <Navigate to="/business/dashboard" replace />;
-    }
+    // For other public pages, allow access
+    return <>{children}</>;
   }
 };
 

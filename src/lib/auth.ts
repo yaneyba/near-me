@@ -38,6 +38,18 @@ export function isAdminEmail(email: string): boolean {
   return adminEmails.includes(email.toLowerCase());
 }
 
+// Helper function to create user object
+function createUserFromSupabaseUser(supabaseUser: any): SimpleUser {
+  return {
+    id: supabaseUser.id,
+    email: supabaseUser.email!,
+    isAdmin: isAdminEmail(supabaseUser.email!),
+    businessId: supabaseUser.user_metadata?.businessId,
+    businessName: supabaseUser.user_metadata?.businessName,
+    businessProfileId: supabaseUser.user_metadata?.businessProfileId
+  };
+}
+
 export class SimpleAuth {
   private static instance: SimpleAuth;
   private authState: AuthState = { user: null, loading: true };
@@ -66,26 +78,16 @@ export class SimpleAuth {
       }
 
       if (session?.user) {
-        const user: SimpleUser = {
-          id: session.user.id,
-          email: session.user.email!,
-          isAdmin: isAdminEmail(session.user.email!)
-        };
+        const user = createUserFromSupabaseUser(session.user);
         this.updateState({ user, loading: false });
       } else {
         this.updateState({ user: null, loading: false });
       }
 
       // Listen for auth changes
-      supabase.auth.onAuthStateChange((event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
-        
+      supabase.auth.onAuthStateChange((_, session) => {
         if (session?.user) {
-          const user: SimpleUser = {
-            id: session.user.id,
-            email: session.user.email!,
-            isAdmin: isAdminEmail(session.user.email!)
-          };
+          const user = createUserFromSupabaseUser(session.user);
           this.updateState({ user, loading: false });
         } else {
           this.updateState({ user: null, loading: false });
@@ -119,36 +121,23 @@ export class SimpleAuth {
 
   async signIn(email: string, password: string): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log('🔐 Simple Auth: Starting sign in for:', email);
-      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
-      console.log('🔐 Simple Auth: Supabase response:', { data: !!data, error });
-
       if (error) {
-        console.error('🔐 Simple Auth: Sign in error:', error);
         return { success: false, error: error.message };
       }
 
       if (data.user) {
-        console.log('🔐 Simple Auth: User authenticated:', data.user.email);
-        const user: SimpleUser = {
-          id: data.user.id,
-          email: data.user.email!,
-          isAdmin: isAdminEmail(data.user.email!)
-        };
-        console.log('🔐 Simple Auth: Created user object:', user);
+        const user = createUserFromSupabaseUser(data.user);
         this.updateState({ user, loading: false });
         return { success: true };
       }
 
-      console.log('🔐 Simple Auth: No user returned');
       return { success: false, error: 'No user returned' };
     } catch (error) {
-      console.error('🔐 Simple Auth: Sign in exception:', error);
       return { success: false, error: 'Network error' };
     }
   }
@@ -205,14 +194,14 @@ export const signOut = async () => {
 };
 
 // Get current user
-export const getCurrentUser = async (): Promise<SimpleUser | null> => {
+export const getCurrentUser = (): SimpleUser | null => {
   const auth = SimpleAuth.getInstance();
   return auth.getState().user;
 };
 
 // Check if user is admin (simple version)
-export const isUserAdmin = async (): Promise<boolean> => {
-  const user = await getCurrentUser();
+export const isUserAdmin = (): boolean => {
+  const user = getCurrentUser();
   return user?.isAdmin || false;
 };
 
