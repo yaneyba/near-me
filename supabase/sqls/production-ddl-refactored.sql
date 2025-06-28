@@ -9,9 +9,15 @@
 -- ENUMS
 -- ========================================
 
-CREATE TYPE IF NOT EXISTS submission_status AS ENUM ('pending', 'approved', 'rejected');
-CREATE TYPE IF NOT EXISTS stripe_subscription_status AS ENUM ('not_started', 'incomplete', 'incomplete_expired', 'trialing', 'active', 'past_due', 'canceled', 'unpaid', 'paused');
-CREATE TYPE IF NOT EXISTS stripe_order_status AS ENUM ('pending', 'completed', 'canceled');
+-- Create enums (drop and recreate to avoid conflicts)
+DROP TYPE IF EXISTS submission_status CASCADE;
+CREATE TYPE submission_status AS ENUM ('pending', 'approved', 'rejected');
+
+DROP TYPE IF EXISTS stripe_subscription_status CASCADE;
+CREATE TYPE stripe_subscription_status AS ENUM ('not_started', 'incomplete', 'incomplete_expired', 'trialing', 'active', 'past_due', 'canceled', 'unpaid', 'paused');
+
+DROP TYPE IF EXISTS stripe_order_status CASCADE;
+CREATE TYPE stripe_order_status AS ENUM ('pending', 'completed', 'canceled');
 
 -- ========================================
 -- BUSINESS SUBMISSIONS TABLE
@@ -69,28 +75,45 @@ CREATE POLICY "Users can view own submissions" ON business_submissions
 -- ========================================
 
 CREATE TABLE IF NOT EXISTS contact_messages (
-    id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name       TEXT NOT NULL,
-    email      TEXT NOT NULL,
-    message    TEXT NOT NULL,
-    site_id    TEXT NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name        TEXT NOT NULL,
+    email       TEXT NOT NULL,
+    subject     TEXT NOT NULL,
+    message     TEXT NOT NULL,
+    category    TEXT,
+    city        TEXT,
+    status      TEXT DEFAULT 'new',
+    admin_notes TEXT,
+    resolved_at TIMESTAMPTZ,
+    resolved_by TEXT,
+    created_at  TIMESTAMPTZ DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Comments
+COMMENT ON TABLE contact_messages IS 'Stores contact form submissions from users';
+COMMENT ON COLUMN contact_messages.category IS 'Business category context when message was sent';
+COMMENT ON COLUMN contact_messages.city IS 'City context when message was sent';
+COMMENT ON COLUMN contact_messages.status IS 'Message status: new, in_progress, resolved';
+COMMENT ON COLUMN contact_messages.admin_notes IS 'Internal notes for admin use';
+COMMENT ON COLUMN contact_messages.resolved_by IS 'Admin user who resolved the message';
+
 -- Indexes
-CREATE INDEX IF NOT EXISTS idx_contact_messages_site_id ON contact_messages(site_id);
+CREATE INDEX IF NOT EXISTS idx_contact_messages_email ON contact_messages(email);
+CREATE INDEX IF NOT EXISTS idx_contact_messages_status ON contact_messages(status);
+CREATE INDEX IF NOT EXISTS idx_contact_messages_category ON contact_messages(category);
 CREATE INDEX IF NOT EXISTS idx_contact_messages_created_at ON contact_messages(created_at DESC);
 
 -- RLS Policies
 ALTER TABLE contact_messages ENABLE ROW LEVEL SECURITY;
 
+-- Anonymous users can submit contact messages
+CREATE POLICY "Anonymous users can submit contact messages" ON contact_messages
+    AS PERMISSIVE FOR INSERT TO anon WITH CHECK (true);
+
 -- Service role can manage all messages (for admin operations)
 CREATE POLICY "Service role can manage contact_messages" ON contact_messages
     FOR ALL USING (auth.role() = 'service_role');
-
--- Anyone can create contact messages (public contact form)
-CREATE POLICY "Anyone can create contact_messages" ON contact_messages
-    FOR INSERT WITH CHECK (true);
 
 -- ========================================
 -- BUSINESS PROFILES TABLE
@@ -273,6 +296,10 @@ $$ LANGUAGE plpgsql;
 -- Apply updated_at triggers to all tables
 CREATE TRIGGER update_business_submissions_updated_at
     BEFORE UPDATE ON business_submissions
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_contact_messages_updated_at
+    BEFORE UPDATE ON contact_messages
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_business_profiles_updated_at

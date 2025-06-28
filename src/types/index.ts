@@ -155,6 +155,7 @@ export interface IDataProvider {
   getBusinessSubmissions(): Promise<any[]>;
   getBusinessProfiles(): Promise<any[]>;
   getContactMessages(): Promise<any[]>;
+  getAllBusinesses(): Promise<any[]>; // Get all businesses from businesses table for admin
   getAdminStats(): Promise<{
     pendingBusinesses: number;
     totalBusinesses: number;

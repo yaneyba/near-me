@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 // These will be set via environment variables
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseServiceRoleKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
 
 // Check if Supabase credentials are available
 if (!supabaseUrl || !supabaseAnonKey) {
@@ -13,6 +14,18 @@ export const supabase = createClient(
   supabaseUrl || 'https://example.supabase.co',
   supabaseAnonKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example_key'
 );
+
+// Service role client for admin operations (bypasses RLS)
+export const supabaseAdmin = supabaseServiceRoleKey ? createClient(
+  supabaseUrl || 'https://example.supabase.co',
+  supabaseServiceRoleKey,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+) : null;
 
 // Database types matching your existing schema with submission_status enum
 export interface Database {

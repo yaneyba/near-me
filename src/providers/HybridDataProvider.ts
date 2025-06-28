@@ -77,6 +77,10 @@ export class HybridDataProvider implements IDataProvider {
     return this.supabaseProvider.getContactMessages();
   }
 
+  async getAllBusinesses(): Promise<any[]> {
+    return this.supabaseProvider.getAllBusinesses();
+  }
+
   async getAdminStats(): Promise<{
     pendingBusinesses: number;
     totalBusinesses: number;

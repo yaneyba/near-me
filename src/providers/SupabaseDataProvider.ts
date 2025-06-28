@@ -1,4 +1,4 @@
-import { supabase, type Database } from '../lib/supabase';
+import { supabase, supabaseAdmin, type Database } from '../lib/supabase';
 import { ContactSubmission, BusinessSubmission, SubmissionResult, UserEngagementEvent, BusinessAnalytics } from '../types';
 
 export class SupabaseDataProvider {
@@ -45,17 +45,23 @@ export class SupabaseDataProvider {
         };
       }
 
-      // Insert into existing contact_messages table - only select ID
+      // Generate site_id from category and city context (for logging/analytics)
+      const siteId = contactData.category && contactData.city 
+        ? `${contactData.category}.${contactData.city}` 
+        : 'near-me-us';
+
+      // Insert into contact_messages table (works with current schema)
       const { data, error } = await supabase
         .from('contact_messages')
         .insert({
           name: contactData.name,
           email: contactData.email,
-          subject: contactData.subject,
+          subject: contactData.subject || 'Contact Form Submission',
           message: contactData.message,
           category: contactData.category || null,
           city: contactData.city || null,
           status: 'new'
+          // Note: site_id not included since current schema doesn't have this field
         })
         .select('id')  // ← Only get the ID we need
         .single();
@@ -599,7 +605,9 @@ We'll contact you at ${businessData.email} with updates on your application stat
    */
   async getBusinessSubmissions(): Promise<any[]> {
     try {
-      const { data, error } = await supabase
+      // Use admin client for admin operations
+      const client = supabaseAdmin || supabase;
+      const { data, error } = await client
         .from('business_submissions')
         .select(`
           id,
@@ -616,11 +624,12 @@ We'll contact you at ${businessData.email} with updates on your application stat
           description,
           services,
           hours,
-          status,
           submitted_at,
           reviewed_at,
           reviewer_notes,
-          site_id
+          site_id,
+          created_at,
+          updated_at
         `)
         .order('submitted_at', { ascending: false });
 
@@ -629,7 +638,11 @@ We'll contact you at ${businessData.email} with updates on your application stat
         throw error;
       }
 
-      return data || [];
+      // Add a default status since the DB doesn't have this field
+      return (data || []).map(submission => ({
+        ...submission,
+        status: 'pending' // Default status for UI compatibility
+      }));
     } catch (error) {
       console.error('Failed to get business submissions:', error);
       throw error;
@@ -641,20 +654,23 @@ We'll contact you at ${businessData.email} with updates on your application stat
    */
   async getBusinessProfiles(): Promise<any[]> {
     try {
-      const { data, error } = await supabase
+      // Use admin client for admin operations
+      const client = supabaseAdmin || supabase;
+      const { data, error } = await client
         .from('business_profiles')
         .select(`
           id,
           user_id,
+          business_id,
           business_name,
           email,
           role,
-          approval_status,
-          premium,
+          stripe_customer_id,
           stripe_subscription_id,
           stripe_price_id,
-          stripe_current_period_end,
-          created_at
+          premium,
+          created_at,
+          updated_at
         `)
         .order('created_at', { ascending: false });
 
@@ -671,11 +687,13 @@ We'll contact you at ${businessData.email} with updates on your application stat
   }
 
   /**
-   * Get all contact messages for admin dashboard
+   * Get all contact messages for admin dashboard (works with actual schema)
    */
   async getContactMessages(): Promise<any[]> {
     try {
-      const { data, error } = await supabase
+      // Use admin client for admin operations
+      const client = supabaseAdmin || supabase;
+      const { data, error } = await client
         .from('contact_messages')
         .select(`
           id,
@@ -689,7 +707,8 @@ We'll contact you at ${businessData.email} with updates on your application stat
           admin_notes,
           resolved_at,
           resolved_by,
-          created_at
+          created_at,
+          updated_at
         `)
         .order('created_at', { ascending: false });
 
@@ -706,12 +725,63 @@ We'll contact you at ${businessData.email} with updates on your application stat
   }
 
   /**
+   * Get all businesses from the businesses table for admin dashboard
+   */
+  async getAllBusinesses(): Promise<any[]> {
+    try {
+      // Use admin client for admin operations
+      const client = supabaseAdmin || supabase;
+      const { data, error } = await client
+        .from('businesses')
+        .select(`
+          id,
+          business_id,
+          name,
+          description,
+          address,
+          phone,
+          website,
+          email,
+          category,
+          city,
+          state,
+          services,
+          hours,
+          rating,
+          review_count,
+          image,
+          established,
+          verified,
+          site_id,
+          status,
+          premium,
+          created_at,
+          updated_at
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching businesses:', error);
+        throw error;
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Failed to get businesses:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Approve a business submission
    */
   async approveBusinessSubmission(id: string, reviewerNotes?: string): Promise<void> {
     try {
+      // Use admin client for admin operations
+      const client = supabaseAdmin || supabase;
+      
       // Get the submission data first
-      const { data: submission, error: fetchError } = await supabase
+      const { data: submission, error: fetchError } = await client
         .from('business_submissions')
         .select('*')
         .eq('id', id)
@@ -723,7 +793,7 @@ We'll contact you at ${businessData.email} with updates on your application stat
       }
 
       // Update the submission status
-      const { error: updateError } = await supabase
+      const { error: updateError } = await client
         .from('business_submissions')
         .update({
           status: 'approved',
@@ -750,7 +820,9 @@ We'll contact you at ${businessData.email} with updates on your application stat
    */
   async rejectBusinessSubmission(id: string, reviewerNotes?: string): Promise<void> {
     try {
-      const { error } = await supabase
+      // Use admin client for admin operations
+      const client = supabaseAdmin || supabase;
+      const { error } = await client
         .from('business_submissions')
         .update({
           status: 'rejected',
@@ -774,13 +846,16 @@ We'll contact you at ${businessData.email} with updates on your application stat
    */
   async resolveContactMessage(id: string, resolvedBy?: string, adminNotes?: string): Promise<void> {
     try {
-      const { error } = await supabase
+      // Use admin client for admin operations
+      const client = supabaseAdmin || supabase;
+      const { error } = await client
         .from('contact_messages')
         .update({
           status: 'resolved',
           resolved_at: new Date().toISOString(),
           resolved_by: resolvedBy || 'admin',
-          admin_notes: adminNotes
+          admin_notes: adminNotes,
+          updated_at: new Date().toISOString()
         })
         .eq('id', id);
 
@@ -805,19 +880,20 @@ We'll contact you at ${businessData.email} with updates on your application stat
     premiumBusinesses: number;
   }> {
     try {
-      // Get counts in parallel
-      const [submissions, profiles, messages] = await Promise.all([
+      // Get counts in parallel - now includes both submissions and actual businesses
+      const [submissions, profiles, messages, businesses] = await Promise.all([
         this.getBusinessSubmissions(),
         this.getBusinessProfiles(),
-        this.getContactMessages()
+        this.getContactMessages(),
+        this.getAllBusinesses()
       ]);
 
       return {
-        pendingBusinesses: submissions.filter(s => s.status === 'pending').length,
-        totalBusinesses: submissions.length,
-        newMessages: messages.filter(m => m.status === 'new').length,
+        pendingBusinesses: submissions.filter((s: any) => s.status === 'pending').length,
+        totalBusinesses: submissions.length + businesses.length, // Count both submissions and actual businesses
+        newMessages: messages.filter((m: any) => m.status === 'new').length, // Count only new messages
         totalUsers: profiles.length,
-        premiumBusinesses: profiles.filter(p => p.premium === true).length
+        premiumBusinesses: businesses.filter((b: any) => b.premium === true).length // Use 'premium' field not 'is_premium'
       };
     } catch (error) {
       console.error('Failed to get admin stats:', error);
@@ -837,8 +913,11 @@ We'll contact you at ${businessData.email} with updates on your application stat
    */
   private async createBusinessFromSubmission(submission: any): Promise<void> {
     try {
+      // Use admin client for admin operations
+      const client = supabaseAdmin || supabase;
+      
       // Check if business already exists
-      const { data: existingBusiness } = await supabase
+      const { data: existingBusiness } = await client
         .from('businesses')
         .select('id')
         .eq('email', submission.email)
@@ -851,10 +930,10 @@ We'll contact you at ${businessData.email} with updates on your application stat
       }
 
       // Create business entry
-      const { error: businessError } = await supabase
+      const { error: businessError } = await client
         .from('businesses')
         .insert({
-          business_id: `${submission.city.toLowerCase().replace(/\s+/g, '-')}-${submission.business_name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
+          business_id: `${submission.category}-${submission.city}-${Date.now()}`.toLowerCase().replace(/\s+/g, '-'),
           name: submission.business_name,
           description: submission.description,
           address: submission.address,
@@ -868,7 +947,8 @@ We'll contact you at ${businessData.email} with updates on your application stat
           hours: submission.hours,
           site_id: submission.site_id || 'near-me-us',
           status: 'active',
-          verified: true
+          premium: false,
+          verified: false
         });
 
       if (businessError) {

@@ -32,9 +32,10 @@ import { DataProviderFactory } from '../providers';
 import { useAuth } from '../lib/auth';
 
 const AdminDashboardPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'businesses' | 'contacts' | 'users' | 'analytics' | 'settings'>('businesses');
+  const [activeTab, setActiveTab] = useState<'submissions' | 'businesses' | 'contacts' | 'users' | 'analytics' | 'settings'>('submissions');
   const [loading, setLoading] = useState(true);
   const [businessSubmissions, setBusinessSubmissions] = useState<any[]>([]);
+  const [businesses, setBusinesses] = useState<any[]>([]);
   const [contactMessages, setContactMessages] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [stats, setStats] = useState({
@@ -131,6 +132,10 @@ const AdminDashboardPage: React.FC = () => {
       const businessSubmissionsData = await dataProvider.getBusinessSubmissions();
       console.log('✅ Loaded', businessSubmissionsData.length, 'business submissions');
       
+      console.log('🏢 Loading businesses...');
+      const businessesData = await dataProvider.getAllBusinesses();
+      console.log('✅ Loaded', businessesData.length, 'businesses');
+      
       console.log('👥 Loading business profiles...');
       const businessProfilesData = await dataProvider.getBusinessProfiles();
       console.log('✅ Loaded', businessProfilesData.length, 'business profiles');
@@ -144,6 +149,7 @@ const AdminDashboardPage: React.FC = () => {
       console.log('✅ Loaded admin stats:', adminStats);
       
       setBusinessSubmissions(businessSubmissionsData);
+      setBusinesses(businessesData);
       setContactMessages(contactMessagesData);
       setUsers(businessProfilesData);
       setStats(adminStats);
@@ -250,38 +256,6 @@ const AdminDashboardPage: React.FC = () => {
     }
   };
 
-  const handleResolveContactMessage = async (id: string) => {
-    try {
-      // Use data provider to resolve message
-      await dataProvider.resolveContactMessage(id, user?.email || 'admin');
-      
-      // Update local state
-      setContactMessages(prev => 
-        prev.map(message => 
-          message.id === id 
-            ? { 
-                ...message, 
-                status: 'resolved',
-                resolved_at: new Date().toISOString(),
-                resolved_by: user?.email || 'admin'
-              } 
-            : message
-        )
-      );
-      
-      // Update stats
-      setStats(prev => ({
-        ...prev,
-        newMessages: prev.newMessages - 1
-      }));
-      
-      console.log('Contact message resolved successfully');
-    } catch (error) {
-      console.error('Error resolving contact message:', error);
-      alert('Failed to resolve message. Please try again.');
-    }
-  };
-
   const getFilteredBusinessSubmissions = () => {
     return businessSubmissions.filter(submission => {
       // Apply status filter
@@ -305,11 +279,34 @@ const AdminDashboardPage: React.FC = () => {
     });
   };
 
+  const getFilteredBusinesses = () => {
+    return businesses.filter(business => {
+      // Apply status filter
+      if (statusFilter === 'active' && business.status !== 'active') return false;
+      if (statusFilter === 'inactive' && business.status !== 'inactive') return false;
+      if (statusFilter === 'premium' && !business.premium) return false;
+      if (statusFilter !== 'all' && statusFilter !== 'active' && statusFilter !== 'inactive' && statusFilter !== 'premium') return false;
+      
+      // Apply search filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        return (
+          business.name.toLowerCase().includes(query) ||
+          business.email.toLowerCase().includes(query) ||
+          business.city.toLowerCase().includes(query) ||
+          business.category.toLowerCase().includes(query)
+        );
+      }
+      
+      return true;
+    });
+  };
+
   const getFilteredContactMessages = () => {
     return contactMessages.filter(message => {
       // Apply status filter
-      if (statusFilter !== 'all' && message.status !== statusFilter) {
-        return false;
+      if (statusFilter && statusFilter !== 'all') {
+        if (message.status !== statusFilter) return false;
       }
       
       // Apply search filter
@@ -318,10 +315,10 @@ const AdminDashboardPage: React.FC = () => {
         return (
           message.name.toLowerCase().includes(query) ||
           message.email.toLowerCase().includes(query) ||
-          message.subject.toLowerCase().includes(query) ||
+          message.subject?.toLowerCase().includes(query) ||
           message.message.toLowerCase().includes(query) ||
-          (message.city && message.city.toLowerCase().includes(query)) ||
-          (message.category && message.category.toLowerCase().includes(query))
+          message.category?.toLowerCase().includes(query) ||
+          message.city?.toLowerCase().includes(query)
         );
       }
       
@@ -331,8 +328,14 @@ const AdminDashboardPage: React.FC = () => {
 
   const getFilteredUsers = () => {
     return users.filter(user => {
-      // Apply role filter
-      if (statusFilter !== 'all' && user.role !== statusFilter) {
+      // Apply premium/role filter based on available fields
+      if (statusFilter === 'premium' && !user.premium) {
+        return false;
+      }
+      if (statusFilter === 'owner' && user.role !== 'owner') {
+        return false;
+      }
+      if (statusFilter === 'active' && !user.stripe_subscription_id) {
         return false;
       }
       
@@ -342,7 +345,8 @@ const AdminDashboardPage: React.FC = () => {
         return (
           user.email.toLowerCase().includes(query) ||
           user.business_name.toLowerCase().includes(query) ||
-          user.role.toLowerCase().includes(query)
+          (user.role && user.role.toLowerCase().includes(query)) ||
+          (user.business_id && user.business_id.toLowerCase().includes(query))
         );
       }
       
@@ -553,6 +557,20 @@ const AdminDashboardPage: React.FC = () => {
           <div className="border-b border-gray-200">
             <nav className="flex -mb-px">
               <button
+                onClick={() => setActiveTab('submissions')}
+                className={`py-4 px-6 font-medium text-sm border-b-2 ${
+                  activeTab === 'submissions'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center">
+                  <Building className="w-5 h-5 mr-2" />
+                  Business Submissions
+                </div>
+              </button>
+              
+              <button
                 onClick={() => setActiveTab('businesses')}
                 className={`py-4 px-6 font-medium text-sm border-b-2 ${
                   activeTab === 'businesses'
@@ -562,7 +580,7 @@ const AdminDashboardPage: React.FC = () => {
               >
                 <div className="flex items-center">
                   <Building className="w-5 h-5 mr-2" />
-                  Business Submissions
+                  Directory Businesses
                 </div>
               </button>
               
@@ -590,7 +608,7 @@ const AdminDashboardPage: React.FC = () => {
               >
                 <div className="flex items-center">
                   <Users className="w-5 h-5 mr-2" />
-                  User Management
+                  Business Profiles
                 </div>
               </button>
               
@@ -647,24 +665,32 @@ const AdminDashboardPage: React.FC = () => {
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="all">All Statuses</option>
-                {activeTab === 'businesses' && (
+                {activeTab === 'submissions' && (
                   <>
                     <option value="pending">Pending</option>
                     <option value="approved">Approved</option>
                     <option value="rejected">Rejected</option>
                   </>
                 )}
+                {activeTab === 'businesses' && (
+                  <>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="premium">Premium</option>
+                  </>
+                )}
                 {activeTab === 'contacts' && (
                   <>
-                    <option value="new">New</option>
+                    <option value="new">New Messages</option>
                     <option value="in_progress">In Progress</option>
                     <option value="resolved">Resolved</option>
                   </>
                 )}
                 {activeTab === 'users' && (
                   <>
-                    <option value="admin">Admins</option>
                     <option value="owner">Business Owners</option>
+                    <option value="premium">Premium Users</option>
+                    <option value="active">Active Subscriptions</option>
                   </>
                 )}
               </select>
@@ -683,7 +709,7 @@ const AdminDashboardPage: React.FC = () => {
         {/* Content Tabs */}
         <div className="bg-white rounded-xl shadow-sm p-6">
           {/* Business Submissions Tab */}
-          {activeTab === 'businesses' && (
+          {activeTab === 'submissions' && (
             <div>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-semibold text-gray-900">Business Submissions</h2>
@@ -807,6 +833,130 @@ const AdminDashboardPage: React.FC = () => {
             </div>
           )}
 
+          {/* Directory Businesses Tab */}
+          {activeTab === 'businesses' && (
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-semibold text-gray-900">Directory Businesses</h2>
+                <button
+                  onClick={() => {
+                    // In a real implementation, this would export data
+                    alert('Export functionality would be implemented here');
+                  }}
+                  className="flex items-center px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Export
+                </button>
+              </div>
+              
+              {getFilteredBusinesses().length === 0 ? (
+                <div className="text-center py-12">
+                  <Building className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No businesses found</h3>
+                  <p className="text-gray-500">
+                    {searchQuery 
+                      ? 'Try adjusting your search or filters' 
+                      : 'Approved businesses will appear here'}
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Business
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Category/Location
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Created
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {getFilteredBusinesses().map((business) => (
+                        <tr key={business.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div>
+                                <div className="text-sm font-medium text-gray-900">{business.name}</div>
+                                <div className="text-sm text-gray-500">{business.email}</div>
+                                {business.phone && <div className="text-sm text-gray-500">{business.phone}</div>}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">{business.category.split('-').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</div>
+                            <div className="text-sm text-gray-500">{business.city}, {business.state}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">{formatDate(business.created_at)}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex flex-col space-y-1">
+                              {getStatusBadge(business.status)}
+                              {business.premium && (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                  <Star className="w-3 h-3 mr-1" />
+                                  Premium
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div className="flex items-center justify-end space-x-2">
+                              <button
+                                onClick={() => {
+                                  // In a real implementation, this would open a detail view
+                                  alert(`View details for ${business.name}`);
+                                }}
+                                className="text-blue-600 hover:text-blue-900 p-1"
+                                title="View Details"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+                              
+                              <button
+                                onClick={() => {
+                                  // In a real implementation, this would open an edit form
+                                  alert(`Edit ${business.name}`);
+                                }}
+                                className="text-gray-600 hover:text-gray-900 p-1"
+                                title="Edit"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              
+                              <button
+                                onClick={() => {
+                                  // In a real implementation, this would toggle premium status
+                                  alert(`Toggle premium status for ${business.name}`);
+                                }}
+                                className="text-orange-600 hover:text-orange-900 p-1"
+                                title="Toggle Premium"
+                              >
+                                <Star className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Contact Messages Tab */}
           {activeTab === 'contacts' && (
             <div>
@@ -839,54 +989,84 @@ const AdminDashboardPage: React.FC = () => {
                   {getFilteredContactMessages().map((message) => (
                     <div key={message.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
                       <div className="flex items-start justify-between">
-                        <div>
+                        <div className="flex-1">
                           <div className="flex items-center mb-2">
-                            <h3 className="text-lg font-medium text-gray-900 mr-3">{message.subject}</h3>
-                            {getStatusBadge(message.status)}
+                            <h3 className="text-lg font-medium text-gray-900 mr-3">
+                              {message.subject || `Contact Message from ${message.name}`}
+                            </h3>
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              message.status === 'new' ? 'bg-blue-100 text-blue-800' :
+                              message.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
+                              message.status === 'resolved' ? 'bg-green-100 text-green-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {message.status === 'new' ? 'New' :
+                               message.status === 'in_progress' ? 'In Progress' :
+                               message.status === 'resolved' ? 'Resolved' :
+                               message.status || 'New'}
+                            </span>
                           </div>
+                          
                           <div className="flex items-center text-sm text-gray-500 mb-2">
-                            <div className="mr-4">{message.name}</div>
-                            <div>{message.email}</div>
+                            <div className="mr-4"><strong>From:</strong> {message.name}</div>
+                            <div className="mr-4"><strong>Email:</strong> {message.email}</div>
+                            {message.category && (
+                              <div className="mr-4"><strong>Category:</strong> {message.category}</div>
+                            )}
+                            {message.city && (
+                              <div><strong>City:</strong> {message.city}</div>
+                            )}
                           </div>
-                          {(message.category || message.city) && (
-                            <div className="flex items-center text-sm text-gray-500 mb-2">
-                              {message.category && (
-                                <div className="mr-4">
-                                  Category: {message.category.split('-').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                                </div>
-                              )}
-                              {message.city && (
-                                <div>Location: {message.city}</div>
-                              )}
-                            </div>
-                          )}
+                          
                           <div className="text-sm text-gray-500 mb-4">
-                            Received: {formatDate(message.created_at)}
+                            <div>Received: {formatDate(message.created_at)}</div>
+                            {message.resolved_at && (
+                              <div>Resolved: {formatDate(message.resolved_at)} by {message.resolved_by}</div>
+                            )}
                           </div>
-                          <div className="text-gray-700 bg-gray-50 p-3 rounded-lg">
+                          
+                          <div className="text-gray-700 bg-gray-50 p-3 rounded-lg mb-3">
                             {message.message}
                           </div>
+                          
+                          {message.admin_notes && (
+                            <div className="text-sm bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
+                              <strong>Admin Notes:</strong> {message.admin_notes}
+                            </div>
+                          )}
                         </div>
-                        <div className="flex space-x-2">
+                        
+                        <div className="flex flex-col space-y-2 ml-4">
+                          <button
+                            onClick={() => {
+                              const subject = message.subject ? `Re: ${message.subject}` : 'Re: Contact Message';
+                              window.open(`mailto:${message.email}?subject=${encodeURIComponent(subject)}&body=Hi ${message.name},%0D%0A%0D%0AThank you for contacting us.%0D%0A%0D%0AOriginal message:%0D%0A${encodeURIComponent(message.message)}`);
+                            }}
+                            className="text-blue-600 hover:text-blue-900 p-1"
+                            title="Reply via Email"
+                          >
+                            <Mail className="w-5 h-5" />
+                          </button>
+                          
                           {message.status !== 'resolved' && (
                             <button
-                              onClick={() => handleResolveContactMessage(message.id)}
+                              onClick={async () => {
+                                const adminNotes = prompt('Add admin notes (optional):');
+                                try {
+                                  await dataProvider.resolveContactMessage(message.id, 'admin', adminNotes || undefined);
+                                  // Refresh data
+                                  loadData();
+                                } catch (error) {
+                                  console.error('Error resolving message:', error);
+                                  alert('Failed to resolve message. Please try again.');
+                                }
+                              }}
                               className="text-green-600 hover:text-green-900 p-1"
                               title="Mark as Resolved"
                             >
                               <CheckCircle className="w-5 h-5" />
                             </button>
                           )}
-                          <button
-                            onClick={() => {
-                              // In a real implementation, this would open a reply form
-                              alert(`Reply to ${message.name}`);
-                            }}
-                            className="text-blue-600 hover:text-blue-900 p-1"
-                            title="Reply"
-                          >
-                            <Mail className="w-5 h-5" />
-                          </button>
                         </div>
                       </div>
                     </div>
@@ -896,31 +1076,31 @@ const AdminDashboardPage: React.FC = () => {
             </div>
           )}
 
-          {/* User Management Tab */}
+          {/* Business Profiles Tab */}
           {activeTab === 'users' && (
             <div>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold text-gray-900">User Management</h2>
+                <h2 className="text-lg font-semibold text-gray-900">Business Profiles</h2>
                 <button
                   onClick={() => {
-                    // In a real implementation, this would open a form to create a new user
-                    alert('Create user functionality would be implemented here');
+                    // In a real implementation, this would open a form to create a new business profile
+                    alert('Create business profile functionality would be implemented here');
                   }}
                   className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
                 >
                   <Users className="w-4 h-4 mr-2" />
-                  Add User
+                  Add Profile
                 </button>
               </div>
               
               {getFilteredUsers().length === 0 ? (
                 <div className="text-center py-12">
                   <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No users found</h3>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No business profiles found</h3>
                   <p className="text-gray-500">
                     {searchQuery 
                       ? 'Try adjusting your search or filters' 
-                      : 'Users will appear here'}
+                      : 'Business profiles will appear here'}
                   </p>
                 </div>
               ) : (
@@ -935,7 +1115,7 @@ const AdminDashboardPage: React.FC = () => {
                           Business
                         </th>
                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Role
+                          Subscription
                         </th>
                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Created
@@ -955,7 +1135,26 @@ const AdminDashboardPage: React.FC = () => {
                             <div className="text-sm text-gray-900">{user.business_name}</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            {getStatusBadge(user.role)}
+                            <div className="flex flex-col space-y-1">
+                              {user.premium && (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                  <Star className="w-3 h-3 mr-1" />
+                                  Premium
+                                </span>
+                              )}
+                              {user.stripe_subscription_id ? (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                  Active
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                  No Subscription
+                                </span>
+                              )}
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {user.role || 'owner'}
+                              </span>
+                            </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm text-gray-900">{formatDate(user.created_at)}</div>
@@ -984,18 +1183,16 @@ const AdminDashboardPage: React.FC = () => {
                                 <Edit className="w-4 h-4" />
                               </button>
                               
-                              {user.role !== 'admin' && (
-                                <button
-                                  onClick={() => {
-                                    // In a real implementation, this would delete the user
-                                    alert(`Delete ${user.email}`);
-                                  }}
-                                  className="text-red-600 hover:text-red-900 p-1"
-                                  title="Delete"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              )}
+                              <button
+                                onClick={() => {
+                                  // In a real implementation, this would delete the business profile
+                                  alert(`Delete business profile for ${user.email}`);
+                                }}
+                                className="text-red-600 hover:text-red-900 p-1"
+                                title="Delete Business Profile"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
                             </div>
                           </td>
                         </tr>
