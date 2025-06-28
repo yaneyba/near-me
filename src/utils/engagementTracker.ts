@@ -1,6 +1,8 @@
 import { UserEngagementEvent } from '../types';
 import { DataProviderFactory } from '../providers';
-import { getAuthFeatureFlags } from '../lib/auth';
+
+// Simple tracking configuration - in production this could come from environment variables
+const TRACKING_ENABLED = true;
 
 // Declare gtag function for TypeScript
 declare global {
@@ -80,14 +82,13 @@ class EngagementTracker {
   ): Promise<void> {
     try {
       // Check if tracking is enabled - early return if disabled
-      const { trackingEnabled } = getAuthFeatureFlags();
-      if (!trackingEnabled) {
+      if (!TRACKING_ENABLED) {
         // Skip all tracking if disabled - no database inserts, no analytics
         if (process.env.NODE_ENV === 'development') {
           console.log('📊 Tracking disabled, event not recorded:', {
             business: businessName,
             event: eventType,
-            trackingEnabled
+            TRACKING_ENABLED
           });
         }
         return;
@@ -146,8 +147,8 @@ class EngagementTracker {
   // Convenience methods for common tracking events
   async trackView(businessId: string, businessName: string, source?: string, searchQuery?: string): Promise<void> {
     // Double-check tracking is enabled before proceeding
-    const { trackingEnabled } = getAuthFeatureFlags();
-    if (!trackingEnabled) return;
+    // Tracking is always enabled in production
+    if (!TRACKING_ENABLED) return;
     
     return this.trackEvent(businessId, businessName, 'view', {
       source,
@@ -156,8 +157,8 @@ class EngagementTracker {
   }
 
   async trackPhoneClick(businessId: string, businessName: string, phoneNumber: string): Promise<void> {
-    const { trackingEnabled } = getAuthFeatureFlags();
-    if (!trackingEnabled) return;
+    // Tracking is always enabled in production
+    if (!TRACKING_ENABLED) return;
     
     return this.trackEvent(businessId, businessName, 'phone_click', {
       clickedUrl: `tel:${phoneNumber}`
@@ -165,8 +166,8 @@ class EngagementTracker {
   }
 
   async trackWebsiteClick(businessId: string, businessName: string, websiteUrl: string): Promise<void> {
-    const { trackingEnabled } = getAuthFeatureFlags();
-    if (!trackingEnabled) return;
+    // Tracking is always enabled in production
+    if (!TRACKING_ENABLED) return;
     
     return this.trackEvent(businessId, businessName, 'website_click', {
       clickedUrl: websiteUrl
@@ -174,8 +175,8 @@ class EngagementTracker {
   }
 
   async trackBookingClick(businessId: string, businessName: string, bookingUrl: string): Promise<void> {
-    const { trackingEnabled } = getAuthFeatureFlags();
-    if (!trackingEnabled) return;
+    // Tracking is always enabled in production
+    if (!TRACKING_ENABLED) return;
     
     return this.trackEvent(businessId, businessName, 'booking_click', {
       clickedUrl: bookingUrl
@@ -183,8 +184,8 @@ class EngagementTracker {
   }
 
   async trackDirectionsClick(businessId: string, businessName: string, directionsUrl: string): Promise<void> {
-    const { trackingEnabled } = getAuthFeatureFlags();
-    if (!trackingEnabled) return;
+    // Tracking is always enabled in production
+    if (!TRACKING_ENABLED) return;
     
     return this.trackEvent(businessId, businessName, 'directions_click', {
       clickedUrl: directionsUrl
@@ -192,8 +193,8 @@ class EngagementTracker {
   }
 
   async trackEmailClick(businessId: string, businessName: string, emailAddress: string): Promise<void> {
-    const { trackingEnabled } = getAuthFeatureFlags();
-    if (!trackingEnabled) return;
+    // Tracking is always enabled in production
+    if (!TRACKING_ENABLED) return;
     
     return this.trackEvent(businessId, businessName, 'email_click', {
       clickedUrl: `mailto:${emailAddress}`
@@ -201,22 +202,22 @@ class EngagementTracker {
   }
 
   async trackHoursView(businessId: string, businessName: string): Promise<void> {
-    const { trackingEnabled } = getAuthFeatureFlags();
-    if (!trackingEnabled) return;
+    // Tracking is always enabled in production
+    if (!TRACKING_ENABLED) return;
     
     return this.trackEvent(businessId, businessName, 'hours_view');
   }
 
   async trackServicesExpand(businessId: string, businessName: string): Promise<void> {
-    const { trackingEnabled } = getAuthFeatureFlags();
-    if (!trackingEnabled) return;
+    // Tracking is always enabled in production
+    if (!TRACKING_ENABLED) return;
     
     return this.trackEvent(businessId, businessName, 'services_expand');
   }
 
   async trackPhotoView(businessId: string, businessName: string, photoUrl: string): Promise<void> {
-    const { trackingEnabled } = getAuthFeatureFlags();
-    if (!trackingEnabled) return;
+    // Tracking is always enabled in production
+    if (!TRACKING_ENABLED) return;
     
     return this.trackEvent(businessId, businessName, 'photo_view', {
       clickedUrl: photoUrl
