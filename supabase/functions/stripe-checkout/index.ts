@@ -1,6 +1,6 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import Stripe from 'npm:stripe@17.7.0';
-import { DataProviderFactory } from '../../providers/DataProviderFactory.ts';
+import { createClient } from "npm:@supabase/supabase-js@2.50.0";
 
 const stripeSecret = Deno.env.get('STRIPE_SECRET_KEY')!;
 const stripe = new Stripe(stripeSecret, {
@@ -10,7 +10,17 @@ const stripe = new Stripe(stripeSecret, {
   },
 });
 
-const dataProvider = DataProviderFactory.getProvider();
+// Simple Supabase client for Edge Functions
+const supabase = createClient(
+  Deno.env.get("SUPABASE_URL")!,
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+);
 
 // Helper function to create responses with CORS headers
 function corsResponse(body: string | object | null, status = 200) {
@@ -97,8 +107,6 @@ Deno.serve(async (req) => {
 
     // Check if customer exists for this business profile
     const { data: customer, error: getCustomerError } = await supabase
-    // Check if customer exists for this business profile
-    const { data: customer, error: getCustomerError } = await supabase
       .from('stripe_customers')
       .select('customer_id')
       .eq('business_profile_id', businessProfileId)
@@ -108,7 +116,6 @@ Deno.serve(async (req) => {
     if (getCustomerError) {
       console.error('Failed to fetch customer information from the database', getCustomerError);
       return corsResponse({ error: 'Failed to fetch customer information' }, 500);
-    }
     }
 
     let customerId;

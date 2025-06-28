@@ -1,12 +1,24 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "npm:stripe@14.20.0";
-import { DataProviderFactory } from "../../providers/DataProviderFactory.ts";
+import { createClient } from "npm:@supabase/supabase-js@2.50.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
+
+// Simple Supabase client for Edge Functions
+const supabase = createClient(
+  Deno.env.get("SUPABASE_URL")!,
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+);
 
 serve(async (req) => {
   // Handle CORS preflight request
@@ -26,7 +38,6 @@ serve(async (req) => {
     }
 
     // Initialize services
-    const dataProvider = DataProviderFactory.getProvider();
     
     // Initialize Stripe
     const stripe = new Stripe(stripeSecretKey, {
@@ -40,7 +51,7 @@ serve(async (req) => {
       throw new Error("Missing required parameters");
     }
 
-    // Get the business profile directly from Supabase
+    // Get the business profile using direct Supabase call
     const { data: profile, error: profileError } = await supabase
       .from("business_profiles")
       .select("*")
@@ -111,13 +122,13 @@ serve(async (req) => {
         status: 200,
       }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error creating checkout session:", error);
     
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
+        error: error?.message || 'Unknown error',
       }),
       {
         headers: {
