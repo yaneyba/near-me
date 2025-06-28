@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "npm:stripe@14.20.0";
-import { getSupabaseService } from "../_shared/supabase-service.ts";
+import { getSupabaseClient } from "../_shared/supabase-client.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -26,7 +26,7 @@ serve(async (req) => {
     }
 
     // Initialize services
-    const supabaseService = getSupabaseService();
+    const supabase = getSupabaseClient();
     
     // Initialize Stripe
     const stripe = new Stripe(stripeSecretKey, {
@@ -40,8 +40,12 @@ serve(async (req) => {
       throw new Error("Missing required parameters");
     }
 
-    // Get the business profile using the service
-    const { data: profile, error: profileError } = await supabaseService.getBusinessProfile(businessProfileId);
+    // Get the business profile directly from Supabase
+    const { data: profile, error: profileError } = await supabase
+      .from("business_profiles")
+      .select("*")
+      .eq("id", businessProfileId)
+      .single();
 
     if (profileError || !profile) {
       throw new Error("Business profile not found");
@@ -62,13 +66,16 @@ serve(async (req) => {
 
       customerId = customer.id;
 
-      // Update the business profile with the Stripe customer ID using the service
-      const { success: updateSuccess, error: updateError } = await supabaseService.updateBusinessProfile(
-        businessProfileId, 
-        { stripe_customer_id: customerId }
-      );
+      // Update the business profile with the Stripe customer ID directly
+      const { error: updateError } = await supabase
+        .from("business_profiles")
+        .update({ 
+          stripe_customer_id: customerId,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", businessProfileId);
 
-      if (!updateSuccess) {
+      if (updateError) {
         throw new Error("Failed to update business profile with Stripe customer ID");
       }
     }

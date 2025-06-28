@@ -14,7 +14,8 @@ This folder contains comprehensive documentation for the Near Me Business Direct
 ### Recent Refactoring (COMPLETED ✅)
 - **[SQL-REFACTORING-COMPLETE.md](./SQL-REFACTORING-COMPLETE.md)**: Complete SQL refactoring summary
 - **[FIXING-OVER-ENGINEERED-AUTH.md](./FIXING-OVER-ENGINEERED-AUTH.md)**: Authentication refactoring details
-- **[SUPABASE-CONSOLIDATION.md](./SUPABASE-CONSOLIDATION.md)**: Edge Functions Supabase client consolidation
+- **[SUPABASE-DUPLICATION-CLEANUP.md](./SUPABASE-DUPLICATION-CLEANUP.md)**: Eliminated duplicate Supabase services ⭐ **LATEST**
+- **[SUPABASE-CONSOLIDATION.md](./SUPABASE-CONSOLIDATION.md)**: Edge Functions consolidation (deprecated)
 - **[PAGINATION-IMPLEMENTATION.md](./PAGINATION-IMPLEMENTATION.md)**: Reusable pagination component implementation
 - **[SUPABASE-SECURITY-FIXES.md](./SUPABASE-SECURITY-FIXES.md)**: Supabase security improvements and fixes
 

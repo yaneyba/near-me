@@ -1,6 +1,26 @@
-# Supabase Client Consolidation for Edge Functions
+# Edge Functions Supabase Client Consolidation ✅ DEPRECATED
 
-## Overview
+## ⚠️ **This Documentation is Outdated**
+
+**This approach has been replaced with a cleaner solution. See [SUPABASE-DUPLICATION-CLEANUP.md](./SUPABASE-DUPLICATION-CLEANUP.md) for the current architecture.**
+
+## What Changed
+
+The complex shared service approach described in this document created unnecessary duplication with the frontend SupabaseDataProvider. Instead, we now use:
+
+- **Frontend**: SupabaseDataProvider (single source of truth for business logic)
+- **Edge Functions**: Direct Supabase calls with simple client factory
+
+## Current Architecture
+
+```
+Frontend: SupabaseDataProvider (complex business logic)
+Edge Functions: getSupabaseClient() + direct calls (simple operations)
+```
+
+---
+
+## Original Documentation (For Reference)
 
 All Supabase Edge Functions have been refactored to use a single, shared Supabase service instead of direct `createClient` calls. This consolidation provides better maintainability, consistency, and error handling across all serverless functions.
 

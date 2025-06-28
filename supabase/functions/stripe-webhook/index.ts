@@ -1,6 +1,6 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import Stripe from 'npm:stripe@17.7.0';
-import { getSupabaseService } from '../_shared/supabase-service.ts';
+import { getSupabaseClient } from '../_shared/supabase-client.ts';
 
 const stripeSecret = Deno.env.get('STRIPE_SECRET_KEY')!;
 const stripeWebhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET')!;
@@ -11,7 +11,7 @@ const stripe = new Stripe(stripeSecret, {
   },
 });
 
-const supabaseService = getSupabaseService();
+const supabase = getSupabaseClient();
 
 Deno.serve(async (req) => {
   try {
@@ -101,7 +101,7 @@ async function handleEvent(event: Stripe.Event) {
         } = stripeData as Stripe.Checkout.Session;
 
         // Insert the order into the stripe_orders table
-        const { success: orderSuccess, error: orderError } = await supabaseService.createStripeOrder({
+        const { error: orderError } = await supabase.from('stripe_orders').insert({
           checkout_session_id,
           payment_intent_id: payment_intent,
           customer_id: customerId,
@@ -112,7 +112,7 @@ async function handleEvent(event: Stripe.Event) {
           status: 'completed', // assuming we want to mark it as completed since payment is successful
         });
 
-        if (!orderSuccess || orderError) {
+        if (orderError) {
           console.error('Error inserting order:', orderError);
           return;
         }
@@ -128,7 +128,11 @@ async function handleEvent(event: Stripe.Event) {
 async function syncCustomerFromStripe(customerId: string) {
   try {
     // Find the business profile associated with this customer
-    const { data: businessProfile, error: profileError } = await supabaseService.getBusinessProfileByStripeCustomer(customerId);
+    const { data: businessProfile, error: profileError } = await supabase
+      .from('business_profiles')
+      .select('id')
+      .eq('stripe_customer_id', customerId)
+      .single();
 
     if (profileError || !businessProfile) {
       console.error(`No business profile found for customer: ${customerId}`);
@@ -146,19 +150,20 @@ async function syncCustomerFromStripe(customerId: string) {
     // If no subscriptions found, mark business as not premium
     if (subscriptions.data.length === 0) {
       console.info(`No active subscriptions found for customer: ${customerId}`);
-      const { success: updateSuccess, error: updateError } = await supabaseService.updateBusinessProfile(
-        businessProfile.id,
-        {
+      const { error: updateError } = await supabase
+        .from('business_profiles')
+        .update({
           stripe_subscription_id: null,
           stripe_price_id: null,
           stripe_current_period_end: null,
           stripe_subscription_status: null,
           cancel_at_period_end: false,
           premium: false,
-        }
-      );
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', businessProfile.id);
 
-      if (!updateSuccess || updateError) {
+      if (updateError) {
         console.error('Error updating business profile:', updateError);
         throw new Error('Failed to update business profile in database');
       }
@@ -170,19 +175,20 @@ async function syncCustomerFromStripe(customerId: string) {
     const isActive = subscription.status === 'active' || subscription.status === 'trialing';
 
     // Update business profile with subscription data
-    const { success: updateSuccess, error: updateError } = await supabaseService.updateBusinessProfile(
-      businessProfile.id,
-      {
+    const { error: updateError } = await supabase
+      .from('business_profiles')
+      .update({
         stripe_subscription_id: subscription.id,
         stripe_price_id: subscription.items.data[0].price.id,
         stripe_current_period_end: subscription.current_period_end,
         stripe_subscription_status: subscription.status,
         cancel_at_period_end: subscription.cancel_at_period_end || false,
         premium: isActive,
-      }
-    );
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', businessProfile.id);
 
-    if (!updateSuccess || updateError) {
+    if (updateError) {
       console.error('Error updating business profile with subscription:', updateError);
       throw new Error('Failed to update business profile in database');
     }
