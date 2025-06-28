@@ -30,6 +30,8 @@ import {
 } from 'lucide-react';
 import { DataProviderFactory } from '../providers';
 import { useAuth } from '../lib/auth';
+import { usePagination } from '../hooks/usePagination';
+import { Pagination } from '../components/Pagination';
 
 const AdminDashboardPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'submissions' | 'businesses' | 'contacts' | 'users' | 'analytics' | 'settings'>('submissions');
@@ -66,6 +68,12 @@ const AdminDashboardPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const dataProvider = DataProviderFactory.getProvider();
+
+  // Pagination hooks for different tabs
+  const businessesPagination = usePagination({ 
+    itemsPerPage: 10, 
+    resetTriggers: [searchQuery, statusFilter] 
+  });
 
   useEffect(() => {
     document.title = 'Admin Dashboard - Near Me Directory';
@@ -837,7 +845,18 @@ const AdminDashboardPage: React.FC = () => {
           {activeTab === 'businesses' && (
             <div>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold text-gray-900">Directory Businesses</h2>
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">Directory Businesses</h2>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {getFilteredBusinesses().length === businesses.length 
+                      ? `${businesses.length} total businesses`
+                      : `${getFilteredBusinesses().length} of ${businesses.length} businesses`
+                    }
+                    {businessesPagination.getTotalPages(getFilteredBusinesses().length) > 1 && 
+                      ` • Page ${businessesPagination.currentPage} of ${businessesPagination.getTotalPages(getFilteredBusinesses().length)}`
+                    }
+                  </p>
+                </div>
                 <button
                   onClick={() => {
                     // In a real implementation, this would export data
@@ -861,29 +880,30 @@ const AdminDashboardPage: React.FC = () => {
                   </p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Business
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Category/Location
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Created
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Status
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {getFilteredBusinesses().map((business) => (
+                <>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Business
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Category/Location
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Created
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {businessesPagination.getPaginatedItems(getFilteredBusinesses()).map((business: any) => (
                         <tr key={business.id} className="hover:bg-gray-50">
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
@@ -953,6 +973,16 @@ const AdminDashboardPage: React.FC = () => {
                     </tbody>
                   </table>
                 </div>
+                
+                {/* Pagination Controls */}
+                <Pagination
+                  currentPage={businessesPagination.currentPage}
+                  totalPages={businessesPagination.getTotalPages(getFilteredBusinesses().length)}
+                  itemsPerPage={businessesPagination.itemsPerPage}
+                  totalItems={getFilteredBusinesses().length}
+                  onPageChange={businessesPagination.setCurrentPage}
+                />
+              </>
               )}
             </div>
           )}
