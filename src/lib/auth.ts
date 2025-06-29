@@ -9,6 +9,7 @@ export interface SimpleUser {
   businessId?: string;
   businessName?: string;
   businessProfileId?: string;
+  role?: string; // Add role field
 }
 
 export interface AuthState {
@@ -38,12 +39,25 @@ export function isAdminEmail(email: string): boolean {
   return adminEmails.includes(email.toLowerCase());
 }
 
+// Enhanced admin check - checks both role and email list
+export function isAdminUser(supabaseUser: any): boolean {
+  // Check if user has admin role in metadata (from your script)
+  const hasAdminRole = supabaseUser.user_metadata?.role === 'admin';
+  
+  // Check if email is in admin list (existing functionality)
+  const hasAdminEmail = isAdminEmail(supabaseUser.email || '');
+  
+  // User is admin if they have either the role OR are in the email list
+  return hasAdminRole || hasAdminEmail;
+}
+
 // Helper function to create user object
 function createUserFromSupabaseUser(supabaseUser: any): SimpleUser {
   return {
     id: supabaseUser.id,
     email: supabaseUser.email!,
-    isAdmin: isAdminEmail(supabaseUser.email!),
+    isAdmin: isAdminUser(supabaseUser), // Use enhanced admin check
+    role: supabaseUser.user_metadata?.role, // Store the role
     businessId: supabaseUser.user_metadata?.businessId,
     businessName: supabaseUser.user_metadata?.businessName,
     businessProfileId: supabaseUser.user_metadata?.businessProfileId
@@ -199,10 +213,22 @@ export const getCurrentUser = (): SimpleUser | null => {
   return auth.getState().user;
 };
 
-// Check if user is admin (simple version)
+// Check if user is admin (enhanced version)
 export const isUserAdmin = (): boolean => {
   const user = getCurrentUser();
   return user?.isAdmin || false;
+};
+
+// Check user role specifically
+export const getUserRole = (): string | undefined => {
+  const user = getCurrentUser();
+  return user?.role;
+};
+
+// Check if user has specific role
+export const hasRole = (role: string): boolean => {
+  const userRole = getUserRole();
+  return userRole === role;
 };
 
 export const getAuthFeatureFlags = (): AuthFeatureFlags => {
