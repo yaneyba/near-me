@@ -347,6 +347,199 @@ const AdminTest: React.FC = () => {
     }
   };
 
+  // Test anonymous role for insert operations
+  const testAnonymousRole = async () => {
+    try {
+      const diagnostics: any = {
+        timestamp: new Date().toISOString(),
+        businessSubmissionsInsert: null,
+        contactMessagesInsert: null,
+        businessProfilesAccess: null,
+        currentRole: null,
+        recommendations: []
+      };
+
+      // Get current connection role
+      try {
+        const { data: roleData, error: roleError } = await supabase.rpc('debug_my_jwt');
+        if (!roleError && roleData) {
+          diagnostics.currentRole = {
+            role: roleData.role || 'unknown',
+            aud: roleData.aud || 'unknown',
+            email: roleData.email || 'anonymous'
+          };
+        }
+      } catch {
+        diagnostics.currentRole = { error: 'Could not determine role' };
+      }
+
+      // Test business_submissions insert (should work for anonymous users)
+      try {
+        const testBusinessData = {
+          business_name: `Anonymous Test Business ${Date.now()}`,
+          owner_name: 'Anonymous Test Owner',
+          email: `anontest${Date.now()}@example.com`,
+          phone: '(555) 123-4567',
+          address: '123 Anonymous Test St',
+          city: 'Test City',
+          state: 'TS',
+          zip_code: '12345',
+          category: 'test',
+          website: 'https://anontest.com',
+          description: 'Anonymous role test submission',
+          site_id: 'anon-test'
+        };
+
+        const { data: businessData, error: businessError } = await supabase
+          .from('business_submissions')
+          .insert([testBusinessData])
+          .select('id');
+
+        diagnostics.businessSubmissionsInsert = {
+          success: !businessError,
+          error: businessError ? {
+            code: businessError.code,
+            message: businessError.message,
+            hint: businessError.hint
+          } : null,
+          insertedId: businessData?.[0]?.id || null
+        };
+
+        // Clean up test data if successful
+        if (businessData?.[0]?.id) {
+          try {
+            await supabase
+              .from('business_submissions')
+              .delete()
+              .eq('id', businessData[0].id);
+            diagnostics.businessSubmissionsInsert.cleanupSuccess = true;
+          } catch {
+            diagnostics.businessSubmissionsInsert.cleanupSuccess = false;
+          }
+        }
+      } catch (err: any) {
+        diagnostics.businessSubmissionsInsert = {
+          success: false,
+          error: { message: err.message }
+        };
+      }
+
+      // Test contact_messages insert (should work for anonymous users)
+      try {
+        const testContactData = {
+          name: 'Anonymous Test User',
+          email: `anoncontact${Date.now()}@example.com`,
+          subject: 'Anonymous Role Test',
+          message: 'Testing anonymous role access to contact_messages table',
+          created_at: new Date().toISOString()
+        };
+
+        const { data: contactData, error: contactError } = await supabase
+          .from('contact_messages')
+          .insert([testContactData])
+          .select('id');
+
+        diagnostics.contactMessagesInsert = {
+          success: !contactError,
+          error: contactError ? {
+            code: contactError.code,
+            message: contactError.message,
+            hint: contactError.hint
+          } : null,
+          insertedId: contactData?.[0]?.id || null
+        };
+
+        // Clean up test data if successful
+        if (contactData?.[0]?.id) {
+          try {
+            await supabase
+              .from('contact_messages')
+              .delete()
+              .eq('id', contactData[0].id);
+            diagnostics.contactMessagesInsert.cleanupSuccess = true;
+          } catch {
+            diagnostics.contactMessagesInsert.cleanupSuccess = false;
+          }
+        }
+      } catch (err: any) {
+        diagnostics.contactMessagesInsert = {
+          success: false,
+          error: { message: err.message }
+        };
+      }
+
+      // Test business_profiles read access (should be restricted to owners only)
+      try {
+        const { data: profileData, error: profileError } = await supabase
+          .from('business_profiles')
+          .select('id')
+          .limit(1);
+
+        diagnostics.businessProfilesAccess = {
+          success: !profileError,
+          error: profileError ? {
+            code: profileError.code,
+            message: profileError.message,
+            hint: profileError.hint
+          } : null,
+          note: 'This should normally fail for anonymous users (expected behavior)'
+        };
+      } catch (err: any) {
+        diagnostics.businessProfilesAccess = {
+          success: false,
+          error: { message: err.message },
+          note: 'This should normally fail for anonymous users (expected behavior)'
+        };
+      }
+
+      // Generate recommendations based on test results
+      if (!diagnostics.businessSubmissionsInsert?.success) {
+        diagnostics.recommendations.push({
+          issue: 'Anonymous users cannot submit business applications',
+          solution: 'Create RLS policy to allow anonymous inserts to business_submissions',
+          sql: `CREATE POLICY "allow_anonymous_business_submissions" ON business_submissions
+FOR INSERT TO anon
+WITH CHECK (true);
+
+CREATE POLICY "allow_authenticated_business_submissions" ON business_submissions
+FOR INSERT TO authenticated
+WITH CHECK (true);`
+        });
+      }
+
+      if (!diagnostics.contactMessagesInsert?.success) {
+        diagnostics.recommendations.push({
+          issue: 'Anonymous users cannot submit contact messages',
+          solution: 'Create RLS policy to allow anonymous inserts to contact_messages',
+          sql: `CREATE POLICY "allow_anonymous_contact_messages" ON contact_messages
+FOR INSERT TO anon
+WITH CHECK (true);
+
+CREATE POLICY "allow_authenticated_contact_messages" ON contact_messages
+FOR INSERT TO authenticated
+WITH CHECK (true);`
+        });
+      }
+
+      // Note about business_profiles access
+      if (diagnostics.businessProfilesAccess?.success) {
+        diagnostics.recommendations.push({
+          issue: 'Business profiles are accessible to anonymous users',
+          solution: 'This might be a security concern - consider restricting access',
+          sql: `-- Business profiles should only be accessible to owners
+CREATE POLICY "owners_manage_own_profile" ON business_profiles
+FOR ALL TO authenticated
+USING (user_id = auth.uid());`
+        });
+      }
+
+      const publicAccessTests = diagnostics.businessSubmissionsInsert?.success && diagnostics.contactMessagesInsert?.success;
+      addResult('Anonymous Role Test', publicAccessTests, diagnostics, publicAccessTests ? null : new Error('Anonymous access issues detected'));
+    } catch (err) {
+      addResult('Anonymous Role Test', false, null, err);
+    }
+  };
+
   // Test JWT debug function
   const testJWTDebug = async () => {
     try {
@@ -362,7 +555,8 @@ const AdminTest: React.FC = () => {
           user_metadata: data?.user_metadata || {},
           app_metadata: data?.app_metadata || {},
           hasAdminRole: false,
-          adminRoleLocation: 'none'
+          adminRoleLocation: 'none',
+          isSuperAdmin: data?.is_super_admin === true
         };
 
         // Check where admin role might be
@@ -732,6 +926,7 @@ const AdminTest: React.FC = () => {
       await testCurrentRole();
       await testSimpleRole();
       await testMinimalRole();
+      await testAnonymousRole();
       await testTablesExist();
       await testRLSPolicies();
       await testRLSDiagnostic();
@@ -823,6 +1018,14 @@ const AdminTest: React.FC = () => {
           </button>
           
           <button
+            onClick={testAnonymousRole}
+            disabled={isRunningTests}
+            className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:bg-orange-300"
+          >
+            Test Anonymous Role
+          </button>
+          
+          <button
             onClick={testTablesExist}
             disabled={isRunningTests}
             className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 disabled:bg-gray-100"
@@ -910,15 +1113,51 @@ const AdminTest: React.FC = () => {
                         </div>
                       )}
                     </div>
+                    <div className={`p-3 rounded-md ${result.data.isSuperAdmin ? 'bg-purple-50' : 'bg-gray-50'}`}>
+                      <div className={`font-medium ${result.data.isSuperAdmin ? 'text-purple-800' : 'text-gray-800'}`}>
+                        Super Admin Status
+                      </div>
+                      <div className={`text-sm ${result.data.isSuperAdmin ? 'text-purple-700' : 'text-gray-700'}`}>
+                        {result.data.isSuperAdmin ? '✅ Super Admin' : '❌ Not Super Admin'}
+                      </div>
+                    </div>
                     <div className="bg-blue-50 p-3 rounded-md">
                       <div className="font-medium text-blue-800">Email</div>
                       <div className="text-sm text-blue-700">{result.data.email}</div>
+                    </div>
+                    <div className="bg-gray-50 p-3 rounded-md">
+                      <div className="font-medium text-gray-800">Role</div>
+                      <div className="text-sm text-gray-700">{result.data.role}</div>
                     </div>
                   </div>
                 </div>
               )}
               
-              {result.data && result.name !== 'JWT Debug Test' && (
+              {/* Special handling for Anonymous Role Test */}
+              {result.name === 'Anonymous Role Test' && result.data && (
+                <div className="mt-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div className={`p-3 rounded-md ${result.data.businessSubmissionsInsert?.success ? 'bg-green-50' : 'bg-red-50'}`}>
+                      <div className={`font-medium ${result.data.businessSubmissionsInsert?.success ? 'text-green-800' : 'text-red-800'}`}>
+                        Business Submissions
+                      </div>
+                      <div className={`text-sm ${result.data.businessSubmissionsInsert?.success ? 'text-green-700' : 'text-red-700'}`}>
+                        {result.data.businessSubmissionsInsert?.success ? '✅ Anonymous insert works' : '❌ Anonymous insert blocked'}
+                      </div>
+                    </div>
+                    <div className={`p-3 rounded-md ${result.data.contactMessagesInsert?.success ? 'bg-green-50' : 'bg-red-50'}`}>
+                      <div className={`font-medium ${result.data.contactMessagesInsert?.success ? 'text-green-800' : 'text-red-800'}`}>
+                        Contact Messages
+                      </div>
+                      <div className={`text-sm ${result.data.contactMessagesInsert?.success ? 'text-green-700' : 'text-red-700'}`}>
+                        {result.data.contactMessagesInsert?.success ? '✅ Anonymous insert works' : '❌ Anonymous insert blocked'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {result.data && result.name !== 'JWT Debug Test' && result.name !== 'Anonymous Role Test' && (
                 <div className="mt-2">
                   <div className="font-medium text-gray-700 mb-2">Result Data:</div>
                   <div className="bg-gray-50 p-3 rounded-md overflow-auto max-h-96">
@@ -927,7 +1166,7 @@ const AdminTest: React.FC = () => {
                 </div>
               )}
               
-              {result.name === 'RLS Diagnostic' && result.data?.recommendations?.length > 0 && (
+              {(result.name === 'RLS Diagnostic' || result.name === 'Anonymous Role Test') && result.data?.recommendations?.length > 0 && (
                 <div className="mt-4">
                   <div className="font-medium text-gray-700 mb-2">Recommendations:</div>
                   <div className="space-y-3">
