@@ -1,368 +1,638 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Shield, 
-  Users, 
-  Settings, 
-  Database, 
-  Server, 
-  CheckCircle, 
-  AlertCircle, 
-  Loader2,
-  Lock,
-  User,
-  Key
-} from 'lucide-react';
-import { useAuth } from '../lib/auth';
+import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 
+interface TestResult {
+  name: string;
+  passed: boolean;
+  data: any;
+  error: any;
+}
+
 const AdminTest: React.FC = () => {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [testResults, setTestResults] = useState<Record<string, boolean>>({});
-  const [userDetails, setUserDetails] = useState<any>(null);
-  const { user } = useAuth();
+  const [results, setResults] = useState<TestResult[]>([]);
+  const [isRunningTests, setIsRunningTests] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      runAdminTests();
-      fetchUserDetails();
-    } else {
-      setLoading(false);
-      setError('Not authenticated as admin. Please log in with admin credentials.');
-    }
-  }, [user]);
+  const addResult = (name: string, passed: boolean, data: any = null, error: any = null) => {
+    setResults(prev => [...prev, { name, passed, data, error }]);
+  };
 
-  const fetchUserDetails = async () => {
+  // Test RLS policies summary
+  const testRLSPolicies = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setUserDetails({
-          id: session.user.id,
-          email: session.user.email,
-          role: user?.role || 'unknown',
-          isAdmin: user?.isAdmin || false,
-          lastSignIn: new Date(session.user.last_sign_in_at || '').toLocaleString(),
-          metadata: session.user.user_metadata
+      // Test what works and what doesn't
+      const results = {
+        providersRead: false,
+        citiesRead: false,
+        contactWrite: false,
+        contactRead: false
+      };
+
+      // Test providers read
+      const { error: providersError } = await supabase
+        .from('providers')
+        .select('id')
+        .limit(1);
+      results.providersRead = !providersError;
+
+      // Test cities read  
+      const { error: citiesError } = await supabase
+        .from('cities')
+        .select('id')
+        .limit(1);
+      results.citiesRead = !citiesError;
+
+      // Test contact submissions read
+      const { error: contactReadError } = await supabase
+        .from('contact_submissions')
+        .select('id')
+        .limit(1);
+      results.contactRead = !contactReadError;
+
+      // Test contact submissions write
+      const { error: contactWriteError } = await supabase
+        .from('contact_submissions')
+        .insert([{
+          name: 'RLS Test',
+          business_name: 'RLS Test Business',
+          email: 'rlstest@example.com',
+          phone: '(555) 123-4567',
+          message: 'RLS policy test',
+          inquiry_type: 'other',
+          status: 'new'
+        }])
+        .select('id');
+      results.contactWrite = !contactWriteError;
+
+      const allPassed = Object.values(results).every(Boolean);
+      addResult('RLS Policies Summary', allPassed, results);
+    } catch (err) {
+      addResult('RLS Policies Summary', false, null, err);
+    }
+  };
+
+  // Test if tables exist
+  const testTablesExist = async () => {
+    try {
+      const tables = ['providers', 'cities', 'contact_submissions', 'provider_submissions', 'consultation_requests'];
+      const results: Record<string, string> = {};
+      
+      for (const table of tables) {
+        try {
+          const { error } = await supabase.from(table).select('count(*)', { count: 'exact', head: true });
+          results[table] = !error ? 'exists' : `error: ${error.message}`;
+        } catch (err: any) {
+          results[table] = `error: ${err.message}`;
+        }
+      }
+      
+      const allExist = Object.values(results).every(result => result === 'exists');
+      addResult('Tables Existence Check', allExist, results, null);
+    } catch (err) {
+      addResult('Tables Existence Check', false, null, err);
+    }
+  };
+
+  // Test basic connection (without relying on specific tables)
+  const testBasicConnection = async () => {
+    try {
+      // Test with a simple query that should work even if no tables exist
+      const { data, error } = await supabase.rpc('version');
+      
+      if (error && error.code === '42883') {
+        // Function doesn't exist, but connection works
+        addResult('Basic Connection', true, { 
+          connected: true,
+          message: 'Connection successful (function not found is expected)'
+        }, null);
+      } else if (!error) {
+        addResult('Basic Connection', true, { 
+          connected: true,
+          version: data,
+          message: 'Connection and version query successful'
+        }, null);
+      } else {
+        addResult('Basic Connection', false, { 
+          connected: false,
+          errorCode: error.code,
+          errorMessage: error.message
+        }, error);
+      }
+    } catch (err: any) {
+      addResult('Basic Connection', false, { 
+        connected: false,
+        error: err.message || 'Unknown connection error'
+      }, err);
+    }
+  };
+
+  // Test current role
+  const testCurrentRole = async () => {
+    try {
+      const { data, error } = await supabase.rpc('get_current_role');
+      addResult('Current Role Test', !error, data, error);
+    } catch (err) {
+      addResult('Current Role Test', false, null, err);
+    }
+  };
+
+  // Test simple role (alternative to current role)
+  const testSimpleRole = async () => {
+    try {
+      const { data, error } = await supabase.rpc('get_simple_role');
+      addResult('Simple Role Test', !error, data, error);
+    } catch (err) {
+      addResult('Simple Role Test', false, null, err);
+    }
+  };
+
+  // Test minimal role (most compatible version)
+  const testMinimalRole = async () => {
+    try {
+      const { data, error } = await supabase.rpc('get_minimal_role');
+      addResult('Minimal Role Test', !error, data, error);
+    } catch (err) {
+      addResult('Minimal Role Test', false, null, err);
+    }
+  };
+
+  // Comprehensive RLS diagnostic test
+  const testRLSDiagnostic = async () => {
+    try {
+      const diagnostics: any = {
+        table: 'contact_submissions',
+        timestamp: new Date().toISOString(),
+        tests: {},
+        policies: null,
+        recommendations: [],
+        currentRole: null,
+        connectionInfo: null
+      };
+
+      // Test 0: Get current role and connection information
+      try {
+        const { data: roleData, error: roleError } = await supabase.rpc('get_current_role');
+        if (!roleError && roleData) {
+          diagnostics.currentRole = {
+            current_user: roleData.current_user,
+            current_role: roleData.current_role,
+            session_user: roleData.session_user,
+            is_superuser: roleData.is_superuser,
+            role_attributes: roleData.role_attributes
+          };
+        } else {
+          // Fallback: Try to get basic role info
+          try {
+            const { data: simpleRole, error: simpleError } = await supabase.rpc('get_simple_role');
+            if (!simpleError && simpleRole) {
+              diagnostics.currentRole = simpleRole;
+            }
+          } catch {
+            diagnostics.currentRole = { error: 'Unable to determine current role' };
+          }
+        }
+      } catch (err) {
+        diagnostics.currentRole = { error: 'Role detection failed' };
+      }
+
+      // Add connection method detection
+      const envInfo = {
+        usingAnonKey: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
+        usingServiceKey: !!import.meta.env.SUPABASE_SERVICE_KEY,
+        dataProvider: import.meta.env.VITE_DATA_PROVIDER,
+        keyType: 'Unknown'
+      };
+
+      // Determine which key is likely being used based on role
+      if (diagnostics.currentRole?.current_user === 'anon' || diagnostics.currentRole?.current_role === 'anon') {
+        envInfo.keyType = 'ANON_KEY (anonymous users)';
+      } else if (diagnostics.currentRole?.current_user === 'service_role' || diagnostics.currentRole?.current_role === 'service_role') {
+        envInfo.keyType = 'SERVICE_KEY (elevated privileges)';
+      } else if (diagnostics.currentRole?.current_user === 'authenticated') {
+        envInfo.keyType = 'AUTHENTICATED (logged-in user)';
+      } else if (diagnostics.currentRole?.current_user === 'postgres') {
+        envInfo.keyType = 'POSTGRES (superuser)';
+      }
+
+      diagnostics.connectionInfo = envInfo;
+
+      // Test 1: Check if RLS is enabled
+      try {
+        const { data: rlsStatus, error: rlsError } = await supabase.rpc('get_table_rls_status', { 
+          table_name: 'contact_submissions' 
+        });
+        
+        if (rlsError && rlsError.code === '42883') {
+          // Function doesn't exist, let's create a simpler check
+          diagnostics.tests.rlsEnabled = 'Unable to check (function missing)';
+        } else {
+          diagnostics.tests.rlsEnabled = rlsStatus;
+        }
+      } catch (err) {
+        diagnostics.tests.rlsEnabled = 'Error checking RLS status';
+      }
+
+      // Test 2: Try to query existing policies
+      try {
+        const { data: policies, error: policiesError } = await supabase
+          .from('pg_policies')
+          .select('*')
+          .eq('tablename', 'contact_submissions');
+        
+        if (policiesError) {
+          // Try alternative approach using RPC if available
+          try {
+            const { data: altPolicies, error: altError } = await supabase.rpc('get_table_policies', {
+              table_name: 'contact_submissions'
+            });
+            diagnostics.policies = altError ? null : altPolicies;
+          } catch {
+            diagnostics.policies = null;
+          }
+        } else {
+          diagnostics.policies = policies;
+        }
+      } catch (err) {
+        diagnostics.policies = null;
+      }
+
+      // Test 3: Test INSERT operation
+      try {
+        const testData = {
+          name: `RLS Diagnostic Test ${Date.now()}`,
+          business_name: `RLS Test Business ${Date.now()}`,
+          email: `rlstest${Date.now()}@example.com`,
+          phone: '(555) 123-4567',
+          message: 'Automated RLS diagnostic test',
+          inquiry_type: 'other',
+          status: 'new'
+        };
+
+        const { data, error } = await supabase
+          .from('contact_submissions')
+          .insert([testData])
+          .select('id');
+
+        diagnostics.tests.insertTest = {
+          success: !error,
+          error: error ? {
+            code: error.code,
+            message: error.message,
+            hint: error.hint,
+            details: error.details
+          } : null,
+          insertedId: data?.[0]?.id || null
+        };
+
+        // Clean up test data if insert succeeded
+        if (data?.[0]?.id) {
+          try {
+            await supabase
+              .from('contact_submissions')
+              .delete()
+              .eq('id', data[0].id);
+            diagnostics.tests.cleanupSuccess = true;
+          } catch {
+            diagnostics.tests.cleanupSuccess = false;
+          }
+        }
+      } catch (err: any) {
+        diagnostics.tests.insertTest = {
+          success: false,
+          error: {
+            message: err.message,
+            code: err.code || 'UNKNOWN'
+          }
+        };
+      }
+
+      // Test 4: Test SELECT operation
+      try {
+        const { error, count } = await supabase
+          .from('contact_submissions')
+          .select('id', { count: 'exact' })
+          .limit(1);
+
+        diagnostics.tests.selectTest = {
+          success: !error,
+          count: count,
+          error: error ? {
+            code: error.code,
+            message: error.message
+          } : null
+        };
+      } catch (err: any) {
+        diagnostics.tests.selectTest = {
+          success: false,
+          error: { message: err.message }
+        };
+      }
+
+      // Generate recommendations based on test results and current role
+      const currentRole = diagnostics.currentRole?.current_role || diagnostics.currentRole?.current_user || 'unknown';
+      const isSuperuser = diagnostics.currentRole?.is_superuser === true;
+      
+      if (!diagnostics.tests.insertTest?.success) {
+        const errorCode = diagnostics.tests.insertTest?.error?.code;
+        
+        if (errorCode === '42501') {
+          let policyTarget = 'public';
+          let explanation = 'for anonymous users';
+          
+          if (currentRole === 'postgres' && !isSuperuser) {
+            policyTarget = 'postgres';
+            explanation = 'for postgres role (Supabase managed - RLS still applies)';
+          } else if (currentRole === 'service_role') {
+            policyTarget = 'service_role';
+            explanation = 'for service_role (you are using SERVICE_KEY)';
+          } else if (currentRole === 'authenticated') {
+            policyTarget = 'authenticated';
+            explanation = 'for authenticated users';
+          } else if (currentRole === 'postgres' && isSuperuser) {
+            explanation = 'postgres superuser - RLS should be bypassed (check if RLS is force-enabled)';
+            policyTarget = 'postgres';
+          }
+          
+          diagnostics.recommendations.push({
+            issue: `RLS Policy Violation (Role: ${currentRole}, Superuser: ${isSuperuser})`,
+            solution: `Create an INSERT policy ${explanation}`,
+            sql: `CREATE POLICY "contact_insert_${policyTarget}" ON "public"."contact_submissions" FOR INSERT TO ${policyTarget} WITH CHECK (true);`,
+            priority: 'HIGH',
+            roleContext: currentRole === 'postgres' && !isSuperuser 
+              ? `You are connecting as 'postgres' but is_superuser=false. This is typical in Supabase where RLS still applies to the postgres role.`
+              : `You are connecting as '${currentRole}' - this determines which RLS policies apply.`
+          });
+        }
+        
+        if (!diagnostics.policies || diagnostics.policies.length === 0) {
+          const policyRecommendation = currentRole === 'service_role' 
+            ? `-- Service role policies (you are using SERVICE_KEY)\nCREATE POLICY "contact_service_all" ON "public"."contact_submissions"\nFOR ALL TO service_role\nUSING (true)\nWITH CHECK (true);`
+            : `-- Public and service role policies\nCREATE POLICY "contact_public_insert" ON "public"."contact_submissions"\nFOR INSERT TO public\nWITH CHECK (true);\n\nCREATE POLICY "contact_service_all" ON "public"."contact_submissions"\nFOR ALL TO service_role\nUSING (true)\nWITH CHECK (true);`;
+            
+          diagnostics.recommendations.push({
+            issue: 'No RLS Policies Found',
+            solution: 'Create RLS policies appropriate for your connection role',
+            sql: policyRecommendation,
+            priority: 'HIGH',
+            roleContext: `Current role: ${currentRole}`
+          });
+        }
+      }
+
+      if (!diagnostics.tests.selectTest?.success) {
+        const selectRole = currentRole === 'service_role' ? 'service_role' : 'public';
+        diagnostics.recommendations.push({
+          issue: 'Cannot read from contact_submissions',
+          solution: `Create a SELECT policy for ${selectRole}`,
+          sql: `CREATE POLICY "contact_select_${selectRole}" ON "public"."contact_submissions" FOR SELECT TO ${selectRole} USING (true);`,
+          priority: 'MEDIUM'
         });
       }
-    } catch (error) {
-      console.error('Error fetching user details:', error);
+
+      const allTestsPassed = diagnostics.tests.insertTest?.success && diagnostics.tests.selectTest?.success;
+      addResult('RLS Diagnostic', allTestsPassed, diagnostics, allTestsPassed ? null : new Error('RLS policy issues detected'));
+    } catch (err) {
+      addResult('RLS Diagnostic', false, null, err);
     }
   };
 
-  const runAdminTests = async () => {
-    setLoading(true);
-    setError(null);
-    const results: Record<string, boolean> = {};
-
+  // Test to show current connection role and key type
+  const testConnectionRole = async () => {
     try {
-      // Test 1: Check if user is admin
-      results.isAdmin = user?.isAdmin || false;
+      const connectionInfo: any = {
+        timestamp: new Date().toISOString(),
+        roleDetails: null,
+        keyAnalysis: {},
+        explanation: null
+      };
 
-      // Test 2: Test business_submissions table access
+      // Get role information
       try {
-        const { data, error } = await supabase
-          .from('business_submissions')
-          .select('count')
-          .limit(1);
-        
-        results.businessSubmissionsAccess = !error;
-      } catch {
-        results.businessSubmissionsAccess = false;
+        const { data: roleData, error: roleError } = await supabase.rpc('get_current_role');
+        if (!roleError && roleData) {
+          connectionInfo.roleDetails = roleData;
+        } else {
+          // Fallback to simple role
+          const { data: simpleRole, error: simpleError } = await supabase.rpc('get_simple_role');
+          connectionInfo.roleDetails = simpleError ? { error: 'Could not determine role' } : simpleRole;
+        }
+      } catch (err) {
+        connectionInfo.roleDetails = { error: 'Role detection failed' };
       }
 
-      // Test 3: Test admin_settings table access
-      try {
-        const { data, error } = await supabase
-          .from('admin_settings')
-          .select('count')
-          .limit(1);
-        
-        results.adminSettingsAccess = !error;
-      } catch {
-        results.adminSettingsAccess = false;
-      }
+      // Analyze environment keys
+      connectionInfo.keyAnalysis = {
+        hasAnonKey: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
+        hasServiceKey: !!import.meta.env.SUPABASE_SERVICE_KEY,
+        dataProvider: import.meta.env.VITE_DATA_PROVIDER,
+        supabaseUrl: import.meta.env.VITE_SUPABASE_URL ? 'Configured' : 'Missing'
+      };
 
-      // Test 4: Test contact_messages table access
-      try {
-        const { data, error } = await supabase
-          .from('contact_messages')
-          .select('count')
-          .limit(1);
-        
-        results.contactMessagesAccess = !error;
-      } catch {
-        results.contactMessagesAccess = false;
-      }
-
-      // Test 5: Test business_profiles table access
-      try {
-        const { data, error } = await supabase
-          .from('business_profiles')
-          .select('count')
-          .limit(1);
-        
-        results.businessProfilesAccess = !error;
-      } catch {
-        results.businessProfilesAccess = false;
-      }
-
-      setTestResults(results);
+      // Determine connection type and provide explanation
+      const currentRole = connectionInfo.roleDetails?.current_role || connectionInfo.roleDetails?.current_user;
       
-      // Check if any tests failed
-      const failedTests = Object.values(results).filter(result => !result).length;
-      if (failedTests > 0) {
-        setError(`${failedTests} admin permission tests failed. You may not have full admin access.`);
+      if (currentRole === 'anon') {
+        connectionInfo.explanation = {
+          connectionType: 'Anonymous (ANON_KEY)',
+          description: 'You are connecting with the anonymous key. This is typical for frontend applications.',
+          rlsImplications: 'RLS policies targeting "public" or "anon" roles will apply.',
+          typicalUse: 'Frontend users, contact forms, public data access',
+          permissions: 'Limited - only what RLS policies explicitly allow for public/anon role'
+        };
+      } else if (currentRole === 'service_role') {
+        connectionInfo.explanation = {
+          connectionType: 'Service Role (SERVICE_KEY)',
+          description: 'You are connecting with the service role key. This has elevated privileges.',
+          rlsImplications: 'RLS policies targeting "service_role" will apply. Can bypass some RLS restrictions.',
+          typicalUse: 'Backend operations, admin functions, bulk operations',
+          permissions: 'Elevated - can perform most database operations if RLS policies allow'
+        };
+      } else if (currentRole === 'authenticated') {
+        connectionInfo.explanation = {
+          connectionType: 'Authenticated User',
+          description: 'You are connecting as an authenticated user (logged in).',
+          rlsImplications: 'RLS policies targeting "authenticated" role will apply.',
+          typicalUse: 'Logged-in users accessing their own data',
+          permissions: 'Standard user permissions based on RLS policies'
+        };
+      } else if (currentRole === 'postgres') {
+        const isSuperuser = connectionInfo.roleDetails?.is_superuser === true;
+        
+        connectionInfo.explanation = {
+          connectionType: isSuperuser ? 'PostgreSQL Superuser' : 'PostgreSQL Admin (Supabase Managed)',
+          description: isSuperuser 
+            ? 'You are connecting with true database superuser privileges.'
+            : 'You are connecting as postgres role, but in a Supabase managed environment where superuser privileges are restricted.',
+          rlsImplications: isSuperuser 
+            ? 'RLS policies are bypassed. Full database access.'
+            : 'RLS policies still apply even to postgres role. You need explicit policies.',
+          typicalUse: isSuperuser 
+            ? 'Database administration, emergency access'
+            : 'Supabase admin access, requires proper RLS policies',
+          permissions: isSuperuser 
+            ? 'Full - can perform any database operation'
+            : 'Admin-level but still subject to RLS policies'
+        };
+      } else {
+        connectionInfo.explanation = {
+          connectionType: `Unknown Role: ${currentRole}`,
+          description: 'The connection role could not be determined or is non-standard.',
+          rlsImplications: 'RLS behavior may be unpredictable.',
+          typicalUse: 'Unknown',
+          permissions: 'Unknown - check role permissions manually'
+        };
       }
-    } catch (error: any) {
-      setError(`Error running admin tests: ${error.message || 'Unknown error'}`);
-    } finally {
-      setLoading(false);
+
+      addResult('Connection Role Analysis', true, connectionInfo, null);
+    } catch (err) {
+      addResult('Connection Role Analysis', false, null, err);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full">
-          <div className="flex flex-col items-center">
-            <Loader2 className="w-12 h-12 text-blue-600 animate-spin mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Running Admin Tests</h2>
-            <p className="text-gray-600 text-center">
-              Verifying your admin permissions and database access...
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const runAllTests = async () => {
+    setIsRunningTests(true);
+    setResults([]);
+    
+    try {
+      await testBasicConnection();
+      await testCurrentRole();
+      await testSimpleRole();
+      await testMinimalRole();
+      await testTablesExist();
+      await testRLSPolicies();
+      await testRLSDiagnostic();
+      await testConnectionRole();
+    } catch (error) {
+      console.error("Error running tests:", error);
+    } finally {
+      setIsRunningTests(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-white">
-            <div className="flex items-center">
-              <Shield className="w-8 h-8 mr-3" />
-              <div>
-                <h1 className="text-2xl font-bold">Admin System Test</h1>
-                <p className="text-blue-100">Verify admin permissions and database access</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Content */}
-          <div className="p-6">
-            {error && (
-              <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start">
-                <AlertCircle className="w-5 h-5 text-red-500 mr-3 flex-shrink-0 mt-0.5" />
-                <div className="text-red-700">{error}</div>
-              </div>
+    <div className="p-6 max-w-7xl mx-auto">
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">RLS Testing Dashboard</h2>
+        <p className="text-gray-600 mb-6">
+          This dashboard helps diagnose Row Level Security (RLS) issues with your Supabase database.
+        </p>
+        
+        <div className="flex flex-wrap gap-4 mb-6">
+          <button
+            onClick={runAllTests}
+            disabled={isRunningTests}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-300 flex items-center"
+          >
+            {isRunningTests ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Running Tests...
+              </>
+            ) : (
+              'Run All Tests'
             )}
-
-            {!user?.isAdmin && (
-              <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start">
-                <Lock className="w-5 h-5 text-yellow-500 mr-3 flex-shrink-0 mt-0.5" />
-                <div>
-                  <h3 className="font-semibold text-yellow-800">Admin Access Required</h3>
-                  <p className="text-yellow-700 text-sm mt-1">
-                    This page is for testing admin functionality. You need admin privileges to run these tests.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* User Details */}
-            {userDetails && (
-              <div className="mb-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <User className="w-5 h-5 mr-2 text-blue-600" />
-                  User Information
-                </h2>
-                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-500">User ID</p>
-                      <p className="font-mono text-sm">{userDetails.id}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Email</p>
-                      <p className="font-medium">{userDetails.email}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Role</p>
-                      <p className="font-medium">
-                        {userDetails.role}
-                        {userDetails.isAdmin && (
-                          <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                            <Shield className="w-3 h-3 mr-1" />
-                            Admin
-                          </span>
-                        )}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Last Sign In</p>
-                      <p className="font-medium">{userDetails.lastSignIn}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Test Results */}
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <Database className="w-5 h-5 mr-2 text-blue-600" />
-                Admin Permission Tests
-              </h2>
-              
-              <div className="space-y-4">
-                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Shield className="w-5 h-5 mr-2 text-gray-500" />
-                      <span className="text-gray-900">Admin Role</span>
-                    </div>
-                    {testResults.isAdmin ? (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        <CheckCircle className="w-3 h-3 mr-1" />
-                        Passed
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                        <AlertCircle className="w-3 h-3 mr-1" />
-                        Failed
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Database className="w-5 h-5 mr-2 text-gray-500" />
-                      <span className="text-gray-900">Business Submissions Access</span>
-                    </div>
-                    {testResults.businessSubmissionsAccess ? (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        <CheckCircle className="w-3 h-3 mr-1" />
-                        Passed
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                        <AlertCircle className="w-3 h-3 mr-1" />
-                        Failed
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Settings className="w-5 h-5 mr-2 text-gray-500" />
-                      <span className="text-gray-900">Admin Settings Access</span>
-                    </div>
-                    {testResults.adminSettingsAccess ? (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        <CheckCircle className="w-3 h-3 mr-1" />
-                        Passed
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                        <AlertCircle className="w-3 h-3 mr-1" />
-                        Failed
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Users className="w-5 h-5 mr-2 text-gray-500" />
-                      <span className="text-gray-900">Contact Messages Access</span>
-                    </div>
-                    {testResults.contactMessagesAccess ? (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        <CheckCircle className="w-3 h-3 mr-1" />
-                        Passed
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                        <AlertCircle className="w-3 h-3 mr-1" />
-                        Failed
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Server className="w-5 h-5 mr-2 text-gray-500" />
-                      <span className="text-gray-900">Business Profiles Access</span>
-                    </div>
-                    {testResults.businessProfilesAccess ? (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        <CheckCircle className="w-3 h-3 mr-1" />
-                        Passed
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                        <AlertCircle className="w-3 h-3 mr-1" />
-                        Failed
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="mt-8 flex flex-col sm:flex-row gap-4">
-              <button
-                onClick={runAdminTests}
-                className="flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                <Server className="w-4 h-4 mr-2" />
-                Run Tests Again
-              </button>
-              
-              <button
-                onClick={() => window.location.href = '/admin/dashboard'}
-                className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                <Shield className="w-4 h-4 mr-2" />
-                Go to Admin Dashboard
-              </button>
-            </div>
-
-            {/* Debug Information */}
-            <div className="mt-8 pt-6 border-t border-gray-200">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-medium text-gray-500">Debug Information</h3>
-                <button
-                  onClick={() => {
-                    console.log('User Details:', userDetails);
-                    console.log('Test Results:', testResults);
-                  }}
-                  className="text-xs text-blue-600 hover:text-blue-800"
-                >
-                  Log to Console
-                </button>
-              </div>
-              <div className="bg-gray-100 rounded-md p-4 overflow-auto max-h-40">
-                <pre className="text-xs text-gray-800">
-                  {JSON.stringify({ userDetails, testResults }, null, 2)}
-                </pre>
-              </div>
-            </div>
-          </div>
+          </button>
+          
+          <button
+            onClick={testBasicConnection}
+            disabled={isRunningTests}
+            className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 disabled:bg-gray-100"
+          >
+            Test Connection
+          </button>
+          
+          <button
+            onClick={testCurrentRole}
+            disabled={isRunningTests}
+            className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 disabled:bg-gray-100"
+          >
+            Check Role
+          </button>
+          
+          <button
+            onClick={testTablesExist}
+            disabled={isRunningTests}
+            className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 disabled:bg-gray-100"
+          >
+            Check Tables
+          </button>
+          
+          <button
+            onClick={testRLSPolicies}
+            disabled={isRunningTests}
+            className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 disabled:bg-gray-100"
+          >
+            Test RLS Policies
+          </button>
+          
+          <button
+            onClick={testRLSDiagnostic}
+            disabled={isRunningTests}
+            className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 disabled:bg-gray-100"
+          >
+            Full RLS Diagnostic
+          </button>
         </div>
       </div>
+      
+      {results.length > 0 && (
+        <div className="space-y-6">
+          {results.map((result, index) => (
+            <div key={index} className={`bg-white rounded-lg shadow-md p-6 ${result.passed ? 'border-l-4 border-green-500' : 'border-l-4 border-red-500'}`}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">{result.name}</h3>
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${result.passed ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                  {result.passed ? 'Passed' : 'Failed'}
+                </span>
+              </div>
+              
+              {result.error && (
+                <div className="mb-4 p-3 bg-red-50 rounded-md text-sm text-red-700">
+                  <div className="font-medium">Error:</div>
+                  <div>{result.error.message || JSON.stringify(result.error)}</div>
+                </div>
+              )}
+              
+              {result.data && (
+                <div className="mt-2">
+                  <div className="font-medium text-gray-700 mb-2">Result Data:</div>
+                  <div className="bg-gray-50 p-3 rounded-md overflow-auto max-h-96">
+                    <pre className="text-xs text-gray-800">{JSON.stringify(result.data, null, 2)}</pre>
+                  </div>
+                </div>
+              )}
+              
+              {result.name === 'RLS Diagnostic' && result.data?.recommendations?.length > 0 && (
+                <div className="mt-4">
+                  <div className="font-medium text-gray-700 mb-2">Recommendations:</div>
+                  <div className="space-y-3">
+                    {result.data.recommendations.map((rec: any, i: number) => (
+                      <div key={i} className="bg-yellow-50 p-3 rounded-md border border-yellow-200">
+                        <div className="font-medium text-yellow-800">{rec.issue}</div>
+                        <div className="text-sm text-yellow-700 mt-1">{rec.solution}</div>
+                        {rec.roleContext && (
+                          <div className="text-xs text-yellow-600 mt-1 italic">{rec.roleContext}</div>
+                        )}
+                        <div className="mt-2 bg-gray-800 text-green-400 p-2 rounded text-xs font-mono overflow-auto">
+                          {rec.sql}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+      
+      {results.length === 0 && !isRunningTests && (
+        <div className="bg-white rounded-lg shadow-md p-6 text-center">
+          <p className="text-gray-600">No test results yet. Click "Run All Tests" to begin.</p>
+        </div>
+      )}
     </div>
   );
 };
