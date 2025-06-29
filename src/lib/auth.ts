@@ -6,6 +6,7 @@ export interface SimpleUser {
   id: string;
   email: string;
   isAdmin: boolean;
+  isSuperAdmin: boolean; // ADDED
   businessId?: string;
   businessName?: string;
   businessProfileId?: string;
@@ -30,12 +31,19 @@ export function isAdminUser(supabaseUser: any): boolean {
   return supabaseUser.user_metadata?.role === 'admin';
 }
 
+// ADDED: Super admin check
+export function isSuperAdminUser(supabaseUser: any): boolean {
+  // Check the is_super_admin column from auth.users table
+  return supabaseUser.is_super_admin === true;
+}
+
 // Helper function to create user object
 function createUserFromSupabaseUser(supabaseUser: any): SimpleUser {
   return {
     id: supabaseUser.id,
     email: supabaseUser.email!,
     isAdmin: isAdminUser(supabaseUser), // Use enhanced admin check
+    isSuperAdmin: isSuperAdminUser(supabaseUser), // ADDED
     role: supabaseUser.user_metadata?.role, // Store the role
     businessId: supabaseUser.user_metadata?.businessId,
     businessName: supabaseUser.user_metadata?.businessName,
@@ -204,6 +212,12 @@ export const isUserAdmin = (): boolean => {
   return user?.isAdmin || false;
 };
 
+// ADDED: Check if current user is super admin
+export const isUserSuperAdmin = (): boolean => {
+  const user = getCurrentUser();
+  return user?.isSuperAdmin || false;
+};
+
 // Check if user has specific role
 export const hasRole = (role: string): boolean => {
   const userRole = getUserRole();
@@ -213,6 +227,12 @@ export const hasRole = (role: string): boolean => {
 // Check if current user is admin (alternative method)
 export const hasAdminRole = (): boolean => {
   return hasRole('admin');
+};
+
+// ADDED: Check if user has super admin role specifically
+export const hasSuperAdminRole = (): boolean => {
+  const user = getCurrentUser();
+  return user?.isSuperAdmin || false;
 };
 
 export const getAuthFeatureFlags = (): AuthFeatureFlags => {
