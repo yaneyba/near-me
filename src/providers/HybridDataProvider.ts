@@ -1,9 +1,9 @@
-import { IDataProvider, Business, ContactSubmission, BusinessSubmission, SubmissionResult } from '../types';
+import { IDataProvider, Business, ContactSubmission, BusinessSubmission, SubmissionResult, UserEngagementEvent, BusinessAnalytics } from '../types';
 import { JsonDataProvider } from './JsonDataProvider';
 import { SupabaseDataProvider } from './SupabaseDataProvider';
 
 /**
- * Hybrid data provider that uses JSON for business data and Supabase for form submissions
+ * Hybrid data provider that uses JSON for business data and Supabase for form submissions and tracking
  */
 export class HybridDataProvider implements IDataProvider {
   private jsonProvider: JsonDataProvider;
@@ -34,5 +34,72 @@ export class HybridDataProvider implements IDataProvider {
 
   async submitBusiness(businessData: BusinessSubmission): Promise<SubmissionResult> {
     return this.supabaseProvider.submitBusiness(businessData);
+  }
+
+  // Use Supabase for engagement tracking (persistent analytics)
+  async trackEngagement(event: UserEngagementEvent): Promise<void> {
+    try {
+      // Try Supabase first for persistent tracking
+      await this.supabaseProvider.trackEngagement(event);
+    } catch (error) {
+      console.warn('Supabase tracking failed, falling back to JSON provider:', error);
+      // Fallback to JSON provider for development
+      await this.jsonProvider.trackEngagement(event);
+    }
+  }
+
+  async getBusinessAnalytics(
+    businessId: string, 
+    period: 'day' | 'week' | 'month' | 'year',
+    startDate?: Date,
+    endDate?: Date
+  ): Promise<BusinessAnalytics> {
+    try {
+      // Try Supabase first for persistent analytics
+      return await this.supabaseProvider.getBusinessAnalytics(businessId, period, startDate, endDate);
+    } catch (error) {
+      console.warn('Supabase analytics failed, falling back to JSON provider:', error);
+      // Fallback to JSON provider for development
+      return await this.jsonProvider.getBusinessAnalytics(businessId, period, startDate, endDate);
+    }
+  }
+
+  // Admin methods - delegate to Supabase provider
+  async getBusinessSubmissions(): Promise<any[]> {
+    return this.supabaseProvider.getBusinessSubmissions();
+  }
+
+  async getBusinessProfiles(): Promise<any[]> {
+    return this.supabaseProvider.getBusinessProfiles();
+  }
+
+  async getContactMessages(): Promise<any[]> {
+    return this.supabaseProvider.getContactMessages();
+  }
+
+  async getAllBusinesses(): Promise<any[]> {
+    return this.supabaseProvider.getAllBusinesses();
+  }
+
+  async getAdminStats(): Promise<{
+    pendingBusinesses: number;
+    totalBusinesses: number;
+    newMessages: number;
+    totalUsers: number;
+    premiumBusinesses: number;
+  }> {
+    return this.supabaseProvider.getAdminStats();
+  }
+
+  async approveBusinessSubmission(id: string, reviewerNotes?: string): Promise<void> {
+    return this.supabaseProvider.approveBusinessSubmission(id, reviewerNotes);
+  }
+
+  async rejectBusinessSubmission(id: string, reviewerNotes?: string): Promise<void> {
+    return this.supabaseProvider.rejectBusinessSubmission(id, reviewerNotes);
+  }
+
+  async resolveContactMessage(id: string, resolvedBy?: string, adminNotes?: string): Promise<void> {
+    return this.supabaseProvider.resolveContactMessage(id, resolvedBy, adminNotes);
   }
 }

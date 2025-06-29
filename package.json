@@ -12,14 +12,22 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "deploy:staging": "npm run build && echo 'Deploy to staging'",
-    "deploy:production": "npm run build:production && echo 'Deploy to production'"
+    "deploy:production": "npm run build:production && echo 'Deploy to production'",
+    "create-admin": "node scripts/create-admin-user.js",
+    "toggle-auth": "node scripts/toggle-auth-features.js",
+    "create-business-owner": "node scripts/create-business-owner.js",
+    "test:supabase": "node scripts/test-supabase-connection.js",
+    "test:supabase:detailed": "node scripts/test-supabase-detailed.js",
+    "add:samples": "node scripts/add-sample-submissions.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.50.0",
+    "dotenv": "^16.6.1",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.20.1"
+    "react-router-dom": "^6.20.1",
+    "stripe": "^14.20.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",

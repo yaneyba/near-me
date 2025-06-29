@@ -1,0 +1,5 @@
+[
+  { "id": "local-businesses", "label": "Local Businesses", "value": "500+" },
+  { "id": "average-rating", "label": "Average Rating", "value": "4.8", "icon": "star" },
+  { "id": "monthly-visitors", "label": "Monthly Visitors", "value": "1K+" }
+]

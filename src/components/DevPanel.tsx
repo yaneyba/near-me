@@ -28,6 +28,7 @@ const DevPanel: React.FC<DevPanelProps> = ({
 
   const cities = [
     'Dallas',
+    'Garland',
     'Denver', 
     'Austin',
     'Houston',

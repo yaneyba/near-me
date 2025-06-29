@@ -2,6 +2,7 @@ import React from 'react';
 import { MapPin, Star } from 'lucide-react';
 import SearchWithLiveResults from './SearchWithLiveResults';
 import { Business } from '../types';
+import stats from '../data/stats.json';
 
 interface HeroProps {
   category: string;
@@ -45,21 +46,19 @@ const Hero: React.FC<HeroProps> = ({ category, city, state, businesses, onSearch
         </div>
 
         <div className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
-            <div className="text-3xl font-bold mb-2">500+</div>
-            <div className="text-blue-200">Local Businesses</div>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
-            <div className="flex items-center justify-center mb-2">
-              <Star className="w-8 h-8 text-yellow-400 fill-current" />
-              <span className="text-3xl font-bold ml-2">4.8</span>
+          {stats.map((stat: { label: string; value: string; icon?: string }) => (
+            <div key={stat.label} className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
+              {stat.icon === 'star' ? (
+                <div className="flex items-center justify-center mb-2">
+                  <Star className="w-8 h-8 text-yellow-400 fill-current" />
+                  <span className="text-3xl font-bold ml-2">{stat.value}</span>
+                </div>
+              ) : (
+                <div className="text-3xl font-bold mb-2">{stat.value}</div>
+              )}
+              <div className="text-blue-200">{stat.label}</div>
             </div>
-            <div className="text-blue-200">Average Rating</div>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
-            <div className="text-3xl font-bold mb-2">10K+</div>
-            <div className="text-blue-200">Happy Customers</div>
-          </div>
+          ))}
         </div>
       </div>
     </div>

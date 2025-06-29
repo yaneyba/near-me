@@ -5,6 +5,7 @@ import { SubdomainInfo } from '../types';
 // Map cities to their states
 const cityStateMap: Record<string, string> = {
   'dallas': 'Texas',
+  'garland': 'Texas',
   'denver': 'Colorado',
   'austin': 'Texas',
   'houston': 'Texas',
@@ -57,7 +58,7 @@ export const parseSubdomain = (hostname: string = window.location.hostname): Sub
     
     const category = formatCategory(rawCategory);
     const city = formatCity(rawCity);
-    const state = cityStateMap[rawCity] || 'Unknown State';
+    const state = cityStateMap[rawCity.toLowerCase()] || 'Unknown State';
     
     return { category, city, state };
   }

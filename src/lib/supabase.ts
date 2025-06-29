@@ -1,140 +1,36 @@
 import { createClient } from '@supabase/supabase-js';
 
-// These will be set via environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Use process.env for Node.js environments (like generate-sitemap.js)
+// and import.meta.env for Vite environments (like the main app)
+const supabaseUrl = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_SUPABASE_URL : process.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_SUPABASE_ANON_KEY : process.env.VITE_SUPABASE_ANON_KEY;
+const supabaseServiceRoleKey = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY : process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
+  throw new Error('Missing Supabase credentials. Ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set in your .env.local file and accessible to the current environment.');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true, // Persist session in local storage
+    autoRefreshToken: true, // Automatically refresh token
+    detectSessionInUrl: true // Detect session from URL (useful for OAuth)
+  }
+});
 
-// Database types matching your existing schema with submission_status enum
-export interface Database {
-  public: {
-    Tables: {
-      contact_messages: {
-        Row: {
-          id: string;
-          name: string;
-          email: string;
-          subject: string;
-          message: string;
-          category: string | null;
-          city: string | null;
-          status: string | null;
-          admin_notes: string | null;
-          resolved_at: string | null;
-          resolved_by: string | null;
-          created_at: string | null;
-          updated_at: string | null;
-        };
-        Insert: {
-          id?: string;
-          name: string;
-          email: string;
-          subject: string;
-          message: string;
-          category?: string | null;
-          city?: string | null;
-          status?: string | null;
-          admin_notes?: string | null;
-          resolved_at?: string | null;
-          resolved_by?: string | null;
-          created_at?: string | null;
-          updated_at?: string | null;
-        };
-        Update: {
-          id?: string;
-          name?: string;
-          email?: string;
-          subject?: string;
-          message?: string;
-          category?: string | null;
-          city?: string | null;
-          status?: string | null;
-          admin_notes?: string | null;
-          resolved_at?: string | null;
-          resolved_by?: string | null;
-          created_at?: string | null;
-          updated_at?: string | null;
-        };
-      };
-      business_submissions: {
-        Row: {
-          id: string;
-          business_name: string;
-          owner_name: string;
-          email: string;
-          phone: string;
-          address: string;
-          city: string;
-          state: string;
-          zip_code: string;
-          category: string;
-          website: string | null;
-          description: string | null;
-          services: string[] | null;
-          hours: any | null;
-          status: Database['public']['Enums']['submission_status'] | null;
-          submitted_at: string | null;
-          reviewed_at: string | null;
-          reviewer_notes: string | null;
-          site_id: string;
-          created_at: string | null;
-          updated_at: string | null;
-        };
-        Insert: {
-          id?: string;
-          business_name: string;
-          owner_name: string;
-          email: string;
-          phone: string;
-          address: string;
-          city: string;
-          state: string;
-          zip_code: string;
-          category: string;
-          website?: string | null;
-          description?: string | null;
-          services?: string[] | null;
-          hours?: any | null;
-          status?: Database['public']['Enums']['submission_status'] | null;
-          submitted_at?: string | null;
-          reviewed_at?: string | null;
-          reviewer_notes?: string | null;
-          site_id: string;
-          created_at?: string | null;
-          updated_at?: string | null;
-        };
-        Update: {
-          id?: string;
-          business_name?: string;
-          owner_name?: string;
-          email?: string;
-          phone?: string;
-          address?: string;
-          city?: string;
-          state?: string;
-          zip_code?: string;
-          category?: string;
-          website?: string | null;
-          description?: string | null;
-          services?: string[] | null;
-          hours?: any | null;
-          status?: Database['public']['Enums']['submission_status'] | null;
-          submitted_at?: string | null;
-          reviewed_at?: string | null;
-          reviewer_notes?: string | null;
-          site_id?: string;
-          created_at?: string | null;
-          updated_at?: string | null;
-        };
-      };
-    };
-    Enums: {
-      submission_status: 'pending' | 'approved' | 'rejected';
-    };
-  };
-}
+// Service role client for admin operations (bypasses RLS)
+export const supabaseAdmin = supabaseServiceRoleKey ? createClient(
+  supabaseUrl!,
+  supabaseServiceRoleKey,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+) : null;
+
+// Helper functions
+export const isAdminClientAvailable = (): boolean => {
+  return supabaseAdmin !== null;
+};
