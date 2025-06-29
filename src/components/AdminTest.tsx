@@ -356,7 +356,8 @@ const AdminTest: React.FC = () => {
         contactMessagesInsert: null,
         businessProfilesAccess: null,
         currentRole: null,
-        recommendations: []
+        recommendations: [],
+        testNote: 'Testing public access that should work, and private access that should be blocked'
       };
 
       // Get current connection role
@@ -366,11 +367,18 @@ const AdminTest: React.FC = () => {
           diagnostics.currentRole = {
             role: roleData.role || 'unknown',
             aud: roleData.aud || 'unknown',
-            email: roleData.email || 'anonymous'
+            email: roleData.email || 'anonymous',
+            isAuthenticated: roleData.role === 'authenticated'
           };
         }
       } catch {
         diagnostics.currentRole = { error: 'Could not determine role' };
+      }
+
+      // Note about testing limitation
+      const isAuthenticatedUser = diagnostics.currentRole?.isAuthenticated;
+      if (isAuthenticatedUser) {
+        diagnostics.testNote = 'NOTE: You are logged in as an authenticated user. This test simulates what anonymous users can do, but your current permissions may differ.';
       }
 
       // Test business_submissions insert (should work for anonymous users)
@@ -402,7 +410,8 @@ const AdminTest: React.FC = () => {
             message: businessError.message,
             hint: businessError.hint
           } : null,
-          insertedId: businessData?.[0]?.id || null
+          insertedId: businessData?.[0]?.id || null,
+          note: 'This should work for anonymous users (public business application form)'
         };
 
         // Clean up test data if successful
@@ -420,7 +429,8 @@ const AdminTest: React.FC = () => {
       } catch (err: any) {
         diagnostics.businessSubmissionsInsert = {
           success: false,
-          error: { message: err.message }
+          error: { message: err.message },
+          note: 'This should work for anonymous users'
         };
       }
 
@@ -446,7 +456,8 @@ const AdminTest: React.FC = () => {
             message: contactError.message,
             hint: contactError.hint
           } : null,
-          insertedId: contactData?.[0]?.id || null
+          insertedId: contactData?.[0]?.id || null,
+          note: 'This should work for anonymous users (public contact form)'
         };
 
         // Clean up test data if successful
@@ -464,31 +475,47 @@ const AdminTest: React.FC = () => {
       } catch (err: any) {
         diagnostics.contactMessagesInsert = {
           success: false,
-          error: { message: err.message }
+          error: { message: err.message },
+          note: 'This should work for anonymous users'
         };
       }
 
-      // Test business_profiles read access (should be restricted to owners only)
+      // Test business_profiles read access 
+      // NOTE: We can't truly test anonymous access while logged in as a super admin
+      // This test documents the expected behavior
       try {
-        const { error: profileError } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from('business_profiles')
           .select('id')
           .limit(1);
 
-        diagnostics.businessProfilesAccess = {
-          success: !profileError,
-          error: profileError ? {
-            code: profileError.code,
-            message: profileError.message,
-            hint: profileError.hint
-          } : null,
-          note: 'This should normally fail for anonymous users (expected behavior)'
-        };
+        if (isAuthenticatedUser) {
+          diagnostics.businessProfilesAccess = {
+            success: !profileError,
+            error: profileError ? {
+              code: profileError.code,
+              message: profileError.message,
+              hint: profileError.hint
+            } : null,
+            note: 'You are authenticated, so you can access profiles. Anonymous users should be blocked.',
+            expectedAnonymousBehavior: 'Anonymous users should get permission denied error'
+          };
+        } else {
+          diagnostics.businessProfilesAccess = {
+            success: !profileError,
+            error: profileError ? {
+              code: profileError.code,
+              message: profileError.message,
+              hint: profileError.hint
+            } : null,
+            note: profileError ? 'GOOD: Anonymous access properly blocked' : 'SECURITY RISK: Anonymous users can access profiles'
+          };
+        }
       } catch (err: any) {
         diagnostics.businessProfilesAccess = {
           success: false,
           error: { message: err.message },
-          note: 'This should normally fail for anonymous users (expected behavior)'
+          note: 'Error testing business profiles access'
         };
       }
 
@@ -521,20 +548,29 @@ WITH CHECK (true);`
         });
       }
 
-      // Note about business_profiles access
-      if (diagnostics.businessProfilesAccess?.success) {
+      // Check if business profiles security looks correct
+      if (!isAuthenticatedUser && diagnostics.businessProfilesAccess?.success) {
         diagnostics.recommendations.push({
-          issue: 'Business profiles are accessible to anonymous users',
-          solution: 'This might be a security concern - consider restricting access',
-          sql: `-- Business profiles should only be accessible to owners
-CREATE POLICY "owners_manage_own_profile" ON business_profiles
-FOR ALL TO authenticated
-USING (user_id = auth.uid());`
+          issue: 'SECURITY RISK: Business profiles are accessible to anonymous users',
+          solution: 'Business profiles should only be accessible to authenticated users (owners and super admins)',
+          sql: `-- Fix business profiles security
+-- Run the diagnostic SQL first to see current policies, then clean up
+DROP POLICY IF EXISTS "allow_public_read_business_profiles" ON business_profiles;
+
+-- Ensure only proper access policies exist
+ALTER TABLE business_profiles ENABLE ROW LEVEL SECURITY;`,
+          priority: 'HIGH'
         });
       }
 
       const publicAccessTests = diagnostics.businessSubmissionsInsert?.success && diagnostics.contactMessagesInsert?.success;
-      addResult('Anonymous Role Test', publicAccessTests, diagnostics, publicAccessTests ? null : new Error('Anonymous access issues detected'));
+      
+      // For authenticated users, we just check that public submissions work
+      // For true anonymous users, we'd also check that business profiles are blocked
+      const overallSuccess = publicAccessTests && (isAuthenticatedUser || !diagnostics.businessProfilesAccess?.success);
+      
+      addResult('Anonymous Role Test', overallSuccess, diagnostics, 
+        !overallSuccess ? new Error('Public access issues detected') : null);
     } catch (err) {
       addResult('Anonymous Role Test', false, null, err);
     }
