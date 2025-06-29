@@ -47,6 +47,10 @@ const AdminDashboardPage: React.FC = () => {
   const [businessesPage, setBusinessesPage] = useState(1);
   const businessesPerPage = 10;
   
+  // Pagination state for business submissions
+  const [submissionsPage, setSubmissionsPage] = useState(1);
+  const submissionsPerPage = 10;
+  
   // Settings state
   const [loginEnabled, setLoginEnabled] = useState(true);
   const [trackingEnabled, setTrackingEnabled] = useState(true);
@@ -76,6 +80,7 @@ const AdminDashboardPage: React.FC = () => {
   // Reset pagination when filters change
   useEffect(() => {
     setBusinessesPage(1);
+    setSubmissionsPage(1);
   }, [searchQuery, statusFilter]);
 
   const loadData = async () => {
@@ -313,6 +318,19 @@ const AdminDashboardPage: React.FC = () => {
     return Math.ceil(filtered.length / businessesPerPage);
   };
 
+  // Pagination functions for business submissions
+  const getPaginatedBusinessSubmissions = () => {
+    const filtered = getFilteredBusinessSubmissions();
+    const startIndex = (submissionsPage - 1) * submissionsPerPage;
+    const endIndex = startIndex + submissionsPerPage;
+    return filtered.slice(startIndex, endIndex);
+  };
+
+  const getTotalSubmissionsPages = () => {
+    const filtered = getFilteredBusinessSubmissions();
+    return Math.ceil(filtered.length / submissionsPerPage);
+  };
+
   // Format date for display
   const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A';
@@ -540,7 +558,13 @@ const AdminDashboardPage: React.FC = () => {
           {activeTab === 'businesses' && (
             <div>
               <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-                <h2 className="text-xl font-semibold text-gray-900">Business Submissions</h2>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">Business Submissions</h2>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {getFilteredBusinessSubmissions().length} of {businessSubmissions.length} submissions
+                    {submissionsPage > 1 && ` • Page ${submissionsPage} of ${getTotalSubmissionsPages()}`}
+                  </p>
+                </div>
                 
                 <div className="flex flex-col sm:flex-row gap-4">
                   {/* Search */}
@@ -587,13 +611,6 @@ const AdminDashboardPage: React.FC = () => {
                 </div>
               </div>
               
-              {/* Results Count */}
-              <div className="text-sm text-gray-500 mb-4">
-                Showing {getFilteredBusinessSubmissions().length} submissions
-                {searchQuery && ` matching "${searchQuery}"`}
-                {statusFilter !== 'all' && ` with status "${statusFilter}"`}
-              </div>
-              
               {/* Table */}
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
@@ -620,7 +637,7 @@ const AdminDashboardPage: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {getFilteredBusinessSubmissions().map((submission) => (
+                    {getPaginatedBusinessSubmissions().map((submission) => (
                       <tr key={submission.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">{submission.business_name}</div>
@@ -674,6 +691,75 @@ const AdminDashboardPage: React.FC = () => {
                   </tbody>
                 </table>
               </div>
+              
+              {/* Pagination */}
+              {getTotalSubmissionsPages() > 1 && (
+                <div className="flex items-center justify-between mt-6">
+                  <div className="flex-1 flex justify-between sm:hidden">
+                    <button
+                      onClick={() => setSubmissionsPage(prev => Math.max(prev - 1, 1))}
+                      disabled={submissionsPage === 1}
+                      className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Previous
+                    </button>
+                    <button
+                      onClick={() => setSubmissionsPage(prev => Math.min(prev + 1, getTotalSubmissionsPages()))}
+                      disabled={submissionsPage === getTotalSubmissionsPages()}
+                      className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Next
+                    </button>
+                  </div>
+                  <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm text-gray-700">
+                        Showing <span className="font-medium">{(submissionsPage - 1) * submissionsPerPage + 1}</span> to{' '}
+                        <span className="font-medium">
+                          {Math.min(submissionsPage * submissionsPerPage, getFilteredBusinessSubmissions().length)}
+                        </span>{' '}
+                        of <span className="font-medium">{getFilteredBusinessSubmissions().length}</span> results
+                      </p>
+                    </div>
+                    <div>
+                      <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                        <button
+                          onClick={() => setSubmissionsPage(prev => Math.max(prev - 1, 1))}
+                          disabled={submissionsPage === 1}
+                          className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <span className="sr-only">Previous</span>
+                          <ChevronUp className="h-5 w-5 rotate-90" />
+                        </button>
+                        
+                        {/* Page numbers */}
+                        {[...Array(getTotalSubmissionsPages())].map((_, i) => (
+                          <button
+                            key={i}
+                            onClick={() => setSubmissionsPage(i + 1)}
+                            className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                              submissionsPage === i + 1
+                                ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                                : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                            }`}
+                          >
+                            {i + 1}
+                          </button>
+                        ))}
+                        
+                        <button
+                          onClick={() => setSubmissionsPage(prev => Math.min(prev + 1, getTotalSubmissionsPages()))}
+                          disabled={submissionsPage === getTotalSubmissionsPages()}
+                          className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <span className="sr-only">Next</span>
+                          <ChevronDown className="h-5 w-5 rotate-90" />
+                        </button>
+                      </nav>
+                    </div>
+                  </div>
+                </div>
+              )}
               
               {/* Empty State */}
               {getFilteredBusinessSubmissions().length === 0 && (
