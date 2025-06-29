@@ -11,9 +11,77 @@ interface TestResult {
 const AdminTest: React.FC = () => {
   const [results, setResults] = useState<TestResult[]>([]);
   const [isRunningTests, setIsRunningTests] = useState(false);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   const addResult = (name: string, passed: boolean, data: any = null, error: any = null) => {
     setResults(prev => [...prev, { name, passed, data, error }]);
+  };
+
+  // Copy result data to clipboard
+  const copyToClipboard = async (result: TestResult, index: number) => {
+    try {
+      const resultData = {
+        name: result.name,
+        passed: result.passed,
+        timestamp: new Date().toISOString(),
+        data: result.data,
+        error: result.error ? {
+          message: result.error.message,
+          code: result.error.code,
+          details: result.error.details,
+          hint: result.error.hint
+        } : null
+      };
+
+      const copyText = JSON.stringify(resultData, null, 2);
+      await navigator.clipboard.writeText(copyText);
+      
+      setCopiedIndex(index);
+      setTimeout(() => setCopiedIndex(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy to clipboard:', err);
+      // Fallback: select text for manual copy
+      const textArea = document.createElement('textarea');
+      textArea.value = JSON.stringify(result, null, 2);
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      
+      setCopiedIndex(index);
+      setTimeout(() => setCopiedIndex(null), 2000);
+    }
+  };
+
+  // Copy all results to clipboard
+  const copyAllResults = async () => {
+    try {
+      const allResults = {
+        timestamp: new Date().toISOString(),
+        totalTests: results.length,
+        passedTests: results.filter(r => r.passed).length,
+        failedTests: results.filter(r => !r.passed).length,
+        results: results.map(result => ({
+          name: result.name,
+          passed: result.passed,
+          data: result.data,
+          error: result.error ? {
+            message: result.error.message,
+            code: result.error.code,
+            details: result.error.details,
+            hint: result.error.hint
+          } : null
+        }))
+      };
+
+      const copyText = JSON.stringify(allResults, null, 2);
+      await navigator.clipboard.writeText(copyText);
+      
+      setCopiedIndex(-1); // Use -1 to indicate "copy all" was used
+      setTimeout(() => setCopiedIndex(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy all results:', err);
+    }
   };
 
   // Test RLS policies summary (Updated with correct tables)
@@ -120,17 +188,56 @@ const AdminTest: React.FC = () => {
       
       for (const table of tables) {
         try {
-          const { error } = await supabase.from(table).select('count(*)', { count: 'exact', head: true });
-          results[table] = !error ? 'exists' : `error: ${error.message}`;
+          // Use a simpler approach - just try to select with limit 0
+          const { error } = await supabase
+            .from(table)
+            .select('*')
+            .limit(0);
+          
+          if (!error) {
+            results[table] = 'exists';
+          } else {
+            // Provide detailed error information
+            const errorMsg = error.message || 'Unknown error';
+            const errorCode = error.code || 'NO_CODE';
+            const errorHint = error.hint || '';
+            
+            if (errorCode === '42P01') {
+              results[table] = 'table does not exist';
+            } else if (errorCode === '42501') {
+              results[table] = 'exists but access denied (RLS policy needed)';
+            } else {
+              results[table] = `error: ${errorCode} - ${errorMsg}${errorHint ? ` (${errorHint})` : ''}`;
+            }
+          }
         } catch (err: any) {
-          results[table] = `error: ${err.message}`;
+          // Handle JavaScript/network errors
+          const errorMsg = err.message || 'Unknown JavaScript error';
+          results[table] = `js_error: ${errorMsg}`;
+          console.error(`Table check error for ${table}:`, err);
         }
       }
       
       const allExist = Object.values(results).every(result => result === 'exists');
-      addResult('Tables Existence Check', allExist, results, null);
-    } catch (err) {
-      addResult('Tables Existence Check', false, null, err);
+      const someExist = Object.values(results).some(result => result === 'exists' || result.includes('access denied'));
+      
+      // Create summary for better understanding
+      const summary = {
+        tablesFound: Object.entries(results).filter(([_, status]) => status === 'exists').length,
+        tablesWithRLSIssues: Object.entries(results).filter(([_, status]) => status.includes('access denied')).length,
+        tablesMissing: Object.entries(results).filter(([_, status]) => status.includes('does not exist')).length,
+        tablesWithErrors: Object.entries(results).filter(([_, status]) => status.startsWith('error:') || status.startsWith('js_error:')).length,
+        details: results,
+        analysis: someExist ? 'Database connection appears to be working' : 'Database connection or authentication issues'
+      };
+      
+      addResult('Tables Existence Check', allExist, summary, allExist ? null : new Error('Some tables are not accessible'));
+    } catch (err: any) {
+      console.error('Tables existence check failed:', err);
+      addResult('Tables Existence Check', false, { 
+        error: 'Failed to run table existence check',
+        details: err.message || 'Unknown error'
+      }, err);
     }
   };
 
@@ -663,6 +770,34 @@ const AdminTest: React.FC = () => {
             )}
           </button>
           
+          {results.length > 0 && (
+            <button
+              onClick={copyAllResults}
+              disabled={isRunningTests}
+              className={`px-4 py-2 rounded-md flex items-center transition-colors ${
+                copiedIndex === -1 
+                  ? 'bg-green-100 text-green-800 border border-green-300' 
+                  : 'bg-gray-200 text-gray-800 hover:bg-gray-300 disabled:bg-gray-100'
+              }`}
+            >
+              {copiedIndex === -1 ? (
+                <>
+                  <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  All Results Copied!
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  Copy All Results
+                </>
+              )}
+            </button>
+          )}
+          
           <button
             onClick={testBasicConnection}
             disabled={isRunningTests}
@@ -719,9 +854,36 @@ const AdminTest: React.FC = () => {
             <div key={index} className={`bg-white rounded-lg shadow-md p-6 ${result.passed ? 'border-l-4 border-green-500' : 'border-l-4 border-red-500'}`}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold">{result.name}</h3>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${result.passed ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                  {result.passed ? 'Passed' : 'Failed'}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${result.passed ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                    {result.passed ? 'Passed' : 'Failed'}
+                  </span>
+                  <button
+                    onClick={() => copyToClipboard(result, index)}
+                    className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                      copiedIndex === index 
+                        ? 'bg-green-100 text-green-800 border border-green-300' 
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                    }`}
+                    title="Copy result data to clipboard"
+                  >
+                    {copiedIndex === index ? (
+                      <>
+                        <svg className="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        Copy
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
               
               {result.error && (
