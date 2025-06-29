@@ -82,7 +82,7 @@ export interface Database {
           description: string | null;
           services: string[] | null;
           hours: BusinessHours | null;
-          status: Database['public']['Enums']['submission_status'] | null;
+          status: Database["public"]["Enums"]["submission_status"] | null;
           submitted_at: string | null;
           reviewed_at: string | null;
           reviewer_notes: string | null;
@@ -105,7 +105,7 @@ export interface Database {
           description?: string | null;
           services?: string[] | null;
           hours?: any | null;
-          status?: Database['public']['Enums']['submission_status'] | null;
+          status?: Database["public"]["Enums"]["submission_status"] | null;
           submitted_at?: string | null;
           reviewed_at?: string | null;
           reviewer_notes?: string | null;
@@ -128,7 +128,7 @@ export interface Database {
           description?: string | null;
           services?: string[] | null;
           hours?: any | null;
-          status?: Database['public']['Enums']['submission_status'] | null;
+          status?: Database["public"]["Enums"]["submission_status"] | null;
           submitted_at?: string | null;
           reviewed_at?: string | null;
           reviewer_notes?: string | null;
@@ -179,19 +179,13 @@ export interface Database {
           business_id: string | null;
           business_name: string;
           email: string;
-          role: string;
-          approval_status: string | null;
-          approved_at: string | null;
-          approved_by: string | null;
+          // role: string; ← REMOVED
+          created_at: string | null;
+          updated_at: string | null;
           stripe_customer_id: string | null;
           stripe_subscription_id: string | null;
           stripe_price_id: string | null;
-          stripe_current_period_end: number | null;
-          stripe_subscription_status: string | null;
-          cancel_at_period_end: boolean | null;
           premium: boolean | null;
-          created_at: string | null;
-          updated_at: string | null;
         };
         Insert: {
           id?: string;
@@ -199,19 +193,13 @@ export interface Database {
           business_id?: string | null;
           business_name: string;
           email: string;
-          role?: string;
-          approval_status?: string | null;
-          approved_at?: string | null;
-          approved_by?: string | null;
+          // role?: string; ← REMOVED
+          created_at?: string | null;
+          updated_at?: string | null;
           stripe_customer_id?: string | null;
           stripe_subscription_id?: string | null;
           stripe_price_id?: string | null;
-          stripe_current_period_end?: number | null;
-          stripe_subscription_status?: string | null;
-          cancel_at_period_end?: boolean | null;
           premium?: boolean | null;
-          created_at?: string | null;
-          updated_at?: string | null;
         };
         Update: {
           id?: string;
@@ -219,19 +207,13 @@ export interface Database {
           business_id?: string | null;
           business_name?: string;
           email?: string;
-          role?: string;
-          approval_status?: string | null;
-          approved_at?: string | null;
-          approved_by?: string | null;
+          // role?: string; ← REMOVED
+          created_at?: string | null;
+          updated_at?: string | null;
           stripe_customer_id?: string | null;
           stripe_subscription_id?: string | null;
           stripe_price_id?: string | null;
-          stripe_current_period_end?: number | null;
-          stripe_subscription_status?: string | null;
-          cancel_at_period_end?: boolean | null;
           premium?: boolean | null;
-          created_at?: string | null;
-          updated_at?: string | null;
         };
       };
       businesses: {
@@ -342,7 +324,7 @@ export interface Database {
       };
     };
     Enums: {
-      submission_status: 'pending' | 'approved' | 'rejected';
+      submission_status: "pending" | "approved" | "rejected";
     };
   };
 }

@@ -21,7 +21,7 @@ import {
   Beaker
 } from 'lucide-react';
 import { DataProviderFactory } from '../providers/DataProviderFactory';
-import { useAuth } from '../lib/auth';
+import { updateDatabaseSettings, useAuth } from '../lib/auth';
 import AdminTest from '../components/AdminTest';
 
 const AdminDashboardPage: React.FC = () => {
