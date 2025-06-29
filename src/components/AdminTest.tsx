@@ -16,52 +16,85 @@ const AdminTest: React.FC = () => {
     setResults(prev => [...prev, { name, passed, data, error }]);
   };
 
-  // Test RLS policies summary
+  // Test RLS policies summary (Updated with correct tables)
   const testRLSPolicies = async () => {
     try {
-      // Test what works and what doesn't
+      // Test what works and what doesn't with actual near-me.us tables
       const results = {
-        providersRead: false,
+        businessSubmissionsRead: false,
+        categoriesRead: false,
         citiesRead: false,
-        contactWrite: false,
-        contactRead: false
+        contactMessagesRead: false,
+        adminSettingsRead: false,
+        businessSubmissionsWrite: false
       };
 
-      // Test providers read
-      const { error: providersError } = await supabase
-        .from('providers')
+      // Test business_submissions read
+      const { error: businessError } = await supabase
+        .from('business_submissions')
         .select('id')
         .limit(1);
-      results.providersRead = !providersError;
+      results.businessSubmissionsRead = !businessError;
 
-      // Test cities read  
+      // Test categories read  
+      const { error: categoriesError } = await supabase
+        .from('categories')
+        .select('id')
+        .limit(1);
+      results.categoriesRead = !categoriesError;
+
+      // Test cities read
       const { error: citiesError } = await supabase
         .from('cities')
         .select('id')
         .limit(1);
       results.citiesRead = !citiesError;
 
-      // Test contact submissions read
+      // Test contact_messages read
       const { error: contactReadError } = await supabase
-        .from('contact_submissions')
+        .from('contact_messages')
         .select('id')
         .limit(1);
-      results.contactRead = !contactReadError;
+      results.contactMessagesRead = !contactReadError;
 
-      // Test contact submissions write
+      // Test admin_settings read
+      const { error: adminError } = await supabase
+        .from('admin_settings')
+        .select('id')
+        .limit(1);
+      results.adminSettingsRead = !adminError;
+
+      // Test business_submissions write
       const { error: contactWriteError } = await supabase
-        .from('contact_submissions')
+        .from('business_submissions')
         .insert([{
-          name: 'RLS Test',
           business_name: 'RLS Test Business',
+          owner_name: 'RLS Test Owner',
           email: 'rlstest@example.com',
           phone: '(555) 123-4567',
-          message: 'RLS policy test',
-          inquiry_type: 'other',
-          status: 'new'
+          address: '123 Test St',
+          city: 'Test City',
+          state: 'TS',
+          zip_code: '12345',
+          category: 'test',
+          website: 'https://test.com',
+          description: 'RLS policy test',
+          site_id: 'test-site'
         }])
         .select('id');
-      results.contactWrite = !contactWriteError;
+      results.businessSubmissionsWrite = !contactWriteError;
+
+      // Clean up test data if write succeeded
+      if (!contactWriteError && contactWriteError !== null) {
+        try {
+          await supabase
+            .from('business_submissions')
+            .delete()
+            .eq('email', 'rlstest@example.com');
+        } catch (cleanupErr) {
+          console.log('Cleanup failed, but test succeeded');
+        }
+      }
 
       const allPassed = Object.values(results).every(Boolean);
       addResult('RLS Policies Summary', allPassed, results);
@@ -70,10 +103,19 @@ const AdminTest: React.FC = () => {
     }
   };
 
-  // Test if tables exist
+  // Test if tables exist (Updated with correct near-me.us tables)
   const testTablesExist = async () => {
     try {
-      const tables = ['providers', 'cities', 'contact_submissions', 'provider_submissions', 'consultation_requests'];
+      const tables = [
+        'business_submissions', 
+        'categories', 
+        'cities', 
+        'businesses', 
+        'contact_messages', 
+        'admin_settings',
+        'business_profiles',
+        'user_engagement_events'
+      ];
       const results: Record<string, string> = {};
       
       for (const table of tables) {
@@ -92,31 +134,74 @@ const AdminTest: React.FC = () => {
     }
   };
 
-  // Test basic connection (without relying on specific tables)
+  // Test basic connection (FIXED VERSION)
   const testBasicConnection = async () => {
     try {
-      // Test with a simple query that should work even if no tables exist
-      const { data, error } = await supabase.rpc('version');
+      // Test 1: Try a simple query that should always work
+      const { data, error } = await supabase
+        .from('information_schema.tables')
+        .select('table_name')
+        .eq('table_schema', 'public')
+        .limit(1);
       
-      if (error && error.code === '42883') {
-        // Function doesn't exist, but connection works
+      if (!error) {
         addResult('Basic Connection', true, { 
           connected: true,
-          message: 'Connection successful (function not found is expected)'
+          message: 'Connection successful - can query database schema',
+          tablesFound: data?.length || 0
         }, null);
-      } else if (!error) {
-        addResult('Basic Connection', true, { 
-          connected: true,
-          version: data,
-          message: 'Connection and version query successful'
-        }, null);
-      } else {
+        return;
+      }
+
+      // Test 2: If schema query fails, try our JWT debug function
+      try {
+        const { data: jwtData, error: jwtError } = await supabase.rpc('debug_my_jwt');
+        
+        if (!jwtError) {
+          addResult('Basic Connection', true, { 
+            connected: true,
+            message: 'Connection successful via JWT debug function',
+            hasJWT: !!jwtData
+          }, null);
+          return;
+        }
+      } catch (jwtErr) {
+        // JWT debug also failed, continue to fallback
+      }
+
+      // Test 3: Final fallback - try to access any existing table
+      const fallbackTables = ['business_submissions', 'categories', 'cities', 'businesses'];
+      let connectionWorked = false;
+      
+      for (const table of fallbackTables) {
+        try {
+          const { error: tableError } = await supabase
+            .from(table)
+            .select('*')
+            .limit(0); // Don't actually fetch data, just test connection
+          
+          if (!tableError || tableError.code !== '42P01') { // 42P01 = table doesn't exist
+            connectionWorked = true;
+            addResult('Basic Connection', true, { 
+              connected: true,
+              message: `Connection successful - accessed table: ${table}`,
+              method: 'table_access_test'
+            }, null);
+            break;
+          }
+        } catch (tableErr) {
+          continue; // Try next table
+        }
+      }
+
+      if (!connectionWorked) {
         addResult('Basic Connection', false, { 
           connected: false,
-          errorCode: error.code,
-          errorMessage: error.message
+          error: 'All connection methods failed',
+          lastError: error.message
         }, error);
       }
+
     } catch (err: any) {
       addResult('Basic Connection', false, { 
         connected: false,
@@ -155,11 +240,48 @@ const AdminTest: React.FC = () => {
     }
   };
 
+  // Test JWT debug function
+  const testJWTDebug = async () => {
+    try {
+      const { data, error } = await supabase.rpc('debug_my_jwt');
+      if (error) {
+        addResult('JWT Debug Test', false, null, error);
+      } else {
+        // Analyze the JWT data
+        const jwtAnalysis = {
+          fullJWT: data,
+          email: data?.email || 'Not found',
+          role: data?.role || 'Not found',
+          user_metadata: data?.user_metadata || {},
+          app_metadata: data?.app_metadata || {},
+          hasAdminRole: false,
+          adminRoleLocation: 'none'
+        };
+
+        // Check where admin role might be
+        if (data?.user_metadata?.role === 'admin') {
+          jwtAnalysis.hasAdminRole = true;
+          jwtAnalysis.adminRoleLocation = 'user_metadata.role';
+        } else if (data?.app_metadata?.role === 'admin') {
+          jwtAnalysis.hasAdminRole = true;
+          jwtAnalysis.adminRoleLocation = 'app_metadata.role';
+        } else if (data?.role === 'admin') {
+          jwtAnalysis.hasAdminRole = true;
+          jwtAnalysis.adminRoleLocation = 'root.role';
+        }
+
+        addResult('JWT Debug Test', true, jwtAnalysis, null);
+      }
+    } catch (err) {
+      addResult('JWT Debug Test', false, null, err);
+    }
+  };
+
   // Comprehensive RLS diagnostic test
   const testRLSDiagnostic = async () => {
     try {
       const diagnostics: any = {
-        table: 'contact_submissions',
+        table: 'business_submissions', // Changed from contact_submissions
         timestamp: new Date().toISOString(),
         tests: {},
         policies: null,
@@ -218,7 +340,7 @@ const AdminTest: React.FC = () => {
       // Test 1: Check if RLS is enabled
       try {
         const { data: rlsStatus, error: rlsError } = await supabase.rpc('get_table_rls_status', { 
-          table_name: 'contact_submissions' 
+          table_name: 'business_submissions' 
         });
         
         if (rlsError && rlsError.code === '42883') {
@@ -236,13 +358,13 @@ const AdminTest: React.FC = () => {
         const { data: policies, error: policiesError } = await supabase
           .from('pg_policies')
           .select('*')
-          .eq('tablename', 'contact_submissions');
+          .eq('tablename', 'business_submissions');
         
         if (policiesError) {
           // Try alternative approach using RPC if available
           try {
             const { data: altPolicies, error: altError } = await supabase.rpc('get_table_policies', {
-              table_name: 'contact_submissions'
+              table_name: 'business_submissions'
             });
             diagnostics.policies = altError ? null : altPolicies;
           } catch {
@@ -255,20 +377,25 @@ const AdminTest: React.FC = () => {
         diagnostics.policies = null;
       }
 
-      // Test 3: Test INSERT operation
+      // Test 3: Test INSERT operation on business_submissions
       try {
         const testData = {
-          name: `RLS Diagnostic Test ${Date.now()}`,
           business_name: `RLS Test Business ${Date.now()}`,
+          owner_name: 'RLS Test Owner',
           email: `rlstest${Date.now()}@example.com`,
           phone: '(555) 123-4567',
-          message: 'Automated RLS diagnostic test',
-          inquiry_type: 'other',
-          status: 'new'
+          address: '123 Test Street',
+          city: 'Test City',
+          state: 'TS',
+          zip_code: '12345',
+          category: 'test',
+          website: 'https://test.com',
+          description: 'Automated RLS diagnostic test',
+          site_id: 'rls-test'
         };
 
         const { data, error } = await supabase
-          .from('contact_submissions')
+          .from('business_submissions')
           .insert([testData])
           .select('id');
 
@@ -287,7 +414,7 @@ const AdminTest: React.FC = () => {
         if (data?.[0]?.id) {
           try {
             await supabase
-              .from('contact_submissions')
+              .from('business_submissions')
               .delete()
               .eq('id', data[0].id);
             diagnostics.tests.cleanupSuccess = true;
@@ -305,10 +432,10 @@ const AdminTest: React.FC = () => {
         };
       }
 
-      // Test 4: Test SELECT operation
+      // Test 4: Test SELECT operation on business_submissions
       try {
         const { error, count } = await supabase
-          .from('contact_submissions')
+          .from('business_submissions')
           .select('id', { count: 'exact' })
           .limit(1);
 
@@ -355,7 +482,7 @@ const AdminTest: React.FC = () => {
           diagnostics.recommendations.push({
             issue: `RLS Policy Violation (Role: ${currentRole}, Superuser: ${isSuperuser})`,
             solution: `Create an INSERT policy ${explanation}`,
-            sql: `CREATE POLICY "contact_insert_${policyTarget}" ON "public"."contact_submissions" FOR INSERT TO ${policyTarget} WITH CHECK (true);`,
+            sql: `CREATE POLICY "business_submissions_insert_${policyTarget}" ON "public"."business_submissions" FOR INSERT TO ${policyTarget} WITH CHECK (true);`,
             priority: 'HIGH',
             roleContext: currentRole === 'postgres' && !isSuperuser 
               ? `You are connecting as 'postgres' but is_superuser=false. This is typical in Supabase where RLS still applies to the postgres role.`
@@ -365,8 +492,8 @@ const AdminTest: React.FC = () => {
         
         if (!diagnostics.policies || diagnostics.policies.length === 0) {
           const policyRecommendation = currentRole === 'service_role' 
-            ? `-- Service role policies (you are using SERVICE_KEY)\nCREATE POLICY "contact_service_all" ON "public"."contact_submissions"\nFOR ALL TO service_role\nUSING (true)\nWITH CHECK (true);`
-            : `-- Public and service role policies\nCREATE POLICY "contact_public_insert" ON "public"."contact_submissions"\nFOR INSERT TO public\nWITH CHECK (true);\n\nCREATE POLICY "contact_service_all" ON "public"."contact_submissions"\nFOR ALL TO service_role\nUSING (true)\nWITH CHECK (true);`;
+            ? `-- Service role policies (you are using SERVICE_KEY)\nCREATE POLICY "business_submissions_service_all" ON "public"."business_submissions"\nFOR ALL TO service_role\nUSING (true)\nWITH CHECK (true);`
+            : `-- Public and service role policies\nCREATE POLICY "business_submissions_public_insert" ON "public"."business_submissions"\nFOR INSERT TO public\nWITH CHECK (true);\n\nCREATE POLICY "business_submissions_service_all" ON "public"."business_submissions"\nFOR ALL TO service_role\nUSING (true)\nWITH CHECK (true);`;
             
           diagnostics.recommendations.push({
             issue: 'No RLS Policies Found',
@@ -381,9 +508,9 @@ const AdminTest: React.FC = () => {
       if (!diagnostics.tests.selectTest?.success) {
         const selectRole = currentRole === 'service_role' ? 'service_role' : 'public';
         diagnostics.recommendations.push({
-          issue: 'Cannot read from contact_submissions',
+          issue: 'Cannot read from business_submissions',
           solution: `Create a SELECT policy for ${selectRole}`,
-          sql: `CREATE POLICY "contact_select_${selectRole}" ON "public"."contact_submissions" FOR SELECT TO ${selectRole} USING (true);`,
+          sql: `CREATE POLICY "business_submissions_select_${selectRole}" ON "public"."business_submissions" FOR SELECT TO ${selectRole} USING (true);`,
           priority: 'MEDIUM'
         });
       }
@@ -494,6 +621,7 @@ const AdminTest: React.FC = () => {
     
     try {
       await testBasicConnection();
+      await testJWTDebug();
       await testCurrentRole();
       await testSimpleRole();
       await testMinimalRole();
@@ -541,6 +669,14 @@ const AdminTest: React.FC = () => {
             className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 disabled:bg-gray-100"
           >
             Test Connection
+          </button>
+          
+          <button
+            onClick={testJWTDebug}
+            disabled={isRunningTests}
+            className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:bg-purple-300"
+          >
+            Test JWT Debug
           </button>
           
           <button
@@ -595,7 +731,32 @@ const AdminTest: React.FC = () => {
                 </div>
               )}
               
-              {result.data && (
+              {/* Special handling for JWT Debug Test */}
+              {result.name === 'JWT Debug Test' && result.data && (
+                <div className="mt-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div className={`p-3 rounded-md ${result.data.hasAdminRole ? 'bg-green-50' : 'bg-red-50'}`}>
+                      <div className={`font-medium ${result.data.hasAdminRole ? 'text-green-800' : 'text-red-800'}`}>
+                        Admin Status
+                      </div>
+                      <div className={`text-sm ${result.data.hasAdminRole ? 'text-green-700' : 'text-red-700'}`}>
+                        {result.data.hasAdminRole ? '✅ Admin role found' : '❌ No admin role detected'}
+                      </div>
+                      {result.data.hasAdminRole && (
+                        <div className="text-xs text-gray-600 mt-1">
+                          Location: {result.data.adminRoleLocation}
+                        </div>
+                      )}
+                    </div>
+                    <div className="bg-blue-50 p-3 rounded-md">
+                      <div className="font-medium text-blue-800">Email</div>
+                      <div className="text-sm text-blue-700">{result.data.email}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {result.data && result.name !== 'JWT Debug Test' && (
                 <div className="mt-2">
                   <div className="font-medium text-gray-700 mb-2">Result Data:</div>
                   <div className="bg-gray-50 p-3 rounded-md overflow-auto max-h-96">
