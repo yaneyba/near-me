@@ -720,14 +720,26 @@ We'll contact you at ${
   /**
    * Get all business profiles for admin dashboard
    */
+  /**
+   * Get all business profiles for admin dashboard
+   */
   async getBusinessProfiles(): Promise<any[]> {
     try {
-      // Use admin client for admin operations
+      // Use the RPC function to get business profiles with user roles
       const client = supabaseAdmin || supabase;
-      const { data, error } = await client
-        .from("business_profiles")
-        .select(
-          `
+      const { data, error } = await client.rpc(
+        "get_business_profiles_with_roles"
+      );
+
+      if (error) {
+        console.error("Error fetching business profiles with roles:", error);
+
+        // Fallback to basic query without roles if RPC function fails
+        console.log("Falling back to basic business profiles query...");
+        const { data: fallbackData, error: fallbackError } = await client
+          .from("business_profiles")
+          .select(
+            `
           id,
           user_id,
           business_id,
@@ -740,12 +752,20 @@ We'll contact you at ${
           created_at,
           updated_at
         `
-        )
-        .order("created_at", { ascending: false });
+          )
+          .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("Error fetching business profiles:", error);
-        throw error;
+        if (fallbackError) {
+          console.error("Fallback query also failed:", fallbackError);
+          throw fallbackError;
+        }
+
+        // Add default role information for fallback data
+        return (fallbackData || []).map((profile) => ({
+          ...profile,
+          user_role: "owner", // Default role
+          is_super_admin: false, // Default super admin status
+        }));
       }
 
       return data || [];
