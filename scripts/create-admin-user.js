@@ -22,11 +22,9 @@ async function createAdminUser() {
     console.log('This script will create an admin user in Supabase auth.users only.\n');
 
     // Supabase credentials (hardcoded)
-    const supabaseUrl = 'https://jeofyinldjyuouppgxhi.supabase.co';
-    const supabaseServiceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Implb2Z5aW5sZGp5dW91cHBneGhpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MDIxOTI1NiwiZXhwIjoyMDY1Nzk1MjU2fQ.y6-sOndGKobfBgIcxkfwml3uxtJt3z_yjs_s91Mmdds';
+    const supabaseUrl = 'https://your-supabase-project.supabase.co'; // Replace with your actual Supabase URL
+    const supabaseServiceKey = 'your-supabase-service-role-key'; // Replace with your actual service role key
     
-
-
     // Create Supabase client with service role key (admin privileges)
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
