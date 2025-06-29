@@ -251,8 +251,8 @@ export class SupabaseDataProvider {
           website: businessData.website || null,
           description: businessData.description || null,
           services: allServices,
-          hours: businessData.hours,
-          status: "pending" as Database["public"]["Enums"]["submission_status"],
+          hours: businessData.hours
+          // status: "pending" as Database["public"]["Enums"]["submission_status"],
         })
         .select("id") // ← Only get the ID we need
         .single();
