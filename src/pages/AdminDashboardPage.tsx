@@ -10,7 +10,6 @@ import {
   XCircle, 
   Clock, 
   Search, 
-  Filter, 
   ChevronDown, 
   ChevronUp, 
   Loader2, 
@@ -46,7 +45,7 @@ const AdminDashboardPage: React.FC = () => {
   
   // Pagination state for businesses
   const [businessesPage, setBusinessesPage] = useState(1);
-  const [businessesPerPage, setBusinessesPerPage] = useState(10);
+  const businessesPerPage = 10;
   
   // Settings state
   const [loginEnabled, setLoginEnabled] = useState(true);

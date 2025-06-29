@@ -470,7 +470,7 @@ const AdminTest: React.FC = () => {
 
       // Test business_profiles read access (should be restricted to owners only)
       try {
-        const { data: profileData, error: profileError } = await supabase
+        const { error: profileError } = await supabase
           .from('business_profiles')
           .select('id')
           .limit(1);
@@ -556,7 +556,7 @@ USING (user_id = auth.uid());`
           app_metadata: data?.app_metadata || {},
           hasAdminRole: false,
           adminRoleLocation: 'none',
-          isSuperAdmin: data?.is_super_admin === true
+          isSuperAdmin: false
         };
 
         // Check where admin role might be
@@ -569,6 +569,17 @@ USING (user_id = auth.uid());`
         } else if (data?.role === 'admin') {
           jwtAnalysis.hasAdminRole = true;
           jwtAnalysis.adminRoleLocation = 'root.role';
+        }
+
+        // Check super admin status from database function
+        try {
+          const { data: superAdminResult, error: superAdminError } = await supabase.rpc('is_super_admin');
+          if (!superAdminError) {
+            jwtAnalysis.isSuperAdmin = superAdminResult === true;
+          }
+        } catch (superAdminErr) {
+          // Function might not exist yet
+          jwtAnalysis.isSuperAdmin = data?.is_super_admin === true;
         }
 
         addResult('JWT Debug Test', true, jwtAnalysis, null);
