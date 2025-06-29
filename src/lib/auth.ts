@@ -9,7 +9,7 @@ export interface SimpleUser {
   businessId?: string;
   businessName?: string;
   businessProfileId?: string;
-  role?: string; // Add role field
+  role?: string; // Add role field.
 }
 
 export interface AuthState {
