@@ -9,7 +9,7 @@ export interface SimpleUser {
   businessId?: string;
   businessName?: string;
   businessProfileId?: string;
-  role?: string; // Add role field
+  role?: string; // Add role field.
 }
 
 export interface AuthState {
@@ -24,31 +24,10 @@ export interface AuthFeatureFlags {
   adsEnabled?: boolean;
 }
 
-// Simple admin check - get from environment variables
-function getAdminEmails(): string[] {
-  const adminEmails = import.meta.env.VITE_ADMIN_EMAILS;
-  if (!adminEmails) {
-    console.warn('VITE_ADMIN_EMAILS not set in environment variables');
-    return [];
-  }
-  return adminEmails.split(',').map((email: string) => email.trim().toLowerCase());
-}
-
-export function isAdminEmail(email: string): boolean {
-  const adminEmails = getAdminEmails();
-  return adminEmails.includes(email.toLowerCase());
-}
-
-// Enhanced admin check - checks both role and email list
+// Role-based admin check - simple and clean
 export function isAdminUser(supabaseUser: any): boolean {
-  // Check if user has admin role in metadata (from your script)
-  const hasAdminRole = supabaseUser.user_metadata?.role === 'admin';
-  
-  // Check if email is in admin list (existing functionality)
-  const hasAdminEmail = isAdminEmail(supabaseUser.email || '');
-  
-  // User is admin if they have either the role OR are in the email list
-  return hasAdminRole || hasAdminEmail;
+  // Check if user has admin role in metadata
+  return supabaseUser.user_metadata?.role === 'admin';
 }
 
 // Helper function to create user object
@@ -213,22 +192,27 @@ export const getCurrentUser = (): SimpleUser | null => {
   return auth.getState().user;
 };
 
-// Check if user is admin (enhanced version)
-export const isUserAdmin = (): boolean => {
-  const user = getCurrentUser();
-  return user?.isAdmin || false;
-};
-
 // Check user role specifically
 export const getUserRole = (): string | undefined => {
   const user = getCurrentUser();
   return user?.role;
 };
 
+// Check if user has admin role specifically
+export const isUserAdmin = (): boolean => {
+  const user = getCurrentUser();
+  return user?.isAdmin || false;
+};
+
 // Check if user has specific role
 export const hasRole = (role: string): boolean => {
   const userRole = getUserRole();
   return userRole === role;
+};
+
+// Check if current user is admin (alternative method)
+export const hasAdminRole = (): boolean => {
+  return hasRole('admin');
 };
 
 export const getAuthFeatureFlags = (): AuthFeatureFlags => {
