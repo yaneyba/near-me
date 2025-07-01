@@ -19,7 +19,7 @@ interface ImportMetaEnv {
   
   // Auth Settings
   readonly VITE_SETTINGS_AUTH_LOGIN_ENABLED: string
-  readonly VITE_SETTINGS_TRACKING_ENABLED: string
+  readonly VITE_SETTINGS_ENABLE_TRACKING: string
 }
 
 interface ImportMeta {

@@ -258,7 +258,7 @@ export const hasOwnerRole = (): boolean => {
 export const getAuthFeatureFlags = (): AuthFeatureFlags => {
   return {
     loginEnabled: import.meta.env.VITE_SETTINGS_AUTH_LOGIN_ENABLED !== 'false',
-    trackingEnabled: import.meta.env.VITE_SETTINGS_TRACKING_ENABLED !== 'false',
+    trackingEnabled: import.meta.env.VITE_SETTINGS_ENABLE_TRACKING !== 'false',
     adsEnabled: import.meta.env.VITE_SETTINGS_ENABLE_ADS !== 'false'
   };
 };

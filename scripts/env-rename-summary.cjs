@@ -12,7 +12,7 @@ console.log('   OLD: VITE_AUTH_LOGIN_ENABLED');
 console.log('   NEW: VITE_SETTINGS_AUTH_LOGIN_ENABLED');
 console.log('');
 console.log('   OLD: VITE_TRACKING_ENABLED');  
-console.log('   NEW: VITE_SETTINGS_TRACKING_ENABLED');
+console.log('   NEW: VITE_SETTINGS_ENABLE_TRACKING');
 
 console.log('\n📝 FILES UPDATED:');
 console.log('   ✅ .env - Updated variable names');
@@ -30,7 +30,7 @@ console.log('   • Improved TypeScript support with explicit type definitions')
 
 console.log('\n🔧 CURRENT VALUES:');
 console.log('   VITE_SETTINGS_AUTH_LOGIN_ENABLED=true');
-console.log('   VITE_SETTINGS_TRACKING_ENABLED=true');
+console.log('   VITE_SETTINGS_ENABLE_TRACKING=true');
 
 console.log('\n✅ VERIFICATION:');
 console.log('   • Build process: ✅ Completed successfully');

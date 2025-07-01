@@ -68,7 +68,7 @@ async function setupAdsSettings() {
     console.log('\n📝 All VITE_SETTINGS_ environment variables:');
     console.log('   • VITE_SETTINGS_ENABLE_ADS=false → ads_enabled');
     console.log('   • VITE_SETTINGS_AUTH_LOGIN_ENABLED=true → login_enabled');
-    console.log('   • VITE_SETTINGS_TRACKING_ENABLED=true → tracking_enabled');
+    console.log('   • VITE_SETTINGS_ENABLE_TRACKING=true → tracking_enabled');
 
   } catch (error) {
     console.error('❌ Unexpected error:', error);
