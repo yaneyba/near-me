@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Crown, X, Star, Zap, BarChart3, Calendar, Navigation, Camera, MessageSquare, Award, ArrowRight, CheckCircle, Mail, Phone } from 'lucide-react';
 import { SITE_INFO } from '../siteInfo';
+import { useNavigate } from 'react-router-dom';
 
 interface PremiumUpgradeProps {
   businessName: string;
@@ -8,6 +9,8 @@ interface PremiumUpgradeProps {
 }
 
 const PremiumUpgrade: React.FC<PremiumUpgradeProps> = ({ businessName, onClose }) => {
+  const navigate = useNavigate();
+  
   const upgradeFeatures = [
     {
       icon: Crown,
@@ -48,8 +51,17 @@ const PremiumUpgrade: React.FC<PremiumUpgradeProps> = ({ businessName, onClose }
   ];
 
   const handleContactSales = () => {
-    const subject = `Premium Upgrade Inquiry - ${businessName}`;
-    const body = `Hi,
+    // Close the modal first
+    onClose();
+    
+    // Navigate to contact page with pre-populated data
+    navigate('/contact', { 
+      state: { 
+        premiumInquiry: true,
+        businessName: businessName,
+        inquiryType: 'business-listing',
+        subject: `Premium Upgrade Inquiry - ${businessName}`,
+        message: `Hi,
 
 I'm interested in upgrading "${businessName}" to a premium listing on Near Me Directory.
 
@@ -59,11 +71,9 @@ Please provide information about:
 - Setup process
 - Timeline to go live
 
-Business Name: ${businessName}
-
-Thank you!`;
-
-    window.open(`mailto:${SITE_INFO.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
+Thank you!`
+      } 
+    });
   };
 
   return (
