@@ -19,13 +19,16 @@ const LoginPage: React.FC = () => {
   // Redirect after successful login
   useEffect(() => {
     if (user) {
-      if (user.isAdmin) {
-        navigate('/admin/dashboard', { replace: true });
-      } else {
-        navigate('/business/dashboard', { replace: true });
-      }
+      // Check if there's a redirect path in location state
+      const from = location.state?.from ? location.state.from : 
+                  user.isAdmin ? '/admin/dashboard' : '/business/dashboard';
+      
+      // If there's a specific tab to activate, include it in the state
+      const state = location.state?.activeTab ? { activeTab: location.state.activeTab } : undefined;
+      
+      navigate(from, { replace: true, state });
     }
-  }, [user, navigate]);
+  }, [user, navigate, location.state]);
 
   // Redirect if login is disabled
   useEffect(() => {

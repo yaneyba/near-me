@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { DataProviderFactory } from '../providers';
 import { BusinessAnalytics } from '../types';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import SubscriptionManager from '../components/SubscriptionManager';
 import { signOut, useAuth } from '../lib/auth';
 
@@ -45,10 +45,16 @@ const BusinessDashboardPage: React.FC = () => {
 
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const dataProvider = DataProviderFactory.getProvider();
 
   useEffect(() => {
     document.title = 'Business Dashboard - Near Me Directory';
+    
+    // Check if we should activate the subscription tab from navigation state
+    if (location.state && location.state.activeTab === 'subscription') {
+      setActiveTab('subscription');
+    }
     
     // If user has a businessId in their profile, use it
     if (user?.businessId) {
@@ -61,7 +67,7 @@ const BusinessDashboardPage: React.FC = () => {
     }
     
     loadAnalytics();
-  }, [period, customDateRange, startDate, endDate, user]);
+  }, [period, customDateRange, startDate, endDate, user, location.state]);
 
   const loadAnalytics = async () => {
     setLoading(true);

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Crown, X, Star, Zap, BarChart3, Calendar, Navigation, Camera, MessageSquare, Award, ArrowRight, CheckCircle, Mail, Phone } from 'lucide-react';
 import { SITE_INFO } from '../siteInfo';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../lib/auth';
 
 interface PremiumUpgradeProps {
   businessName: string;
@@ -8,6 +10,9 @@ interface PremiumUpgradeProps {
 }
 
 const PremiumUpgrade: React.FC<PremiumUpgradeProps> = ({ businessName, onClose }) => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  
   const upgradeFeatures = [
     {
       icon: Crown,
@@ -48,22 +53,24 @@ const PremiumUpgrade: React.FC<PremiumUpgradeProps> = ({ businessName, onClose }
   ];
 
   const handleContactSales = () => {
-    const subject = `Premium Upgrade Inquiry - ${businessName}`;
-    const body = `Hi,
+    if (user) {
+      // If user is logged in, navigate to the subscription tab in the business dashboard
+      navigate('/business/dashboard', { state: { activeTab: 'subscription' } });
+      onClose();
+    } else {
+      // If user is not logged in, redirect to login page with return destination
+      navigate('/login', { 
+        state: { 
+          from: '/business/dashboard', 
+          message: 'Please log in to upgrade your business listing' 
+        } 
+      });
+      onClose();
+    }
+  };
 
-I'm interested in upgrading "${businessName}" to a premium listing on Near Me Directory.
-
-Please provide information about:
-- Premium features and benefits
-- Pricing options
-- Setup process
-- Timeline to go live
-
-Business Name: ${businessName}
-
-Thank you!`;
-
-    window.open(`mailto:${SITE_INFO.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
+  const handlePhoneCall = () => {
+    window.location.href = `tel:${SITE_INFO.phone.replace(/[^\d+]/g, '')}`;
   };
 
   return (
@@ -217,13 +224,13 @@ Thank you!`;
                 <ArrowRight className="w-4 h-4 ml-2" />
               </button>
               
-              <a
-                href={`tel:${SITE_INFO.phone.replace(/[^\d+]/g, '')}`}
+              <button
+                onClick={handlePhoneCall}
                 className="border-2 border-gray-300 hover:border-gray-400 text-gray-700 hover:bg-gray-50 px-8 py-3 rounded-lg font-semibold transition-colors inline-flex items-center justify-center"
               >
                 <Phone className="w-5 h-5 mr-2" />
                 Call {SITE_INFO.phone}
-              </a>
+              </button>
             </div>
 
             <p className="text-xs text-gray-500 mt-4">
