@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Phone, 
   Mail, 
@@ -19,7 +19,6 @@ import {
 import { DataProviderFactory } from '../providers';
 import { ContactSubmission } from '../types';
 import { SITE_INFO } from '../siteInfo';
-import { useLocation } from 'react-router-dom';
 
 interface ContactSectionProps {
   category: string;
@@ -44,7 +43,6 @@ interface FormErrors {
 }
 
 const ContactSection: React.FC<ContactSectionProps> = ({ category, city, state }) => {
-  const location = useLocation();
   const [formData, setFormData] = useState<FormData>({
     name: '',
     email: '',
@@ -79,31 +77,6 @@ const ContactSection: React.FC<ContactSectionProps> = ({ category, city, state }
     { value: 'high', label: 'High - Response within 24 hours', color: 'text-orange-600' },
     { value: 'urgent', label: 'Urgent - Response within 4 hours', color: 'text-red-600' }
   ];
-
-  // Check for pre-populated data from navigation state
-  useEffect(() => {
-    if (location.state) {
-      const { 
-        premiumInquiry, 
-        businessName, 
-        inquiryType, 
-        subject, 
-        message 
-      } = location.state as any;
-      
-      if (premiumInquiry) {
-        // Pre-populate form with premium inquiry data
-        setFormData(prev => ({
-          ...prev,
-          businessName: businessName || prev.businessName,
-          inquiryType: inquiryType || 'business-listing',
-          subject: subject || prev.subject,
-          message: message || prev.message,
-          urgency: 'high' // Set higher urgency for premium inquiries
-        }));
-      }
-    }
-  }, [location.state]);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
