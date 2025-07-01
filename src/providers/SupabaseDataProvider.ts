@@ -343,10 +343,24 @@ We'll contact you at ${
   }
 
   /**
-   * Track user engagement events
+   * Track user engagement events - CLICK EVENTS ONLY
    */
   async trackEngagement(event: UserEngagementEvent): Promise<void> {
     try {
+      // Only track click events - filter out view events and other non-click events
+      const clickEvents = [
+        'phone_click',
+        'website_click', 
+        'booking_click',
+        'directions_click',
+        'email_click'
+      ];
+
+      // Skip tracking if this is not a click event
+      if (!clickEvents.includes(event.eventType)) {
+        return;
+      }
+
       const { error } = await supabase.from("user_engagement_events").insert({
         business_id: event.businessId,
         business_name: event.businessName,
@@ -441,19 +455,20 @@ We'll contact you at ${
     startDate: Date,
     endDate: Date
   ): BusinessAnalytics {
+    // CLICK EVENTS ONLY - We only track and process click interactions
     const metrics = {
-      totalViews: 0,
-      uniqueViews: 0,
+      totalViews: 0, // Not tracked - click events only
+      uniqueViews: 0, // Based on unique sessions with clicks
       phoneClicks: 0,
       websiteClicks: 0,
       bookingClicks: 0,
       directionsClicks: 0,
       emailClicks: 0,
-      hoursViews: 0,
-      servicesExpands: 0,
-      photoViews: 0,
-      conversionRate: 0,
-      engagementRate: 0,
+      hoursViews: 0, // Not tracked - click events only
+      servicesExpands: 0, // Not tracked - click events only  
+      photoViews: 0, // Not tracked - click events only
+      conversionRate: 0, // Based on click distribution
+      engagementRate: 0, // Based on clicks per session
     };
 
     const uniqueSessionIds = new Set<string>();
@@ -481,27 +496,8 @@ We'll contact you at ${
         uniqueSessionIds.add(event.user_session_id);
       }
 
-      // Count metrics by event type
+      // Count metrics by event type - CLICK EVENTS ONLY
       switch (event.event_type) {
-        case "view":
-          metrics.totalViews++;
-          hourlyData.views++;
-
-          // Track sources
-          const source = eventData.source || "direct";
-          sourceMap.set(source, (sourceMap.get(source) || 0) + 1);
-
-          // Track search queries
-          if (eventData.searchQuery) {
-            const existing = searchQueryMap.get(eventData.searchQuery) || {
-              views: 0,
-              clicks: 0,
-            };
-            existing.views++;
-            searchQueryMap.set(eventData.searchQuery, existing);
-          }
-          break;
-
         case "phone_click":
           metrics.phoneClicks++;
           hourlyData.interactions++;
@@ -527,30 +523,24 @@ We'll contact you at ${
           hourlyData.interactions++;
           break;
 
-        case "hours_view":
-          metrics.hoursViews++;
-          hourlyData.interactions++;
-          break;
-
-        case "services_expand":
-          metrics.servicesExpands++;
-          hourlyData.interactions++;
-          break;
-
-        case "photo_view":
-          metrics.photoViews++;
-          hourlyData.interactions++;
+        // Skip all non-click events since we're only tracking clicks
+        default:
+          // No tracking for views, hours_view, services_expand, photo_view etc.
           break;
       }
 
-      // Track device types
+      // Track device types for click events
       const deviceType = eventData.deviceType || "desktop";
       if (deviceType in deviceMap) {
         deviceMap[deviceType as keyof typeof deviceMap]++;
       }
 
-      // Update search query clicks
-      if (eventData.searchQuery && event.event_type !== "view") {
+      // Track sources for click events (where the click originated from)  
+      const source = eventData.source || "direct";
+      sourceMap.set(source, (sourceMap.get(source) || 0) + 1);
+
+      // Update search query clicks (since we only track clicks now)
+      if (eventData.searchQuery) {
         const existing = searchQueryMap.get(eventData.searchQuery) || {
           views: 0,
           clicks: 0,
@@ -560,53 +550,56 @@ We'll contact you at ${
       }
     });
 
-    // Calculate derived metrics
+    // Calculate derived metrics - CLICK EVENTS FOCUSED
     metrics.uniqueViews = uniqueSessionIds.size;
+    
+    // Total primary interactions (conversion-focused clicks)
     const totalInteractions =
       metrics.phoneClicks + metrics.websiteClicks + metrics.bookingClicks;
-    metrics.conversionRate =
-      metrics.totalViews > 0
-        ? (totalInteractions / metrics.totalViews) * 100
-        : 0;
-
+    
+    // All click interactions
     const allInteractions =
-      totalInteractions +
-      metrics.directionsClicks +
-      metrics.emailClicks +
-      metrics.hoursViews +
-      metrics.servicesExpands +
-      metrics.photoViews;
-    metrics.engagementRate =
-      metrics.totalViews > 0 ? (allInteractions / metrics.totalViews) * 100 : 0;
+      totalInteractions + metrics.directionsClicks + metrics.emailClicks;
+    
+    // Since we're only tracking clicks, conversion rate is based on click distribution
+    // Phone, Website, and Booking clicks are considered "conversion" events
+    metrics.conversionRate = allInteractions > 0 
+      ? (totalInteractions / allInteractions) * 100 
+      : 0;
+      
+    // Engagement rate is the variety of different click types per unique session
+    metrics.engagementRate = metrics.uniqueViews > 0 
+      ? (allInteractions / metrics.uniqueViews) * 100 
+      : 0;
 
-    // Process top sources
+    // Process top sources - limited data since we only track clicks
     const topSources = Array.from(sourceMap.entries())
-      .map(([source, views]) => ({
+      .map(([source, clicks]) => ({
         source,
-        views,
-        percentage:
-          metrics.totalViews > 0 ? (views / metrics.totalViews) * 100 : 0,
+        views: 0, // No view tracking
+        clicks,
+        percentage: allInteractions > 0 ? (clicks / allInteractions) * 100 : 0,
       }))
-      .sort((a, b) => b.views - a.views)
+      .sort((a, b) => b.clicks - a.clicks)
       .slice(0, 10);
 
-    // Process top search queries
+    // Process top search queries - clicks only since we don't track views
     const topSearchQueries = Array.from(searchQueryMap.entries())
       .map(([query, data]) => ({
         query,
-        views: data.views,
+        views: 0, // No view tracking
         clicks: data.clicks,
       }))
-      .sort((a, b) => b.views - a.views)
+      .sort((a, b) => b.clicks - a.clicks)
       .slice(0, 10);
 
-    // Process hourly distribution
+    // Process hourly distribution - clicks only
     const hourlyDistribution = Array.from({ length: 24 }, (_, hour) => {
       const data = hourlyMap.get(hour) || { views: 0, interactions: 0 };
       return {
         hour,
-        views: data.views,
-        interactions: data.interactions,
+        views: 0, // No view tracking
+        interactions: data.interactions, // Only click interactions
       };
     });
 

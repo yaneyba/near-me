@@ -151,15 +151,10 @@ class EngagementTracker {
   }
 
   // Convenience methods for common tracking events
-  async trackView(businessId: string, businessName: string, source?: string, searchQuery?: string): Promise<void> {
-    // Double-check tracking is enabled before proceeding
-    // Tracking is always enabled in production
-    if (!TRACKING_ENABLED) return;
-    
-    return this.trackEvent(businessId, businessName, 'view', {
-      source,
-      searchQuery
-    });
+  async trackView(_businessId: string, _businessName: string, _source?: string, _searchQuery?: string): Promise<void> {
+    // CLICK EVENTS ONLY - View events are no longer tracked
+    // This method exists for backward compatibility but does nothing
+    return;
   }
 
   async trackPhoneClick(businessId: string, businessName: string, phoneNumber: string): Promise<void> {
@@ -207,27 +202,22 @@ class EngagementTracker {
     });
   }
 
-  async trackHoursView(businessId: string, businessName: string): Promise<void> {
-    // Tracking is always enabled in production
-    if (!TRACKING_ENABLED) return;
-    
-    return this.trackEvent(businessId, businessName, 'hours_view');
+  async trackHoursView(_businessId: string, _businessName: string): Promise<void> {
+    // CLICK EVENTS ONLY - Hours view events are no longer tracked
+    // This method exists for backward compatibility but does nothing
+    return;
   }
 
-  async trackServicesExpand(businessId: string, businessName: string): Promise<void> {
-    // Tracking is always enabled in production
-    if (!TRACKING_ENABLED) return;
-    
-    return this.trackEvent(businessId, businessName, 'services_expand');
+  async trackServicesExpand(_businessId: string, _businessName: string): Promise<void> {
+    // CLICK EVENTS ONLY - Services expand events are no longer tracked
+    // This method exists for backward compatibility but does nothing
+    return;
   }
 
-  async trackPhotoView(businessId: string, businessName: string, photoUrl: string): Promise<void> {
-    // Tracking is always enabled in production
-    if (!TRACKING_ENABLED) return;
-    
-    return this.trackEvent(businessId, businessName, 'photo_view', {
-      clickedUrl: photoUrl
-    });
+  async trackPhotoView(_businessId: string, _businessName: string, _photoUrl: string): Promise<void> {
+    // CLICK EVENTS ONLY - Photo view events are no longer tracked
+    // This method exists for backward compatibility but does nothing
+    return;
   }
 }
 
