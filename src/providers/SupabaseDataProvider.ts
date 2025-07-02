@@ -1006,13 +1006,13 @@ We'll contact you at ${
       // Use admin client for admin operations
       const client = supabaseAdmin || supabase;
 
-      // Check if business already exists
+      // Check if business already exists - FIXED: Use .maybeSingle() instead of .single()
       const { data: existingBusiness } = await client
         .from("businesses")
         .select("id")
         .eq("email", submission.email)
         .eq("name", submission.business_name)
-        .single();
+        .maybeSingle();
 
       if (existingBusiness) {
         console.log("Business already exists in directory");
