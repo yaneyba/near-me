@@ -49,9 +49,9 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
         const query = searchQuery.toLowerCase();
         return (
           business.name.toLowerCase().includes(query) ||
-          business.description.toLowerCase().includes(query) ||
+          business.description?.toLowerCase().includes(query) ||
           business.services.some(service => service.toLowerCase().includes(query)) ||
-          business.neighborhood.toLowerCase().includes(query)
+          business.neighborhood?.toLowerCase().includes(query)
         );
       });
 

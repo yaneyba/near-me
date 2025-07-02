@@ -1,4 +1,3 @@
-import { Database } from "../lib/database";
 import { supabase, supabaseAdmin } from "../lib/supabase";
 import {
   ContactSubmission,
@@ -53,12 +52,6 @@ export class SupabaseDataProvider {
           errors,
         };
       }
-
-      // Generate site_id from category and city context (for logging/analytics)
-      const siteId =
-        contactData.category && contactData.city
-          ? `${contactData.category}.${contactData.city}`
-          : "near-me-us";
 
       // Insert into contact_messages table (works with current schema)
       const { data, error } = await supabase
@@ -699,10 +692,10 @@ We'll contact you at ${
         throw error;
       }
 
-      // Add a default status since the DB doesn't have this field
+      // Add a computed status based on reviewed_at field
       return (data || []).map((submission) => ({
         ...submission,
-        status: "pending", // Default status for UI compatibility
+        status: submission.reviewed_at ? "reviewed" : "pending", // Status based on whether it has been reviewed
       }));
     } catch (error) {
       console.error("Failed to get business submissions:", error);
@@ -881,11 +874,10 @@ We'll contact you at ${
         throw new Error("Failed to find submission");
       }
 
-      // Update the submission status
+      // Update the submission with review information
       const { error: updateError } = await client
         .from("business_submissions")
         .update({
-          status: "approved",
           reviewed_at: new Date().toISOString(),
           reviewer_notes: reviewerNotes || "Approved by admin",
         })
@@ -917,7 +909,6 @@ We'll contact you at ${
       const { error } = await client
         .from("business_submissions")
         .update({
-          status: "rejected",
           reviewed_at: new Date().toISOString(),
           reviewer_notes: reviewerNotes || "Rejected by admin",
         })
