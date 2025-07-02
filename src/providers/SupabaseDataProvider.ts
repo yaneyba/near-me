@@ -1021,9 +1021,18 @@ We'll contact you at ${
 
       // Normalize category to match database categories
       const normalizedCategory = this.normalizeCategoryForDatabase(submission.category);
+      
+      // Validate the normalized category is one of the 4 valid ones
+      const validCategories = ["nail-salons", "auto-repair", "restaurants", "hair-salons"];
+      if (!validCategories.includes(normalizedCategory)) {
+        console.error(`Invalid normalized category: ${normalizedCategory}. Must be one of: ${validCategories.join(", ")}`);
+        throw new Error(`Invalid category: ${normalizedCategory}`);
+      }
 
-      // Create business entry
-      const { error: businessError } = await client.from("businesses").insert({
+      console.log(`Creating business with category: ${normalizedCategory} (from original: ${submission.category})`);
+
+      // Prepare the business data
+      const businessData = {
         business_id: `${normalizedCategory}-${submission.city}-${Date.now()}`
           .toLowerCase()
           .replace(/\s+/g, "-"),
@@ -1042,16 +1051,33 @@ We'll contact you at ${
         status: "active",
         premium: false,
         verified: false,
-      });
+      };
+
+      console.log("Business data to insert:", businessData);
+
+      // Create business entry
+      const { error: businessError } = await client.from("businesses").insert(businessData);
 
       if (businessError) {
         console.error("Error creating business entry:", businessError);
-        console.error("Submission category:", submission.category);
-        console.error("Normalized category:", normalizedCategory);
+        console.error("Submission data:", {
+          original_category: submission.category,
+          normalized_category: normalizedCategory,
+          business_name: submission.business_name,
+          city: submission.city,
+          state: submission.state
+        });
+        
+        // Check if it's a foreign key constraint error
+        if (businessError.message?.includes('violates foreign key constraint')) {
+          console.error("Foreign key constraint error detected. The category may not exist in the database.");
+          throw new Error(`Category "${normalizedCategory}" does not exist in the database. Valid categories are: ${validCategories.join(", ")}`);
+        }
+        
         throw businessError;
       }
 
-      console.log("Business entry created successfully");
+      console.log("Business entry created successfully with category:", normalizedCategory);
     } catch (error) {
       console.error("Error creating business from submission:", error);
       throw error;
@@ -1060,48 +1086,73 @@ We'll contact you at ${
 
   /**
    * Normalize category names to match database categories
+   * Only maps to the 4 valid categories: nail-salons, auto-repair, restaurants, hair-salons
    */
   private normalizeCategoryForDatabase(category: string): string {
     if (!category) return "nail-salons"; // Default fallback
     
-    // Map common category variations to database categories
+    // Define the 4 valid categories
+    const validCategories = ["nail-salons", "auto-repair", "restaurants", "hair-salons"];
+    
+    // Map common category variations to valid database categories
     const categoryMap: Record<string, string> = {
+      // Nail salon variations
       "nail salons": "nail-salons",
       "nail salon": "nail-salons", 
       "nail": "nail-salons",
       "nails": "nail-salons",
+      "nail-salons": "nail-salons",
+      
+      // Auto repair variations
       "auto repair": "auto-repair",
       "automotive": "auto-repair",
       "car repair": "auto-repair",
       "auto": "auto-repair",
+      "auto-repair": "auto-repair",
+      "garage": "auto-repair",
+      "mechanic": "auto-repair",
+      
+      // Restaurant variations
       "restaurants": "restaurants",
       "restaurant": "restaurants",
       "food": "restaurants",
-      "beauty": "beauty-salons",
-      "beauty salon": "beauty-salons",
-      "beauty salons": "beauty-salons",
+      "dining": "restaurants",
+      "cafe": "restaurants",
+      "eatery": "restaurants",
+      
+      // Hair salon variations  
       "hair salon": "hair-salons",
       "hair salons": "hair-salons",
       "hair": "hair-salons",
-      "fitness": "fitness-centers",
-      "gym": "fitness-centers",
-      "health": "healthcare",
-      "medical": "healthcare",
-      "dentist": "dentist",
-      "dental": "dentist"
+      "hair-salons": "hair-salons",
+      "beauty": "hair-salons", // Map beauty to hair-salons as closest match
+      "beauty salon": "hair-salons",
+      "beauty salons": "hair-salons",
+      "hairdresser": "hair-salons",
+      "barber": "hair-salons"
     };
 
     const normalizedInput = category.toLowerCase().trim();
     
-    // Direct match
+    // Direct match from our mapping
     if (categoryMap[normalizedInput]) {
       return categoryMap[normalizedInput];
     }
     
-    // Convert spaces to dashes for database format
+    // Convert spaces to dashes and check if it's a valid category
     const dashedCategory = normalizedInput.replace(/\s+/g, "-");
+    if (validCategories.includes(dashedCategory)) {
+      return dashedCategory;
+    }
     
-    // Return the dashed version or fallback to nail-salons
-    return dashedCategory || "nail-salons";
+    // If no match found, try to find the best fit by checking if the input contains keywords
+    if (normalizedInput.includes("nail")) return "nail-salons";
+    if (normalizedInput.includes("auto") || normalizedInput.includes("car") || normalizedInput.includes("repair")) return "auto-repair";
+    if (normalizedInput.includes("food") || normalizedInput.includes("restaurant") || normalizedInput.includes("dining")) return "restaurants";
+    if (normalizedInput.includes("hair") || normalizedInput.includes("beauty") || normalizedInput.includes("salon")) return "hair-salons";
+    
+    // Final fallback
+    console.warn(`Category "${category}" could not be normalized to a valid category. Using fallback: nail-salons`);
+    return "nail-salons";
   }
 }

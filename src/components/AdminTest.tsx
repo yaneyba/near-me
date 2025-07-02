@@ -484,7 +484,7 @@ const AdminTest: React.FC = () => {
       // NOTE: We can't truly test anonymous access while logged in as a super admin
       // This test documents the expected behavior
       try {
-        const { data: profileData, error: profileError } = await supabase
+        const { error: profileError } = await supabase
           .from('business_profiles')
           .select('id')
           .limit(1);
@@ -963,6 +963,122 @@ ALTER TABLE business_profiles ENABLE ROW LEVEL SECURITY;`,
     }
   };
 
+  // Test categories to identify valid categories in the database
+  const testCategories = async () => {
+    try {
+      const categoryInfo: any = {
+        timestamp: new Date().toISOString(),
+        availableCategories: [],
+        validationResults: {},
+        recommendations: []
+      };
+
+      // First, try to get categories from the categories table
+      try {
+        const { data: categoriesData, error: categoriesError } = await supabase
+          .from('categories')
+          .select('*');
+        
+        if (!categoriesError && categoriesData && categoriesData.length > 0) {
+          categoryInfo.availableCategories = categoriesData;
+          categoryInfo.source = 'categories_table';
+        } else {
+          categoryInfo.categoriesTableError = categoriesError?.message || 'No data found';
+        }
+      } catch (err) {
+        categoryInfo.categoriesTableError = 'Table access failed';
+      }
+
+      // Second, try to get unique categories from existing businesses
+      try {
+        const { data: businessesData, error: businessesError } = await supabase
+          .from('businesses')
+          .select('category')
+          .not('category', 'is', null);
+        
+        if (!businessesError && businessesData) {
+          const uniqueCategories = [...new Set(businessesData.map(b => b.category))];
+          categoryInfo.categoriesFromBusinesses = uniqueCategories;
+          
+          if (!categoryInfo.availableCategories.length) {
+            categoryInfo.availableCategories = uniqueCategories.map(cat => ({ id: cat, name: cat }));
+            categoryInfo.source = 'businesses_table';
+          }
+        } else {
+          categoryInfo.businessesTableError = businessesError?.message || 'No data found';
+        }
+      } catch (err) {
+        categoryInfo.businessesTableError = 'Table access failed';
+      }
+
+      // Test our normalization function against known categories
+      const testCategories = [
+        'nail salon', 'Nail Salons', 'auto repair', 'Auto Repair', 
+        'restaurants', 'Restaurant', 'hair salon', 'Hair Salons',
+        'beauty salon', 'mechanic', 'cafe', 'barber'
+      ];
+
+      const normalizeCategoryForDatabase = (category: string): string => {
+        if (!category) return "nail-salons";
+        
+        const validCategories = ["nail-salons", "auto-repair", "restaurants", "hair-salons"];
+        const categoryMap: Record<string, string> = {
+          "nail salons": "nail-salons", "nail salon": "nail-salons", "nail": "nail-salons", "nails": "nail-salons", "nail-salons": "nail-salons",
+          "auto repair": "auto-repair", "automotive": "auto-repair", "car repair": "auto-repair", "auto": "auto-repair", "auto-repair": "auto-repair", "garage": "auto-repair", "mechanic": "auto-repair",
+          "restaurants": "restaurants", "restaurant": "restaurants", "food": "restaurants", "dining": "restaurants", "cafe": "restaurants", "eatery": "restaurants",
+          "hair salon": "hair-salons", "hair salons": "hair-salons", "hair": "hair-salons", "hair-salons": "hair-salons", "beauty": "hair-salons", "beauty salon": "hair-salons", "beauty salons": "hair-salons", "hairdresser": "hair-salons", "barber": "hair-salons"
+        };
+
+        const normalizedInput = category.toLowerCase().trim();
+        if (categoryMap[normalizedInput]) return categoryMap[normalizedInput];
+        
+        const dashedCategory = normalizedInput.replace(/\s+/g, "-");
+        if (validCategories.includes(dashedCategory)) return dashedCategory;
+        
+        if (normalizedInput.includes("nail")) return "nail-salons";
+        if (normalizedInput.includes("auto") || normalizedInput.includes("car") || normalizedInput.includes("repair")) return "auto-repair";
+        if (normalizedInput.includes("food") || normalizedInput.includes("restaurant") || normalizedInput.includes("dining")) return "restaurants";
+        if (normalizedInput.includes("hair") || normalizedInput.includes("beauty") || normalizedInput.includes("salon")) return "hair-salons";
+        
+        return "nail-salons";
+      };
+
+      categoryInfo.validationResults = {};
+      testCategories.forEach(testCat => {
+        const normalized = normalizeCategoryForDatabase(testCat);
+        categoryInfo.validationResults[testCat] = normalized;
+      });
+
+      // Generate recommendations
+      const dbCategories = categoryInfo.availableCategories.map((cat: any) => cat.id || cat.name || cat);
+      const normalizedCategories = ["nail-salons", "auto-repair", "restaurants", "hair-salons"];
+      
+      categoryInfo.recommendations = [];
+      
+      if (dbCategories.length === 0) {
+        categoryInfo.recommendations.push('No categories found in database. Check if categories table exists and has data.');
+      } else {
+        const missingInDb = normalizedCategories.filter(norm => !dbCategories.includes(norm));
+        const extraInDb = dbCategories.filter((db: string) => !normalizedCategories.includes(db));
+        
+        if (missingInDb.length > 0) {
+          categoryInfo.recommendations.push(`Missing in database: ${missingInDb.join(', ')}`);
+        }
+        if (extraInDb.length > 0) {
+          categoryInfo.recommendations.push(`Extra in database: ${extraInDb.join(', ')}`);
+        }
+        if (missingInDb.length === 0 && extraInDb.length === 0) {
+          categoryInfo.recommendations.push('Category validation looks good! All normalized categories match database.');
+        }
+      }
+
+      const testPassed = categoryInfo.availableCategories.length > 0 && categoryInfo.recommendations.some((rec: string) => rec.includes('looks good'));
+      addResult('Category Validation', testPassed, categoryInfo, null);
+    } catch (err) {
+      addResult('Category Validation', false, null, err);
+    }
+  };
+
   const runAllTests = async () => {
     setIsRunningTests(true);
     setResults([]);
@@ -978,6 +1094,7 @@ ALTER TABLE business_profiles ENABLE ROW LEVEL SECURITY;`,
       await testRLSPolicies();
       await testRLSDiagnostic();
       await testConnectionRole();
+      await testCategories();
     } catch (error) {
       console.error("Error running tests:", error);
     } finally {
@@ -1094,6 +1211,14 @@ ALTER TABLE business_profiles ENABLE ROW LEVEL SECURITY;`,
             className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 disabled:bg-gray-100"
           >
             Full RLS Diagnostic
+          </button>
+          
+          <button
+            onClick={testCategories}
+            disabled={isRunningTests}
+            className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 disabled:bg-gray-100"
+          >
+            Test Categories
           </button>
         </div>
       </div>
