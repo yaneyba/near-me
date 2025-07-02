@@ -1437,4 +1437,24 @@ We'll contact you at ${
       peakHours
     };
   }
+
+  async clearSampleEngagementData(sampleDataIdentifier: string): Promise<void> {
+    try {
+      // Delete all engagement events where the event_data contains the sample data identifier
+      const { error } = await supabase
+        .from('user_engagement_events')
+        .delete()
+        .or(`event_data->>userAgent.ilike.%${sampleDataIdentifier}%,event_data->>sampleDataId.eq.${sampleDataIdentifier}`);
+
+      if (error) {
+        console.error('Error clearing sample engagement data:', error);
+        throw error;
+      }
+
+      console.log(`Successfully cleared sample engagement data with identifier: ${sampleDataIdentifier}`);
+    } catch (error) {
+      console.error('Failed to clear sample engagement data:', error);
+      throw error;
+    }
+  }
 }

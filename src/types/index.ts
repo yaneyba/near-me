@@ -90,6 +90,7 @@ export interface UserEngagementEvent {
     referrer?: string;
     sessionId?: string;
     deviceType?: 'mobile' | 'tablet' | 'desktop';
+    sampleDataId?: string; // For identifying and cleaning up generated sample data
     location?: {
       city?: string;
       state?: string;
@@ -204,6 +205,8 @@ export interface IDataProvider {
   approveBusinessSubmission(id: string, reviewerNotes?: string): Promise<void>;
   rejectBusinessSubmission(id: string, reviewerNotes?: string): Promise<void>;
   resolveContactMessage(id: string, resolvedBy?: string, adminNotes?: string): Promise<void>;
+  // Sample data management
+  clearSampleEngagementData?(sampleDataIdentifier: string): Promise<void>;
 }
 
 export interface SubdomainInfo {

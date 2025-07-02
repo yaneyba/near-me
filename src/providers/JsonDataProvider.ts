@@ -902,6 +902,28 @@ We'll contact you at ${businessData.email} with updates on your application stat
     // Mock implementation - just log for development
   }
 
+  async clearSampleEngagementData(sampleDataIdentifier: string): Promise<void> {
+    try {
+      // Filter out events that contain the sample data identifier
+      const originalCount = this.engagementEvents.length;
+      
+      this.engagementEvents = this.engagementEvents.filter(event => {
+        const eventData = event.eventData || {};
+        const userAgent = eventData.userAgent || '';
+        const sampleDataId = eventData.sampleDataId || '';
+        
+        // Keep events that don't match the sample data identifier
+        return !userAgent.includes(sampleDataIdentifier) && sampleDataId !== sampleDataIdentifier;
+      });
+
+      const clearedCount = originalCount - this.engagementEvents.length;
+      console.log(`Cleared ${clearedCount} sample engagement events from in-memory storage`);
+    } catch (error) {
+      console.error('Failed to clear sample engagement data from JSON provider:', error);
+      throw error;
+    }
+  }
+
   private isValidEmail(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);

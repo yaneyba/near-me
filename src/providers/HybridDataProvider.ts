@@ -153,4 +153,15 @@ export class HybridDataProvider implements IDataProvider {
   async resolveContactMessage(id: string, resolvedBy?: string, adminNotes?: string): Promise<void> {
     return this.supabaseProvider.resolveContactMessage(id, resolvedBy, adminNotes);
   }
+
+  async clearSampleEngagementData(sampleDataIdentifier: string): Promise<void> {
+    try {
+      // Try Supabase first for real data cleanup
+      return await this.supabaseProvider.clearSampleEngagementData(sampleDataIdentifier);
+    } catch (error) {
+      console.warn('Supabase sample data cleanup failed, falling back to JSON provider:', error);
+      // Fallback to JSON provider for development
+      return await this.jsonProvider.clearSampleEngagementData(sampleDataIdentifier);
+    }
+  }
 }

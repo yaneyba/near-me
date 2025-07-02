@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
 import { DataProviderFactory } from '../providers/DataProviderFactory';
 import { UserEngagementEvent } from '../types';
-import { Zap, Check, AlertCircle } from 'lucide-react';
+import { Zap, Check, AlertCircle, Trash2 } from 'lucide-react';
 
 const AnalyticsDataGenerator: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const dataProvider = DataProviderFactory.getProvider();
+
+  // Unique identifier for generated sample data
+  const SAMPLE_DATA_IDENTIFIER = 'ANALYTICS_SAMPLE_DATA_GENERATOR';
 
   const generateSampleData = async () => {
     try {
@@ -29,6 +33,10 @@ const AnalyticsDataGenerator: React.FC = () => {
       const sources = ['search', 'category', 'premium', 'related'];
       const devices = ['mobile', 'tablet', 'desktop'] as const;
 
+      // Safety cap to prevent infinite generation
+      const MAX_EVENTS = 200;
+      let eventCount = 0;
+
       // Generate events for the last 7 days
       const now = new Date();
       const daysBack = 7;
@@ -44,6 +52,11 @@ const AnalyticsDataGenerator: React.FC = () => {
           const eventsPerDay = Math.floor(Math.random() * 16) + 5; // 5-20 events
 
           for (let i = 0; i < eventsPerDay; i++) {
+            // Stop if we've reached the maximum number of events
+            if (eventCount >= MAX_EVENTS) {
+              break;
+            }
+
             const eventTime = new Date(eventDate);
             eventTime.setHours(Math.floor(Math.random() * 24));
             eventTime.setMinutes(Math.floor(Math.random() * 60));
@@ -56,7 +69,8 @@ const AnalyticsDataGenerator: React.FC = () => {
                 source: sources[Math.floor(Math.random() * sources.length)],
                 deviceType: devices[Math.floor(Math.random() * devices.length)],
                 searchQuery: Math.random() > 0.7 ? `${business.category} near me` : undefined,
-                userAgent: 'Analytics Data Generator',
+                userAgent: `Analytics Data Generator - ${SAMPLE_DATA_IDENTIFIER}`,
+                sampleDataId: SAMPLE_DATA_IDENTIFIER, // Mark as sample data for easy cleanup
                 location: {
                   city: business.city,
                   state: business.state,
@@ -69,7 +83,18 @@ const AnalyticsDataGenerator: React.FC = () => {
             };
 
             sampleEvents.push(event);
+            eventCount++;
           }
+          
+          // Break out of business loop if we've reached max events
+          if (eventCount >= MAX_EVENTS) {
+            break;
+          }
+        }
+        
+        // Break out of day loop if we've reached max events
+        if (eventCount >= MAX_EVENTS) {
+          break;
         }
       }
 
@@ -97,6 +122,28 @@ const AnalyticsDataGenerator: React.FC = () => {
     }
   };
 
+  const clearSampleData = async () => {
+    try {
+      setIsClearing(true);
+      setError(null);
+      setResult(null);
+
+      // Check if the provider has a method to clear sample data
+      if ('clearSampleEngagementData' in dataProvider && typeof dataProvider.clearSampleEngagementData === 'function') {
+        await dataProvider.clearSampleEngagementData(SAMPLE_DATA_IDENTIFIER);
+        setResult('Successfully cleared all sample data from the database.');
+      } else {
+        setError('Clear sample data functionality is not available with the current data provider.');
+      }
+
+    } catch (err) {
+      console.error('Error clearing sample data:', err);
+      setError(err instanceof Error ? err.message : 'Failed to clear sample data');
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6">
       <div className="flex items-center justify-between mb-4">
@@ -104,23 +151,43 @@ const AnalyticsDataGenerator: React.FC = () => {
           <h3 className="text-lg font-semibold text-gray-900">Analytics Data Generator</h3>
           <p className="text-sm text-gray-600">Generate sample engagement data for testing the analytics dashboard</p>
         </div>
-        <button
-          onClick={generateSampleData}
-          disabled={isGenerating}
-          className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:bg-purple-300 flex items-center"
-        >
-          {isGenerating ? (
-            <>
-              <div className="animate-spin w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full"></div>
-              Generating...
-            </>
-          ) : (
-            <>
-              <Zap className="w-4 h-4 mr-2" />
-              Generate Sample Data
-            </>
-          )}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={generateSampleData}
+            disabled={isGenerating || isClearing}
+            className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:bg-purple-300 flex items-center"
+          >
+            {isGenerating ? (
+              <>
+                <div className="animate-spin w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full"></div>
+                Generating...
+              </>
+            ) : (
+              <>
+                <Zap className="w-4 h-4 mr-2" />
+                Generate Sample Data
+              </>
+            )}
+          </button>
+          
+          <button
+            onClick={clearSampleData}
+            disabled={isGenerating || isClearing}
+            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-red-300 flex items-center"
+          >
+            {isClearing ? (
+              <>
+                <div className="animate-spin w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full"></div>
+                Clearing...
+              </>
+            ) : (
+              <>
+                <Trash2 className="w-4 h-4 mr-2" />
+                Clear Sample Data
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {result && (
