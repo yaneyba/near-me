@@ -1019,9 +1019,12 @@ We'll contact you at ${
         return;
       }
 
+      // Normalize category to match database categories
+      const normalizedCategory = this.normalizeCategoryForDatabase(submission.category);
+
       // Create business entry
       const { error: businessError } = await client.from("businesses").insert({
-        business_id: `${submission.category}-${submission.city}-${Date.now()}`
+        business_id: `${normalizedCategory}-${submission.city}-${Date.now()}`
           .toLowerCase()
           .replace(/\s+/g, "-"),
         name: submission.business_name,
@@ -1030,7 +1033,7 @@ We'll contact you at ${
         phone: submission.phone,
         website: submission.website,
         email: submission.email,
-        category: submission.category,
+        category: normalizedCategory,
         city: submission.city,
         state: submission.state,
         services: submission.services || [],
@@ -1043,6 +1046,8 @@ We'll contact you at ${
 
       if (businessError) {
         console.error("Error creating business entry:", businessError);
+        console.error("Submission category:", submission.category);
+        console.error("Normalized category:", normalizedCategory);
         throw businessError;
       }
 
@@ -1051,5 +1056,52 @@ We'll contact you at ${
       console.error("Error creating business from submission:", error);
       throw error;
     }
+  }
+
+  /**
+   * Normalize category names to match database categories
+   */
+  private normalizeCategoryForDatabase(category: string): string {
+    if (!category) return "nail-salons"; // Default fallback
+    
+    // Map common category variations to database categories
+    const categoryMap: Record<string, string> = {
+      "nail salons": "nail-salons",
+      "nail salon": "nail-salons", 
+      "nail": "nail-salons",
+      "nails": "nail-salons",
+      "auto repair": "auto-repair",
+      "automotive": "auto-repair",
+      "car repair": "auto-repair",
+      "auto": "auto-repair",
+      "restaurants": "restaurants",
+      "restaurant": "restaurants",
+      "food": "restaurants",
+      "beauty": "beauty-salons",
+      "beauty salon": "beauty-salons",
+      "beauty salons": "beauty-salons",
+      "hair salon": "hair-salons",
+      "hair salons": "hair-salons",
+      "hair": "hair-salons",
+      "fitness": "fitness-centers",
+      "gym": "fitness-centers",
+      "health": "healthcare",
+      "medical": "healthcare",
+      "dentist": "dentist",
+      "dental": "dentist"
+    };
+
+    const normalizedInput = category.toLowerCase().trim();
+    
+    // Direct match
+    if (categoryMap[normalizedInput]) {
+      return categoryMap[normalizedInput];
+    }
+    
+    // Convert spaces to dashes for database format
+    const dashedCategory = normalizedInput.replace(/\s+/g, "-");
+    
+    // Return the dashed version or fallback to nail-salons
+    return dashedCategory || "nail-salons";
   }
 }
