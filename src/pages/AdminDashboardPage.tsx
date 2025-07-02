@@ -1,35 +1,79 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { 
   BarChart3, 
   Users, 
-  FileText, 
   MessageSquare, 
   Settings, 
+  Building, 
   CheckCircle, 
   XCircle, 
-  Clock, 
-  Search, 
-  ChevronDown, 
-  ChevronUp, 
   Loader2, 
-  AlertCircle,
-  Flag,
-  UserCheck,
-  UserX,
-  Beaker
+  Search, 
+  Filter, 
+  ChevronDown, 
+  Menu, 
+  X,
+  AlertTriangle,
+  Clock,
+  CheckCheck,
+  Inbox,
+  MailOpen,
+  MailCheck,
+  Trash2,
+  RefreshCw,
+  PlusCircle,
+  MinusCircle,
+  ArrowUpDown,
+  Eye,
+  Edit,
+  Trash,
+  MoreHorizontal,
+  Bell
 } from 'lucide-react';
 import { DataProviderFactory } from '../providers/DataProviderFactory';
-import { updateDatabaseSettings, useAuth } from '../lib/auth';
-import AdminTest from '../components/AdminTest';
+import { useAuth } from '../lib/auth';
+import { Pagination } from '../components/Pagination';
+import usePagination from '../hooks/usePagination';
 
-const AdminDashboardPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'businesses' | 'messages' | 'users' | 'analytics' | 'settings' | 'test'>('businesses');
+const AdminDashboardPage = () => {
+  // State for mobile menu
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
+  // Tab state
+  const [activeTab, setActiveTab] = useState('business-submissions');
+  
+  // Data loading state
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Business submissions state
   const [businessSubmissions, setBusinessSubmissions] = useState<any[]>([]);
+  const [submissionSearchQuery, setSubmissionSearchQuery] = useState('');
+  const [submissionStatusFilter, setSubmissionStatusFilter] = useState('all');
+  
+  // Contact messages state
   const [contactMessages, setContactMessages] = useState<any[]>([]);
-  const [businessProfiles, setBusinessProfiles] = useState<any[]>([]);
+  const [messageSearchQuery, setMessageSearchQuery] = useState('');
+  const [messageStatusFilter, setMessageStatusFilter] = useState('all');
+  
+  // Directory businesses state
+  const [businesses, setBusinesses] = useState<any[]>([]);
+  const [businessSearchQuery, setBusinessSearchQuery] = useState('');
+  const [businessStatusFilter, setBusinessStatusFilter] = useState('all');
+  
+  // User management state
+  const [users, setUsers] = useState<any[]>([]);
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [userRoleFilter, setUserRoleFilter] = useState('all');
+  
+  // Settings state
+  const [settings, setSettings] = useState({
+    loginEnabled: true,
+    trackingEnabled: true,
+    adsEnabled: false
+  });
+  
+  // Stats state
   const [stats, setStats] = useState({
     pendingBusinesses: 0,
     totalBusinesses: 0,
@@ -38,51 +82,64 @@ const AdminDashboardPage: React.FC = () => {
     premiumBusinesses: 0
   });
   
-  // Search and filter state
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  // Action states
+  const [processingAction, setProcessingAction] = useState<string | null>(null);
+  const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   
-  // Pagination state for businesses
-  const [businessesPage, setBusinessesPage] = useState(1);
-  const businessesPerPage = 10;
+  // Pagination hooks
+  const submissionsPagination = usePagination({ 
+    itemsPerPage: 10, 
+    resetTriggers: [submissionSearchQuery, submissionStatusFilter] 
+  });
   
-  // Pagination state for business submissions
-  const [submissionsPage, setSubmissionsPage] = useState(1);
-  const submissionsPerPage = 10;
+  const messagesPagination = usePagination({ 
+    itemsPerPage: 10, 
+    resetTriggers: [messageSearchQuery, messageStatusFilter] 
+  });
   
-  // Settings state
-  const [loginEnabled, setLoginEnabled] = useState(true);
-  const [trackingEnabled, setTrackingEnabled] = useState(true);
-  const [adsEnabled, setAdsEnabled] = useState(false);
-  const [settingsLoading, setSettingsLoading] = useState(false);
+  const businessesPagination = usePagination({ 
+    itemsPerPage: 10, 
+    resetTriggers: [businessSearchQuery, businessStatusFilter] 
+  });
   
-  const { user, authFeatures } = useAuth();
-  const navigate = useNavigate();
+  const usersPagination = usePagination({ 
+    itemsPerPage: 10, 
+    resetTriggers: [userSearchQuery, userRoleFilter] 
+  });
+
+  const { user } = useAuth();
   const dataProvider = DataProviderFactory.getProvider();
 
   // Check if user is admin
   useEffect(() => {
-    if (!user) {
-      navigate('/login');
-      return;
+    if (user && !user.isAdmin) {
+      window.location.href = '/';
     }
-    
-    if (!user.isAdmin) {
-      navigate('/');
-      return;
-    }
-    
-    loadData();
-    loadSettings();
-  }, [user, navigate]);
+  }, [user]);
 
-  // Reset pagination when filters change
+  // Load data on mount
   useEffect(() => {
-    setBusinessesPage(1);
-    setSubmissionsPage(1);
-  }, [searchQuery, statusFilter]);
+    loadData();
+    
+    // Add debug helpers
+    if (process.env.NODE_ENV === 'development') {
+      window.debugAdminDashboard = {
+        checkAuth: () => console.log('Current user:', user),
+        loadData,
+        showStats: () => console.log('Current stats:', stats)
+      };
+    }
+    
+    return () => {
+      // Clean up debug helpers
+      if (process.env.NODE_ENV === 'development' && window.debugAdminDashboard) {
+        delete window.debugAdminDashboard;
+      }
+    };
+  }, []);
 
+  // Load all data
   const loadData = async () => {
     setLoading(true);
     setError(null);
@@ -90,84 +147,84 @@ const AdminDashboardPage: React.FC = () => {
     try {
       // Load all data in parallel
       const [
-        submissionsData,
-        messagesData,
-        profilesData,
+        submissionsData, 
+        messagesData, 
+        businessesData, 
+        usersData,
         statsData
       ] = await Promise.all([
         dataProvider.getBusinessSubmissions(),
         dataProvider.getContactMessages(),
+        dataProvider.getAllBusinesses(),
         dataProvider.getBusinessProfiles(),
         dataProvider.getAdminStats()
       ]);
       
-      setBusinessSubmissions(submissionsData || []);
-      setContactMessages(messagesData || []);
-      setBusinessProfiles(profilesData || []);
-      setStats(statsData || {
-        pendingBusinesses: 0,
-        totalBusinesses: 0,
-        newMessages: 0,
-        totalUsers: 0,
-        premiumBusinesses: 0
-      });
-    } catch (err: any) {
-      console.error('Error loading admin data:', err);
-      setError(err.message || 'Failed to load admin data');
+      // Update state with loaded data
+      setBusinessSubmissions(submissionsData);
+      setContactMessages(messagesData);
+      setBusinesses(businessesData);
+      setUsers(usersData);
+      setStats(statsData);
+      
+      // Load settings
+      loadSettings();
+      
+    } catch (err) {
+      console.error('Error loading data:', err);
+      setError('Failed to load data. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  // Load settings
   const loadSettings = async () => {
-    setSettingsLoading(true);
     try {
-      // Get auth feature flags from the hook that's already called at component level
-      setLoginEnabled(authFeatures?.loginEnabled ?? true);
-      setTrackingEnabled(authFeatures?.trackingEnabled ?? true);
-      setAdsEnabled(authFeatures?.adsEnabled ?? false);
+      // In a real implementation, this would load from database
+      // For now, we'll use environment variables as fallback
+      setSettings({
+        loginEnabled: true,
+        trackingEnabled: true,
+        adsEnabled: false
+      });
     } catch (err) {
       console.error('Error loading settings:', err);
-    } finally {
-      setSettingsLoading(false);
+      // Don't set error state here to avoid blocking the UI
     }
   };
 
-  const handleApproveBusinessSubmission = async (id: string) => {
+  // Update settings
+  const updateSettings = async (newSettings: Partial<typeof settings>) => {
     try {
+      setProcessingAction('settings');
+      
+      // In a real implementation, this would update the database
+      // For now, we'll just update local state
+      setSettings(prev => ({ ...prev, ...newSettings }));
+      
+      setActionSuccess('Settings updated successfully');
+      setTimeout(() => setActionSuccess(null), 3000);
+    } catch (err) {
+      console.error('Error updating settings:', err);
+      setActionError('Failed to update settings');
+      setTimeout(() => setActionError(null), 3000);
+    } finally {
+      setProcessingAction(null);
+    }
+  };
+
+  // Handle business submission approval
+  const handleApproveSubmission = async (id: string) => {
+    try {
+      setProcessingAction(`approve-${id}`);
+      
       await dataProvider.approveBusinessSubmission(id);
       
       // Update local state
       setBusinessSubmissions(prev => 
-        prev.map(submission => 
-          submission.id === id 
-            ? { ...submission, status: 'approved', reviewed_at: new Date().toISOString() } 
-            : submission
-        )
-      );
-      
-      // Update stats
-      setStats(prev => ({
-        ...prev,
-        pendingBusinesses: Math.max(0, prev.pendingBusinesses - 1),
-        totalBusinesses: prev.totalBusinesses + 1
-      }));
-    } catch (err: any) {
-      console.error('Error approving business submission:', err);
-      alert(`Failed to approve business: ${err.message || 'Unknown error'}`);
-    }
-  };
-
-  const handleRejectBusinessSubmission = async (id: string) => {
-    try {
-      await dataProvider.rejectBusinessSubmission(id);
-      
-      // Update local state
-      setBusinessSubmissions(prev => 
-        prev.map(submission => 
-          submission.id === id 
-            ? { ...submission, status: 'rejected', reviewed_at: new Date().toISOString() } 
-            : submission
+        prev.map(sub => 
+          sub.id === id ? { ...sub, status: 'approved', reviewed_at: new Date().toISOString() } : sub
         )
       );
       
@@ -176,27 +233,60 @@ const AdminDashboardPage: React.FC = () => {
         ...prev,
         pendingBusinesses: Math.max(0, prev.pendingBusinesses - 1)
       }));
-    } catch (err: any) {
-      console.error('Error rejecting business submission:', err);
-      alert(`Failed to reject business: ${err.message || 'Unknown error'}`);
+      
+      setActionSuccess('Business approved successfully');
+      setTimeout(() => setActionSuccess(null), 3000);
+    } catch (err) {
+      console.error('Error approving business:', err);
+      setActionError('Failed to approve business');
+      setTimeout(() => setActionError(null), 3000);
+    } finally {
+      setProcessingAction(null);
     }
   };
 
-  const handleResolveContactMessage = async (id: string) => {
+  // Handle business submission rejection
+  const handleRejectSubmission = async (id: string) => {
     try {
+      setProcessingAction(`reject-${id}`);
+      
+      await dataProvider.rejectBusinessSubmission(id);
+      
+      // Update local state
+      setBusinessSubmissions(prev => 
+        prev.map(sub => 
+          sub.id === id ? { ...sub, status: 'rejected', reviewed_at: new Date().toISOString() } : sub
+        )
+      );
+      
+      // Update stats
+      setStats(prev => ({
+        ...prev,
+        pendingBusinesses: Math.max(0, prev.pendingBusinesses - 1)
+      }));
+      
+      setActionSuccess('Business rejected successfully');
+      setTimeout(() => setActionSuccess(null), 3000);
+    } catch (err) {
+      console.error('Error rejecting business:', err);
+      setActionError('Failed to reject business');
+      setTimeout(() => setActionError(null), 3000);
+    } finally {
+      setProcessingAction(null);
+    }
+  };
+
+  // Handle contact message resolution
+  const handleResolveMessage = async (id: string) => {
+    try {
+      setProcessingAction(`resolve-${id}`);
+      
       await dataProvider.resolveContactMessage(id, user?.email);
       
       // Update local state
       setContactMessages(prev => 
-        prev.map(message => 
-          message.id === id 
-            ? { 
-                ...message, 
-                status: 'resolved', 
-                resolved_at: new Date().toISOString(),
-                resolved_by: user?.email
-              } 
-            : message
+        prev.map(msg => 
+          msg.id === id ? { ...msg, status: 'resolved', resolved_at: new Date().toISOString() } : msg
         )
       );
       
@@ -205,139 +295,133 @@ const AdminDashboardPage: React.FC = () => {
         ...prev,
         newMessages: Math.max(0, prev.newMessages - 1)
       }));
-    } catch (err: any) {
-      console.error('Error resolving contact message:', err);
-      alert(`Failed to resolve message: ${err.message || 'Unknown error'}`);
-    }
-  };
-
-  const handleUpdateSettings = async () => {
-    setSettingsLoading(true);
-    try {
-      // Update auth feature flags
-      await updateDatabaseSettings({
-        loginEnabled,
-        trackingEnabled,
-        adsEnabled
-      });
-      alert('Settings updated successfully');
-    } catch (err: any) {
-      console.error('Error updating settings:', err);
-      alert(`Failed to update settings: ${err.message || 'Unknown error'}`);
+      
+      setActionSuccess('Message resolved successfully');
+      setTimeout(() => setActionSuccess(null), 3000);
+    } catch (err) {
+      console.error('Error resolving message:', err);
+      setActionError('Failed to resolve message');
+      setTimeout(() => setActionError(null), 3000);
     } finally {
-      setSettingsLoading(false);
+      setProcessingAction(null);
     }
   };
 
-  // Filter functions
-  const getFilteredBusinessSubmissions = () => {
+  // Filter business submissions
+  const getFilteredSubmissions = () => {
     return businessSubmissions.filter(submission => {
-      // Filter by status
-      if (statusFilter !== 'all' && submission.status !== statusFilter) {
+      // Status filter
+      if (submissionStatusFilter !== 'all' && submission.status !== submissionStatusFilter) {
         return false;
       }
       
-      // Filter by search query
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
+      // Search filter
+      if (submissionSearchQuery) {
+        const query = submissionSearchQuery.toLowerCase();
         return (
-          submission.business_name?.toLowerCase().includes(query) ||
-          submission.owner_name?.toLowerCase().includes(query) ||
-          submission.email?.toLowerCase().includes(query) ||
-          submission.city?.toLowerCase().includes(query)
+          submission.business_name.toLowerCase().includes(query) ||
+          submission.owner_name.toLowerCase().includes(query) ||
+          submission.email.toLowerCase().includes(query) ||
+          submission.city.toLowerCase().includes(query) ||
+          submission.state.toLowerCase().includes(query)
         );
       }
       
       return true;
-    }).sort((a, b) => {
-      // Sort by submitted_at date
-      const dateA = new Date(a.submitted_at || 0).getTime();
-      const dateB = new Date(b.submitted_at || 0).getTime();
-      return sortDirection === 'desc' ? dateB - dateA : dateA - dateB;
     });
   };
 
+  // Filter contact messages
   const getFilteredContactMessages = () => {
     return contactMessages.filter(message => {
-      // Filter by status
-      if (statusFilter !== 'all' && message.status !== statusFilter) {
+      // Status filter
+      if (messageStatusFilter !== 'all' && message.status !== messageStatusFilter) {
         return false;
       }
       
-      // Filter by search query
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
+      // Search filter
+      if (messageSearchQuery) {
+        const query = messageSearchQuery.toLowerCase();
         return (
-          message.name?.toLowerCase().includes(query) ||
-          message.email?.toLowerCase().includes(query) ||
-          message.subject?.toLowerCase().includes(query) ||
-          message.message?.toLowerCase().includes(query)
+          message.name.toLowerCase().includes(query) ||
+          message.email.toLowerCase().includes(query) ||
+          message.subject.toLowerCase().includes(query) ||
+          message.message.toLowerCase().includes(query)
         );
       }
       
       return true;
-    }).sort((a, b) => {
-      // Sort by created_at date
-      const dateA = new Date(a.created_at || 0).getTime();
-      const dateB = new Date(b.created_at || 0).getTime();
-      return sortDirection === 'desc' ? dateB - dateA : dateA - dateB;
     });
   };
 
+  // Filter businesses
   const getFilteredBusinesses = () => {
-    return businessProfiles.filter(profile => {
-      // Filter by search query
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
+    return businesses.filter(business => {
+      // Status filter
+      if (businessStatusFilter !== 'all') {
+        if (businessStatusFilter === 'premium' && !business.premium) {
+          return false;
+        }
+        if (businessStatusFilter === 'regular' && business.premium) {
+          return false;
+        }
+        if (businessStatusFilter === 'verified' && !business.verified) {
+          return false;
+        }
+      }
+      
+      // Search filter
+      if (businessSearchQuery) {
+        const query = businessSearchQuery.toLowerCase();
         return (
-          profile.business_name?.toLowerCase().includes(query) ||
-          profile.email?.toLowerCase().includes(query)
+          business.name.toLowerCase().includes(query) ||
+          business.category.toLowerCase().includes(query) ||
+          business.city.toLowerCase().includes(query) ||
+          business.state.toLowerCase().includes(query)
         );
       }
       
       return true;
-    }).sort((a, b) => {
-      // Sort by created_at date
-      const dateA = new Date(a.created_at || 0).getTime();
-      const dateB = new Date(b.created_at || 0).getTime();
-      return sortDirection === 'desc' ? dateB - dateA : dateA - dateB;
     });
   };
 
-  // Pagination functions
-  const getPaginatedBusinesses = () => {
-    const filtered = getFilteredBusinesses();
-    const startIndex = (businessesPage - 1) * businessesPerPage;
-    const endIndex = startIndex + businessesPerPage;
-    return filtered.slice(startIndex, endIndex);
-  };
-
-  const getTotalBusinessesPages = () => {
-    const filtered = getFilteredBusinesses();
-    return Math.ceil(filtered.length / businessesPerPage);
-  };
-
-  // Pagination functions for business submissions
-  const getPaginatedBusinessSubmissions = () => {
-    const filtered = getFilteredBusinessSubmissions();
-    const startIndex = (submissionsPage - 1) * submissionsPerPage;
-    const endIndex = startIndex + submissionsPerPage;
-    return filtered.slice(startIndex, endIndex);
-  };
-
-  const getTotalSubmissionsPages = () => {
-    const filtered = getFilteredBusinessSubmissions();
-    return Math.ceil(filtered.length / submissionsPerPage);
+  // Filter users
+  const getFilteredUsers = () => {
+    return users.filter(user => {
+      // Role filter
+      if (userRoleFilter !== 'all' && user.role !== userRoleFilter) {
+        return false;
+      }
+      
+      // Search filter
+      if (userSearchQuery) {
+        const query = userSearchQuery.toLowerCase();
+        return (
+          user.business_name.toLowerCase().includes(query) ||
+          user.email.toLowerCase().includes(query)
+        );
+      }
+      
+      return true;
+    });
   };
 
   // Format date for display
   const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleString();
+    
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
   };
 
-  // Get status badge color
-  const getStatusBadgeColor = (status: string) => {
+  // Get status badge class
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
         return 'bg-yellow-100 text-yellow-800';
@@ -356,890 +440,1307 @@ const AdminDashboardPage: React.FC = () => {
     }
   };
 
-  // Debug helpers (for development only)
-  if (process.env.NODE_ENV === 'development') {
-    // @ts-ignore
-    window.debugAdminDashboard = {
-      checkAuth: () => console.log('Current user:', user),
-      loadData: () => {
-        console.log('Manually loading data...');
-        loadData();
-      },
-      showStats: () => console.log('Current stats:', stats)
-    };
-  }
+  // Get status icon
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <Clock className="w-4 h-4" />;
+      case 'approved':
+        return <CheckCircle className="w-4 h-4" />;
+      case 'rejected':
+        return <XCircle className="w-4 h-4" />;
+      case 'new':
+        return <Inbox className="w-4 h-4" />;
+      case 'in_progress':
+        return <MailOpen className="w-4 h-4" />;
+      case 'resolved':
+        return <MailCheck className="w-4 h-4" />;
+      default:
+        return null;
+    }
+  };
 
-  if (loading && !businessSubmissions.length) {
+  // Truncate text
+  const truncateText = (text: string, maxLength: number = 50) => {
+    if (!text) return '';
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+  };
+
+  // Render loading state
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-900">Loading Admin Dashboard</h2>
-          <p className="text-gray-500 mt-2">Please wait while we load your data...</p>
+          <p className="text-gray-600 mt-2">Please wait while we load your data...</p>
         </div>
       </div>
     );
   }
 
+  // Render error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <AlertTriangle className="w-12 h-12 text-red-600 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900">Error Loading Dashboard</h2>
+          <p className="text-gray-600 mt-2 mb-4">{error}</p>
+          <button
+            onClick={loadData}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <RefreshCw className="w-4 h-4 mr-2 inline" />
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Get filtered data
+  const filteredSubmissions = getFilteredSubmissions();
+  const filteredMessages = getFilteredContactMessages();
+  const filteredBusinesses = getFilteredBusinesses();
+  const filteredUsers = getFilteredUsers();
+  
+  // Get paginated data
+  const paginatedSubmissions = submissionsPagination.getPaginatedItems(filteredSubmissions);
+  const paginatedMessages = messagesPagination.getPaginatedItems(filteredMessages);
+  const paginatedBusinesses = businessesPagination.getPaginatedItems(filteredBusinesses);
+  const paginatedUsers = usersPagination.getPaginatedItems(filteredUsers);
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600 mt-1">Manage business submissions, messages, and settings</p>
+      {/* Mobile Header */}
+      <div className="lg:hidden bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center">
+            <Building className="w-6 h-6 text-blue-600 mr-2" />
+            <h1 className="text-lg font-bold text-gray-900">Admin Dashboard</h1>
+          </div>
+          
+          <button 
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 text-gray-600 hover:text-gray-900 focus:outline-none"
+          >
+            {mobileMenuOpen ? (
+              <X className="w-6 h-6" />
+            ) : (
+              <Menu className="w-6 h-6" />
+            )}
+          </button>
         </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-blue-600">
-            <div className="flex items-center">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-600">Pending Businesses</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.pendingBusinesses}</p>
-              </div>
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <FileText className="w-6 h-6 text-blue-600" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-green-600">
-            <div className="flex items-center">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-600">Total Businesses</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalBusinesses}</p>
-              </div>
-              <div className="p-3 bg-green-100 rounded-lg">
-                <BarChart3 className="w-6 h-6 text-green-600" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-yellow-600">
-            <div className="flex items-center">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-600">New Messages</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.newMessages}</p>
-              </div>
-              <div className="p-3 bg-yellow-100 rounded-lg">
-                <MessageSquare className="w-6 h-6 text-yellow-600" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-purple-600">
-            <div className="flex items-center">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-600">Total Users</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalUsers}</p>
-              </div>
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <Users className="w-6 h-6 text-purple-600" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-orange-600">
-            <div className="flex items-center">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-600">Premium Businesses</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.premiumBusinesses}</p>
-              </div>
-              <div className="p-3 bg-orange-100 rounded-lg">
-                <Flag className="w-6 h-6 text-orange-600" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <div className="bg-white rounded-xl shadow-sm mb-8">
-          <div className="border-b border-gray-200">
-            <nav className="flex -mb-px">
+        
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="bg-white border-b border-gray-200 p-4">
+            <div className="space-y-2">
               <button
-                onClick={() => setActiveTab('businesses')}
-                className={`py-4 px-6 font-medium text-sm border-b-2 ${
-                  activeTab === 'businesses'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                onClick={() => {
+                  setActiveTab('business-submissions');
+                  setMobileMenuOpen(false);
+                }}
+                className={`w-full flex items-center p-3 rounded-lg text-left ${
+                  activeTab === 'business-submissions' 
+                    ? 'bg-blue-50 text-blue-700' 
+                    : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                <FileText className="w-5 h-5 inline mr-2" />
-                Business Submissions
+                <Building className="w-5 h-5 mr-3" />
+                <span>Business Submissions</span>
+                {stats.pendingBusinesses > 0 && (
+                  <span className="ml-auto bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                    {stats.pendingBusinesses}
+                  </span>
+                )}
               </button>
               
               <button
-                onClick={() => setActiveTab('messages')}
-                className={`py-4 px-6 font-medium text-sm border-b-2 ${
-                  activeTab === 'messages'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                onClick={() => {
+                  setActiveTab('contact-messages');
+                  setMobileMenuOpen(false);
+                }}
+                className={`w-full flex items-center p-3 rounded-lg text-left ${
+                  activeTab === 'contact-messages' 
+                    ? 'bg-blue-50 text-blue-700' 
+                    : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                <MessageSquare className="w-5 h-5 inline mr-2" />
-                Contact Messages
+                <MessageSquare className="w-5 h-5 mr-3" />
+                <span>Contact Messages</span>
+                {stats.newMessages > 0 && (
+                  <span className="ml-auto bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                    {stats.newMessages}
+                  </span>
+                )}
               </button>
               
               <button
-                onClick={() => setActiveTab('users')}
-                className={`py-4 px-6 font-medium text-sm border-b-2 ${
-                  activeTab === 'users'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                onClick={() => {
+                  setActiveTab('businesses');
+                  setMobileMenuOpen(false);
+                }}
+                className={`w-full flex items-center p-3 rounded-lg text-left ${
+                  activeTab === 'businesses' 
+                    ? 'bg-blue-50 text-blue-700' 
+                    : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                <Users className="w-5 h-5 inline mr-2" />
-                Directory Businesses
+                <Building className="w-5 h-5 mr-3" />
+                <span>Directory Businesses</span>
               </button>
               
               <button
-                onClick={() => setActiveTab('analytics')}
-                className={`py-4 px-6 font-medium text-sm border-b-2 ${
-                  activeTab === 'analytics'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                onClick={() => {
+                  setActiveTab('users');
+                  setMobileMenuOpen(false);
+                }}
+                className={`w-full flex items-center p-3 rounded-lg text-left ${
+                  activeTab === 'users' 
+                    ? 'bg-blue-50 text-blue-700' 
+                    : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                <BarChart3 className="w-5 h-5 inline mr-2" />
-                Analytics
+                <Users className="w-5 h-5 mr-3" />
+                <span>User Management</span>
               </button>
               
               <button
-                onClick={() => setActiveTab('settings')}
-                className={`py-4 px-6 font-medium text-sm border-b-2 ${
-                  activeTab === 'settings'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                onClick={() => {
+                  setActiveTab('analytics');
+                  setMobileMenuOpen(false);
+                }}
+                className={`w-full flex items-center p-3 rounded-lg text-left ${
+                  activeTab === 'analytics' 
+                    ? 'bg-blue-50 text-blue-700' 
+                    : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                <Settings className="w-5 h-5 inline mr-2" />
-                Settings
+                <BarChart3 className="w-5 h-5 mr-3" />
+                <span>Analytics</span>
               </button>
               
               <button
-                onClick={() => setActiveTab('test')}
-                className={`py-4 px-6 font-medium text-sm border-b-2 ${
-                  activeTab === 'test'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                onClick={() => {
+                  setActiveTab('settings');
+                  setMobileMenuOpen(false);
+                }}
+                className={`w-full flex items-center p-3 rounded-lg text-left ${
+                  activeTab === 'settings' 
+                    ? 'bg-blue-50 text-blue-700' 
+                    : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                <Beaker className="w-5 h-5 inline mr-2" />
-                Test
+                <Settings className="w-5 h-5 mr-3" />
+                <span>Settings</span>
               </button>
-            </nav>
-          </div>
-        </div>
-
-        {/* Error Message */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
-            <div className="flex">
-              <AlertCircle className="w-5 h-5 text-red-500 mr-3" />
-              <div>
-                <h3 className="text-sm font-medium text-red-800">Error loading data</h3>
-                <p className="text-sm text-red-700 mt-1">{error}</p>
-                <button
-                  onClick={loadData}
-                  className="mt-2 text-sm font-medium text-red-600 hover:text-red-800"
-                >
-                  Try Again
-                </button>
+            </div>
+            
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <div className="flex items-center text-sm text-gray-500">
+                <Bell className="w-4 h-4 mr-2" />
+                <span>Notifications</span>
+                <span className="ml-auto bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                  {stats.pendingBusinesses + stats.newMessages}
+                </span>
               </div>
             </div>
           </div>
         )}
+      </div>
 
-        {/* Tab Content */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
+      <div className="flex flex-col lg:flex-row">
+        {/* Desktop Sidebar */}
+        <div className="hidden lg:block w-64 bg-white border-r border-gray-200 min-h-screen sticky top-0">
+          <div className="p-6">
+            <div className="flex items-center mb-6">
+              <Building className="w-6 h-6 text-blue-600 mr-2" />
+              <h1 className="text-xl font-bold text-gray-900">Admin Dashboard</h1>
+            </div>
+            
+            <nav className="space-y-2">
+              <button
+                onClick={() => setActiveTab('business-submissions')}
+                className={`w-full flex items-center p-3 rounded-lg text-left ${
+                  activeTab === 'business-submissions' 
+                    ? 'bg-blue-50 text-blue-700' 
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <Building className="w-5 h-5 mr-3" />
+                <span>Business Submissions</span>
+                {stats.pendingBusinesses > 0 && (
+                  <span className="ml-auto bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                    {stats.pendingBusinesses}
+                  </span>
+                )}
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('contact-messages')}
+                className={`w-full flex items-center p-3 rounded-lg text-left ${
+                  activeTab === 'contact-messages' 
+                    ? 'bg-blue-50 text-blue-700' 
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <MessageSquare className="w-5 h-5 mr-3" />
+                <span>Contact Messages</span>
+                {stats.newMessages > 0 && (
+                  <span className="ml-auto bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                    {stats.newMessages}
+                  </span>
+                )}
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('businesses')}
+                className={`w-full flex items-center p-3 rounded-lg text-left ${
+                  activeTab === 'businesses' 
+                    ? 'bg-blue-50 text-blue-700' 
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <Building className="w-5 h-5 mr-3" />
+                <span>Directory Businesses</span>
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('users')}
+                className={`w-full flex items-center p-3 rounded-lg text-left ${
+                  activeTab === 'users' 
+                    ? 'bg-blue-50 text-blue-700' 
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <Users className="w-5 h-5 mr-3" />
+                <span>User Management</span>
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('analytics')}
+                className={`w-full flex items-center p-3 rounded-lg text-left ${
+                  activeTab === 'analytics' 
+                    ? 'bg-blue-50 text-blue-700' 
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <BarChart3 className="w-5 h-5 mr-3" />
+                <span>Analytics</span>
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('settings')}
+                className={`w-full flex items-center p-3 rounded-lg text-left ${
+                  activeTab === 'settings' 
+                    ? 'bg-blue-50 text-blue-700' 
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <Settings className="w-5 h-5 mr-3" />
+                <span>Settings</span>
+              </button>
+            </nav>
+          </div>
+          
+          <div className="p-6 border-t border-gray-200">
+            <div className="space-y-4">
+              <div className="flex items-center">
+                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                <span className="text-sm text-gray-600">Admin: {user?.email}</span>
+              </div>
+              
+              <div className="text-xs text-gray-500">
+                Last login: {formatDate(new Date().toISOString())}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 p-4 lg:p-8">
+          {/* Action Messages */}
+          {actionSuccess && (
+            <div className="mb-4 bg-green-50 border border-green-200 text-green-800 rounded-lg p-4 flex items-start">
+              <CheckCircle className="w-5 h-5 mr-3 flex-shrink-0 mt-0.5" />
+              <div>{actionSuccess}</div>
+            </div>
+          )}
+          
+          {actionError && (
+            <div className="mb-4 bg-red-50 border border-red-200 text-red-800 rounded-lg p-4 flex items-start">
+              <AlertTriangle className="w-5 h-5 mr-3 flex-shrink-0 mt-0.5" />
+              <div>{actionError}</div>
+            </div>
+          )}
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+            <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-blue-600">
+              <div className="flex items-center">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-500">Pending Businesses</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.pendingBusinesses}</p>
+                </div>
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <Building className="w-6 h-6 text-blue-600" />
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-green-600">
+              <div className="flex items-center">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-500">Total Businesses</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.totalBusinesses}</p>
+                </div>
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <Building className="w-6 h-6 text-green-600" />
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-yellow-600">
+              <div className="flex items-center">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-500">New Messages</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.newMessages}</p>
+                </div>
+                <div className="p-3 bg-yellow-100 rounded-lg">
+                  <MessageSquare className="w-6 h-6 text-yellow-600" />
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-purple-600">
+              <div className="flex items-center">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-500">Total Users</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.totalUsers}</p>
+                </div>
+                <div className="p-3 bg-purple-100 rounded-lg">
+                  <Users className="w-6 h-6 text-purple-600" />
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-orange-600">
+              <div className="flex items-center">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-500">Premium Businesses</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.premiumBusinesses}</p>
+                </div>
+                <div className="p-3 bg-orange-100 rounded-lg">
+                  <BarChart3 className="w-6 h-6 text-orange-600" />
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Business Submissions Tab */}
-          {activeTab === 'businesses' && (
-            <div>
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900">Business Submissions</h2>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {getFilteredBusinessSubmissions().length} of {businessSubmissions.length} submissions
-                    {submissionsPage > 1 && ` • Page ${submissionsPage} of ${getTotalSubmissionsPages()}`}
-                  </p>
+          {activeTab === 'business-submissions' && (
+            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+              <div className="p-4 sm:p-6 border-b border-gray-200">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <h2 className="text-xl font-bold text-gray-900">Business Submissions</h2>
+                  
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <button
+                      onClick={loadData}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+                    >
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Refresh
+                    </button>
+                  </div>
                 </div>
                 
-                <div className="flex flex-col sm:flex-row gap-4">
-                  {/* Search */}
-                  <div className="relative">
+                <div className="mt-4 flex flex-col sm:flex-row gap-4">
+                  <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                     <input
                       type="text"
                       placeholder="Search submissions..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
+                      value={submissionSearchQuery}
+                      onChange={(e) => setSubmissionSearchQuery(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
                   
-                  {/* Status Filter */}
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="all">All Statuses</option>
-                    <option value="pending">Pending</option>
-                    <option value="approved">Approved</option>
-                    <option value="rejected">Rejected</option>
-                  </select>
-                  
-                  {/* Sort Direction */}
-                  <button
-                    onClick={() => setSortDirection(prev => prev === 'desc' ? 'asc' : 'desc')}
-                    className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-                  >
-                    {sortDirection === 'desc' ? (
-                      <>
-                        <ChevronDown className="w-4 h-4 mr-2" />
-                        Newest First
-                      </>
-                    ) : (
-                      <>
-                        <ChevronUp className="w-4 h-4 mr-2" />
-                        Oldest First
-                      </>
-                    )}
-                  </button>
+                  <div className="flex items-center">
+                    <Filter className="w-5 h-5 text-gray-400 mr-2" />
+                    <select
+                      value={submissionStatusFilter}
+                      onChange={(e) => setSubmissionStatusFilter(e.target.value)}
+                      className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="all">All Statuses</option>
+                      <option value="pending">Pending</option>
+                      <option value="approved">Approved</option>
+                      <option value="rejected">Rejected</option>
+                    </select>
+                  </div>
+                </div>
+                
+                {/* Results count */}
+                <div className="mt-4 text-sm text-gray-600">
+                  {filteredSubmissions.length} of {businessSubmissions.length} submissions
+                  {submissionSearchQuery && ` matching "${submissionSearchQuery}"`}
                 </div>
               </div>
               
-              {/* Table */}
+              {/* Submissions Table */}
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+                <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Business
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Contact
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                        Owner
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
                         Location
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Status
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
                         Submitted
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {getPaginatedBusinessSubmissions().map((submission) => (
-                      <tr key={submission.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{submission.business_name}</div>
-                          <div className="text-sm text-gray-500">{submission.category}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{submission.owner_name}</div>
-                          <div className="text-sm text-gray-500">{submission.email}</div>
-                          <div className="text-sm text-gray-500">{submission.phone}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{submission.city}, {submission.state}</div>
-                          <div className="text-sm text-gray-500">{submission.address}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeColor(submission.status)}`}>
-                            {submission.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {formatDate(submission.submitted_at)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          {submission.status === 'pending' ? (
-                            <div className="flex space-x-2">
-                              <button
-                                onClick={() => handleApproveBusinessSubmission(submission.id)}
-                                className="text-green-600 hover:text-green-900"
-                              >
-                                <UserCheck className="w-5 h-5" />
-                              </button>
-                              <button
-                                onClick={() => handleRejectBusinessSubmission(submission.id)}
-                                className="text-red-600 hover:text-red-900"
-                              >
-                                <UserX className="w-5 h-5" />
-                              </button>
-                            </div>
-                          ) : (
-                            <span className="text-gray-500">
-                              {submission.status === 'approved' ? (
-                                <CheckCircle className="w-5 h-5 text-green-500" />
-                              ) : (
-                                <XCircle className="w-5 h-5 text-red-500" />
-                              )}
-                            </span>
-                          )}
+                  <tbody className="divide-y divide-gray-200">
+                    {paginatedSubmissions.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                          No submissions found
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      paginatedSubmissions.map((submission) => (
+                        <tr key={submission.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">
+                              {submission.business_name}
+                            </div>
+                            <div className="text-xs text-gray-500 md:hidden">
+                              {submission.owner_name}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap hidden md:table-cell">
+                            <div className="text-sm text-gray-900">{submission.owner_name}</div>
+                            <div className="text-xs text-gray-500">{submission.email}</div>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap hidden lg:table-cell">
+                            <div className="text-sm text-gray-900">{submission.city}, {submission.state}</div>
+                            <div className="text-xs text-gray-500">{submission.category}</div>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(submission.status)}`}>
+                              {getStatusIcon(submission.status)}
+                              <span className="ml-1 capitalize">{submission.status}</span>
+                            </span>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
+                            {formatDate(submission.submitted_at)}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div className="flex items-center justify-end space-x-2">
+                              {submission.status === 'pending' && (
+                                <>
+                                  <button
+                                    onClick={() => handleApproveSubmission(submission.id)}
+                                    disabled={processingAction === `approve-${submission.id}`}
+                                    className="text-green-600 hover:text-green-900 p-1"
+                                    title="Approve"
+                                  >
+                                    {processingAction === `approve-${submission.id}` ? (
+                                      <Loader2 className="w-5 h-5 animate-spin" />
+                                    ) : (
+                                      <CheckCircle className="w-5 h-5" />
+                                    )}
+                                  </button>
+                                  <button
+                                    onClick={() => handleRejectSubmission(submission.id)}
+                                    disabled={processingAction === `reject-${submission.id}`}
+                                    className="text-red-600 hover:text-red-900 p-1"
+                                    title="Reject"
+                                  >
+                                    {processingAction === `reject-${submission.id}` ? (
+                                      <Loader2 className="w-5 h-5 animate-spin" />
+                                    ) : (
+                                      <XCircle className="w-5 h-5" />
+                                    )}
+                                  </button>
+                                </>
+                              )}
+                              <button
+                                onClick={() => {/* View details */}}
+                                className="text-blue-600 hover:text-blue-900 p-1"
+                                title="View Details"
+                              >
+                                <Eye className="w-5 h-5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
               
               {/* Pagination */}
-              {getTotalSubmissionsPages() > 1 && (
-                <div className="flex items-center justify-between mt-6">
-                  <div className="flex-1 flex justify-between sm:hidden">
-                    <button
-                      onClick={() => setSubmissionsPage(prev => Math.max(prev - 1, 1))}
-                      disabled={submissionsPage === 1}
-                      className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Previous
-                    </button>
-                    <button
-                      onClick={() => setSubmissionsPage(prev => Math.min(prev + 1, getTotalSubmissionsPages()))}
-                      disabled={submissionsPage === getTotalSubmissionsPages()}
-                      className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Next
-                    </button>
-                  </div>
-                  <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                    <div>
-                      <p className="text-sm text-gray-700">
-                        Showing <span className="font-medium">{(submissionsPage - 1) * submissionsPerPage + 1}</span> to{' '}
-                        <span className="font-medium">
-                          {Math.min(submissionsPage * submissionsPerPage, getFilteredBusinessSubmissions().length)}
-                        </span>{' '}
-                        of <span className="font-medium">{getFilteredBusinessSubmissions().length}</span> results
-                      </p>
-                    </div>
-                    <div>
-                      <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                        <button
-                          onClick={() => setSubmissionsPage(prev => Math.max(prev - 1, 1))}
-                          disabled={submissionsPage === 1}
-                          className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <span className="sr-only">Previous</span>
-                          <ChevronUp className="h-5 w-5 rotate-90" />
-                        </button>
-                        
-                        {/* Page numbers */}
-                        {[...Array(getTotalSubmissionsPages())].map((_, i) => (
-                          <button
-                            key={i}
-                            onClick={() => setSubmissionsPage(i + 1)}
-                            className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                              submissionsPage === i + 1
-                                ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                                : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                            }`}
-                          >
-                            {i + 1}
-                          </button>
-                        ))}
-                        
-                        <button
-                          onClick={() => setSubmissionsPage(prev => Math.min(prev + 1, getTotalSubmissionsPages()))}
-                          disabled={submissionsPage === getTotalSubmissionsPages()}
-                          className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <span className="sr-only">Next</span>
-                          <ChevronDown className="h-5 w-5 rotate-90" />
-                        </button>
-                      </nav>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              {/* Empty State */}
-              {getFilteredBusinessSubmissions().length === 0 && (
-                <div className="text-center py-12">
-                  <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No business submissions found</h3>
-                  <p className="text-gray-500">
-                    {searchQuery || statusFilter !== 'all'
-                      ? 'Try adjusting your search or filter criteria'
-                      : 'Business submissions will appear here when they are submitted'}
-                  </p>
-                </div>
-              )}
+              <Pagination
+                currentPage={submissionsPagination.currentPage}
+                totalPages={submissionsPagination.getTotalPages(filteredSubmissions.length)}
+                itemsPerPage={submissionsPagination.itemsPerPage}
+                totalItems={filteredSubmissions.length}
+                onPageChange={submissionsPagination.setCurrentPage}
+              />
             </div>
           )}
 
           {/* Contact Messages Tab */}
-          {activeTab === 'messages' && (
-            <div>
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-                <h2 className="text-xl font-semibold text-gray-900">Contact Messages</h2>
+          {activeTab === 'contact-messages' && (
+            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+              <div className="p-4 sm:p-6 border-b border-gray-200">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <h2 className="text-xl font-bold text-gray-900">Contact Messages</h2>
+                  
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <button
+                      onClick={loadData}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+                    >
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Refresh
+                    </button>
+                  </div>
+                </div>
                 
-                <div className="flex flex-col sm:flex-row gap-4">
-                  {/* Search */}
-                  <div className="relative">
+                <div className="mt-4 flex flex-col sm:flex-row gap-4">
+                  <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                     <input
                       type="text"
                       placeholder="Search messages..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
+                      value={messageSearchQuery}
+                      onChange={(e) => setMessageSearchQuery(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
                   
-                  {/* Status Filter */}
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="all">All Statuses</option>
-                    <option value="new">New</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="resolved">Resolved</option>
-                  </select>
-                  
-                  {/* Sort Direction */}
-                  <button
-                    onClick={() => setSortDirection(prev => prev === 'desc' ? 'asc' : 'desc')}
-                    className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-                  >
-                    {sortDirection === 'desc' ? (
-                      <>
-                        <ChevronDown className="w-4 h-4 mr-2" />
-                        Newest First
-                      </>
-                    ) : (
-                      <>
-                        <ChevronUp className="w-4 h-4 mr-2" />
-                        Oldest First
-                      </>
-                    )}
-                  </button>
+                  <div className="flex items-center">
+                    <Filter className="w-5 h-5 text-gray-400 mr-2" />
+                    <select
+                      value={messageStatusFilter}
+                      onChange={(e) => setMessageStatusFilter(e.target.value)}
+                      className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="all">All Statuses</option>
+                      <option value="new">New</option>
+                      <option value="in_progress">In Progress</option>
+                      <option value="resolved">Resolved</option>
+                    </select>
+                  </div>
+                </div>
+                
+                {/* Results count */}
+                <div className="mt-4 text-sm text-gray-600">
+                  {filteredMessages.length} of {contactMessages.length} messages
+                  {messageSearchQuery && ` matching "${messageSearchQuery}"`}
                 </div>
               </div>
               
-              {/* Results Count */}
-              <div className="text-sm text-gray-500 mb-4">
-                Showing {getFilteredContactMessages().length} messages
-                {searchQuery && ` matching "${searchQuery}"`}
-                {statusFilter !== 'all' && ` with status "${statusFilter}"`}
-              </div>
-              
-              {/* Table */}
+              {/* Messages Table */}
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+                <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         From
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Subject
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Location
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                        Message
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Status
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
                         Received
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {getFilteredContactMessages().map((message) => (
-                      <tr key={message.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{message.name}</div>
-                          <div className="text-sm text-gray-500">{message.email}</div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="text-sm text-gray-900">{message.subject}</div>
-                          <div className="text-sm text-gray-500 truncate max-w-xs">{message.message}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{message.city || 'N/A'}</div>
-                          <div className="text-sm text-gray-500">{message.category || 'General'}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeColor(message.status)}`}>
-                            {message.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {formatDate(message.created_at)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          {message.status !== 'resolved' ? (
-                            <button
-                              onClick={() => handleResolveContactMessage(message.id)}
-                              className="text-green-600 hover:text-green-900"
-                            >
-                              <CheckCircle className="w-5 h-5" />
-                            </button>
-                          ) : (
-                            <span className="text-gray-500">
-                              <Clock className="w-5 h-5" />
-                            </span>
-                          )}
+                  <tbody className="divide-y divide-gray-200">
+                    {paginatedMessages.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                          No messages found
                         </td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              
-              {/* Empty State */}
-              {getFilteredContactMessages().length === 0 && (
-                <div className="text-center py-12">
-                  <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No contact messages found</h3>
-                  <p className="text-gray-500">
-                    {searchQuery || statusFilter !== 'all'
-                      ? 'Try adjusting your search or filter criteria'
-                      : 'Contact messages will appear here when they are submitted'}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Directory Businesses Tab */}
-          {activeTab === 'users' && (
-            <div>
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900">Directory Businesses</h2>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {getFilteredBusinesses().length} of {businessProfiles.length} businesses
-                    {businessesPage > 1 && ` • Page ${businessesPage} of ${getTotalBusinessesPages()}`}
-                  </p>
-                </div>
-                
-                <div className="flex flex-col sm:flex-row gap-4">
-                  {/* Search */}
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Search businesses..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
-                    />
-                  </div>
-                  
-                  {/* Sort Direction */}
-                  <button
-                    onClick={() => setSortDirection(prev => prev === 'desc' ? 'asc' : 'desc')}
-                    className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-                  >
-                    {sortDirection === 'desc' ? (
-                      <>
-                        <ChevronDown className="w-4 h-4 mr-2" />
-                        Newest First
-                      </>
                     ) : (
-                      <>
-                        <ChevronUp className="w-4 h-4 mr-2" />
-                        Oldest First
-                      </>
+                      paginatedMessages.map((message) => (
+                        <tr key={message.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">
+                              {message.name}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {message.email}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4">
+                            <div className="text-sm text-gray-900">
+                              {message.subject || 'No Subject'}
+                            </div>
+                            <div className="text-xs text-gray-500 md:hidden">
+                              {truncateText(message.message, 30)}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 hidden md:table-cell">
+                            <div className="text-sm text-gray-900 max-w-xs">
+                              {truncateText(message.message, 100)}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(message.status)}`}>
+                              {getStatusIcon(message.status)}
+                              <span className="ml-1 capitalize">{message.status}</span>
+                            </span>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
+                            {formatDate(message.created_at)}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div className="flex items-center justify-end space-x-2">
+                              {message.status !== 'resolved' && (
+                                <button
+                                  onClick={() => handleResolveMessage(message.id)}
+                                  disabled={processingAction === `resolve-${message.id}`}
+                                  className="text-green-600 hover:text-green-900 p-1"
+                                  title="Mark as Resolved"
+                                >
+                                  {processingAction === `resolve-${message.id}` ? (
+                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                  ) : (
+                                    <CheckCheck className="w-5 h-5" />
+                                  )}
+                                </button>
+                              )}
+                              <button
+                                onClick={() => {/* View details */}}
+                                className="text-blue-600 hover:text-blue-900 p-1"
+                                title="View Details"
+                              >
+                                <Eye className="w-5 h-5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
                     )}
-                  </button>
-                </div>
-              </div>
-              
-              {/* Table */}
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Business
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Contact
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Role
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Created
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {getPaginatedBusinesses().map((profile) => (
-                      <tr key={profile.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{profile.business_name}</div>
-                          <div className="text-sm text-gray-500">{profile.business_id || 'No ID'}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{profile.email}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">owner</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            profile.premium ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                          }`}>
-                            {profile.premium ? 'Premium' : 'Basic'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {formatDate(profile.created_at)}
-                        </td>
-                      </tr>
-                    ))}
                   </tbody>
                 </table>
               </div>
               
               {/* Pagination */}
-              {getTotalBusinessesPages() > 1 && (
-                <div className="flex items-center justify-between mt-6">
-                  <div className="flex-1 flex justify-between sm:hidden">
+              <Pagination
+                currentPage={messagesPagination.currentPage}
+                totalPages={messagesPagination.getTotalPages(filteredMessages.length)}
+                itemsPerPage={messagesPagination.itemsPerPage}
+                totalItems={filteredMessages.length}
+                onPageChange={messagesPagination.setCurrentPage}
+              />
+            </div>
+          )}
+
+          {/* Directory Businesses Tab */}
+          {activeTab === 'businesses' && (
+            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+              <div className="p-4 sm:p-6 border-b border-gray-200">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <h2 className="text-xl font-bold text-gray-900">Directory Businesses</h2>
+                  
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <button
-                      onClick={() => setBusinessesPage(prev => Math.max(prev - 1, 1))}
-                      disabled={businessesPage === 1}
-                      className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={loadData}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
                     >
-                      Previous
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Refresh
                     </button>
-                    <button
-                      onClick={() => setBusinessesPage(prev => Math.min(prev + 1, getTotalBusinessesPages()))}
-                      disabled={businessesPage === getTotalBusinessesPages()}
-                      className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Next
-                    </button>
-                  </div>
-                  <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                    <div>
-                      <p className="text-sm text-gray-700">
-                        Showing <span className="font-medium">{(businessesPage - 1) * businessesPerPage + 1}</span> to{' '}
-                        <span className="font-medium">
-                          {Math.min(businessesPage * businessesPerPage, getFilteredBusinesses().length)}
-                        </span>{' '}
-                        of <span className="font-medium">{getFilteredBusinesses().length}</span> results
-                      </p>
-                    </div>
-                    <div>
-                      <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                        <button
-                          onClick={() => setBusinessesPage(prev => Math.max(prev - 1, 1))}
-                          disabled={businessesPage === 1}
-                          className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <span className="sr-only">Previous</span>
-                          <ChevronUp className="h-5 w-5 rotate-90" />
-                        </button>
-                        
-                        {/* Page numbers */}
-                        {[...Array(getTotalBusinessesPages())].map((_, i) => (
-                          <button
-                            key={i}
-                            onClick={() => setBusinessesPage(i + 1)}
-                            className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                              businessesPage === i + 1
-                                ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                                : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                            }`}
-                          >
-                            {i + 1}
-                          </button>
-                        ))}
-                        
-                        <button
-                          onClick={() => setBusinessesPage(prev => Math.min(prev + 1, getTotalBusinessesPages()))}
-                          disabled={businessesPage === getTotalBusinessesPages()}
-                          className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <span className="sr-only">Next</span>
-                          <ChevronDown className="h-5 w-5 rotate-90" />
-                        </button>
-                      </nav>
-                    </div>
                   </div>
                 </div>
-              )}
+                
+                <div className="mt-4 flex flex-col sm:flex-row gap-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search businesses..."
+                      value={businessSearchQuery}
+                      onChange={(e) => setBusinessSearchQuery(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  
+                  <div className="flex items-center">
+                    <Filter className="w-5 h-5 text-gray-400 mr-2" />
+                    <select
+                      value={businessStatusFilter}
+                      onChange={(e) => setBusinessStatusFilter(e.target.value)}
+                      className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="all">All Businesses</option>
+                      <option value="premium">Premium Only</option>
+                      <option value="regular">Regular Only</option>
+                      <option value="verified">Verified Only</option>
+                    </select>
+                  </div>
+                </div>
+                
+                {/* Results count and pagination info */}
+                <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm text-gray-600">
+                  <div>
+                    {filteredBusinesses.length} of {businesses.length} businesses
+                    {businessSearchQuery && ` matching "${businessSearchQuery}"`}
+                  </div>
+                  
+                  {businessesPagination.getTotalPages(filteredBusinesses.length) > 1 && (
+                    <div>
+                      Page {businessesPagination.currentPage} of {businessesPagination.getTotalPages(filteredBusinesses.length)}
+                    </div>
+                  )}
+                </div>
+              </div>
               
-              {/* Empty State */}
-              {getFilteredBusinesses().length === 0 && (
-                <div className="text-center py-12">
-                  <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No businesses found</h3>
-                  <p className="text-gray-500">
-                    {searchQuery
-                      ? 'Try adjusting your search criteria'
-                      : 'Businesses will appear here when they are created'}
-                  </p>
+              {/* Businesses Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Business
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                        Category
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
+                        Location
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                        Added
+                      </th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {paginatedBusinesses.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                          No businesses found
+                        </td>
+                      </tr>
+                    ) : (
+                      paginatedBusinesses.map((business) => (
+                        <tr key={business.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-4">
+                            <div className="flex items-center">
+                              <div className="flex-shrink-0 h-10 w-10 bg-gray-200 rounded-full overflow-hidden">
+                                {business.image && (
+                                  <img 
+                                    src={business.image} 
+                                    alt={business.name}
+                                    className="h-full w-full object-cover"
+                                  />
+                                )}
+                              </div>
+                              <div className="ml-4">
+                                <div className="text-sm font-medium text-gray-900">
+                                  {business.name}
+                                </div>
+                                <div className="text-xs text-gray-500 md:hidden">
+                                  {business.category}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap hidden md:table-cell">
+                            <div className="text-sm text-gray-900 capitalize">
+                              {business.category.replace(/-/g, ' ')}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap hidden lg:table-cell">
+                            <div className="text-sm text-gray-900">{business.city}, {business.state}</div>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-1">
+                              {business.premium && (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                  Premium
+                                </span>
+                              )}
+                              {business.verified && (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                  Verified
+                                </span>
+                              )}
+                              {!business.premium && !business.verified && (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                  Regular
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
+                            {formatDate(business.created_at)}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div className="flex items-center justify-end space-x-2">
+                              <button
+                                onClick={() => {/* View details */}}
+                                className="text-blue-600 hover:text-blue-900 p-1"
+                                title="View Details"
+                              >
+                                <Eye className="w-5 h-5" />
+                              </button>
+                              <button
+                                onClick={() => {/* Edit business */}}
+                                className="text-indigo-600 hover:text-indigo-900 p-1"
+                                title="Edit"
+                              >
+                                <Edit className="w-5 h-5" />
+                              </button>
+                              <button
+                                onClick={() => {/* Delete business */}}
+                                className="text-red-600 hover:text-red-900 p-1"
+                                title="Delete"
+                              >
+                                <Trash className="w-5 h-5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              
+              {/* Pagination */}
+              <Pagination
+                currentPage={businessesPagination.currentPage}
+                totalPages={businessesPagination.getTotalPages(filteredBusinesses.length)}
+                itemsPerPage={businessesPagination.itemsPerPage}
+                totalItems={filteredBusinesses.length}
+                onPageChange={businessesPagination.setCurrentPage}
+              />
+            </div>
+          )}
+
+          {/* User Management Tab */}
+          {activeTab === 'users' && (
+            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+              <div className="p-4 sm:p-6 border-b border-gray-200">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <h2 className="text-xl font-bold text-gray-900">User Management</h2>
+                  
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <button
+                      onClick={loadData}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+                    >
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Refresh
+                    </button>
+                  </div>
                 </div>
-              )}
+                
+                <div className="mt-4 flex flex-col sm:flex-row gap-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search users..."
+                      value={userSearchQuery}
+                      onChange={(e) => setUserSearchQuery(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  
+                  <div className="flex items-center">
+                    <Filter className="w-5 h-5 text-gray-400 mr-2" />
+                    <select
+                      value={userRoleFilter}
+                      onChange={(e) => setUserRoleFilter(e.target.value)}
+                      className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="all">All Roles</option>
+                      <option value="owner">Business Owners</option>
+                      <option value="admin">Admins</option>
+                    </select>
+                  </div>
+                </div>
+                
+                {/* Results count */}
+                <div className="mt-4 text-sm text-gray-600">
+                  {filteredUsers.length} of {users.length} users
+                  {userSearchQuery && ` matching "${userSearchQuery}"`}
+                </div>
+              </div>
+              
+              {/* Users Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        User
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                        Business
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Role
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                        Status
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
+                        Joined
+                      </th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {paginatedUsers.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                          No users found
+                        </td>
+                      </tr>
+                    ) : (
+                      paginatedUsers.map((user) => (
+                        <tr key={user.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">
+                              {user.email}
+                            </div>
+                            <div className="text-xs text-gray-500 md:hidden">
+                              {user.business_name || 'No business'}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap hidden md:table-cell">
+                            <div className="text-sm text-gray-900">
+                              {user.business_name || 'No business'}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              user.role === 'admin' 
+                                ? 'bg-purple-100 text-purple-800' 
+                                : 'bg-blue-100 text-blue-800'
+                            }`}>
+                              {user.role === 'admin' ? 'Admin' : 'Owner'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap hidden md:table-cell">
+                            <div className="flex items-center">
+                              {user.premium ? (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                  Premium
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                  Regular
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 hidden lg:table-cell">
+                            {formatDate(user.created_at)}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div className="flex items-center justify-end space-x-2">
+                              <button
+                                onClick={() => {/* View details */}}
+                                className="text-blue-600 hover:text-blue-900 p-1"
+                                title="View Details"
+                              >
+                                <Eye className="w-5 h-5" />
+                              </button>
+                              <button
+                                onClick={() => {/* Edit user */}}
+                                className="text-indigo-600 hover:text-indigo-900 p-1"
+                                title="Edit"
+                              >
+                                <Edit className="w-5 h-5" />
+                              </button>
+                              <button
+                                onClick={() => {/* Delete user */}}
+                                className="text-red-600 hover:text-red-900 p-1"
+                                title="Delete"
+                              >
+                                <Trash className="w-5 h-5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              
+              {/* Pagination */}
+              <Pagination
+                currentPage={usersPagination.currentPage}
+                totalPages={usersPagination.getTotalPages(filteredUsers.length)}
+                itemsPerPage={usersPagination.itemsPerPage}
+                totalItems={filteredUsers.length}
+                onPageChange={usersPagination.setCurrentPage}
+              />
             </div>
           )}
 
           {/* Analytics Tab */}
           {activeTab === 'analytics' && (
-            <div>
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-                <h2 className="text-xl font-semibold text-gray-900">Analytics</h2>
-                
-                <div className="flex flex-col sm:flex-row gap-4">
-                  {/* Date Range */}
-                  <select
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="7d">Last 7 Days</option>
-                    <option value="30d">Last 30 Days</option>
-                    <option value="90d">Last 90 Days</option>
-                    <option value="1y">Last Year</option>
-                    <option value="custom">Custom Range</option>
-                  </select>
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-6">Analytics Dashboard</h2>
+              
+              <div className="mb-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="text-sm font-medium text-gray-700">Select Date Range</div>
                   
-                  {/* Period */}
-                  <select
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="day">By Day</option>
-                    <option value="week">By Week</option>
-                    <option value="month">By Month</option>
-                  </select>
+                  <div className="flex flex-wrap gap-2">
+                    <button className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm font-medium">
+                      Today
+                    </button>
+                    <button className="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm font-medium">
+                      Last 7 Days
+                    </button>
+                    <button className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm font-medium">
+                      Last 30 Days
+                    </button>
+                    <button className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm font-medium">
+                      Last 90 Days
+                    </button>
+                    <button className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm font-medium">
+                      Custom
+                    </button>
+                  </div>
                 </div>
               </div>
               
-              {/* Analytics Placeholder */}
-              <div className="bg-gray-50 rounded-lg p-8 text-center">
-                <BarChart3 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Analytics Coming Soon</h3>
-                <p className="text-gray-500 max-w-md mx-auto">
-                  We're working on comprehensive analytics for your admin dashboard. 
-                  This feature will be available in an upcoming update.
-                </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-sm font-medium text-gray-500">Page Views</div>
+                    <div className="text-green-600 text-xs font-medium flex items-center">
+                      <ArrowUpDown className="w-3 h-3 mr-1" />
+                      12.5%
+                    </div>
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900">24,521</div>
+                  <div className="mt-4 h-10 bg-gray-100 rounded">
+                    {/* Placeholder for chart */}
+                  </div>
+                </div>
+                
+                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-sm font-medium text-gray-500">Business Views</div>
+                    <div className="text-green-600 text-xs font-medium flex items-center">
+                      <ArrowUpDown className="w-3 h-3 mr-1" />
+                      8.3%
+                    </div>
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900">12,432</div>
+                  <div className="mt-4 h-10 bg-gray-100 rounded">
+                    {/* Placeholder for chart */}
+                  </div>
+                </div>
+                
+                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-sm font-medium text-gray-500">Conversion Rate</div>
+                    <div className="text-red-600 text-xs font-medium flex items-center">
+                      <ArrowUpDown className="w-3 h-3 mr-1" />
+                      -2.1%
+                    </div>
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900">3.2%</div>
+                  <div className="mt-4 h-10 bg-gray-100 rounded">
+                    {/* Placeholder for chart */}
+                  </div>
+                </div>
+                
+                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-sm font-medium text-gray-500">New Businesses</div>
+                    <div className="text-green-600 text-xs font-medium flex items-center">
+                      <ArrowUpDown className="w-3 h-3 mr-1" />
+                      15.7%
+                    </div>
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900">48</div>
+                  <div className="mt-4 h-10 bg-gray-100 rounded">
+                    {/* Placeholder for chart */}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Traffic by Source</h3>
+                  <div className="h-64 bg-gray-100 rounded flex items-center justify-center">
+                    <p className="text-gray-500">Chart placeholder</p>
+                  </div>
+                </div>
+                
+                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">User Engagement</h3>
+                  <div className="h-64 bg-gray-100 rounded flex items-center justify-center">
+                    <p className="text-gray-500">Chart placeholder</p>
+                  </div>
+                </div>
               </div>
             </div>
           )}
 
           {/* Settings Tab */}
           {activeTab === 'settings' && (
-            <div>
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-                <h2 className="text-xl font-semibold text-gray-900">System Settings</h2>
-              </div>
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-6">System Settings</h2>
               
               <div className="space-y-6">
-                {/* Authentication Settings */}
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                    <h3 className="text-lg font-medium text-gray-900">Authentication Settings</h3>
-                  </div>
-                  <div className="p-6 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="text-base font-medium text-gray-900">User Login</h4>
-                        <p className="text-sm text-gray-500">Allow users to log in to the platform</p>
-                      </div>
-                      <div className="relative inline-block w-12 h-6 transition duration-200 ease-in-out rounded-full">
-                        <input
-                          type="checkbox"
-                          id="toggle-login"
-                          className="absolute w-6 h-6 transition duration-200 ease-in-out transform bg-white border rounded-full appearance-none cursor-pointer peer border-gray-300 checked:right-0 checked:border-blue-600 checked:bg-blue-600"
-                          checked={loginEnabled}
-                          onChange={(e) => setLoginEnabled(e.target.checked)}
-                        />
-                        <label
-                          htmlFor="toggle-login"
-                          className="block w-full h-full overflow-hidden rounded-full cursor-pointer bg-gray-300 peer-checked:bg-blue-300"
-                        ></label>
-                      </div>
+                <div className="border-b border-gray-200 pb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Authentication Settings</h3>
+                  
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <div className="font-medium text-gray-900">User Login</div>
+                      <div className="text-sm text-gray-600">Enable or disable user login functionality</div>
                     </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="text-base font-medium text-gray-900">User Engagement Tracking</h4>
-                        <p className="text-sm text-gray-500">Track user interactions with businesses</p>
-                      </div>
-                      <div className="relative inline-block w-12 h-6 transition duration-200 ease-in-out rounded-full">
-                        <input
-                          type="checkbox"
-                          id="toggle-tracking"
-                          className="absolute w-6 h-6 transition duration-200 ease-in-out transform bg-white border rounded-full appearance-none cursor-pointer peer border-gray-300 checked:right-0 checked:border-blue-600 checked:bg-blue-600"
-                          checked={trackingEnabled}
-                          onChange={(e) => setTrackingEnabled(e.target.checked)}
-                        />
-                        <label
-                          htmlFor="toggle-tracking"
-                          className="block w-full h-full overflow-hidden rounded-full cursor-pointer bg-gray-300 peer-checked:bg-blue-300"
-                        ></label>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="text-base font-medium text-gray-900">Advertisements</h4>
-                        <p className="text-sm text-gray-500">Enable or disable ads on the platform</p>
-                      </div>
-                      <div className="relative inline-block w-12 h-6 transition duration-200 ease-in-out rounded-full">
-                        <input
-                          type="checkbox"
-                          id="toggle-ads"
-                          className="absolute w-6 h-6 transition duration-200 ease-in-out transform bg-white border rounded-full appearance-none cursor-pointer peer border-gray-300 checked:right-0 checked:border-blue-600 checked:bg-blue-600"
-                          checked={adsEnabled}
-                          onChange={(e) => setAdsEnabled(e.target.checked)}
-                        />
-                        <label
-                          htmlFor="toggle-ads"
-                          className="block w-full h-full overflow-hidden rounded-full cursor-pointer bg-gray-300 peer-checked:bg-blue-300"
-                        ></label>
-                      </div>
+                    <div className="flex items-center">
+                      <button
+                        onClick={() => updateSettings({ loginEnabled: true })}
+                        disabled={processingAction === 'settings' || settings.loginEnabled}
+                        className={`px-3 py-1 rounded-l-lg text-sm font-medium ${
+                          settings.loginEnabled
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        Enabled
+                      </button>
+                      <button
+                        onClick={() => updateSettings({ loginEnabled: false })}
+                        disabled={processingAction === 'settings' || !settings.loginEnabled}
+                        className={`px-3 py-1 rounded-r-lg text-sm font-medium ${
+                          !settings.loginEnabled
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        Disabled
+                      </button>
                     </div>
                   </div>
-                  <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                    <button
-                      onClick={handleUpdateSettings}
-                      disabled={settingsLoading}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {settingsLoading ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 inline animate-spin" />
-                          Saving...
-                        </>
-                      ) : (
-                        'Save Settings'
-                      )}
-                    </button>
+                </div>
+                
+                <div className="border-b border-gray-200 pb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Analytics Settings</h3>
+                  
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <div className="font-medium text-gray-900">User Engagement Tracking</div>
+                      <div className="text-sm text-gray-600">Enable or disable tracking of user interactions</div>
+                    </div>
+                    <div className="flex items-center">
+                      <button
+                        onClick={() => updateSettings({ trackingEnabled: true })}
+                        disabled={processingAction === 'settings' || settings.trackingEnabled}
+                        className={`px-3 py-1 rounded-l-lg text-sm font-medium ${
+                          settings.trackingEnabled
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        Enabled
+                      </button>
+                      <button
+                        onClick={() => updateSettings({ trackingEnabled: false })}
+                        disabled={processingAction === 'settings' || !settings.trackingEnabled}
+                        className={`px-3 py-1 rounded-r-lg text-sm font-medium ${
+                          !settings.trackingEnabled
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        Disabled
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Advertisement Settings</h3>
+                  
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <div className="font-medium text-gray-900">Display Ads</div>
+                      <div className="text-sm text-gray-600">Enable or disable advertisements on the site</div>
+                    </div>
+                    <div className="flex items-center">
+                      <button
+                        onClick={() => updateSettings({ adsEnabled: true })}
+                        disabled={processingAction === 'settings' || settings.adsEnabled}
+                        className={`px-3 py-1 rounded-l-lg text-sm font-medium ${
+                          settings.adsEnabled
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        Enabled
+                      </button>
+                      <button
+                        onClick={() => updateSettings({ adsEnabled: false })}
+                        disabled={processingAction === 'settings' || !settings.adsEnabled}
+                        className={`px-3 py-1 rounded-r-lg text-sm font-medium ${
+                          !settings.adsEnabled
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        Disabled
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* Test Tab */}
-          {activeTab === 'test' && (
-            <div>
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-                <h2 className="text-xl font-semibold text-gray-900">Admin System Test</h2>
-              </div>
-              
-              <AdminTest />
             </div>
           )}
         </div>
