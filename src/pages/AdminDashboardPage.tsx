@@ -678,8 +678,13 @@ const AdminDashboardPage: React.FC = () => {
                 </tbody>
               </table>
             </div>
-            
-            {/* Pagination */}
+            </div>
+            </>
+        )}
+        
+        {/* Pagination for both mobile and desktop */}
+        {!businessesLoading && filteredSubmissions.length > 0 && (
+          <div className="mt-4">
             <Pagination
               currentPage={businessesPagination.currentPage}
               totalPages={businessesPagination.getTotalPages(filteredSubmissions.length)}
@@ -688,7 +693,6 @@ const AdminDashboardPage: React.FC = () => {
               onPageChange={businessesPagination.setCurrentPage}
             />
           </div>
-          </>
         )}
       </div>
     );
