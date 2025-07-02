@@ -57,7 +57,7 @@ const AdminDashboardPage: React.FC = () => {
   const [adsEnabled, setAdsEnabled] = useState(false);
   const [settingsLoading, setSettingsLoading] = useState(false);
   
-  const { user } = useAuth();
+  const { user, authFeatures } = useAuth();
   const navigate = useNavigate();
   const dataProvider = DataProviderFactory.getProvider();
 
@@ -122,8 +122,7 @@ const AdminDashboardPage: React.FC = () => {
   const loadSettings = async () => {
     setSettingsLoading(true);
     try {
-      // Get auth feature flags
-      const { authFeatures } = useAuth();
+      // Get auth feature flags from the hook that's already called at component level
       setLoginEnabled(authFeatures?.loginEnabled ?? true);
       setTrackingEnabled(authFeatures?.trackingEnabled ?? true);
       setAdsEnabled(authFeatures?.adsEnabled ?? false);
