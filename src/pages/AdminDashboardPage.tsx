@@ -514,9 +514,76 @@ const AdminDashboardPage: React.FC = () => {
             </p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
+          <>
+            {/* Mobile Card View */}
+            <div className="sm:hidden space-y-3">
+              {paginatedSubmissions.map((submission) => (
+                <div key={submission.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-medium text-gray-900 truncate">
+                        {submission.business_name}
+                      </h4>
+                      <p className="text-xs text-gray-500 truncate mt-1">
+                        {submission.email}
+                      </p>
+                    </div>
+                    <div className="ml-3">
+                      {submission.status === 'pending' ? (
+                        <span className="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                          Pending
+                        </span>
+                      ) : submission.status === 'approved' ? (
+                        <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                          Approved
+                        </span>
+                      ) : submission.status === 'rejected' ? (
+                        <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                          Rejected
+                        </span>
+                      ) : (
+                        <span className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                          Reviewed
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 mb-3">
+                    <div>
+                      <span className="font-medium">Category:</span> {submission.category}
+                    </div>
+                    <div>
+                      <span className="font-medium">Location:</span> {submission.city}, {submission.state}
+                    </div>
+                  </div>
+                  
+                  {submission.status === 'pending' && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleApproveBusinessSubmission(submission.id)}
+                        className="flex-1 px-3 py-2 bg-green-600 text-white text-xs font-medium rounded-md hover:bg-green-700 flex items-center justify-center"
+                      >
+                        <CheckCircle className="w-4 h-4 mr-1" />
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => handleRejectBusinessSubmission(submission.id)}
+                        className="flex-1 px-3 py-2 bg-red-600 text-white text-xs font-medium rounded-md hover:bg-red-700 flex items-center justify-center"
+                      >
+                        <XCircle className="w-4 h-4 mr-1" />
+                        Reject
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            
+            {/* Desktop Table View */}
+            <div className="hidden sm:block bg-white rounded-lg shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -621,6 +688,7 @@ const AdminDashboardPage: React.FC = () => {
               onPageChange={businessesPagination.setCurrentPage}
             />
           </div>
+          </>
         )}
       </div>
     );
@@ -1261,10 +1329,10 @@ const AdminDashboardPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
+    <div className="min-h-screen bg-gray-50 admin-container">
       {/* Mobile Header */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-30 sm:hidden">
-        <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center justify-between px-4 py-3 max-w-full">
           <h1 className="text-xl font-bold text-gray-900">Admin Dashboard</h1>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -1369,10 +1437,10 @@ const AdminDashboardPage: React.FC = () => {
         )}
       </div>
       
-      <div className="w-full max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row md:space-x-6 px-4 sm:px-6 lg:px-8 py-6">
+      <div className="w-full">
+        <div className="flex flex-col md:flex-row md:space-x-6">
           {/* Desktop Sidebar */}
-          <div className="hidden sm:block w-64 flex-shrink-0">
+          <div className="hidden sm:block w-64 flex-shrink-0 px-4 sm:px-6 lg:px-8 py-6">
             <div className="bg-white rounded-lg shadow-sm p-4 sticky top-6">
               <h1 className="text-xl font-bold text-gray-900 mb-6">Admin Dashboard</h1>
               
@@ -1483,9 +1551,9 @@ const AdminDashboardPage: React.FC = () => {
           </div>
           
           {/* Main Content */}
-          <div className="flex-1 mt-6 sm:mt-0 min-w-0 max-w-full">
+          <div className="flex-1 mt-6 sm:mt-0 min-w-0 max-w-full px-4 sm:px-6 lg:px-8 py-6">
             {/* Mobile Tab Navigation */}
-            <div className="sm:hidden mb-6 bg-white rounded-lg shadow-sm overflow-hidden">
+            <div className="sm:hidden mb-6 bg-white rounded-lg shadow-sm overflow-hidden max-w-full">
               <div className="flex overflow-x-auto scrollbar-hide">
                 <button
                   onClick={() => {
@@ -1570,7 +1638,7 @@ const AdminDashboardPage: React.FC = () => {
             </div>
             
             {/* Tab Content */}
-            <div className="w-full overflow-hidden tab-content">
+            <div className="w-full max-w-full overflow-hidden tab-content">
               {renderActiveTabContent()}
             </div>
           </div>
@@ -1606,24 +1674,51 @@ const AdminDashboardPage: React.FC = () => {
           scrollbar-width: none;
         }
         
-        /* Ensure proper mobile table behavior */
+        /* Prevent all horizontal overflow */
+        html, body {
+          overflow-x: hidden;
+          max-width: 100%;
+        }
+        
+        /* Mobile responsive fixes */
         @media (max-width: 640px) {
+          * {
+            max-width: 100%;
+            box-sizing: border-box;
+          }
+          
+          /* Mobile table container with proper constraints */
           .mobile-table-container {
+            width: 100%;
             max-width: 100vw;
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
+            border-radius: 8px;
           }
           
+          /* Constrain table width on mobile */
           .mobile-table {
-            min-width: 600px;
+            min-width: 500px;
+            width: 100%;
           }
           
-          /* Prevent horizontal overflow on the entire page */
-          body {
-            overflow-x: hidden;
+          /* Mobile card layout for tables */
+          .mobile-card-item {
+            display: block;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
           }
           
-          /* Fix mobile filter modal positioning */
+          /* Hide table headers on mobile */
+          .mobile-hide-table {
+            display: none;
+          }
+          
+          /* Mobile filter modal positioning */
           .mobile-filter-modal {
             position: fixed;
             left: 0;
@@ -1632,11 +1727,28 @@ const AdminDashboardPage: React.FC = () => {
             max-height: 80vh;
             transform: translateY(0);
           }
+          
+          /* Prevent text overflow */
+          .mobile-text-truncate {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 200px;
+          }
         }
         
         /* Smooth transitions for tab changes */
         .tab-content {
           transition: opacity 0.2s ease-in-out;
+          width: 100%;
+          max-width: 100%;
+        }
+        
+        /* Ensure all containers respect viewport width */
+        .admin-container {
+          width: 100%;
+          max-width: 100vw;
+          overflow-x: hidden;
         }
       `}</style>
     </div>
