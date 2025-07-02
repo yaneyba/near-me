@@ -15,7 +15,6 @@ import {
   Menu,
   X,
   RefreshCw,
-  Building
 } from 'lucide-react';
 import { DataProviderFactory } from '../providers';
 import { useAuth } from '../lib/auth';
@@ -83,6 +82,45 @@ const AdminDashboardPage: React.FC = () => {
     itemsPerPage: 10, 
     resetTriggers: [userSearchQuery, userRoleFilter] 
   });
+
+  // Close mobile modals when tab changes
+  useEffect(() => {
+    setMobileMenuOpen(false);
+    setMobileFiltersOpen(false);
+  }, [activeTab]);
+
+  // Close mobile modals when pagination changes
+  useEffect(() => {
+    setMobileFiltersOpen(false);
+  }, [businessesPagination.currentPage, messagesPagination.currentPage, usersPagination.currentPage]);
+
+  // Handle viewport changes to ensure proper responsive behavior
+  useEffect(() => {
+    const handleResize = () => {
+      // Close mobile modals on resize to prevent layout issues
+      if (window.innerWidth >= 640) { // sm breakpoint
+        setMobileMenuOpen(false);
+        setMobileFiltersOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Ensure body overflow is handled properly
+  useEffect(() => {
+    if (mobileMenuOpen || mobileFiltersOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [mobileMenuOpen, mobileFiltersOpen]);
 
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -1223,7 +1261,7 @@ const AdminDashboardPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
       {/* Mobile Header */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-30 sm:hidden">
         <div className="flex items-center justify-between px-4 py-3">
@@ -1331,8 +1369,8 @@ const AdminDashboardPage: React.FC = () => {
         )}
       </div>
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex flex-col md:flex-row md:space-x-6">
+      <div className="w-full max-w-7xl mx-auto">
+        <div className="flex flex-col md:flex-row md:space-x-6 px-4 sm:px-6 lg:px-8 py-6">
           {/* Desktop Sidebar */}
           <div className="hidden sm:block w-64 flex-shrink-0">
             <div className="bg-white rounded-lg shadow-sm p-4 sticky top-6">
@@ -1445,15 +1483,19 @@ const AdminDashboardPage: React.FC = () => {
           </div>
           
           {/* Main Content */}
-          <div className="flex-1 mt-6 sm:mt-0">
+          <div className="flex-1 mt-6 sm:mt-0 min-w-0 max-w-full">
             {/* Mobile Tab Navigation */}
             <div className="sm:hidden mb-6 bg-white rounded-lg shadow-sm overflow-hidden">
               <div className="flex overflow-x-auto scrollbar-hide">
                 <button
-                  onClick={() => setActiveTab('businesses')}
+                  onClick={() => {
+                    setActiveTab('businesses');
+                    setMobileMenuOpen(false);
+                    setMobileFiltersOpen(false);
+                  }}
                   className={`flex-1 px-4 py-3 text-center text-sm font-medium whitespace-nowrap ${
                     activeTab === 'businesses' 
-                      ? 'text-blue-600 border-b-2 border-blue-600' 
+                      ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
                       : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
@@ -1462,10 +1504,14 @@ const AdminDashboardPage: React.FC = () => {
                 </button>
                 
                 <button
-                  onClick={() => setActiveTab('messages')}
+                  onClick={() => {
+                    setActiveTab('messages');
+                    setMobileMenuOpen(false);
+                    setMobileFiltersOpen(false);
+                  }}
                   className={`flex-1 px-4 py-3 text-center text-sm font-medium whitespace-nowrap ${
                     activeTab === 'messages' 
-                      ? 'text-blue-600 border-b-2 border-blue-600' 
+                      ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
                       : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
@@ -1474,10 +1520,14 @@ const AdminDashboardPage: React.FC = () => {
                 </button>
                 
                 <button
-                  onClick={() => setActiveTab('users')}
+                  onClick={() => {
+                    setActiveTab('users');
+                    setMobileMenuOpen(false);
+                    setMobileFiltersOpen(false);
+                  }}
                   className={`flex-1 px-4 py-3 text-center text-sm font-medium whitespace-nowrap ${
                     activeTab === 'users' 
-                      ? 'text-blue-600 border-b-2 border-blue-600' 
+                      ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
                       : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
@@ -1486,10 +1536,14 @@ const AdminDashboardPage: React.FC = () => {
                 </button>
                 
                 <button
-                  onClick={() => setActiveTab('analytics')}
+                  onClick={() => {
+                    setActiveTab('analytics');
+                    setMobileMenuOpen(false);
+                    setMobileFiltersOpen(false);
+                  }}
                   className={`flex-1 px-4 py-3 text-center text-sm font-medium whitespace-nowrap ${
                     activeTab === 'analytics' 
-                      ? 'text-blue-600 border-b-2 border-blue-600' 
+                      ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
                       : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
@@ -1498,10 +1552,14 @@ const AdminDashboardPage: React.FC = () => {
                 </button>
                 
                 <button
-                  onClick={() => setActiveTab('settings')}
+                  onClick={() => {
+                    setActiveTab('settings');
+                    setMobileMenuOpen(false);
+                    setMobileFiltersOpen(false);
+                  }}
                   className={`flex-1 px-4 py-3 text-center text-sm font-medium whitespace-nowrap ${
                     activeTab === 'settings' 
-                      ? 'text-blue-600 border-b-2 border-blue-600' 
+                      ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
                       : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
@@ -1512,12 +1570,14 @@ const AdminDashboardPage: React.FC = () => {
             </div>
             
             {/* Tab Content */}
-            {renderActiveTabContent()}
+            <div className="w-full overflow-hidden tab-content">
+              {renderActiveTabContent()}
+            </div>
           </div>
         </div>
       </div>
       
-      {/* Add CSS for animations */}
+      {/* Add CSS for animations and mobile fixes */}
       <style>{`
         @keyframes fade-in {
           from { opacity: 0; }
@@ -1544,6 +1604,39 @@ const AdminDashboardPage: React.FC = () => {
         .scrollbar-hide {
           -ms-overflow-style: none;
           scrollbar-width: none;
+        }
+        
+        /* Ensure proper mobile table behavior */
+        @media (max-width: 640px) {
+          .mobile-table-container {
+            max-width: 100vw;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+          }
+          
+          .mobile-table {
+            min-width: 600px;
+          }
+          
+          /* Prevent horizontal overflow on the entire page */
+          body {
+            overflow-x: hidden;
+          }
+          
+          /* Fix mobile filter modal positioning */
+          .mobile-filter-modal {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            max-height: 80vh;
+            transform: translateY(0);
+          }
+        }
+        
+        /* Smooth transitions for tab changes */
+        .tab-content {
+          transition: opacity 0.2s ease-in-out;
         }
       `}</style>
     </div>
