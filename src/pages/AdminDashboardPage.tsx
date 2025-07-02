@@ -5,28 +5,19 @@ import {
   MessageSquare, 
   Settings, 
   FileText, 
-  ChevronDown, 
-  ChevronUp, 
-  Search, 
-  Filter, 
   CheckCircle, 
   XCircle, 
+  Search, 
+  Filter, 
+  ChevronDown, 
   Clock, 
-  Loader2, 
+  UserCheck, 
+  Flag, 
+  Loader2,
   AlertCircle,
   Menu,
   X,
-  RefreshCw,
-  Sliders,
-  Eye,
-  Download,
-  Trash2,
-  UserCheck,
-  UserX,
-  Flag,
-  MoreHorizontal,
-  ArrowLeft,
-  ArrowRight
+  RefreshCw
 } from 'lucide-react';
 import { DataProviderFactory } from '../providers';
 import { useAuth } from '../lib/auth';
@@ -35,14 +26,35 @@ import Pagination from '../components/Pagination';
 import usePagination from '../hooks/usePagination';
 
 const AdminDashboardPage: React.FC = () => {
-  // State for admin dashboard
-  const [activeTab, setActiveTab] = useState<'businesses' | 'contact' | 'users' | 'analytics' | 'settings'>('businesses');
+  // State for active tab
+  const [activeTab, setActiveTab] = useState<'businesses' | 'messages' | 'users' | 'analytics' | 'settings'>('businesses');
+  
+  // State for business submissions
   const [businessSubmissions, setBusinessSubmissions] = useState<any[]>([]);
+  const [businessSearchQuery, setBusinessSearchQuery] = useState('');
+  const [businessStatusFilter, setBusinessStatusFilter] = useState<string>('all');
+  const [businessesLoading, setBusinessesLoading] = useState(true);
+  
+  // State for contact messages
   const [contactMessages, setContactMessages] = useState<any[]>([]);
+  const [messageSearchQuery, setMessageSearchQuery] = useState('');
+  const [messageStatusFilter, setMessageStatusFilter] = useState<string>('all');
+  const [messagesLoading, setMessagesLoading] = useState(true);
+  
+  // State for business profiles (users)
   const [businessProfiles, setBusinessProfiles] = useState<any[]>([]);
-  const [businesses, setBusinesses] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [userRoleFilter, setUserRoleFilter] = useState<string>('all');
+  const [usersLoading, setUsersLoading] = useState(true);
+  
+  // State for admin settings
+  const [loginEnabled, setLoginEnabled] = useState(true);
+  const [trackingEnabled, setTrackingEnabled] = useState(true);
+  const [adsEnabled, setAdsEnabled] = useState(false);
+  const [settingsLoading, setSettingsLoading] = useState(true);
+  const [settingsError, setSettingsError] = useState<string | null>(null);
+  
+  // State for admin stats
   const [stats, setStats] = useState({
     pendingBusinesses: 0,
     totalBusinesses: 0,
@@ -51,45 +63,42 @@ const AdminDashboardPage: React.FC = () => {
     premiumBusinesses: 0
   });
   
-  // Search and filter state
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  // State for mobile menu
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   
   // Pagination for businesses
   const businessesPagination = usePagination({ 
     itemsPerPage: 10, 
-    resetTriggers: [searchQuery, statusFilter] 
+    resetTriggers: [businessSearchQuery, businessStatusFilter] 
   });
   
-  // Pagination for contact messages
-  const contactPagination = usePagination({ 
+  // Pagination for messages
+  const messagesPagination = usePagination({ 
     itemsPerPage: 10, 
-    resetTriggers: [searchQuery, statusFilter] 
+    resetTriggers: [messageSearchQuery, messageStatusFilter] 
   });
   
   // Pagination for users
   const usersPagination = usePagination({ 
     itemsPerPage: 10, 
-    resetTriggers: [searchQuery] 
+    resetTriggers: [userSearchQuery, userRoleFilter] 
   });
-  
-  // Auth and navigation
+
   const { user } = useAuth();
   const navigate = useNavigate();
   const dataProvider = DataProviderFactory.getProvider();
 
-  // Load data on component mount
+  // Check if user is admin
+  useEffect(() => {
+    if (user && !user.isAdmin) {
+      navigate('/');
+    }
+  }, [user, navigate]);
+
+  // Load data on mount
   useEffect(() => {
     document.title = 'Admin Dashboard - Near Me Directory';
-    
-    // Check if user is admin
-    if (!user?.isAdmin) {
-      navigate('/');
-      return;
-    }
-    
     loadData();
     
     // Add debug helpers to window object
@@ -100,44 +109,60 @@ const AdminDashboardPage: React.FC = () => {
         showStats: () => console.log('Current stats:', stats)
       };
     }
-  }, [user, navigate]);
+  }, []);
 
-  // Load all data from the data provider
+  // Load all data
   const loadData = async () => {
-    setLoading(true);
-    setError(null);
-    
     try {
-      // Get data provider
-      const dataProvider = DataProviderFactory.getProvider();
+      setBusinessesLoading(true);
+      setMessagesLoading(true);
+      setUsersLoading(true);
+      setSettingsLoading(true);
       
       // Load all data in parallel
       const [
-        submissionsData, 
-        messagesData, 
-        profilesData, 
-        businessesData,
+        businessSubmissionsData, 
+        contactMessagesData, 
+        businessProfilesData,
         statsData
       ] = await Promise.all([
         dataProvider.getBusinessSubmissions(),
         dataProvider.getContactMessages(),
         dataProvider.getBusinessProfiles(),
-        dataProvider.getAllBusinesses(),
         dataProvider.getAdminStats()
       ]);
       
       // Update state with loaded data
-      setBusinessSubmissions(submissionsData || []);
-      setContactMessages(messagesData || []);
-      setBusinessProfiles(profilesData || []);
-      setBusinesses(businessesData || []);
+      setBusinessSubmissions(businessSubmissionsData);
+      setContactMessages(contactMessagesData);
+      setBusinessProfiles(businessProfilesData);
       setStats(statsData);
       
-    } catch (err) {
-      console.error('Error loading admin data:', err);
-      setError('Failed to load data. Please try again.');
+      // Load settings
+      await loadSettings();
+    } catch (error) {
+      console.error('Error loading data:', error);
     } finally {
-      setLoading(false);
+      setBusinessesLoading(false);
+      setMessagesLoading(false);
+      setUsersLoading(false);
+    }
+  };
+
+  // Load admin settings
+  const loadSettings = async () => {
+    try {
+      // For now, just use environment variables
+      // In the future, this would load from database
+      setLoginEnabled(true);
+      setTrackingEnabled(true);
+      setAdsEnabled(false);
+      setSettingsError(null);
+    } catch (error) {
+      console.error('Error loading settings:', error);
+      setSettingsError('Failed to load settings. Please try again.');
+    } finally {
+      setSettingsLoading(false);
     }
   };
 
@@ -146,7 +171,7 @@ const AdminDashboardPage: React.FC = () => {
     try {
       await dataProvider.approveBusinessSubmission(id);
       
-      // Update local data
+      // Update local state
       setBusinessSubmissions(prev => 
         prev.map(submission => 
           submission.id === id 
@@ -158,13 +183,11 @@ const AdminDashboardPage: React.FC = () => {
       // Update stats
       setStats(prev => ({
         ...prev,
-        pendingBusinesses: prev.pendingBusinesses - 1,
-        totalBusinesses: prev.totalBusinesses
+        pendingBusinesses: Math.max(0, prev.pendingBusinesses - 1),
+        totalBusinesses: prev.totalBusinesses + 1
       }));
-      
     } catch (error) {
       console.error('Error approving business submission:', error);
-      setError('Failed to approve business. Please try again.');
     }
   };
 
@@ -173,7 +196,7 @@ const AdminDashboardPage: React.FC = () => {
     try {
       await dataProvider.rejectBusinessSubmission(id);
       
-      // Update local data
+      // Update local state
       setBusinessSubmissions(prev => 
         prev.map(submission => 
           submission.id === id 
@@ -185,12 +208,10 @@ const AdminDashboardPage: React.FC = () => {
       // Update stats
       setStats(prev => ({
         ...prev,
-        pendingBusinesses: prev.pendingBusinesses - 1
+        pendingBusinesses: Math.max(0, prev.pendingBusinesses - 1)
       }));
-      
     } catch (error) {
       console.error('Error rejecting business submission:', error);
-      setError('Failed to reject business. Please try again.');
     }
   };
 
@@ -199,11 +220,11 @@ const AdminDashboardPage: React.FC = () => {
     try {
       await dataProvider.resolveContactMessage(id, user?.email);
       
-      // Update local data
+      // Update local state
       setContactMessages(prev => 
         prev.map(message => 
           message.id === id 
-            ? { ...message, status: 'resolved', resolved_at: new Date().toISOString(), resolved_by: user?.email } 
+            ? { ...message, status: 'resolved', resolved_at: new Date().toISOString() } 
             : message
         )
       );
@@ -211,55 +232,99 @@ const AdminDashboardPage: React.FC = () => {
       // Update stats
       setStats(prev => ({
         ...prev,
-        newMessages: prev.newMessages - 1
+        newMessages: Math.max(0, prev.newMessages - 1)
       }));
-      
     } catch (error) {
       console.error('Error resolving contact message:', error);
-      setError('Failed to resolve message. Please try again.');
     }
   };
 
-  // Filter business submissions based on search query and status filter
+  // Toggle login setting
+  const handleToggleLogin = async () => {
+    setLoginEnabled(prev => !prev);
+    // In a real implementation, this would update the database
+  };
+
+  // Toggle tracking setting
+  const handleToggleTracking = async () => {
+    setTrackingEnabled(prev => !prev);
+    // In a real implementation, this would update the database
+  };
+
+  // Toggle ads setting
+  const handleToggleAds = async () => {
+    setAdsEnabled(prev => !prev);
+    // In a real implementation, this would update the database
+  };
+
+  // Filter business submissions
   const getFilteredBusinessSubmissions = () => {
     return businessSubmissions.filter(submission => {
-      // Filter by search query
-      const matchesSearch = searchQuery === '' || 
-        submission.business_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        submission.owner_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        submission.email.toLowerCase().includes(searchQuery.toLowerCase());
-      
       // Filter by status
-      const matchesStatus = statusFilter === 'all' || submission.status === statusFilter;
+      if (businessStatusFilter !== 'all' && submission.status !== businessStatusFilter) {
+        return false;
+      }
       
-      return matchesSearch && matchesStatus;
+      // Filter by search query
+      if (businessSearchQuery) {
+        const query = businessSearchQuery.toLowerCase();
+        return (
+          submission.business_name.toLowerCase().includes(query) ||
+          submission.owner_name.toLowerCase().includes(query) ||
+          submission.email.toLowerCase().includes(query) ||
+          submission.city.toLowerCase().includes(query) ||
+          submission.category.toLowerCase().includes(query)
+        );
+      }
+      
+      return true;
     });
   };
 
-  // Filter contact messages based on search query and status filter
+  // Filter contact messages
   const getFilteredContactMessages = () => {
     return contactMessages.filter(message => {
-      // Filter by search query
-      const matchesSearch = searchQuery === '' || 
-        message.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        message.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        message.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        message.message.toLowerCase().includes(searchQuery.toLowerCase());
-      
       // Filter by status
-      const matchesStatus = statusFilter === 'all' || message.status === statusFilter;
+      if (messageStatusFilter !== 'all' && message.status !== messageStatusFilter) {
+        return false;
+      }
       
-      return matchesSearch && matchesStatus;
+      // Filter by search query
+      if (messageSearchQuery) {
+        const query = messageSearchQuery.toLowerCase();
+        return (
+          message.name.toLowerCase().includes(query) ||
+          message.email.toLowerCase().includes(query) ||
+          message.subject.toLowerCase().includes(query) ||
+          message.message.toLowerCase().includes(query) ||
+          (message.category && message.category.toLowerCase().includes(query)) ||
+          (message.city && message.city.toLowerCase().includes(query))
+        );
+      }
+      
+      return true;
     });
   };
 
-  // Filter business profiles based on search query
+  // Filter business profiles (users)
   const getFilteredBusinessProfiles = () => {
     return businessProfiles.filter(profile => {
+      // Filter by role
+      if (userRoleFilter !== 'all' && profile.role !== userRoleFilter) {
+        return false;
+      }
+      
       // Filter by search query
-      return searchQuery === '' || 
-        profile.business_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        profile.email.toLowerCase().includes(searchQuery.toLowerCase());
+      if (userSearchQuery) {
+        const query = userSearchQuery.toLowerCase();
+        return (
+          profile.business_name.toLowerCase().includes(query) ||
+          profile.email.toLowerCase().includes(query) ||
+          (profile.role && profile.role.toLowerCase().includes(query))
+        );
+      }
+      
+      return true;
     });
   };
 
@@ -267,1162 +332,1326 @@ const AdminDashboardPage: React.FC = () => {
   const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  // Get status badge class based on status
-  const getStatusBadgeClass = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'approved':
-        return 'bg-green-100 text-green-800';
-      case 'rejected':
-        return 'bg-red-100 text-red-800';
-      case 'new':
-        return 'bg-blue-100 text-blue-800';
-      case 'in_progress':
-        return 'bg-purple-100 text-purple-800';
-      case 'resolved':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  // Get status icon based on status
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Clock className="w-4 h-4" />;
-      case 'approved':
-        return <CheckCircle className="w-4 h-4" />;
-      case 'rejected':
-        return <XCircle className="w-4 h-4" />;
-      case 'new':
-        return <Flag className="w-4 h-4" />;
-      case 'in_progress':
-        return <Loader2 className="w-4 h-4" />;
-      case 'resolved':
-        return <CheckCircle className="w-4 h-4" />;
-      default:
-        return <Clock className="w-4 h-4" />;
-    }
-  };
-
-  // Toggle mobile menu
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen);
-  };
-
-  // Toggle mobile filters
-  const toggleMobileFilters = () => {
-    setMobileFiltersOpen(!mobileFiltersOpen);
-  };
-
-  // Render loading state
-  if (loading) {
+  // Render business submissions tab
+  const renderBusinessSubmissionsTab = () => {
+    const filteredSubmissions = getFilteredBusinessSubmissions();
+    const paginatedSubmissions = businessesPagination.getPaginatedItems(filteredSubmissions);
+    
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900">Loading Admin Dashboard</h2>
-          <p className="text-gray-600 mt-2">Please wait while we load your data...</p>
+      <div className="space-y-4">
+        {/* Mobile Filters */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-900">Business Submissions</h3>
+            <div className="flex sm:hidden">
+              <button 
+                onClick={() => setMobileFiltersOpen(true)}
+                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md"
+              >
+                <Filter className="w-5 h-5" />
+              </button>
+              <button 
+                onClick={loadData}
+                className="p-2 ml-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md"
+              >
+                <RefreshCw className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+          
+          {/* Desktop Filters */}
+          <div className="hidden sm:flex sm:items-center sm:space-x-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Search businesses..."
+                value={businessSearchQuery}
+                onChange={(e) => setBusinessSearchQuery(e.target.value)}
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-64"
+              />
+            </div>
+            
+            <select
+              value={businessStatusFilter}
+              onChange={(e) => setBusinessStatusFilter(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+              <option value="reviewed">Reviewed</option>
+            </select>
+            
+            <button
+              onClick={loadData}
+              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg flex items-center"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Refresh
+            </button>
+          </div>
+        </div>
+        
+        {/* Mobile Filters Modal */}
+        {mobileFiltersOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end sm:hidden">
+            <div className="bg-white rounded-t-xl w-full p-4 space-y-4 animate-slide-up">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Filters</h3>
+                <button 
+                  onClick={() => setMobileFiltersOpen(false)}
+                  className="p-2 text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <input
+                      type="text"
+                      placeholder="Search businesses..."
+                      value={businessSearchQuery}
+                      onChange={(e) => setBusinessSearchQuery(e.target.value)}
+                      className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                  <select
+                    value={businessStatusFilter}
+                    onChange={(e) => setBusinessStatusFilter(e.target.value)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
+                  >
+                    <option value="all">All Statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="reviewed">Reviewed</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={() => {
+                    setBusinessSearchQuery('');
+                    setBusinessStatusFilter('all');
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg"
+                >
+                  Clear Filters
+                </button>
+                <button
+                  onClick={() => setMobileFiltersOpen(false)}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg"
+                >
+                  Apply Filters
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Results Count */}
+        <div className="text-sm text-gray-600">
+          {filteredSubmissions.length} of {businessSubmissions.length} businesses
+          {businessSearchQuery && <span> matching "{businessSearchQuery}"</span>}
+          {businessStatusFilter !== 'all' && <span> with status "{businessStatusFilter}"</span>}
+        </div>
+        
+        {/* Business Submissions Table */}
+        {businessesLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+          </div>
+        ) : filteredSubmissions.length === 0 ? (
+          <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+            <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No business submissions found</h3>
+            <p className="text-gray-600">
+              {businessSearchQuery || businessStatusFilter !== 'all' 
+                ? 'Try adjusting your search or filters'
+                : 'When businesses submit applications, they will appear here'}
+            </p>
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Business
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                      Category
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
+                      Location
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {paginatedSubmissions.map((submission) => (
+                    <tr key={submission.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="flex flex-col">
+                          <div className="text-sm font-medium text-gray-900">{submission.business_name}</div>
+                          <div className="text-sm text-gray-500 truncate max-w-[200px]">{submission.email}</div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap hidden md:table-cell">
+                        <div className="text-sm text-gray-900">{submission.category}</div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap hidden lg:table-cell">
+                        <div className="text-sm text-gray-900">{submission.city}, {submission.state}</div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        {submission.status === 'pending' ? (
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                            Pending
+                          </span>
+                        ) : submission.status === 'approved' ? (
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            Approved
+                          </span>
+                        ) : submission.status === 'rejected' ? (
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                            Rejected
+                          </span>
+                        ) : (
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                            <Clock className="w-3 h-3 mr-1" />
+                            Reviewed
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex items-center justify-end space-x-2">
+                          {submission.status === 'pending' && (
+                            <>
+                              <button
+                                onClick={() => handleApproveBusinessSubmission(submission.id)}
+                                className="text-green-600 hover:text-green-900 p-1"
+                                title="Approve"
+                              >
+                                <CheckCircle className="w-5 h-5" />
+                              </button>
+                              <button
+                                onClick={() => handleRejectBusinessSubmission(submission.id)}
+                                className="text-red-600 hover:text-red-900 p-1"
+                                title="Reject"
+                              >
+                                <XCircle className="w-5 h-5" />
+                              </button>
+                            </>
+                          )}
+                          <button
+                            onClick={() => {
+                              // View details (would open a modal in a real implementation)
+                              console.log('View details:', submission);
+                            }}
+                            className="text-blue-600 hover:text-blue-900 p-1"
+                            title="View Details"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
+            {/* Pagination */}
+            <Pagination
+              currentPage={businessesPagination.currentPage}
+              totalPages={businessesPagination.getTotalPages(filteredSubmissions.length)}
+              itemsPerPage={businessesPagination.itemsPerPage}
+              totalItems={filteredSubmissions.length}
+              onPageChange={businessesPagination.setCurrentPage}
+            />
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Render contact messages tab
+  const renderContactMessagesTab = () => {
+    const filteredMessages = getFilteredContactMessages();
+    const paginatedMessages = messagesPagination.getPaginatedItems(filteredMessages);
+    
+    return (
+      <div className="space-y-4">
+        {/* Mobile Filters */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-900">Contact Messages</h3>
+            <div className="flex sm:hidden">
+              <button 
+                onClick={() => setMobileFiltersOpen(true)}
+                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md"
+              >
+                <Filter className="w-5 h-5" />
+              </button>
+              <button 
+                onClick={loadData}
+                className="p-2 ml-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md"
+              >
+                <RefreshCw className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+          
+          {/* Desktop Filters */}
+          <div className="hidden sm:flex sm:items-center sm:space-x-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Search messages..."
+                value={messageSearchQuery}
+                onChange={(e) => setMessageSearchQuery(e.target.value)}
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-64"
+              />
+            </div>
+            
+            <select
+              value={messageStatusFilter}
+              onChange={(e) => setMessageStatusFilter(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">All Statuses</option>
+              <option value="new">New</option>
+              <option value="in_progress">In Progress</option>
+              <option value="resolved">Resolved</option>
+            </select>
+            
+            <button
+              onClick={loadData}
+              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg flex items-center"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Refresh
+            </button>
+          </div>
+        </div>
+        
+        {/* Mobile Filters Modal */}
+        {mobileFiltersOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end sm:hidden">
+            <div className="bg-white rounded-t-xl w-full p-4 space-y-4 animate-slide-up">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Filters</h3>
+                <button 
+                  onClick={() => setMobileFiltersOpen(false)}
+                  className="p-2 text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <input
+                      type="text"
+                      placeholder="Search messages..."
+                      value={messageSearchQuery}
+                      onChange={(e) => setMessageSearchQuery(e.target.value)}
+                      className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                  <select
+                    value={messageStatusFilter}
+                    onChange={(e) => setMessageStatusFilter(e.target.value)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
+                  >
+                    <option value="all">All Statuses</option>
+                    <option value="new">New</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="resolved">Resolved</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={() => {
+                    setMessageSearchQuery('');
+                    setMessageStatusFilter('all');
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg"
+                >
+                  Clear Filters
+                </button>
+                <button
+                  onClick={() => setMobileFiltersOpen(false)}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg"
+                >
+                  Apply Filters
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Results Count */}
+        <div className="text-sm text-gray-600">
+          {filteredMessages.length} of {contactMessages.length} messages
+          {messageSearchQuery && <span> matching "{messageSearchQuery}"</span>}
+          {messageStatusFilter !== 'all' && <span> with status "{messageStatusFilter}"</span>}
+        </div>
+        
+        {/* Contact Messages Table */}
+        {messagesLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+          </div>
+        ) : filteredMessages.length === 0 ? (
+          <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+            <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No contact messages found</h3>
+            <p className="text-gray-600">
+              {messageSearchQuery || messageStatusFilter !== 'all' 
+                ? 'Try adjusting your search or filters'
+                : 'When visitors submit contact forms, they will appear here'}
+            </p>
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Contact
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                      Subject
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
+                      Date
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {paginatedMessages.map((message) => (
+                    <tr key={message.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="flex flex-col">
+                          <div className="text-sm font-medium text-gray-900">{message.name}</div>
+                          <div className="text-sm text-gray-500 truncate max-w-[200px]">{message.email}</div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap hidden md:table-cell">
+                        <div className="text-sm text-gray-900 truncate max-w-[200px]">{message.subject}</div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap hidden lg:table-cell">
+                        <div className="text-sm text-gray-500">{formatDate(message.created_at)}</div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        {message.status === 'new' ? (
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                            New
+                          </span>
+                        ) : message.status === 'in_progress' ? (
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                            In Progress
+                          </span>
+                        ) : (
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            Resolved
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex items-center justify-end space-x-2">
+                          {message.status !== 'resolved' && (
+                            <button
+                              onClick={() => handleResolveContactMessage(message.id)}
+                              className="text-green-600 hover:text-green-900 p-1"
+                              title="Mark as Resolved"
+                            >
+                              <CheckCircle className="w-5 h-5" />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => {
+                              // View details (would open a modal in a real implementation)
+                              console.log('View message details:', message);
+                            }}
+                            className="text-blue-600 hover:text-blue-900 p-1"
+                            title="View Details"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
+            {/* Pagination */}
+            <Pagination
+              currentPage={messagesPagination.currentPage}
+              totalPages={messagesPagination.getTotalPages(filteredMessages.length)}
+              itemsPerPage={messagesPagination.itemsPerPage}
+              totalItems={filteredMessages.length}
+              onPageChange={messagesPagination.setCurrentPage}
+            />
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Render business profiles (users) tab
+  const renderUsersTab = () => {
+    const filteredProfiles = getFilteredBusinessProfiles();
+    const paginatedProfiles = usersPagination.getPaginatedItems(filteredProfiles);
+    
+    return (
+      <div className="space-y-4">
+        {/* Mobile Filters */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-900">User Management</h3>
+            <div className="flex sm:hidden">
+              <button 
+                onClick={() => setMobileFiltersOpen(true)}
+                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md"
+              >
+                <Filter className="w-5 h-5" />
+              </button>
+              <button 
+                onClick={loadData}
+                className="p-2 ml-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md"
+              >
+                <RefreshCw className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+          
+          {/* Desktop Filters */}
+          <div className="hidden sm:flex sm:items-center sm:space-x-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Search users..."
+                value={userSearchQuery}
+                onChange={(e) => setUserSearchQuery(e.target.value)}
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-64"
+              />
+            </div>
+            
+            <select
+              value={userRoleFilter}
+              onChange={(e) => setUserRoleFilter(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">All Roles</option>
+              <option value="owner">Owner</option>
+              <option value="admin">Admin</option>
+              <option value="staff">Staff</option>
+            </select>
+            
+            <button
+              onClick={loadData}
+              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg flex items-center"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Refresh
+            </button>
+          </div>
+        </div>
+        
+        {/* Mobile Filters Modal */}
+        {mobileFiltersOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end sm:hidden">
+            <div className="bg-white rounded-t-xl w-full p-4 space-y-4 animate-slide-up">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Filters</h3>
+                <button 
+                  onClick={() => setMobileFiltersOpen(false)}
+                  className="p-2 text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <input
+                      type="text"
+                      placeholder="Search users..."
+                      value={userSearchQuery}
+                      onChange={(e) => setUserSearchQuery(e.target.value)}
+                      className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                  <select
+                    value={userRoleFilter}
+                    onChange={(e) => setUserRoleFilter(e.target.value)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
+                  >
+                    <option value="all">All Roles</option>
+                    <option value="owner">Owner</option>
+                    <option value="admin">Admin</option>
+                    <option value="staff">Staff</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={() => {
+                    setUserSearchQuery('');
+                    setUserRoleFilter('all');
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg"
+                >
+                  Clear Filters
+                </button>
+                <button
+                  onClick={() => setMobileFiltersOpen(false)}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg"
+                >
+                  Apply Filters
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Results Count */}
+        <div className="text-sm text-gray-600">
+          {filteredProfiles.length} of {businessProfiles.length} users
+          {userSearchQuery && <span> matching "{userSearchQuery}"</span>}
+          {userRoleFilter !== 'all' && <span> with role "{userRoleFilter}"</span>}
+        </div>
+        
+        {/* Business Profiles Table */}
+        {usersLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+          </div>
+        ) : filteredProfiles.length === 0 ? (
+          <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+            <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No users found</h3>
+            <p className="text-gray-600">
+              {userSearchQuery || userRoleFilter !== 'all' 
+                ? 'Try adjusting your search or filters'
+                : 'When users register, they will appear here'}
+            </p>
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      User
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                      Business
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Role
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
+                      Status
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {paginatedProfiles.map((profile) => (
+                    <tr key={profile.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="flex flex-col">
+                          <div className="text-sm font-medium text-gray-900">{profile.email}</div>
+                          <div className="text-sm text-gray-500">ID: {profile.id.substring(0, 8)}...</div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap hidden md:table-cell">
+                        <div className="text-sm text-gray-900">{profile.business_name}</div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        {profile.role === 'admin' ? (
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
+                            Admin
+                          </span>
+                        ) : profile.role === 'owner' ? (
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                            Owner
+                          </span>
+                        ) : (
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                            {profile.role || 'User'}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap hidden lg:table-cell">
+                        {profile.premium ? (
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                            Premium
+                          </span>
+                        ) : (
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                            Basic
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex items-center justify-end space-x-2">
+                          <button
+                            onClick={() => {
+                              // View details (would open a modal in a real implementation)
+                              console.log('View user details:', profile);
+                            }}
+                            className="text-blue-600 hover:text-blue-900 p-1"
+                            title="View Details"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
+            {/* Pagination */}
+            <Pagination
+              currentPage={usersPagination.currentPage}
+              totalPages={usersPagination.getTotalPages(filteredProfiles.length)}
+              itemsPerPage={usersPagination.itemsPerPage}
+              totalItems={filteredProfiles.length}
+              onPageChange={usersPagination.setCurrentPage}
+            />
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Render analytics tab
+  const renderAnalyticsTab = () => {
+    return (
+      <div className="space-y-6">
+        <h3 className="text-lg font-semibold text-gray-900">Analytics Dashboard</h3>
+        
+        {/* Date Range Controls */}
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <h4 className="text-md font-semibold text-gray-900 mb-4">Date Range</h4>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <button className="px-4 py-2 bg-blue-600 text-white rounded-lg">Last 7 Days</button>
+            <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg">Last 30 Days</button>
+            <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg">Last 90 Days</button>
+            <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg">Custom Range</button>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <button className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg">Daily</button>
+            <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg">Weekly</button>
+            <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg">Monthly</button>
+            <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg">Yearly</button>
+          </div>
+        </div>
+        
+        {/* Metrics Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-sm font-medium text-gray-500">Total Visits</h4>
+              <div className="bg-blue-100 p-2 rounded-full">
+                <Users className="w-4 h-4 text-blue-600" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-gray-900">12,345</div>
+            <div className="text-sm text-green-600 flex items-center mt-1">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+              </svg>
+              12.3% from last period
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-sm font-medium text-gray-500">New Businesses</h4>
+              <div className="bg-green-100 p-2 rounded-full">
+                <Building className="w-4 h-4 text-green-600" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-gray-900">{stats.totalBusinesses}</div>
+            <div className="text-sm text-green-600 flex items-center mt-1">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+              </svg>
+              8.1% from last period
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-sm font-medium text-gray-500">Conversion Rate</h4>
+              <div className="bg-purple-100 p-2 rounded-full">
+                <BarChart3 className="w-4 h-4 text-purple-600" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-gray-900">3.2%</div>
+            <div className="text-sm text-red-600 flex items-center mt-1">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              </svg>
+              1.5% from last period
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-sm font-medium text-gray-500">Premium Users</h4>
+              <div className="bg-yellow-100 p-2 rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-gray-900">{stats.premiumBusinesses}</div>
+            <div className="text-sm text-green-600 flex items-center mt-1">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+              </svg>
+              5.0% from last period
+            </div>
+          </div>
+        </div>
+        
+        {/* Chart Placeholder */}
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <h4 className="text-md font-semibold text-gray-900 mb-4">Traffic Overview</h4>
+          <div className="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+            <p className="text-gray-500">Chart will be displayed here</p>
+          </div>
         </div>
       </div>
     );
-  }
+  };
 
-  // Render error state
-  if (error) {
+  // Render settings tab
+  const renderSettingsTab = () => {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="text-center max-w-md">
-          <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Dashboard</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <button 
-            onClick={loadData}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <RefreshCw className="w-4 h-4 mr-2 inline" />
-            Try Again
-          </button>
-        </div>
+      <div className="space-y-6">
+        <h3 className="text-lg font-semibold text-gray-900">Admin Settings</h3>
+        
+        {settingsError && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start">
+            <AlertCircle className="w-5 h-5 text-red-500 mr-3 flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-red-700">{settingsError}</div>
+          </div>
+        )}
+        
+        {settingsLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-md font-semibold text-gray-900">User Login</h4>
+                  <p className="text-sm text-gray-500 mt-1">Enable or disable user login functionality</p>
+                </div>
+                <div className="relative inline-block w-12 h-6 transition duration-200 ease-in-out">
+                  <input
+                    type="checkbox"
+                    id="toggle-login"
+                    className="absolute w-6 h-6 opacity-0 z-10 cursor-pointer"
+                    checked={loginEnabled}
+                    onChange={handleToggleLogin}
+                  />
+                  <label
+                    htmlFor="toggle-login"
+                    className={`block overflow-hidden h-6 rounded-full cursor-pointer transition-colors duration-200 ease-in-out ${
+                      loginEnabled ? 'bg-blue-600' : 'bg-gray-300'
+                    }`}
+                  >
+                    <span
+                      className={`block h-6 w-6 rounded-full bg-white shadow transform transition-transform duration-200 ease-in-out ${
+                        loginEnabled ? 'translate-x-6' : 'translate-x-0'
+                      }`}
+                    ></span>
+                  </label>
+                </div>
+              </div>
+              
+              <div className="border-t border-gray-200 pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-md font-semibold text-gray-900">User Engagement Tracking</h4>
+                    <p className="text-sm text-gray-500 mt-1">Enable or disable user engagement tracking</p>
+                  </div>
+                  <div className="relative inline-block w-12 h-6 transition duration-200 ease-in-out">
+                    <input
+                      type="checkbox"
+                      id="toggle-tracking"
+                      className="absolute w-6 h-6 opacity-0 z-10 cursor-pointer"
+                      checked={trackingEnabled}
+                      onChange={handleToggleTracking}
+                    />
+                    <label
+                      htmlFor="toggle-tracking"
+                      className={`block overflow-hidden h-6 rounded-full cursor-pointer transition-colors duration-200 ease-in-out ${
+                        trackingEnabled ? 'bg-blue-600' : 'bg-gray-300'
+                      }`}
+                    >
+                      <span
+                        className={`block h-6 w-6 rounded-full bg-white shadow transform transition-transform duration-200 ease-in-out ${
+                          trackingEnabled ? 'translate-x-6' : 'translate-x-0'
+                        }`}
+                      ></span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="border-t border-gray-200 pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-md font-semibold text-gray-900">Advertisements</h4>
+                    <p className="text-sm text-gray-500 mt-1">Enable or disable advertisements on the site</p>
+                  </div>
+                  <div className="relative inline-block w-12 h-6 transition duration-200 ease-in-out">
+                    <input
+                      type="checkbox"
+                      id="toggle-ads"
+                      className="absolute w-6 h-6 opacity-0 z-10 cursor-pointer"
+                      checked={adsEnabled}
+                      onChange={handleToggleAds}
+                    />
+                    <label
+                      htmlFor="toggle-ads"
+                      className={`block overflow-hidden h-6 rounded-full cursor-pointer transition-colors duration-200 ease-in-out ${
+                        adsEnabled ? 'bg-blue-600' : 'bg-gray-300'
+                      }`}
+                    >
+                      <span
+                        className={`block h-6 w-6 rounded-full bg-white shadow transform transition-transform duration-200 ease-in-out ${
+                          adsEnabled ? 'translate-x-6' : 'translate-x-0'
+                        }`}
+                      ></span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
-  }
+  };
 
-  // Get filtered data for current tab
-  const filteredBusinessSubmissions = getFilteredBusinessSubmissions();
-  const filteredContactMessages = getFilteredContactMessages();
-  const filteredBusinessProfiles = getFilteredBusinessProfiles();
-  
-  // Get paginated data
-  const paginatedBusinessSubmissions = businessesPagination.getPaginatedItems(filteredBusinessSubmissions);
-  const paginatedContactMessages = contactPagination.getPaginatedItems(filteredContactMessages);
-  const paginatedBusinessProfiles = usersPagination.getPaginatedItems(filteredBusinessProfiles);
+  // Render active tab content
+  const renderActiveTabContent = () => {
+    switch (activeTab) {
+      case 'businesses':
+        return renderBusinessSubmissionsTab();
+      case 'messages':
+        return renderContactMessagesTab();
+      case 'users':
+        return renderUsersTab();
+      case 'analytics':
+        return renderAnalyticsTab();
+      case 'settings':
+        return renderSettingsTab();
+      default:
+        return renderBusinessSubmissionsTab();
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Mobile Header */}
-      <div className="lg:hidden bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="flex items-center justify-between p-4">
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-30 sm:hidden">
+        <div className="flex items-center justify-between px-4 py-3">
           <h1 className="text-xl font-bold text-gray-900">Admin Dashboard</h1>
-          <button 
-            onClick={toggleMobileMenu}
-            className="p-2 text-gray-600 hover:text-gray-900 focus:outline-none"
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md"
           >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {mobileMenuOpen ? (
+              <X className="w-6 h-6" />
+            ) : (
+              <Menu className="w-6 h-6" />
+            )}
           </button>
         </div>
         
-        {/* Mobile Navigation Menu */}
+        {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="bg-white border-t border-gray-200 py-2">
-            <nav className="space-y-1 px-4">
-              <button
-                onClick={() => { setActiveTab('businesses'); setMobileMenuOpen(false); }}
-                className={`w-full flex items-center px-3 py-3 text-sm font-medium rounded-md ${
-                  activeTab === 'businesses' 
-                    ? 'bg-blue-50 text-blue-700' 
-                    : 'text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <FileText className="w-5 h-5 mr-3" />
-                Business Submissions
-                <span className="ml-auto bg-yellow-100 text-yellow-800 py-1 px-2 rounded-full text-xs">
+          <div className="border-t border-gray-200 py-2 px-4 space-y-1 animate-fade-in">
+            <button
+              onClick={() => {
+                setActiveTab('businesses');
+                setMobileMenuOpen(false);
+              }}
+              className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium ${
+                activeTab === 'businesses' 
+                  ? 'bg-blue-100 text-blue-700' 
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <FileText className="w-5 h-5 inline-block mr-2" />
+              Business Submissions
+              {stats.pendingBusinesses > 0 && (
+                <span className="ml-2 px-2 py-0.5 bg-red-100 text-red-800 rounded-full text-xs">
                   {stats.pendingBusinesses}
                 </span>
-              </button>
-              
-              <button
-                onClick={() => { setActiveTab('contact'); setMobileMenuOpen(false); }}
-                className={`w-full flex items-center px-3 py-3 text-sm font-medium rounded-md ${
-                  activeTab === 'contact' 
-                    ? 'bg-blue-50 text-blue-700' 
-                    : 'text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <MessageSquare className="w-5 h-5 mr-3" />
-                Contact Messages
-                <span className="ml-auto bg-blue-100 text-blue-800 py-1 px-2 rounded-full text-xs">
+              )}
+            </button>
+            
+            <button
+              onClick={() => {
+                setActiveTab('messages');
+                setMobileMenuOpen(false);
+              }}
+              className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium ${
+                activeTab === 'messages' 
+                  ? 'bg-blue-100 text-blue-700' 
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <MessageSquare className="w-5 h-5 inline-block mr-2" />
+              Contact Messages
+              {stats.newMessages > 0 && (
+                <span className="ml-2 px-2 py-0.5 bg-red-100 text-red-800 rounded-full text-xs">
                   {stats.newMessages}
                 </span>
-              </button>
-              
-              <button
-                onClick={() => { setActiveTab('users'); setMobileMenuOpen(false); }}
-                className={`w-full flex items-center px-3 py-3 text-sm font-medium rounded-md ${
-                  activeTab === 'users' 
-                    ? 'bg-blue-50 text-blue-700' 
-                    : 'text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <Users className="w-5 h-5 mr-3" />
-                User Management
-                <span className="ml-auto bg-gray-100 text-gray-800 py-1 px-2 rounded-full text-xs">
-                  {stats.totalUsers}
-                </span>
-              </button>
-              
-              <button
-                onClick={() => { setActiveTab('analytics'); setMobileMenuOpen(false); }}
-                className={`w-full flex items-center px-3 py-3 text-sm font-medium rounded-md ${
-                  activeTab === 'analytics' 
-                    ? 'bg-blue-50 text-blue-700' 
-                    : 'text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <BarChart3 className="w-5 h-5 mr-3" />
-                Analytics
-              </button>
-              
-              <button
-                onClick={() => { setActiveTab('settings'); setMobileMenuOpen(false); }}
-                className={`w-full flex items-center px-3 py-3 text-sm font-medium rounded-md ${
-                  activeTab === 'settings' 
-                    ? 'bg-blue-50 text-blue-700' 
-                    : 'text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <Settings className="w-5 h-5 mr-3" />
-                Settings
-              </button>
-            </nav>
+              )}
+            </button>
+            
+            <button
+              onClick={() => {
+                setActiveTab('users');
+                setMobileMenuOpen(false);
+              }}
+              className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium ${
+                activeTab === 'users' 
+                  ? 'bg-blue-100 text-blue-700' 
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <Users className="w-5 h-5 inline-block mr-2" />
+              User Management
+            </button>
+            
+            <button
+              onClick={() => {
+                setActiveTab('analytics');
+                setMobileMenuOpen(false);
+              }}
+              className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium ${
+                activeTab === 'analytics' 
+                  ? 'bg-blue-100 text-blue-700' 
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <BarChart3 className="w-5 h-5 inline-block mr-2" />
+              Analytics
+            </button>
+            
+            <button
+              onClick={() => {
+                setActiveTab('settings');
+                setMobileMenuOpen(false);
+              }}
+              className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium ${
+                activeTab === 'settings' 
+                  ? 'bg-blue-100 text-blue-700' 
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <Settings className="w-5 h-5 inline-block mr-2" />
+              Settings
+            </button>
           </div>
         )}
       </div>
-
-      <div className="flex">
-        {/* Desktop Sidebar */}
-        <div className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:border-r lg:border-gray-200 lg:bg-white">
-          <div className="flex flex-col flex-grow pt-5 pb-4 overflow-y-auto">
-            <div className="flex items-center flex-shrink-0 px-4">
-              <h1 className="text-xl font-bold text-gray-900">Admin Dashboard</h1>
-            </div>
-            <div className="mt-8 flex-grow flex flex-col">
-              <nav className="flex-1 px-4 space-y-1">
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="flex flex-col md:flex-row md:space-x-6">
+          {/* Desktop Sidebar */}
+          <div className="hidden sm:block w-64 flex-shrink-0">
+            <div className="bg-white rounded-lg shadow-sm p-4 sticky top-6">
+              <h1 className="text-xl font-bold text-gray-900 mb-6">Admin Dashboard</h1>
+              
+              <nav className="space-y-2">
                 <button
                   onClick={() => setActiveTab('businesses')}
-                  className={`flex items-center px-3 py-3 text-sm font-medium rounded-md ${
+                  className={`w-full flex items-center px-3 py-2 rounded-md text-sm font-medium ${
                     activeTab === 'businesses' 
-                      ? 'bg-blue-50 text-blue-700' 
-                      : 'text-gray-700 hover:bg-gray-50'
+                      ? 'bg-blue-100 text-blue-700' 
+                      : 'text-gray-700 hover:bg-gray-100'
                   }`}
                 >
                   <FileText className="w-5 h-5 mr-3" />
-                  Business Submissions
-                  <span className="ml-auto bg-yellow-100 text-yellow-800 py-1 px-2 rounded-full text-xs">
-                    {stats.pendingBusinesses}
-                  </span>
+                  <span>Business Submissions</span>
+                  {stats.pendingBusinesses > 0 && (
+                    <span className="ml-auto px-2 py-0.5 bg-red-100 text-red-800 rounded-full text-xs">
+                      {stats.pendingBusinesses}
+                    </span>
+                  )}
                 </button>
                 
                 <button
-                  onClick={() => setActiveTab('contact')}
-                  className={`flex items-center px-3 py-3 text-sm font-medium rounded-md ${
-                    activeTab === 'contact' 
-                      ? 'bg-blue-50 text-blue-700' 
-                      : 'text-gray-700 hover:bg-gray-50'
+                  onClick={() => setActiveTab('messages')}
+                  className={`w-full flex items-center px-3 py-2 rounded-md text-sm font-medium ${
+                    activeTab === 'messages' 
+                      ? 'bg-blue-100 text-blue-700' 
+                      : 'text-gray-700 hover:bg-gray-100'
                   }`}
                 >
                   <MessageSquare className="w-5 h-5 mr-3" />
-                  Contact Messages
-                  <span className="ml-auto bg-blue-100 text-blue-800 py-1 px-2 rounded-full text-xs">
-                    {stats.newMessages}
-                  </span>
+                  <span>Contact Messages</span>
+                  {stats.newMessages > 0 && (
+                    <span className="ml-auto px-2 py-0.5 bg-red-100 text-red-800 rounded-full text-xs">
+                      {stats.newMessages}
+                    </span>
+                  )}
                 </button>
                 
                 <button
                   onClick={() => setActiveTab('users')}
-                  className={`flex items-center px-3 py-3 text-sm font-medium rounded-md ${
+                  className={`w-full flex items-center px-3 py-2 rounded-md text-sm font-medium ${
                     activeTab === 'users' 
-                      ? 'bg-blue-50 text-blue-700' 
-                      : 'text-gray-700 hover:bg-gray-50'
+                      ? 'bg-blue-100 text-blue-700' 
+                      : 'text-gray-700 hover:bg-gray-100'
                   }`}
                 >
                   <Users className="w-5 h-5 mr-3" />
-                  User Management
-                  <span className="ml-auto bg-gray-100 text-gray-800 py-1 px-2 rounded-full text-xs">
-                    {stats.totalUsers}
-                  </span>
+                  <span>User Management</span>
                 </button>
                 
                 <button
                   onClick={() => setActiveTab('analytics')}
-                  className={`flex items-center px-3 py-3 text-sm font-medium rounded-md ${
+                  className={`w-full flex items-center px-3 py-2 rounded-md text-sm font-medium ${
                     activeTab === 'analytics' 
-                      ? 'bg-blue-50 text-blue-700' 
-                      : 'text-gray-700 hover:bg-gray-50'
+                      ? 'bg-blue-100 text-blue-700' 
+                      : 'text-gray-700 hover:bg-gray-100'
                   }`}
                 >
                   <BarChart3 className="w-5 h-5 mr-3" />
-                  Analytics
+                  <span>Analytics</span>
                 </button>
                 
                 <button
                   onClick={() => setActiveTab('settings')}
-                  className={`flex items-center px-3 py-3 text-sm font-medium rounded-md ${
+                  className={`w-full flex items-center px-3 py-2 rounded-md text-sm font-medium ${
                     activeTab === 'settings' 
-                      ? 'bg-blue-50 text-blue-700' 
-                      : 'text-gray-700 hover:bg-gray-50'
+                      ? 'bg-blue-100 text-blue-700' 
+                      : 'text-gray-700 hover:bg-gray-100'
                   }`}
                 >
                   <Settings className="w-5 h-5 mr-3" />
-                  Settings
+                  <span>Settings</span>
                 </button>
               </nav>
+              
+              {/* Stats Summary */}
+              <div className="mt-8 pt-6 border-t border-gray-200">
+                <h2 className="text-sm font-medium text-gray-500 mb-4">Overview</h2>
+                
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-gray-600">Pending Businesses</div>
+                    <div className="text-sm font-medium text-gray-900">{stats.pendingBusinesses}</div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-gray-600">Total Businesses</div>
+                    <div className="text-sm font-medium text-gray-900">{stats.totalBusinesses}</div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-gray-600">New Messages</div>
+                    <div className="text-sm font-medium text-gray-900">{stats.newMessages}</div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-gray-600">Total Users</div>
+                    <div className="text-sm font-medium text-gray-900">{stats.totalUsers}</div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-gray-600">Premium Businesses</div>
+                    <div className="text-sm font-medium text-gray-900">{stats.premiumBusinesses}</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="lg:pl-64 flex flex-col flex-1">
-          <main className="flex-1">
-            <div className="py-6">
-              {/* Desktop Header */}
-              <div className="hidden lg:flex lg:items-center lg:justify-between px-4 sm:px-6 lg:px-8 mb-6">
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">
-                    {activeTab === 'businesses' && 'Business Submissions'}
-                    {activeTab === 'contact' && 'Contact Messages'}
-                    {activeTab === 'users' && 'User Management'}
-                    {activeTab === 'analytics' && 'Analytics Dashboard'}
-                    {activeTab === 'settings' && 'System Settings'}
-                  </h1>
-                  <p className="mt-1 text-sm text-gray-600">
-                    {activeTab === 'businesses' && 'Manage business submissions and approvals'}
-                    {activeTab === 'contact' && 'Handle customer inquiries and messages'}
-                    {activeTab === 'users' && 'Manage user accounts and permissions'}
-                    {activeTab === 'analytics' && 'View platform performance metrics'}
-                    {activeTab === 'settings' && 'Configure system settings and features'}
-                  </p>
-                </div>
-                <div>
-                  <button
-                    onClick={loadData}
-                    className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
-                  >
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                    Refresh
-                  </button>
-                </div>
-              </div>
-
-              {/* Mobile Tab Header */}
-              <div className="lg:hidden px-4 sm:px-6 mb-4">
-                <div className="flex items-center justify-between">
-                  <h1 className="text-xl font-bold text-gray-900">
-                    {activeTab === 'businesses' && 'Business Submissions'}
-                    {activeTab === 'contact' && 'Contact Messages'}
-                    {activeTab === 'users' && 'User Management'}
-                    {activeTab === 'analytics' && 'Analytics Dashboard'}
-                    {activeTab === 'settings' && 'System Settings'}
-                  </h1>
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={toggleMobileFilters}
-                      className="p-2 text-gray-600 hover:text-gray-900 focus:outline-none"
-                    >
-                      <Sliders className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={loadData}
-                      className="p-2 text-gray-600 hover:text-gray-900 focus:outline-none"
-                    >
-                      <RefreshCw className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Content Area */}
-              <div className="px-4 sm:px-6 lg:px-8">
-                {/* Business Submissions Tab */}
-                {activeTab === 'businesses' && (
-                  <div>
-                    {/* Search and Filters */}
-                    <div className="mb-6">
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                        <div className="relative flex-1">
-                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Search className="h-5 w-5 text-gray-400" />
-                          </div>
-                          <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Search businesses..."
-                            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                          />
-                        </div>
-                        
-                        <div className="flex items-center space-x-2">
-                          <select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-                          >
-                            <option value="all">All Statuses</option>
-                            <option value="pending">Pending</option>
-                            <option value="approved">Approved</option>
-                            <option value="rejected">Rejected</option>
-                          </select>
-                          
-                          <button
-                            onClick={loadData}
-                            className="hidden md:inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
-                          >
-                            <RefreshCw className="w-4 h-4 mr-2" />
-                            Refresh
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Results Info */}
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-                      <div className="text-sm text-gray-700 mb-2 sm:mb-0">
-                        {filteredBusinessSubmissions.length} of {businessSubmissions.length} businesses
-                        {businessesPagination.currentPage > 1 && (
-                          <span className="ml-2">
-                            • Page {businessesPagination.currentPage} of {businessesPagination.getTotalPages(filteredBusinessSubmissions.length)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Business Submissions Table */}
-                    <div className="bg-white shadow overflow-hidden sm:rounded-md mb-6">
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Business
-                              </th>
-                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                                Contact
-                              </th>
-                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
-                                Location
-                              </th>
-                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Status
-                              </th>
-                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                                Submitted
-                              </th>
-                              <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Actions
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {paginatedBusinessSubmissions.length === 0 ? (
-                              <tr>
-                                <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
-                                  No business submissions found
-                                </td>
-                              </tr>
-                            ) : (
-                              paginatedBusinessSubmissions.map((submission) => (
-                                <tr key={submission.id} className="hover:bg-gray-50">
-                                  <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="flex items-center">
-                                      <div>
-                                        <div className="text-sm font-medium text-gray-900">
-                                          {submission.business_name}
-                                        </div>
-                                        <div className="text-sm text-gray-500 hidden sm:block">
-                                          {submission.owner_name}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
-                                    <div className="text-sm text-gray-900">{submission.email}</div>
-                                    <div className="text-sm text-gray-500">{submission.phone}</div>
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap hidden lg:table-cell">
-                                    <div className="text-sm text-gray-900">{submission.city}, {submission.state}</div>
-                                    <div className="text-sm text-gray-500">{submission.category}</div>
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap">
-                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(submission.status)}`}>
-                                      <span className="flex items-center">
-                                        {getStatusIcon(submission.status)}
-                                        <span className="ml-1 capitalize">{submission.status}</span>
-                                      </span>
-                                    </span>
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
-                                    {formatDate(submission.submitted_at)}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <div className="flex items-center justify-end space-x-2">
-                                      {submission.status === 'pending' && (
-                                        <>
-                                          <button
-                                            onClick={() => handleApproveBusinessSubmission(submission.id)}
-                                            className="text-green-600 hover:text-green-900 p-1"
-                                            title="Approve"
-                                          >
-                                            <UserCheck className="w-5 h-5" />
-                                          </button>
-                                          <button
-                                            onClick={() => handleRejectBusinessSubmission(submission.id)}
-                                            className="text-red-600 hover:text-red-900 p-1"
-                                            title="Reject"
-                                          >
-                                            <UserX className="w-5 h-5" />
-                                          </button>
-                                        </>
-                                      )}
-                                      <button
-                                        onClick={() => {
-                                          // View details functionality
-                                          console.log('View details for:', submission);
-                                        }}
-                                        className="text-blue-600 hover:text-blue-900 p-1"
-                                        title="View Details"
-                                      >
-                                        <Eye className="w-5 h-5" />
-                                      </button>
-                                    </div>
-                                  </td>
-                                </tr>
-                              ))
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                    
-                    {/* Pagination */}
-                    {filteredBusinessSubmissions.length > 0 && (
-                      <Pagination
-                        currentPage={businessesPagination.currentPage}
-                        totalPages={businessesPagination.getTotalPages(filteredBusinessSubmissions.length)}
-                        itemsPerPage={businessesPagination.itemsPerPage}
-                        totalItems={filteredBusinessSubmissions.length}
-                        onPageChange={businessesPagination.setCurrentPage}
-                      />
-                    )}
-                  </div>
-                )}
-
-                {/* Contact Messages Tab */}
-                {activeTab === 'contact' && (
-                  <div>
-                    {/* Search and Filters */}
-                    <div className="mb-6">
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                        <div className="relative flex-1">
-                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Search className="h-5 w-5 text-gray-400" />
-                          </div>
-                          <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Search messages..."
-                            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                          />
-                        </div>
-                        
-                        <div className="flex items-center space-x-2">
-                          <select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-                          >
-                            <option value="all">All Statuses</option>
-                            <option value="new">New</option>
-                            <option value="in_progress">In Progress</option>
-                            <option value="resolved">Resolved</option>
-                          </select>
-                          
-                          <button
-                            onClick={loadData}
-                            className="hidden md:inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
-                          >
-                            <RefreshCw className="w-4 h-4 mr-2" />
-                            Refresh
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Results Info */}
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-                      <div className="text-sm text-gray-700 mb-2 sm:mb-0">
-                        {filteredContactMessages.length} of {contactMessages.length} messages
-                        {contactPagination.currentPage > 1 && (
-                          <span className="ml-2">
-                            • Page {contactPagination.currentPage} of {contactPagination.getTotalPages(filteredContactMessages.length)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Contact Messages Table */}
-                    <div className="bg-white shadow overflow-hidden sm:rounded-md mb-6">
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                From
-                              </th>
-                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Subject
-                              </th>
-                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                                Category
-                              </th>
-                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Status
-                              </th>
-                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                                Received
-                              </th>
-                              <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Actions
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {paginatedContactMessages.length === 0 ? (
-                              <tr>
-                                <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
-                                  No contact messages found
-                                </td>
-                              </tr>
-                            ) : (
-                              paginatedContactMessages.map((message) => (
-                                <tr key={message.id} className="hover:bg-gray-50">
-                                  <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="flex items-center">
-                                      <div>
-                                        <div className="text-sm font-medium text-gray-900">
-                                          {message.name}
-                                        </div>
-                                        <div className="text-sm text-gray-500 hidden sm:block">
-                                          {message.email}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </td>
-                                  <td className="px-6 py-4">
-                                    <div className="text-sm text-gray-900 line-clamp-2">{message.subject}</div>
-                                    <div className="text-xs text-gray-500 line-clamp-1 hidden sm:block">{message.message.substring(0, 50)}...</div>
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
-                                    <div className="text-sm text-gray-900">{message.category || 'General'}</div>
-                                    <div className="text-sm text-gray-500">{message.city || 'N/A'}</div>
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap">
-                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(message.status)}`}>
-                                      <span className="flex items-center">
-                                        {getStatusIcon(message.status)}
-                                        <span className="ml-1 capitalize">{message.status}</span>
-                                      </span>
-                                    </span>
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
-                                    {formatDate(message.created_at)}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <div className="flex items-center justify-end space-x-2">
-                                      {message.status !== 'resolved' && (
-                                        <button
-                                          onClick={() => handleResolveContactMessage(message.id)}
-                                          className="text-green-600 hover:text-green-900 p-1"
-                                          title="Mark as Resolved"
-                                        >
-                                          <CheckCircle className="w-5 h-5" />
-                                        </button>
-                                      )}
-                                      <button
-                                        onClick={() => {
-                                          // View details functionality
-                                          console.log('View details for:', message);
-                                        }}
-                                        className="text-blue-600 hover:text-blue-900 p-1"
-                                        title="View Details"
-                                      >
-                                        <Eye className="w-5 h-5" />
-                                      </button>
-                                    </div>
-                                  </td>
-                                </tr>
-                              ))
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                    
-                    {/* Pagination */}
-                    {filteredContactMessages.length > 0 && (
-                      <Pagination
-                        currentPage={contactPagination.currentPage}
-                        totalPages={contactPagination.getTotalPages(filteredContactMessages.length)}
-                        itemsPerPage={contactPagination.itemsPerPage}
-                        totalItems={filteredContactMessages.length}
-                        onPageChange={contactPagination.setCurrentPage}
-                      />
-                    )}
-                  </div>
-                )}
-
-                {/* User Management Tab */}
-                {activeTab === 'users' && (
-                  <div>
-                    {/* Search */}
-                    <div className="mb-6">
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                        <div className="relative flex-1">
-                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Search className="h-5 w-5 text-gray-400" />
-                          </div>
-                          <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Search users..."
-                            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                          />
-                        </div>
-                        
-                        <div className="flex items-center space-x-2">
-                          <button
-                            onClick={loadData}
-                            className="hidden md:inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
-                          >
-                            <RefreshCw className="w-4 h-4 mr-2" />
-                            Refresh
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Results Info */}
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-                      <div className="text-sm text-gray-700 mb-2 sm:mb-0">
-                        {filteredBusinessProfiles.length} of {businessProfiles.length} users
-                        {usersPagination.currentPage > 1 && (
-                          <span className="ml-2">
-                            • Page {usersPagination.currentPage} of {usersPagination.getTotalPages(filteredBusinessProfiles.length)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* User Management Table */}
-                    <div className="bg-white shadow overflow-hidden sm:rounded-md mb-6">
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                User
-                              </th>
-                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                                Business
-                              </th>
-                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Role
-                              </th>
-                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                                Status
-                              </th>
-                              <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Actions
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {paginatedBusinessProfiles.length === 0 ? (
-                              <tr>
-                                <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
-                                  No users found
-                                </td>
-                              </tr>
-                            ) : (
-                              paginatedBusinessProfiles.map((profile) => (
-                                <tr key={profile.id} className="hover:bg-gray-50">
-                                  <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="flex items-center">
-                                      <div>
-                                        <div className="text-sm font-medium text-gray-900">
-                                          {profile.email}
-                                        </div>
-                                        <div className="text-sm text-gray-500 hidden sm:block">
-                                          ID: {profile.id.substring(0, 8)}...
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
-                                    <div className="text-sm text-gray-900">{profile.business_name || 'N/A'}</div>
-                                    <div className="text-sm text-gray-500">{profile.business_id || 'No business ID'}</div>
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap">
-                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                      profile.role === 'admin' 
-                                        ? 'bg-purple-100 text-purple-800' 
-                                        : 'bg-blue-100 text-blue-800'
-                                    }`}>
-                                      {profile.role || 'user'}
-                                    </span>
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
-                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                      profile.premium 
-                                        ? 'bg-green-100 text-green-800' 
-                                        : 'bg-gray-100 text-gray-800'
-                                    }`}>
-                                      {profile.premium ? 'Premium' : 'Basic'}
-                                    </span>
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <div className="flex items-center justify-end space-x-2">
-                                      <button
-                                        onClick={() => {
-                                          // View details functionality
-                                          console.log('View details for:', profile);
-                                        }}
-                                        className="text-blue-600 hover:text-blue-900 p-1"
-                                        title="View Details"
-                                      >
-                                        <Eye className="w-5 h-5" />
-                                      </button>
-                                      <button
-                                        onClick={() => {
-                                          // Edit functionality
-                                          console.log('Edit user:', profile);
-                                        }}
-                                        className="text-indigo-600 hover:text-indigo-900 p-1"
-                                        title="Edit User"
-                                      >
-                                        <Settings className="w-5 h-5" />
-                                      </button>
-                                    </div>
-                                  </td>
-                                </tr>
-                              ))
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                    
-                    {/* Pagination */}
-                    {filteredBusinessProfiles.length > 0 && (
-                      <Pagination
-                        currentPage={usersPagination.currentPage}
-                        totalPages={usersPagination.getTotalPages(filteredBusinessProfiles.length)}
-                        itemsPerPage={usersPagination.itemsPerPage}
-                        totalItems={filteredBusinessProfiles.length}
-                        onPageChange={usersPagination.setCurrentPage}
-                      />
-                    )}
-                  </div>
-                )}
-
-                {/* Analytics Tab */}
-                {activeTab === 'analytics' && (
-                  <div>
-                    {/* Date Range Controls */}
-                    <div className="bg-white p-6 rounded-lg shadow mb-6">
-                      <h2 className="text-lg font-medium text-gray-900 mb-4">Analytics Dashboard</h2>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div className="p-4 bg-blue-50 rounded-lg">
-                          <div className="flex items-center">
-                            <FileText className="w-8 h-8 text-blue-600 mr-3" />
-                            <div>
-                              <div className="text-sm text-blue-600">Pending Businesses</div>
-                              <div className="text-2xl font-bold text-blue-900">{stats.pendingBusinesses}</div>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="p-4 bg-green-50 rounded-lg">
-                          <div className="flex items-center">
-                            <Users className="w-8 h-8 text-green-600 mr-3" />
-                            <div>
-                              <div className="text-sm text-green-600">Total Businesses</div>
-                              <div className="text-2xl font-bold text-green-900">{stats.totalBusinesses}</div>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="p-4 bg-yellow-50 rounded-lg">
-                          <div className="flex items-center">
-                            <MessageSquare className="w-8 h-8 text-yellow-600 mr-3" />
-                            <div>
-                              <div className="text-sm text-yellow-600">New Messages</div>
-                              <div className="text-2xl font-bold text-yellow-900">{stats.newMessages}</div>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="p-4 bg-purple-50 rounded-lg">
-                          <div className="flex items-center">
-                            <BarChart3 className="w-8 h-8 text-purple-600 mr-3" />
-                            <div>
-                              <div className="text-sm text-purple-600">Premium Businesses</div>
-                              <div className="text-2xl font-bold text-purple-900">{stats.premiumBusinesses}</div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Chart Placeholder */}
-                    <div className="bg-white p-6 rounded-lg shadow mb-6">
-                      <h2 className="text-lg font-medium text-gray-900 mb-4">Business Growth</h2>
-                      <div className="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
-                        <p className="text-gray-500">Chart will be displayed here</p>
-                      </div>
-                    </div>
-                    
-                    {/* Recent Activity */}
-                    <div className="bg-white p-6 rounded-lg shadow">
-                      <h2 className="text-lg font-medium text-gray-900 mb-4">Recent Activity</h2>
-                      <div className="space-y-4">
-                        <div className="flex items-start">
-                          <div className="flex-shrink-0">
-                            <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
-                              <FileText className="h-5 w-5 text-blue-600" />
-                            </div>
-                          </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">New business submission</div>
-                            <div className="text-sm text-gray-500">A new business was submitted for approval</div>
-                            <div className="text-xs text-gray-400 mt-1">2 hours ago</div>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-start">
-                          <div className="flex-shrink-0">
-                            <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
-                              <CheckCircle className="h-5 w-5 text-green-600" />
-                            </div>
-                          </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">Business approved</div>
-                            <div className="text-sm text-gray-500">A business submission was approved</div>
-                            <div className="text-xs text-gray-400 mt-1">5 hours ago</div>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-start">
-                          <div className="flex-shrink-0">
-                            <div className="h-8 w-8 rounded-full bg-yellow-100 flex items-center justify-center">
-                              <MessageSquare className="h-5 w-5 text-yellow-600" />
-                            </div>
-                          </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">New contact message</div>
-                            <div className="text-sm text-gray-500">A new contact message was received</div>
-                            <div className="text-xs text-gray-400 mt-1">1 day ago</div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Settings Tab */}
-                {activeTab === 'settings' && (
-                  <div>
-                    <div className="bg-white shadow sm:rounded-md mb-6">
-                      <div className="px-4 py-5 sm:p-6">
-                        <h3 className="text-lg leading-6 font-medium text-gray-900">
-                          System Settings
-                        </h3>
-                        <div className="mt-2 max-w-xl text-sm text-gray-500">
-                          <p>Configure global settings for the platform.</p>
-                        </div>
-                        <div className="mt-5 space-y-6">
-                          <div className="flex items-start">
-                            <div className="flex items-center h-5">
-                              <input
-                                id="login-enabled"
-                                name="login-enabled"
-                                type="checkbox"
-                                className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded"
-                                checked={true}
-                                onChange={() => {
-                                  // Toggle login enabled
-                                  console.log('Toggle login enabled');
-                                }}
-                              />
-                            </div>
-                            <div className="ml-3 text-sm">
-                              <label htmlFor="login-enabled" className="font-medium text-gray-700">
-                                Enable User Login
-                              </label>
-                              <p className="text-gray-500">
-                                Allow users to log in to the platform. Disabling this will prevent all users from logging in.
-                              </p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-start">
-                            <div className="flex items-center h-5">
-                              <input
-                                id="tracking-enabled"
-                                name="tracking-enabled"
-                                type="checkbox"
-                                className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded"
-                                checked={true}
-                                onChange={() => {
-                                  // Toggle tracking enabled
-                                  console.log('Toggle tracking enabled');
-                                }}
-                              />
-                            </div>
-                            <div className="ml-3 text-sm">
-                              <label htmlFor="tracking-enabled" className="font-medium text-gray-700">
-                                Enable User Tracking
-                              </label>
-                              <p className="text-gray-500">
-                                Track user engagement with businesses. This helps provide analytics to business owners.
-                              </p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-start">
-                            <div className="flex items-center h-5">
-                              <input
-                                id="ads-enabled"
-                                name="ads-enabled"
-                                type="checkbox"
-                                className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded"
-                                checked={false}
-                                onChange={() => {
-                                  // Toggle ads enabled
-                                  console.log('Toggle ads enabled');
-                                }}
-                              />
-                            </div>
-                            <div className="ml-3 text-sm">
-                              <label htmlFor="ads-enabled" className="font-medium text-gray-700">
-                                Enable Advertisements
-                              </label>
-                              <p className="text-gray-500">
-                                Show advertisements on the platform. This can generate additional revenue.
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="px-4 py-3 bg-gray-50 text-right sm:px-6">
-                        <button
-                          type="button"
-                          className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                          onClick={() => {
-                            // Save settings
-                            console.log('Save settings');
-                          }}
-                        >
-                          Save Settings
-                        </button>
-                      </div>
-                    </div>
-                    
-                    <div className="bg-white shadow sm:rounded-md">
-                      <div className="px-4 py-5 sm:p-6">
-                        <h3 className="text-lg leading-6 font-medium text-gray-900">
-                          Admin Account
-                        </h3>
-                        <div className="mt-2 max-w-xl text-sm text-gray-500">
-                          <p>Manage your admin account settings.</p>
-                        </div>
-                        <div className="mt-5">
-                          <button
-                            type="button"
-                            className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                          >
-                            <Settings className="mr-2 h-4 w-4" />
-                            Account Settings
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
+          
+          {/* Main Content */}
+          <div className="flex-1 mt-6 sm:mt-0">
+            {/* Mobile Tab Navigation */}
+            <div className="sm:hidden mb-6 bg-white rounded-lg shadow-sm overflow-hidden">
+              <div className="flex overflow-x-auto scrollbar-hide">
+                <button
+                  onClick={() => setActiveTab('businesses')}
+                  className={`flex-1 px-4 py-3 text-center text-sm font-medium whitespace-nowrap ${
+                    activeTab === 'businesses' 
+                      ? 'text-blue-600 border-b-2 border-blue-600' 
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <FileText className="w-5 h-5 mx-auto mb-1" />
+                  <span>Businesses</span>
+                </button>
+                
+                <button
+                  onClick={() => setActiveTab('messages')}
+                  className={`flex-1 px-4 py-3 text-center text-sm font-medium whitespace-nowrap ${
+                    activeTab === 'messages' 
+                      ? 'text-blue-600 border-b-2 border-blue-600' 
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <MessageSquare className="w-5 h-5 mx-auto mb-1" />
+                  <span>Messages</span>
+                </button>
+                
+                <button
+                  onClick={() => setActiveTab('users')}
+                  className={`flex-1 px-4 py-3 text-center text-sm font-medium whitespace-nowrap ${
+                    activeTab === 'users' 
+                      ? 'text-blue-600 border-b-2 border-blue-600' 
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <Users className="w-5 h-5 mx-auto mb-1" />
+                  <span>Users</span>
+                </button>
+                
+                <button
+                  onClick={() => setActiveTab('analytics')}
+                  className={`flex-1 px-4 py-3 text-center text-sm font-medium whitespace-nowrap ${
+                    activeTab === 'analytics' 
+                      ? 'text-blue-600 border-b-2 border-blue-600' 
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <BarChart3 className="w-5 h-5 mx-auto mb-1" />
+                  <span>Analytics</span>
+                </button>
+                
+                <button
+                  onClick={() => setActiveTab('settings')}
+                  className={`flex-1 px-4 py-3 text-center text-sm font-medium whitespace-nowrap ${
+                    activeTab === 'settings' 
+                      ? 'text-blue-600 border-b-2 border-blue-600' 
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <Settings className="w-5 h-5 mx-auto mb-1" />
+                  <span>Settings</span>
+                </button>
               </div>
             </div>
-          </main>
+            
+            {/* Tab Content */}
+            {renderActiveTabContent()}
+          </div>
         </div>
       </div>
       
-      {/* Mobile Filters Modal */}
-      {mobileFiltersOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto lg:hidden">
-          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-              <div className="absolute inset-0 bg-gray-500 opacity-75" onClick={toggleMobileFilters}></div>
-            </div>
-            
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <div className="sm:flex sm:items-start">
-                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg leading-6 font-medium text-gray-900">
-                        Filters
-                      </h3>
-                      <button
-                        onClick={toggleMobileFilters}
-                        className="text-gray-400 hover:text-gray-500"
-                      >
-                        <X className="h-6 w-6" />
-                      </button>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      <div>
-                        <label htmlFor="mobile-search" className="block text-sm font-medium text-gray-700 mb-1">
-                          Search
-                        </label>
-                        <div className="relative">
-                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Search className="h-5 w-5 text-gray-400" />
-                          </div>
-                          <input
-                            id="mobile-search"
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder={`Search ${activeTab}...`}
-                            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                          />
-                        </div>
-                      </div>
-                      
-                      {(activeTab === 'businesses' || activeTab === 'contact') && (
-                        <div>
-                          <label htmlFor="mobile-status" className="block text-sm font-medium text-gray-700 mb-1">
-                            Status
-                          </label>
-                          <select
-                            id="mobile-status"
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-                          >
-                            <option value="all">All Statuses</option>
-                            {activeTab === 'businesses' && (
-                              <>
-                                <option value="pending">Pending</option>
-                                <option value="approved">Approved</option>
-                                <option value="rejected">Rejected</option>
-                              </>
-                            )}
-                            {activeTab === 'contact' && (
-                              <>
-                                <option value="new">New</option>
-                                <option value="in_progress">In Progress</option>
-                                <option value="resolved">Resolved</option>
-                              </>
-                            )}
-                          </select>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button
-                  type="button"
-                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
-                  onClick={toggleMobileFilters}
-                >
-                  Apply Filters
-                </button>
-                <button
-                  type="button"
-                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                  onClick={() => {
-                    setSearchQuery('');
-                    setStatusFilter('all');
-                    toggleMobileFilters();
-                  }}
-                >
-                  Reset
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Add CSS for animations */}
+      <style jsx>{`
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        
+        @keyframes slide-up {
+          from { transform: translateY(100%); }
+          to { transform: translateY(0); }
+        }
+        
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out;
+        }
+        
+        .animate-slide-up {
+          animation: slide-up 0.3s ease-out;
+        }
+        
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
     </div>
   );
 };
