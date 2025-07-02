@@ -64,6 +64,57 @@ export class HybridDataProvider implements IDataProvider {
     }
   }
 
+  async getOverallAnalytics(
+    period: 'day' | 'week' | 'month' | 'year' = 'week',
+    startDate?: Date,
+    endDate?: Date
+  ): Promise<{
+    totalClickEvents: number;
+    totalUniqueVisitors: number;
+    averageConversionRate: number;
+    activeBusinesses: number;
+    topPerformingBusinesses: Array<{
+      businessId: string;
+      businessName: string;
+      totalClicks: number;
+      phoneClicks: number;
+      websiteClicks: number;
+      bookingClicks: number;
+      conversionRate: number;
+    }>;
+    categoryBreakdown: Array<{
+      category: string;
+      totalClicks: number;
+      uniqueVisitors: number;
+      businesses: number;
+    }>;
+    deviceBreakdown: {
+      mobile: number;
+      tablet: number;
+      desktop: number;
+    };
+    clickTypeBreakdown: {
+      phone: number;
+      website: number;
+      booking: number;
+      directions: number;
+      email: number;
+    };
+    peakHours: Array<{
+      hour: number;
+      totalClicks: number;
+    }>;
+  }> {
+    try {
+      // Try Supabase first for real analytics from user_engagement_events
+      return await this.supabaseProvider.getOverallAnalytics(period, startDate, endDate);
+    } catch (error) {
+      console.warn('Supabase overall analytics failed, falling back to JSON provider:', error);
+      // Fallback to JSON provider for development
+      return await this.jsonProvider.getOverallAnalytics(period, startDate, endDate);
+    }
+  }
+
   // Admin methods - delegate to Supabase provider
   async getBusinessSubmissions(): Promise<any[]> {
     return this.supabaseProvider.getBusinessSubmissions();

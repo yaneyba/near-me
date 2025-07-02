@@ -22,6 +22,7 @@ import { useAuth } from '../lib/auth';
 import { useNavigate } from 'react-router-dom';
 import Pagination from '../components/Pagination';
 import usePagination from '../hooks/usePagination';
+import AnalyticsDashboard from '../components/AnalyticsDashboard';
 
 const AdminDashboardPage: React.FC = () => {
   // State for active tab
@@ -1084,103 +1085,7 @@ const AdminDashboardPage: React.FC = () => {
   const renderAnalyticsTab = () => {
     return (
       <div className="space-y-6">
-        <h3 className="text-lg font-semibold text-gray-900">Analytics Dashboard</h3>
-        
-        {/* Date Range Controls */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h4 className="text-md font-semibold text-gray-900 mb-4">Date Range</h4>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-lg">Last 7 Days</button>
-            <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg">Last 30 Days</button>
-            <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg">Last 90 Days</button>
-            <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg">Custom Range</button>
-          </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <button className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg">Daily</button>
-            <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg">Weekly</button>
-            <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg">Monthly</button>
-            <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg">Yearly</button>
-          </div>
-        </div>
-        
-        {/* Metrics Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="text-sm font-medium text-gray-500">Total Visits</h4>
-              <div className="bg-blue-100 p-2 rounded-full">
-                <Users className="w-4 h-4 text-blue-600" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-gray-900">12,345</div>
-            <div className="text-sm text-green-600 flex items-center mt-1">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-              </svg>
-              12.3% from last period
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="text-sm font-medium text-gray-500">New Businesses</h4>
-              <div className="bg-green-100 p-2 rounded-full">
-                <Building className="w-4 h-4 text-green-600" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-gray-900">{stats.totalBusinesses}</div>
-            <div className="text-sm text-green-600 flex items-center mt-1">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-              </svg>
-              8.1% from last period
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="text-sm font-medium text-gray-500">Conversion Rate</h4>
-              <div className="bg-purple-100 p-2 rounded-full">
-                <BarChart3 className="w-4 h-4 text-purple-600" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-gray-900">3.2%</div>
-            <div className="text-sm text-red-600 flex items-center mt-1">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-              </svg>
-              1.5% from last period
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="text-sm font-medium text-gray-500">Premium Users</h4>
-              <div className="bg-yellow-100 p-2 rounded-full">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-gray-900">{stats.premiumBusinesses}</div>
-            <div className="text-sm text-green-600 flex items-center mt-1">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-              </svg>
-              5.0% from last period
-            </div>
-          </div>
-        </div>
-        
-        {/* Chart Placeholder */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h4 className="text-md font-semibold text-gray-900 mb-4">Traffic Overview</h4>
-          <div className="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
-            <p className="text-gray-500">Chart will be displayed here</p>
-          </div>
-        </div>
+        <AnalyticsDashboard />
       </div>
     );
   };

@@ -151,6 +151,44 @@ export interface IDataProvider {
   // New tracking methods
   trackEngagement(event: UserEngagementEvent): Promise<void>;
   getBusinessAnalytics(businessId: string, period: 'day' | 'week' | 'month' | 'year', startDate?: Date, endDate?: Date): Promise<BusinessAnalytics>;
+  // Overall analytics method
+  getOverallAnalytics(period?: 'day' | 'week' | 'month' | 'year', startDate?: Date, endDate?: Date): Promise<{
+    totalClickEvents: number;
+    totalUniqueVisitors: number;
+    averageConversionRate: number;
+    activeBusinesses: number;
+    topPerformingBusinesses: Array<{
+      businessId: string;
+      businessName: string;
+      totalClicks: number;
+      phoneClicks: number;
+      websiteClicks: number;
+      bookingClicks: number;
+      conversionRate: number;
+    }>;
+    categoryBreakdown: Array<{
+      category: string;
+      totalClicks: number;
+      uniqueVisitors: number;
+      businesses: number;
+    }>;
+    deviceBreakdown: {
+      mobile: number;
+      tablet: number;
+      desktop: number;
+    };
+    clickTypeBreakdown: {
+      phone: number;
+      website: number;
+      booking: number;
+      directions: number;
+      email: number;
+    };
+    peakHours: Array<{
+      hour: number;
+      totalClicks: number;
+    }>;
+  }>;
   // Admin methods
   getBusinessSubmissions(): Promise<any[]>;
   getBusinessProfiles(): Promise<any[]>;

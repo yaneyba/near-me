@@ -339,6 +339,238 @@ We'll contact you at ${businessData.email} with updates on your application stat
     }
   }
 
+  async getOverallAnalytics(
+    period: 'day' | 'week' | 'month' | 'year' = 'week',
+    startDate?: Date,
+    endDate?: Date
+  ): Promise<{
+    totalClickEvents: number;
+    totalUniqueVisitors: number;
+    averageConversionRate: number;
+    activeBusinesses: number;
+    topPerformingBusinesses: Array<{
+      businessId: string;
+      businessName: string;
+      totalClicks: number;
+      phoneClicks: number;
+      websiteClicks: number;
+      bookingClicks: number;
+      conversionRate: number;
+    }>;
+    categoryBreakdown: Array<{
+      category: string;
+      totalClicks: number;
+      uniqueVisitors: number;
+      businesses: number;
+    }>;
+    deviceBreakdown: {
+      mobile: number;
+      tablet: number;
+      desktop: number;
+    };
+    clickTypeBreakdown: {
+      phone: number;
+      website: number;
+      booking: number;
+      directions: number;
+      email: number;
+    };
+    peakHours: Array<{
+      hour: number;
+      totalClicks: number;
+    }>;
+  }> {
+    // Calculate date range if not provided
+    const end = endDate || new Date();
+    let start = startDate;
+
+    if (!start) {
+      start = new Date();
+      switch (period) {
+        case 'day':
+          start.setDate(start.getDate() - 1);
+          break;
+        case 'week':
+          start.setDate(start.getDate() - 7);
+          break;
+        case 'month':
+          start.setMonth(start.getMonth() - 1);
+          break;
+        case 'year':
+          start.setFullYear(start.getFullYear() - 1);
+          break;
+      }
+    }
+
+    // Filter events for the time period (click events only)
+    const relevantEvents = this.engagementEvents.filter(event => 
+      event.timestamp >= start! && 
+      event.timestamp <= end &&
+      event.eventType.includes('_click')
+    );
+
+    // Mock implementation for development with sample data
+    if (relevantEvents.length === 0) {
+      return {
+        totalClickEvents: 42,
+        totalUniqueVisitors: 28,
+        averageConversionRate: 65.5,
+        activeBusinesses: 12,
+        topPerformingBusinesses: [
+          {
+            businessId: 'mock-business-1',
+            businessName: 'Sample Nail Salon',
+            totalClicks: 15,
+            phoneClicks: 8,
+            websiteClicks: 5,
+            bookingClicks: 2,
+            conversionRate: 85.7
+          },
+          {
+            businessId: 'mock-business-2', 
+            businessName: 'Elite Auto Repair',
+            totalClicks: 12,
+            phoneClicks: 7,
+            websiteClicks: 3,
+            bookingClicks: 2,
+            conversionRate: 75.0
+          }
+        ],
+        categoryBreakdown: [
+          {
+            category: 'nail-salons',
+            totalClicks: 25,
+            uniqueVisitors: 18,
+            businesses: 8
+          },
+          {
+            category: 'auto-repair',
+            totalClicks: 17,
+            uniqueVisitors: 12,
+            businesses: 4
+          }
+        ],
+        deviceBreakdown: {
+          mobile: 28,
+          tablet: 5,
+          desktop: 9
+        },
+        clickTypeBreakdown: {
+          phone: 20,
+          website: 12,
+          booking: 6,
+          directions: 3,
+          email: 1
+        },
+        peakHours: [
+          { hour: 14, totalClicks: 8 },
+          { hour: 16, totalClicks: 6 },
+          { hour: 11, totalClicks: 5 },
+          { hour: 13, totalClicks: 4 },
+          { hour: 15, totalClicks: 3 }
+        ]
+      };
+    }
+
+    // Process real events if available
+    const uniqueSessionIds = new Set<string>();
+    const businessMetrics = new Map<string, any>();
+    const deviceBreakdown = { mobile: 0, tablet: 0, desktop: 0 };
+    const clickTypeBreakdown = { phone: 0, website: 0, booking: 0, directions: 0, email: 0 };
+    const hourlyMap = new Map<number, number>();
+
+    relevantEvents.forEach(event => {
+      if (event.userSessionId) {
+        uniqueSessionIds.add(event.userSessionId);
+      }
+
+      const hour = new Date(event.timestamp).getHours();
+      hourlyMap.set(hour, (hourlyMap.get(hour) || 0) + 1);
+
+      // Track device types
+      const deviceType = event.eventData?.deviceType || 'desktop';
+      if (deviceType in deviceBreakdown) {
+        deviceBreakdown[deviceType as keyof typeof deviceBreakdown]++;
+      }
+
+      // Track click types
+      switch (event.eventType) {
+        case 'phone_click':
+          clickTypeBreakdown.phone++;
+          break;
+        case 'website_click':
+          clickTypeBreakdown.website++;
+          break;
+        case 'booking_click':
+          clickTypeBreakdown.booking++;
+          break;
+        case 'directions_click':
+          clickTypeBreakdown.directions++;
+          break;
+        case 'email_click':
+          clickTypeBreakdown.email++;
+          break;
+      }
+
+      // Track business metrics
+      if (!businessMetrics.has(event.businessId)) {
+        businessMetrics.set(event.businessId, {
+          businessName: event.businessName,
+          totalClicks: 0,
+          phoneClicks: 0,
+          websiteClicks: 0,
+          bookingClicks: 0
+        });
+      }
+
+      const metric = businessMetrics.get(event.businessId);
+      metric.totalClicks++;
+      
+      if (event.eventType === 'phone_click') metric.phoneClicks++;
+      if (event.eventType === 'website_click') metric.websiteClicks++;
+      if (event.eventType === 'booking_click') metric.bookingClicks++;
+    });
+
+    // Calculate results
+    const totalClickEvents = Object.values(clickTypeBreakdown).reduce((sum, count) => sum + count, 0);
+    const totalUniqueVisitors = uniqueSessionIds.size;
+    const activeBusinesses = businessMetrics.size;
+
+    const topPerformingBusinesses = Array.from(businessMetrics.entries())
+      .map(([businessId, metric]) => ({
+        businessId,
+        businessName: metric.businessName,
+        totalClicks: metric.totalClicks,
+        phoneClicks: metric.phoneClicks,
+        websiteClicks: metric.websiteClicks,
+        bookingClicks: metric.bookingClicks,
+        conversionRate: metric.totalClicks > 0 ? 
+          ((metric.phoneClicks + metric.websiteClicks + metric.bookingClicks) / metric.totalClicks) * 100 : 0
+      }))
+      .sort((a, b) => b.totalClicks - a.totalClicks)
+      .slice(0, 10);
+
+    const averageConversionRate = topPerformingBusinesses.length > 0 ?
+      topPerformingBusinesses.reduce((sum, b) => sum + b.conversionRate, 0) / topPerformingBusinesses.length : 0;
+
+    const peakHours = Array.from(hourlyMap.entries())
+      .map(([hour, totalClicks]) => ({ hour, totalClicks }))
+      .sort((a, b) => b.totalClicks - a.totalClicks)
+      .slice(0, 5);
+
+    return {
+      totalClickEvents,
+      totalUniqueVisitors,
+      averageConversionRate,
+      activeBusinesses,
+      topPerformingBusinesses,
+      categoryBreakdown: [], // Could be enhanced with real category processing
+      deviceBreakdown,
+      clickTypeBreakdown,
+      peakHours
+    };
+  }
+
   private processEngagementEvents(
     events: UserEngagementEvent[], 
     businessId: string, 
@@ -365,7 +597,7 @@ We'll contact you at ${businessData.email} with updates on your application stat
     const sourceMap = new Map<string, number>();
     const searchQueryMap = new Map<string, { views: number; clicks: number }>();
     const deviceMap = { mobile: 0, tablet: 0, desktop: 0 };
-    const hourlyMap = new Map<number, { views: number; interactions: number }>();
+    const hourlyMap = new Map<number, { views: number, interactions: number }>();
 
     // Process each event
     events.forEach(event => {

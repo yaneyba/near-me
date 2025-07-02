@@ -1155,4 +1155,286 @@ We'll contact you at ${
     console.warn(`Category "${category}" could not be normalized to a valid category. Using fallback: nail-salons`);
     return "nail-salons";
   }
+
+  /**
+   * Get overall analytics across all businesses
+   */
+  async getOverallAnalytics(
+    period: "day" | "week" | "month" | "year" = "week",
+    startDate?: Date,
+    endDate?: Date
+  ): Promise<{
+    totalClickEvents: number;
+    totalUniqueVisitors: number;
+    averageConversionRate: number;
+    activeBusinesses: number;
+    topPerformingBusinesses: Array<{
+      businessId: string;
+      businessName: string;
+      totalClicks: number;
+      phoneClicks: number;
+      websiteClicks: number;
+      bookingClicks: number;
+      conversionRate: number;
+    }>;
+    categoryBreakdown: Array<{
+      category: string;
+      totalClicks: number;
+      uniqueVisitors: number;
+      businesses: number;
+    }>;
+    deviceBreakdown: {
+      mobile: number;
+      tablet: number;
+      desktop: number;
+    };
+    clickTypeBreakdown: {
+      phone: number;
+      website: number;
+      booking: number;
+      directions: number;
+      email: number;
+    };
+    peakHours: Array<{
+      hour: number;
+      totalClicks: number;
+    }>;
+  }> {
+    try {
+      // Calculate date range if not provided
+      const end = endDate || new Date();
+      let start = startDate;
+
+      if (!start) {
+        start = new Date();
+        switch (period) {
+          case "day":
+            start.setDate(start.getDate() - 1);
+            break;
+          case "week":
+            start.setDate(start.getDate() - 7);
+            break;
+          case "month":
+            start.setMonth(start.getMonth() - 1);
+            break;
+          case "year":
+            start.setFullYear(start.getFullYear() - 1);
+            break;
+        }
+      }
+
+      // Get all engagement events for the period
+      const { data: events, error } = await supabase
+        .from("user_engagement_events")
+        .select("*")
+        .gte("timestamp", start.toISOString())
+        .lte("timestamp", end.toISOString())
+        .order("timestamp", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching overall analytics:", error);
+        throw error;
+      }
+
+      // Get all businesses for name lookup and category breakdown
+      const businesses = await this.getAllBusinesses();
+      const businessMap = new Map(businesses.map(b => [b.business_id, b]));
+
+      return this.processOverallEngagementEvents(events || [], businessMap, period);
+    } catch (error) {
+      console.error("Failed to get overall analytics:", error);
+      // Return empty analytics on error
+      return {
+        totalClickEvents: 0,
+        totalUniqueVisitors: 0,
+        averageConversionRate: 0,
+        activeBusinesses: 0,
+        topPerformingBusinesses: [],
+        categoryBreakdown: [],
+        deviceBreakdown: { mobile: 0, tablet: 0, desktop: 0 },
+        clickTypeBreakdown: { phone: 0, website: 0, booking: 0, directions: 0, email: 0 },
+        peakHours: []
+      };
+    }
+  }
+
+  private processOverallEngagementEvents(
+    events: any[],
+    businessMap: Map<string, any>,
+    _period: "day" | "week" | "month" | "year"
+  ) {
+    const uniqueSessionIds = new Set<string>();
+    const businessMetrics = new Map<string, {
+      phoneClicks: number;
+      websiteClicks: number;
+      bookingClicks: number;
+      directionsClicks: number;
+      emailClicks: number;
+      sessions: Set<string>;
+    }>();
+    
+    const deviceBreakdown = { mobile: 0, tablet: 0, desktop: 0 };
+    const clickTypeBreakdown = { phone: 0, website: 0, booking: 0, directions: 0, email: 0 };
+    const hourlyMap = new Map<number, number>();
+    const categoryMap = new Map<string, {
+      totalClicks: number;
+      uniqueVisitors: Set<string>;
+      businesses: Set<string>;
+    }>();
+
+    // Process each event
+    events.forEach((event) => {
+      const eventData = event.event_data || {};
+      const hour = new Date(event.timestamp).getHours();
+      const businessId = event.business_id;
+
+      // Track unique sessions globally
+      if (event.user_session_id) {
+        uniqueSessionIds.add(event.user_session_id);
+      }
+
+      // Initialize business metrics if not exists
+      if (!businessMetrics.has(businessId)) {
+        businessMetrics.set(businessId, {
+          phoneClicks: 0,
+          websiteClicks: 0,
+          bookingClicks: 0,
+          directionsClicks: 0,
+          emailClicks: 0,
+          sessions: new Set()
+        });
+      }
+
+      const businessMetric = businessMetrics.get(businessId)!;
+      if (event.user_session_id) {
+        businessMetric.sessions.add(event.user_session_id);
+      }
+
+      // Count click events only
+      switch (event.event_type) {
+        case "phone_click":
+          businessMetric.phoneClicks++;
+          clickTypeBreakdown.phone++;
+          hourlyMap.set(hour, (hourlyMap.get(hour) || 0) + 1);
+          break;
+
+        case "website_click":
+          businessMetric.websiteClicks++;
+          clickTypeBreakdown.website++;
+          hourlyMap.set(hour, (hourlyMap.get(hour) || 0) + 1);
+          break;
+
+        case "booking_click":
+          businessMetric.bookingClicks++;
+          clickTypeBreakdown.booking++;
+          hourlyMap.set(hour, (hourlyMap.get(hour) || 0) + 1);
+          break;
+
+        case "directions_click":
+          businessMetric.directionsClicks++;
+          clickTypeBreakdown.directions++;
+          hourlyMap.set(hour, (hourlyMap.get(hour) || 0) + 1);
+          break;
+
+        case "email_click":
+          businessMetric.emailClicks++;
+          clickTypeBreakdown.email++;
+          hourlyMap.set(hour, (hourlyMap.get(hour) || 0) + 1);
+          break;
+
+        default:
+          // Skip non-click events
+          break;
+      }
+
+      // Track device types for click events
+      if (event.event_type.includes('_click')) {
+        const deviceType = eventData.deviceType || "desktop";
+        if (deviceType in deviceBreakdown) {
+          deviceBreakdown[deviceType as keyof typeof deviceBreakdown]++;
+        }
+
+        // Track category metrics for click events
+        const business = businessMap.get(businessId);
+        if (business) {
+          const category = business.category || 'Unknown';
+          if (!categoryMap.has(category)) {
+            categoryMap.set(category, {
+              totalClicks: 0,
+              uniqueVisitors: new Set(),
+              businesses: new Set()
+            });
+          }
+          
+          const categoryMetric = categoryMap.get(category)!;
+          categoryMetric.totalClicks++;
+          categoryMetric.businesses.add(businessId);
+          
+          if (event.user_session_id) {
+            categoryMetric.uniqueVisitors.add(event.user_session_id);
+          }
+        }
+      }
+    });
+
+    // Calculate overall metrics
+    const totalClickEvents = Object.values(clickTypeBreakdown).reduce((sum, count) => sum + count, 0);
+    const totalUniqueVisitors = uniqueSessionIds.size;
+    const activeBusinesses = businessMetrics.size;
+
+    // Calculate top performing businesses
+    const topPerformingBusinesses = Array.from(businessMetrics.entries())
+      .map(([businessId, metrics]) => {
+        const business = businessMap.get(businessId);
+        const totalClicks = metrics.phoneClicks + metrics.websiteClicks + metrics.bookingClicks + 
+                           metrics.directionsClicks + metrics.emailClicks;
+        const primaryClicks = metrics.phoneClicks + metrics.websiteClicks + metrics.bookingClicks;
+        const conversionRate = totalClicks > 0 ? (primaryClicks / totalClicks) * 100 : 0;
+
+        return {
+          businessId,
+          businessName: business?.name || 'Unknown Business',
+          totalClicks,
+          phoneClicks: metrics.phoneClicks,
+          websiteClicks: metrics.websiteClicks,
+          bookingClicks: metrics.bookingClicks,
+          conversionRate
+        };
+      })
+      .sort((a, b) => b.totalClicks - a.totalClicks)
+      .slice(0, 10);
+
+    // Calculate average conversion rate
+    const totalPrimaryClicks = topPerformingBusinesses.reduce((sum, b) => 
+      sum + b.phoneClicks + b.websiteClicks + b.bookingClicks, 0);
+    const averageConversionRate = totalClickEvents > 0 ? (totalPrimaryClicks / totalClickEvents) * 100 : 0;
+
+    // Process category breakdown
+    const categoryBreakdown = Array.from(categoryMap.entries())
+      .map(([category, data]) => ({
+        category,
+        totalClicks: data.totalClicks,
+        uniqueVisitors: data.uniqueVisitors.size,
+        businesses: data.businesses.size
+      }))
+      .sort((a, b) => b.totalClicks - a.totalClicks);
+
+    // Process peak hours
+    const peakHours = Array.from(hourlyMap.entries())
+      .map(([hour, totalClicks]) => ({ hour, totalClicks }))
+      .sort((a, b) => b.totalClicks - a.totalClicks)
+      .slice(0, 5);
+
+    return {
+      totalClickEvents,
+      totalUniqueVisitors,
+      averageConversionRate,
+      activeBusinesses,
+      topPerformingBusinesses,
+      categoryBreakdown,
+      deviceBreakdown,
+      clickTypeBreakdown,
+      peakHours
+    };
+  }
 }

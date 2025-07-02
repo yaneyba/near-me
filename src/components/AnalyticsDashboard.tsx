@@ -15,42 +15,17 @@ import {
   Tablet
 } from 'lucide-react';
 import { DataProviderFactory } from '../providers/DataProviderFactory';
-import { BusinessAnalytics } from '../types';
 import AnalyticsDataGenerator from './AnalyticsDataGenerator';
 
 interface AnalyticsDashboardProps {
   className?: string;
 }
 
-interface OverallAnalytics {
-  totalClickEvents: number;
-  totalUniqueVisitors: number;
-  topPerformingBusinesses: Array<{
-    businessId: string;
-    businessName: string;
-    totalClicks: number;
-    phoneClicks: number;
-    websiteClicks: number;
-    conversionRate: number;
-  }>;
-  categoryBreakdown: Array<{
-    category: string;
-    totalClicks: number;
-    uniqueVisitors: number;
-  }>;
-  timeseriesData: Array<{
-    date: string;
-    clicks: number;
-    visitors: number;
-  }>;
-}
-
 const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ className = '' }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<'day' | 'week' | 'month' | 'year'>('week');
-  const [overallAnalytics, setOverallAnalytics] = useState<OverallAnalytics | null>(null);
-  const [businessAnalytics, setBusinessAnalytics] = useState<BusinessAnalytics[]>([]);
+  const [overallAnalytics, setOverallAnalytics] = useState<any>(null);
 
   const dataProvider = DataProviderFactory.getProvider();
 
@@ -63,26 +38,9 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ className = '' 
       setLoading(true);
       setError(null);
 
-      // Get all businesses to fetch analytics for each
-      const businesses = await dataProvider.getAllBusinesses();
-      
-      // Fetch analytics for each business
-      const analyticsPromises = businesses.map(business => 
-        dataProvider.getBusinessAnalytics(business.business_id, selectedPeriod)
-          .catch(err => {
-            console.warn(`Failed to get analytics for business ${business.business_id}:`, err);
-            return null;
-          })
-      );
-
-      const analyticsResults = await Promise.all(analyticsPromises);
-      const validAnalytics = analyticsResults.filter(result => result !== null) as BusinessAnalytics[];
-      
-      setBusinessAnalytics(validAnalytics);
-      
-      // Calculate overall analytics
-      const overall = calculateOverallAnalytics(validAnalytics, businesses);
-      setOverallAnalytics(overall);
+      // Get overall analytics from user_engagement_events table
+      const analytics = await dataProvider.getOverallAnalytics(selectedPeriod);
+      setOverallAnalytics(analytics);
 
     } catch (err) {
       console.error('Error loading analytics data:', err);
@@ -92,83 +50,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ className = '' 
     }
   };
 
-  const calculateOverallAnalytics = (analytics: BusinessAnalytics[], businesses: any[]): OverallAnalytics => {
-    const totalClickEvents = analytics.reduce((sum, a) => 
-      sum + a.metrics.phoneClicks + a.metrics.websiteClicks + a.metrics.bookingClicks + 
-      a.metrics.directionsClicks + a.metrics.emailClicks, 0
-    );
 
-    const totalUniqueVisitors = analytics.reduce((sum, a) => sum + a.metrics.uniqueViews, 0);
-
-    // Top performing businesses
-    const businessPerformance = analytics.map(a => {
-      const business = businesses.find(b => b.business_id === a.businessId);
-      const totalClicks = a.metrics.phoneClicks + a.metrics.websiteClicks + a.metrics.bookingClicks;
-      
-      return {
-        businessId: a.businessId,
-        businessName: business?.name || 'Unknown Business',
-        totalClicks,
-        phoneClicks: a.metrics.phoneClicks,
-        websiteClicks: a.metrics.websiteClicks,
-        conversionRate: a.metrics.conversionRate
-      };
-    }).sort((a, b) => b.totalClicks - a.totalClicks).slice(0, 10);
-
-    // Category breakdown
-    const categoryMap = new Map<string, { clicks: number; visitors: number }>();
-    analytics.forEach(a => {
-      const business = businesses.find(b => b.business_id === a.businessId);
-      const category = business?.category || 'Unknown';
-      const clicks = a.metrics.phoneClicks + a.metrics.websiteClicks + a.metrics.bookingClicks + 
-                    a.metrics.directionsClicks + a.metrics.emailClicks;
-      
-      const existing = categoryMap.get(category) || { clicks: 0, visitors: 0 };
-      categoryMap.set(category, {
-        clicks: existing.clicks + clicks,
-        visitors: existing.visitors + a.metrics.uniqueViews
-      });
-    });
-
-    const categoryBreakdown = Array.from(categoryMap.entries()).map(([category, data]) => ({
-      category,
-      totalClicks: data.clicks,
-      uniqueVisitors: data.visitors
-    })).sort((a, b) => b.totalClicks - a.totalClicks);
-
-    // Generate mock timeseries data for now (could be enhanced with real historical data)
-    const timeseriesData = generateTimeseriesData(selectedPeriod, totalClickEvents, totalUniqueVisitors);
-
-    return {
-      totalClickEvents,
-      totalUniqueVisitors,
-      topPerformingBusinesses: businessPerformance,
-      categoryBreakdown,
-      timeseriesData
-    };
-  };
-
-  const generateTimeseriesData = (period: string, totalClicks: number, totalVisitors: number) => {
-    const days = period === 'day' ? 1 : period === 'week' ? 7 : period === 'month' ? 30 : 365;
-    const data = [];
-    
-    for (let i = days - 1; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      
-      // Distribute data with some randomness
-      const dayClicks = Math.floor((totalClicks / days) * (0.5 + Math.random()));
-      const dayVisitors = Math.floor((totalVisitors / days) * (0.5 + Math.random()));
-      
-      data.push({
-        date: date.toISOString().split('T')[0],
-        clicks: dayClicks,
-        visitors: dayVisitors
-      });
-    }
-    
-    return data;
-  };
 
   const formatNumber = (num: number) => {
     if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
@@ -213,15 +95,9 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ className = '' 
     );
   }
 
-  const avgConversionRate = businessAnalytics.length > 0 
-    ? businessAnalytics.reduce((sum, a) => sum + a.metrics.conversionRate, 0) / businessAnalytics.length 
-    : 0;
+  const avgConversionRate = overallAnalytics?.averageConversionRate || 0;
 
-  const totalDeviceBreakdown = businessAnalytics.reduce((acc, a) => ({
-    mobile: acc.mobile + a.deviceBreakdown.mobile,
-    tablet: acc.tablet + a.deviceBreakdown.tablet,
-    desktop: acc.desktop + a.deviceBreakdown.desktop
-  }), { mobile: 0, tablet: 0, desktop: 0 });
+  const totalDeviceBreakdown = overallAnalytics?.deviceBreakdown || { mobile: 0, tablet: 0, desktop: 0 };
 
   return (
     <div className={`bg-white rounded-lg shadow-sm p-6 ${className}`}>
@@ -297,7 +173,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ className = '' 
             <BarChart3 className="w-4 h-4 text-orange-600" />
           </div>
           <div className="text-2xl font-bold text-gray-900">
-            {businessAnalytics.length}
+            {overallAnalytics?.activeBusinesses || 0}
           </div>
           <div className="mt-2 text-xs text-gray-600">
             Businesses with engagement data
@@ -311,7 +187,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ className = '' 
         <div className="bg-white border border-gray-200 rounded-lg p-4">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Performing Businesses</h3>
           <div className="space-y-3">
-            {overallAnalytics?.topPerformingBusinesses.slice(0, 5).map((business, index) => (
+            {overallAnalytics?.topPerformingBusinesses.slice(0, 5).map((business: any, index: number) => (
               <div key={business.businessId} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-3">
                   <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -347,7 +223,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ className = '' 
         <div className="bg-white border border-gray-200 rounded-lg p-4">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Category Performance</h3>
           <div className="space-y-3">
-            {overallAnalytics?.categoryBreakdown.map((category) => {
+            {overallAnalytics?.categoryBreakdown.map((category: any) => {
               const total = overallAnalytics.totalClickEvents;
               const percentage = total > 0 ? (category.totalClicks / total) * 100 : 0;
               
@@ -414,11 +290,13 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ className = '' 
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Click Types</h3>
           <div className="space-y-4">
             {(() => {
-              const totalPhoneClicks = businessAnalytics.reduce((sum, a) => sum + a.metrics.phoneClicks, 0);
-              const totalWebsiteClicks = businessAnalytics.reduce((sum, a) => sum + a.metrics.websiteClicks, 0);
-              const totalDirectionsClicks = businessAnalytics.reduce((sum, a) => sum + a.metrics.directionsClicks, 0);
-              const totalBookingClicks = businessAnalytics.reduce((sum, a) => sum + a.metrics.bookingClicks, 0);
-              const totalEmailClicks = businessAnalytics.reduce((sum, a) => sum + a.metrics.emailClicks, 0);
+              const clickTypes = overallAnalytics?.clickTypeBreakdown || {
+                phone: 0,
+                website: 0,
+                directions: 0,
+                booking: 0,
+                email: 0
+              };
               
               return (
                 <>
@@ -427,35 +305,35 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ className = '' 
                       <Phone className="w-4 h-4 text-blue-600" />
                       <span className="text-sm font-medium text-gray-900">Phone</span>
                     </div>
-                    <span className="text-sm text-gray-600">{totalPhoneClicks}</span>
+                    <span className="text-sm text-gray-600">{clickTypes.phone}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <Globe className="w-4 h-4 text-green-600" />
                       <span className="text-sm font-medium text-gray-900">Website</span>
                     </div>
-                    <span className="text-sm text-gray-600">{totalWebsiteClicks}</span>
+                    <span className="text-sm text-gray-600">{clickTypes.website}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <MapPin className="w-4 h-4 text-red-600" />
                       <span className="text-sm font-medium text-gray-900">Directions</span>
                     </div>
-                    <span className="text-sm text-gray-600">{totalDirectionsClicks}</span>
+                    <span className="text-sm text-gray-600">{clickTypes.directions}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <Calendar className="w-4 h-4 text-purple-600" />
                       <span className="text-sm font-medium text-gray-900">Booking</span>
                     </div>
-                    <span className="text-sm text-gray-600">{totalBookingClicks}</span>
+                    <span className="text-sm text-gray-600">{clickTypes.booking}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <Mail className="w-4 h-4 text-orange-600" />
                       <span className="text-sm font-medium text-gray-900">Email</span>
                     </div>
-                    <span className="text-sm text-gray-600">{totalEmailClicks}</span>
+                    <span className="text-sm text-gray-600">{clickTypes.email}</span>
                   </div>
                 </>
               );
@@ -468,23 +346,9 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ className = '' 
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Peak Hours</h3>
           <div className="space-y-2">
             {(() => {
-              // Calculate hourly totals across all businesses
-              const hourlyTotals = Array.from({ length: 24 }, (_, hour) => {
-                const totalInteractions = businessAnalytics.reduce((sum, analytics) => {
-                  const hourData = analytics.hourlyDistribution.find(h => h.hour === hour);
-                  return sum + (hourData?.interactions || 0);
-                }, 0);
-                return { hour, interactions: totalInteractions };
-              });
-
-              // Sort by interactions and get top 5
-              const topHours = hourlyTotals
-                .sort((a, b) => b.interactions - a.interactions)
-                .slice(0, 5);
-
-              const maxInteractions = topHours[0]?.interactions || 1;
-
-              return topHours.map((hourData) => (
+              const peakHours = overallAnalytics?.peakHours || [];
+              
+              return peakHours.slice(0, 5).map((hourData: { hour: number; totalClicks: number }) => (
                 <div key={hourData.hour} className="flex items-center space-x-3">
                   <div className="w-12 text-sm text-gray-600">
                     {hourData.hour === 0 ? '12 AM' : 
@@ -496,12 +360,12 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ className = '' 
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div
                         className="bg-blue-600 h-2 rounded-full"
-                        style={{ width: `${(hourData.interactions / maxInteractions) * 100}%` }}
+                        style={{ width: `${Math.min((hourData.totalClicks / (peakHours[0]?.totalClicks || 1)) * 100, 100)}%` }}
                       ></div>
                     </div>
                   </div>
                   <div className="w-12 text-sm text-gray-900 text-right">
-                    {hourData.interactions}
+                    {hourData.totalClicks}
                   </div>
                 </div>
               ));
