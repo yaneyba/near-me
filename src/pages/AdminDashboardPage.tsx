@@ -9,15 +9,13 @@ import {
   XCircle, 
   Search, 
   Filter, 
-  ChevronDown, 
   Clock, 
-  UserCheck, 
-  Flag, 
   Loader2,
   AlertCircle,
   Menu,
   X,
-  RefreshCw
+  RefreshCw,
+  Building
 } from 'lucide-react';
 import { DataProviderFactory } from '../providers';
 import { useAuth } from '../lib/auth';
@@ -100,15 +98,6 @@ const AdminDashboardPage: React.FC = () => {
   useEffect(() => {
     document.title = 'Admin Dashboard - Near Me Directory';
     loadData();
-    
-    // Add debug helpers to window object
-    if (process.env.NODE_ENV === 'development') {
-      (window as any).debugAdminDashboard = {
-        checkAuth: () => console.log('Current user:', user),
-        loadData,
-        showStats: () => console.log('Current stats:', stats)
-      };
-    }
   }, []);
 
   // Load all data
@@ -1624,7 +1613,7 @@ const AdminDashboardPage: React.FC = () => {
       </div>
       
       {/* Add CSS for animations */}
-      <style jsx>{`
+      <style>{`
         @keyframes fade-in {
           from { opacity: 0; }
           to { opacity: 1; }
