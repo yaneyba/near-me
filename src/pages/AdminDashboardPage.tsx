@@ -3,33 +3,37 @@ import { useNavigate } from 'react-router-dom';
 import { 
   BarChart3, 
   Users, 
-  FileText, 
   MessageSquare, 
   Settings, 
+  FileText, 
   CheckCircle, 
   XCircle, 
   Clock, 
   Search, 
+  Filter, 
   ChevronDown, 
   ChevronUp, 
   Loader2, 
   AlertCircle,
-  Flag,
-  UserCheck,
-  UserX,
-  Beaker
+  Menu,
+  X,
+  LogOut
 } from 'lucide-react';
-import { DataProviderFactory } from '../providers/DataProviderFactory';
-import { updateDatabaseSettings, useAuth } from '../lib/auth';
-import AdminTest from '../components/AdminTest';
+import { DataProviderFactory } from '../providers';
+import { useAuth, signOut } from '../lib/auth';
+import usePagination from '../hooks/usePagination';
+import Pagination from '../components/Pagination';
 
 const AdminDashboardPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'businesses' | 'messages' | 'users' | 'analytics' | 'settings' | 'test'>('businesses');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Auth and navigation
+  const { user, authFeatures } = useAuth();
+  const navigate = useNavigate();
+  
+  // State for data
   const [businessSubmissions, setBusinessSubmissions] = useState<any[]>([]);
   const [contactMessages, setContactMessages] = useState<any[]>([]);
   const [businessProfiles, setBusinessProfiles] = useState<any[]>([]);
+  const [businesses, setBusinesses] = useState<any[]>([]);
   const [stats, setStats] = useState({
     pendingBusinesses: 0,
     totalBusinesses: 0,
@@ -38,111 +42,128 @@ const AdminDashboardPage: React.FC = () => {
     premiumBusinesses: 0
   });
   
-  // Search and filter state
+  // UI state
+  const [activeTab, setActiveTab] = useState<'businesses' | 'submissions' | 'messages' | 'users' | 'analytics' | 'settings'>('submissions');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-  
-  // Pagination state for businesses
-  const [businessesPage, setBusinessesPage] = useState(1);
-  const businessesPerPage = 10;
-  
-  // Pagination state for business submissions
-  const [submissionsPage, setSubmissionsPage] = useState(1);
-  const submissionsPerPage = 10;
+  const [showFilters, setShowFilters] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   // Settings state
   const [loginEnabled, setLoginEnabled] = useState(true);
   const [trackingEnabled, setTrackingEnabled] = useState(true);
   const [adsEnabled, setAdsEnabled] = useState(false);
-  const [settingsLoading, setSettingsLoading] = useState(false);
+  const [settingsChanged, setSettingsChanged] = useState(false);
+  const [savingSettings, setSavingSettings] = useState(false);
   
-  const { user, authFeatures } = useAuth();
-  const navigate = useNavigate();
-  const dataProvider = DataProviderFactory.getProvider();
+  // Pagination hooks
+  const businessesPagination = usePagination({ 
+    itemsPerPage: 10, 
+    resetTriggers: [searchQuery, statusFilter] 
+  });
+  
+  const submissionsPagination = usePagination({ 
+    itemsPerPage: 10, 
+    resetTriggers: [searchQuery, statusFilter] 
+  });
+  
+  const messagesPagination = usePagination({ 
+    itemsPerPage: 10, 
+    resetTriggers: [searchQuery, statusFilter] 
+  });
+  
+  const usersPagination = usePagination({ 
+    itemsPerPage: 10, 
+    resetTriggers: [searchQuery] 
+  });
 
-  // Check if user is admin
+  // Load data on component mount
   useEffect(() => {
-    if (!user) {
+    // Check if user is admin
+    if (!user || !user.isAdmin) {
       navigate('/login');
       return;
     }
     
-    if (!user.isAdmin) {
-      navigate('/');
-      return;
-    }
-    
     loadData();
-    loadSettings();
-  }, [user, navigate]);
+    
+    // Add debug helpers to window object
+    if (process.env.NODE_ENV === 'development') {
+      (window as any).debugAdminDashboard = {
+        checkAuth: () => console.log('Current user:', user),
+        loadData,
+        showStats: () => console.log('Current stats:', stats)
+      };
+    }
+  }, [user]);
 
-  // Reset pagination when filters change
+  // Load settings from auth features
   useEffect(() => {
-    setBusinessesPage(1);
-    setSubmissionsPage(1);
-  }, [searchQuery, statusFilter]);
+    if (authFeatures) {
+      setLoginEnabled(authFeatures.loginEnabled ?? true);
+      setTrackingEnabled(authFeatures.trackingEnabled ?? true);
+      setAdsEnabled(authFeatures.adsEnabled ?? false);
+    }
+  }, [authFeatures]);
 
   const loadData = async () => {
-    setLoading(true);
-    setError(null);
-    
     try {
+      setLoading(true);
+      setError(null);
+      
+      const dataProvider = DataProviderFactory.getProvider();
+      
       // Load all data in parallel
       const [
-        submissionsData,
-        messagesData,
-        profilesData,
+        submissionsData, 
+        messagesData, 
+        profilesData, 
+        businessesData,
         statsData
       ] = await Promise.all([
         dataProvider.getBusinessSubmissions(),
         dataProvider.getContactMessages(),
         dataProvider.getBusinessProfiles(),
+        dataProvider.getAllBusinesses(),
         dataProvider.getAdminStats()
       ]);
       
+      // Update state with loaded data
       setBusinessSubmissions(submissionsData || []);
       setContactMessages(messagesData || []);
       setBusinessProfiles(profilesData || []);
-      setStats(statsData || {
-        pendingBusinesses: 0,
-        totalBusinesses: 0,
-        newMessages: 0,
-        totalUsers: 0,
-        premiumBusinesses: 0
-      });
-    } catch (err: any) {
+      setBusinesses(businessesData || []);
+      setStats(statsData);
+      
+    } catch (err) {
       console.error('Error loading admin data:', err);
-      setError(err.message || 'Failed to load admin data');
+      setError('Failed to load data. Please try again later.');
     } finally {
       setLoading(false);
     }
   };
 
-  const loadSettings = async () => {
-    setSettingsLoading(true);
+  const handleLogout = async () => {
     try {
-      // Get auth feature flags from the hook that's already called at component level
-      setLoginEnabled(authFeatures?.loginEnabled ?? true);
-      setTrackingEnabled(authFeatures?.trackingEnabled ?? true);
-      setAdsEnabled(authFeatures?.adsEnabled ?? false);
-    } catch (err) {
-      console.error('Error loading settings:', err);
-    } finally {
-      setSettingsLoading(false);
+      await signOut();
+      navigate('/login');
+    } catch (error) {
+      console.error('Error signing out:', error);
     }
   };
 
-  const handleApproveBusinessSubmission = async (id: string) => {
+  const handleApproveSubmission = async (id: string) => {
     try {
+      setLoading(true);
+      const dataProvider = DataProviderFactory.getProvider();
       await dataProvider.approveBusinessSubmission(id);
       
-      // Update local state
+      // Update local data
       setBusinessSubmissions(prev => 
-        prev.map(submission => 
-          submission.id === id 
-            ? { ...submission, status: 'approved', reviewed_at: new Date().toISOString() } 
-            : submission
+        prev.map(sub => 
+          sub.id === id ? { ...sub, status: 'approved', reviewed_at: new Date().toISOString() } : sub
         )
       );
       
@@ -152,22 +173,27 @@ const AdminDashboardPage: React.FC = () => {
         pendingBusinesses: Math.max(0, prev.pendingBusinesses - 1),
         totalBusinesses: prev.totalBusinesses + 1
       }));
-    } catch (err: any) {
-      console.error('Error approving business submission:', err);
-      alert(`Failed to approve business: ${err.message || 'Unknown error'}`);
+      
+      // Reload data to get the newly created business
+      await loadData();
+    } catch (err) {
+      console.error('Error approving submission:', err);
+      setError('Failed to approve submission. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleRejectBusinessSubmission = async (id: string) => {
+  const handleRejectSubmission = async (id: string) => {
     try {
+      setLoading(true);
+      const dataProvider = DataProviderFactory.getProvider();
       await dataProvider.rejectBusinessSubmission(id);
       
-      // Update local state
+      // Update local data
       setBusinessSubmissions(prev => 
-        prev.map(submission => 
-          submission.id === id 
-            ? { ...submission, status: 'rejected', reviewed_at: new Date().toISOString() } 
-            : submission
+        prev.map(sub => 
+          sub.id === id ? { ...sub, status: 'rejected', reviewed_at: new Date().toISOString() } : sub
         )
       );
       
@@ -176,27 +202,24 @@ const AdminDashboardPage: React.FC = () => {
         ...prev,
         pendingBusinesses: Math.max(0, prev.pendingBusinesses - 1)
       }));
-    } catch (err: any) {
-      console.error('Error rejecting business submission:', err);
-      alert(`Failed to reject business: ${err.message || 'Unknown error'}`);
+    } catch (err) {
+      console.error('Error rejecting submission:', err);
+      setError('Failed to reject submission. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleResolveContactMessage = async (id: string) => {
+  const handleResolveMessage = async (id: string) => {
     try {
+      setLoading(true);
+      const dataProvider = DataProviderFactory.getProvider();
       await dataProvider.resolveContactMessage(id, user?.email);
       
-      // Update local state
+      // Update local data
       setContactMessages(prev => 
-        prev.map(message => 
-          message.id === id 
-            ? { 
-                ...message, 
-                status: 'resolved', 
-                resolved_at: new Date().toISOString(),
-                resolved_by: user?.email
-              } 
-            : message
+        prev.map(msg => 
+          msg.id === id ? { ...msg, status: 'resolved', resolved_at: new Date().toISOString() } : msg
         )
       );
       
@@ -205,139 +228,109 @@ const AdminDashboardPage: React.FC = () => {
         ...prev,
         newMessages: Math.max(0, prev.newMessages - 1)
       }));
-    } catch (err: any) {
-      console.error('Error resolving contact message:', err);
-      alert(`Failed to resolve message: ${err.message || 'Unknown error'}`);
+    } catch (err) {
+      console.error('Error resolving message:', err);
+      setError('Failed to resolve message. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleUpdateSettings = async () => {
-    setSettingsLoading(true);
+  const handleSaveSettings = async () => {
     try {
-      // Update auth feature flags
-      await updateDatabaseSettings({
+      setSavingSettings(true);
+      
+      // Update settings in database
+      const dataProvider = DataProviderFactory.getProvider();
+      await dataProvider.updateSettings({
         loginEnabled,
         trackingEnabled,
         adsEnabled
       });
-      alert('Settings updated successfully');
-    } catch (err: any) {
-      console.error('Error updating settings:', err);
-      alert(`Failed to update settings: ${err.message || 'Unknown error'}`);
+      
+      setSettingsChanged(false);
+    } catch (err) {
+      console.error('Error saving settings:', err);
+      setError('Failed to save settings. Please try again.');
     } finally {
-      setSettingsLoading(false);
+      setSavingSettings(false);
     }
   };
 
   // Filter functions
-  const getFilteredBusinessSubmissions = () => {
-    return businessSubmissions.filter(submission => {
-      // Filter by status
-      if (statusFilter !== 'all' && submission.status !== statusFilter) {
-        return false;
-      }
-      
-      // Filter by search query
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        return (
-          submission.business_name?.toLowerCase().includes(query) ||
-          submission.owner_name?.toLowerCase().includes(query) ||
-          submission.email?.toLowerCase().includes(query) ||
-          submission.city?.toLowerCase().includes(query)
-        );
-      }
-      
-      return true;
-    }).sort((a, b) => {
-      // Sort by submitted_at date
-      const dateA = new Date(a.submitted_at || 0).getTime();
-      const dateB = new Date(b.submitted_at || 0).getTime();
-      return sortDirection === 'desc' ? dateB - dateA : dateA - dateB;
-    });
-  };
-
-  const getFilteredContactMessages = () => {
-    return contactMessages.filter(message => {
-      // Filter by status
-      if (statusFilter !== 'all' && message.status !== statusFilter) {
-        return false;
-      }
-      
-      // Filter by search query
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        return (
-          message.name?.toLowerCase().includes(query) ||
-          message.email?.toLowerCase().includes(query) ||
-          message.subject?.toLowerCase().includes(query) ||
-          message.message?.toLowerCase().includes(query)
-        );
-      }
-      
-      return true;
-    }).sort((a, b) => {
-      // Sort by created_at date
-      const dateA = new Date(a.created_at || 0).getTime();
-      const dateB = new Date(b.created_at || 0).getTime();
-      return sortDirection === 'desc' ? dateB - dateA : dateA - dateB;
-    });
-  };
-
   const getFilteredBusinesses = () => {
-    return businessProfiles.filter(profile => {
-      // Filter by search query
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        return (
-          profile.business_name?.toLowerCase().includes(query) ||
-          profile.email?.toLowerCase().includes(query)
-        );
-      }
+    return businesses.filter(business => {
+      // Search filter
+      const matchesSearch = !searchQuery || 
+        business.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        business.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        business.city.toLowerCase().includes(searchQuery.toLowerCase());
       
-      return true;
-    }).sort((a, b) => {
-      // Sort by created_at date
-      const dateA = new Date(a.created_at || 0).getTime();
-      const dateB = new Date(b.created_at || 0).getTime();
-      return sortDirection === 'desc' ? dateB - dateA : dateA - dateB;
+      // Status filter
+      const matchesStatus = statusFilter === 'all' || 
+        (statusFilter === 'premium' && business.premium) ||
+        (statusFilter === 'active' && business.status === 'active') ||
+        (statusFilter === 'inactive' && business.status === 'inactive');
+      
+      return matchesSearch && matchesStatus;
     });
   };
 
-  // Pagination functions
-  const getPaginatedBusinesses = () => {
-    const filtered = getFilteredBusinesses();
-    const startIndex = (businessesPage - 1) * businessesPerPage;
-    const endIndex = startIndex + businessesPerPage;
-    return filtered.slice(startIndex, endIndex);
+  const getFilteredSubmissions = () => {
+    return businessSubmissions.filter(submission => {
+      // Search filter
+      const matchesSearch = !searchQuery || 
+        submission.business_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        submission.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        submission.city.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      // Status filter
+      const matchesStatus = statusFilter === 'all' || 
+        (statusFilter === 'pending' && submission.status === 'pending') ||
+        (statusFilter === 'approved' && submission.status === 'approved') ||
+        (statusFilter === 'rejected' && submission.status === 'rejected');
+      
+      return matchesSearch && matchesStatus;
+    });
   };
 
-  const getTotalBusinessesPages = () => {
-    const filtered = getFilteredBusinesses();
-    return Math.ceil(filtered.length / businessesPerPage);
+  const getFilteredMessages = () => {
+    return contactMessages.filter(message => {
+      // Search filter
+      const matchesSearch = !searchQuery || 
+        message.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        message.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        message.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        message.message.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      // Status filter
+      const matchesStatus = statusFilter === 'all' || 
+        (statusFilter === 'new' && message.status === 'new') ||
+        (statusFilter === 'in_progress' && message.status === 'in_progress') ||
+        (statusFilter === 'resolved' && message.status === 'resolved');
+      
+      return matchesSearch && matchesStatus;
+    });
   };
 
-  // Pagination functions for business submissions
-  const getPaginatedBusinessSubmissions = () => {
-    const filtered = getFilteredBusinessSubmissions();
-    const startIndex = (submissionsPage - 1) * submissionsPerPage;
-    const endIndex = startIndex + submissionsPerPage;
-    return filtered.slice(startIndex, endIndex);
-  };
-
-  const getTotalSubmissionsPages = () => {
-    const filtered = getFilteredBusinessSubmissions();
-    return Math.ceil(filtered.length / submissionsPerPage);
+  const getFilteredUsers = () => {
+    return businessProfiles.filter(profile => {
+      // Search filter
+      return !searchQuery || 
+        profile.business_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        profile.email.toLowerCase().includes(searchQuery.toLowerCase());
+    });
   };
 
   // Format date for display
   const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleString();
+    const date = new Date(dateString);
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
   };
 
-  // Get status badge color
-  const getStatusBadgeColor = (status: string) => {
+  // Get status badge class
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
         return 'bg-yellow-100 text-yellow-800';
@@ -351,31 +344,42 @@ const AdminDashboardPage: React.FC = () => {
         return 'bg-purple-100 text-purple-800';
       case 'resolved':
         return 'bg-green-100 text-green-800';
+      case 'active':
+        return 'bg-green-100 text-green-800';
+      case 'inactive':
+        return 'bg-gray-100 text-gray-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
   };
 
-  // Debug helpers (for development only)
-  if (process.env.NODE_ENV === 'development') {
-    // @ts-ignore
-    window.debugAdminDashboard = {
-      checkAuth: () => console.log('Current user:', user),
-      loadData: () => {
-        console.log('Manually loading data...');
-        loadData();
-      },
-      showStats: () => console.log('Current stats:', stats)
-    };
-  }
-
-  if (loading && !businessSubmissions.length) {
+  // Render loading state
+  if (loading && !businessSubmissions.length && !contactMessages.length) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-900">Loading Admin Dashboard</h2>
-          <p className="text-gray-500 mt-2">Please wait while we load your data...</p>
+          <p className="text-gray-600 mt-2">Please wait while we load your data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Render error state
+  if (error && !businessSubmissions.length && !contactMessages.length) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Dashboard</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button 
+            onClick={loadData}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );
@@ -383,865 +387,1171 @@ const AdminDashboardPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600 mt-1">Manage business submissions, messages, and settings</p>
+      {/* Mobile Header */}
+      <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">Admin Dashboard</h1>
+          <p className="text-sm text-gray-600">Manage your directory</p>
         </div>
+        <button 
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
+        >
+          {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </button>
+      </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-blue-600">
-            <div className="flex items-center">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-600">Pending Businesses</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.pendingBusinesses}</p>
-              </div>
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <FileText className="w-6 h-6 text-blue-600" />
-              </div>
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden bg-white border-b border-gray-200 shadow-lg">
+          <div className="px-4 py-2 space-y-1">
+            <button
+              onClick={() => { setActiveTab('submissions'); setMobileMenuOpen(false); }}
+              className={`w-full text-left px-3 py-2 rounded-lg flex items-center ${
+                activeTab === 'submissions' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <FileText className="w-5 h-5 mr-2" />
+              Business Submissions
+              <span className="ml-auto bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                {stats.pendingBusinesses}
+              </span>
+            </button>
+            
+            <button
+              onClick={() => { setActiveTab('messages'); setMobileMenuOpen(false); }}
+              className={`w-full text-left px-3 py-2 rounded-lg flex items-center ${
+                activeTab === 'messages' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <MessageSquare className="w-5 h-5 mr-2" />
+              Contact Messages
+              <span className="ml-auto bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                {stats.newMessages}
+              </span>
+            </button>
+            
+            <button
+              onClick={() => { setActiveTab('businesses'); setMobileMenuOpen(false); }}
+              className={`w-full text-left px-3 py-2 rounded-lg flex items-center ${
+                activeTab === 'businesses' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <FileText className="w-5 h-5 mr-2" />
+              Directory Businesses
+            </button>
+            
+            <button
+              onClick={() => { setActiveTab('users'); setMobileMenuOpen(false); }}
+              className={`w-full text-left px-3 py-2 rounded-lg flex items-center ${
+                activeTab === 'users' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <Users className="w-5 h-5 mr-2" />
+              User Management
+            </button>
+            
+            <button
+              onClick={() => { setActiveTab('analytics'); setMobileMenuOpen(false); }}
+              className={`w-full text-left px-3 py-2 rounded-lg flex items-center ${
+                activeTab === 'analytics' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <BarChart3 className="w-5 h-5 mr-2" />
+              Analytics
+            </button>
+            
+            <button
+              onClick={() => { setActiveTab('settings'); setMobileMenuOpen(false); }}
+              className={`w-full text-left px-3 py-2 rounded-lg flex items-center ${
+                activeTab === 'settings' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <Settings className="w-5 h-5 mr-2" />
+              Settings
+            </button>
+            
+            <div className="border-t border-gray-200 my-2 pt-2">
+              <button
+                onClick={handleLogout}
+                className="w-full text-left px-3 py-2 rounded-lg flex items-center text-red-600 hover:bg-red-50"
+              >
+                <LogOut className="w-5 h-5 mr-2" />
+                Sign Out
+              </button>
             </div>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-green-600">
-            <div className="flex items-center">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-600">Total Businesses</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalBusinesses}</p>
-              </div>
-              <div className="p-3 bg-green-100 rounded-lg">
-                <BarChart3 className="w-6 h-6 text-green-600" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-yellow-600">
-            <div className="flex items-center">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-600">New Messages</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.newMessages}</p>
-              </div>
-              <div className="p-3 bg-yellow-100 rounded-lg">
-                <MessageSquare className="w-6 h-6 text-yellow-600" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-purple-600">
-            <div className="flex items-center">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-600">Total Users</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalUsers}</p>
-              </div>
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <Users className="w-6 h-6 text-purple-600" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-orange-600">
-            <div className="flex items-center">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-600">Premium Businesses</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.premiumBusinesses}</p>
-              </div>
-              <div className="p-3 bg-orange-100 rounded-lg">
-                <Flag className="w-6 h-6 text-orange-600" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <div className="bg-white rounded-xl shadow-sm mb-8">
-          <div className="border-b border-gray-200">
-            <nav className="flex -mb-px">
-              <button
-                onClick={() => setActiveTab('businesses')}
-                className={`py-4 px-6 font-medium text-sm border-b-2 ${
-                  activeTab === 'businesses'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <FileText className="w-5 h-5 inline mr-2" />
-                Business Submissions
-              </button>
-              
-              <button
-                onClick={() => setActiveTab('messages')}
-                className={`py-4 px-6 font-medium text-sm border-b-2 ${
-                  activeTab === 'messages'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <MessageSquare className="w-5 h-5 inline mr-2" />
-                Contact Messages
-              </button>
-              
-              <button
-                onClick={() => setActiveTab('users')}
-                className={`py-4 px-6 font-medium text-sm border-b-2 ${
-                  activeTab === 'users'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <Users className="w-5 h-5 inline mr-2" />
-                Directory Businesses
-              </button>
-              
-              <button
-                onClick={() => setActiveTab('analytics')}
-                className={`py-4 px-6 font-medium text-sm border-b-2 ${
-                  activeTab === 'analytics'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <BarChart3 className="w-5 h-5 inline mr-2" />
-                Analytics
-              </button>
-              
-              <button
-                onClick={() => setActiveTab('settings')}
-                className={`py-4 px-6 font-medium text-sm border-b-2 ${
-                  activeTab === 'settings'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <Settings className="w-5 h-5 inline mr-2" />
-                Settings
-              </button>
-              
-              <button
-                onClick={() => setActiveTab('test')}
-                className={`py-4 px-6 font-medium text-sm border-b-2 ${
-                  activeTab === 'test'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <Beaker className="w-5 h-5 inline mr-2" />
-                Test
-              </button>
-            </nav>
           </div>
         </div>
+      )}
 
-        {/* Error Message */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
-            <div className="flex">
-              <AlertCircle className="w-5 h-5 text-red-500 mr-3" />
-              <div>
-                <h3 className="text-sm font-medium text-red-800">Error loading data</h3>
-                <p className="text-sm text-red-700 mt-1">{error}</p>
+      <div className="flex flex-col lg:flex-row">
+        {/* Sidebar - Desktop only */}
+        <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 bg-white border-r border-gray-200">
+          <div className="flex flex-col flex-grow pt-5 pb-4 overflow-y-auto">
+            <div className="flex items-center flex-shrink-0 px-4">
+              <h1 className="text-xl font-bold text-gray-900">Admin Dashboard</h1>
+            </div>
+            <div className="mt-5 flex-grow flex flex-col">
+              <nav className="flex-1 px-2 space-y-1">
                 <button
-                  onClick={loadData}
-                  className="mt-2 text-sm font-medium text-red-600 hover:text-red-800"
+                  onClick={() => setActiveTab('submissions')}
+                  className={`w-full text-left px-3 py-2 rounded-lg flex items-center ${
+                    activeTab === 'submissions' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'
+                  }`}
                 >
-                  Try Again
+                  <FileText className="w-5 h-5 mr-2" />
+                  Business Submissions
+                  <span className="ml-auto bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                    {stats.pendingBusinesses}
+                  </span>
                 </button>
-              </div>
+                
+                <button
+                  onClick={() => setActiveTab('messages')}
+                  className={`w-full text-left px-3 py-2 rounded-lg flex items-center ${
+                    activeTab === 'messages' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <MessageSquare className="w-5 h-5 mr-2" />
+                  Contact Messages
+                  <span className="ml-auto bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                    {stats.newMessages}
+                  </span>
+                </button>
+                
+                <button
+                  onClick={() => setActiveTab('businesses')}
+                  className={`w-full text-left px-3 py-2 rounded-lg flex items-center ${
+                    activeTab === 'businesses' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <FileText className="w-5 h-5 mr-2" />
+                  Directory Businesses
+                </button>
+                
+                <button
+                  onClick={() => setActiveTab('users')}
+                  className={`w-full text-left px-3 py-2 rounded-lg flex items-center ${
+                    activeTab === 'users' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <Users className="w-5 h-5 mr-2" />
+                  User Management
+                </button>
+                
+                <button
+                  onClick={() => setActiveTab('analytics')}
+                  className={`w-full text-left px-3 py-2 rounded-lg flex items-center ${
+                    activeTab === 'analytics' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <BarChart3 className="w-5 h-5 mr-2" />
+                  Analytics
+                </button>
+                
+                <button
+                  onClick={() => setActiveTab('settings')}
+                  className={`w-full text-left px-3 py-2 rounded-lg flex items-center ${
+                    activeTab === 'settings' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <Settings className="w-5 h-5 mr-2" />
+                  Settings
+                </button>
+              </nav>
+            </div>
+            <div className="p-4 border-t border-gray-200">
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center px-3 py-2 text-sm font-medium text-red-600 rounded-md hover:bg-red-50"
+              >
+                <LogOut className="mr-2 h-5 w-5" />
+                Sign Out
+              </button>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* Tab Content */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          {/* Business Submissions Tab */}
-          {activeTab === 'businesses' && (
-            <div>
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900">Business Submissions</h2>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {getFilteredBusinessSubmissions().length} of {businessSubmissions.length} submissions
-                    {submissionsPage > 1 && ` • Page ${submissionsPage} of ${getTotalSubmissionsPages()}`}
-                  </p>
-                </div>
-                
-                <div className="flex flex-col sm:flex-row gap-4">
-                  {/* Search */}
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Search submissions..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
-                    />
+        {/* Main content */}
+        <div className="lg:pl-64 flex flex-col flex-1">
+          <main className="flex-1 pb-8">
+            {/* Page header */}
+            <div className="bg-white shadow">
+              <div className="px-4 sm:px-6 lg:px-8 py-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex-1 min-w-0">
+                    <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+                      {activeTab === 'submissions' && 'Business Submissions'}
+                      {activeTab === 'messages' && 'Contact Messages'}
+                      {activeTab === 'businesses' && 'Directory Businesses'}
+                      {activeTab === 'users' && 'User Management'}
+                      {activeTab === 'analytics' && 'Analytics'}
+                      {activeTab === 'settings' && 'Settings'}
+                    </h2>
                   </div>
-                  
-                  {/* Status Filter */}
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="all">All Statuses</option>
-                    <option value="pending">Pending</option>
-                    <option value="approved">Approved</option>
-                    <option value="rejected">Rejected</option>
-                  </select>
-                  
-                  {/* Sort Direction */}
-                  <button
-                    onClick={() => setSortDirection(prev => prev === 'desc' ? 'asc' : 'desc')}
-                    className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-                  >
-                    {sortDirection === 'desc' ? (
-                      <>
-                        <ChevronDown className="w-4 h-4 mr-2" />
-                        Newest First
-                      </>
-                    ) : (
-                      <>
-                        <ChevronUp className="w-4 h-4 mr-2" />
-                        Oldest First
-                      </>
-                    )}
-                  </button>
+                  <div className="mt-4 sm:mt-0">
+                    <button
+                      onClick={loadData}
+                      className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                      <span className="hidden sm:inline">Refresh Data</span>
+                      <span className="sm:hidden">Refresh</span>
+                    </button>
+                  </div>
                 </div>
               </div>
-              
-              {/* Table */}
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Business
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Contact
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Location
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Submitted
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {getPaginatedBusinessSubmissions().map((submission) => (
-                      <tr key={submission.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{submission.business_name}</div>
-                          <div className="text-sm text-gray-500">{submission.category}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{submission.owner_name}</div>
-                          <div className="text-sm text-gray-500">{submission.email}</div>
-                          <div className="text-sm text-gray-500">{submission.phone}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{submission.city}, {submission.state}</div>
-                          <div className="text-sm text-gray-500">{submission.address}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeColor(submission.status)}`}>
-                            {submission.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {formatDate(submission.submitted_at)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          {submission.status === 'pending' ? (
-                            <div className="flex space-x-2">
-                              <button
-                                onClick={() => handleApproveBusinessSubmission(submission.id)}
-                                className="text-green-600 hover:text-green-900"
-                              >
-                                <UserCheck className="w-5 h-5" />
-                              </button>
-                              <button
-                                onClick={() => handleRejectBusinessSubmission(submission.id)}
-                                className="text-red-600 hover:text-red-900"
-                              >
-                                <UserX className="w-5 h-5" />
-                              </button>
+            </div>
+
+            {/* Stats cards */}
+            <div className="px-4 sm:px-6 lg:px-8 mt-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div className="bg-white overflow-hidden shadow rounded-lg">
+                  <div className="px-4 py-5 sm:p-6">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0 bg-blue-100 rounded-md p-3">
+                        <FileText className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <div className="ml-5 w-0 flex-1">
+                        <dl>
+                          <dt className="text-sm font-medium text-gray-500 truncate">
+                            Pending Businesses
+                          </dt>
+                          <dd className="flex items-baseline">
+                            <div className="text-2xl font-semibold text-gray-900">
+                              {stats.pendingBusinesses}
                             </div>
-                          ) : (
-                            <span className="text-gray-500">
-                              {submission.status === 'approved' ? (
-                                <CheckCircle className="w-5 h-5 text-green-500" />
+                          </dd>
+                        </dl>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white overflow-hidden shadow rounded-lg">
+                  <div className="px-4 py-5 sm:p-6">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0 bg-green-100 rounded-md p-3">
+                        <FileText className="h-6 w-6 text-green-600" />
+                      </div>
+                      <div className="ml-5 w-0 flex-1">
+                        <dl>
+                          <dt className="text-sm font-medium text-gray-500 truncate">
+                            Total Businesses
+                          </dt>
+                          <dd className="flex items-baseline">
+                            <div className="text-2xl font-semibold text-gray-900">
+                              {stats.totalBusinesses}
+                            </div>
+                          </dd>
+                        </dl>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white overflow-hidden shadow rounded-lg">
+                  <div className="px-4 py-5 sm:p-6">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0 bg-yellow-100 rounded-md p-3">
+                        <MessageSquare className="h-6 w-6 text-yellow-600" />
+                      </div>
+                      <div className="ml-5 w-0 flex-1">
+                        <dl>
+                          <dt className="text-sm font-medium text-gray-500 truncate">
+                            New Messages
+                          </dt>
+                          <dd className="flex items-baseline">
+                            <div className="text-2xl font-semibold text-gray-900">
+                              {stats.newMessages}
+                            </div>
+                          </dd>
+                        </dl>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white overflow-hidden shadow rounded-lg">
+                  <div className="px-4 py-5 sm:p-6">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0 bg-purple-100 rounded-md p-3">
+                        <Users className="h-6 w-6 text-purple-600" />
+                      </div>
+                      <div className="ml-5 w-0 flex-1">
+                        <dl>
+                          <dt className="text-sm font-medium text-gray-500 truncate">
+                            Total Users
+                          </dt>
+                          <dd className="flex items-baseline">
+                            <div className="text-2xl font-semibold text-gray-900">
+                              {stats.totalUsers}
+                            </div>
+                          </dd>
+                        </dl>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white overflow-hidden shadow rounded-lg">
+                  <div className="px-4 py-5 sm:p-6">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0 bg-indigo-100 rounded-md p-3">
+                        <BarChart3 className="h-6 w-6 text-indigo-600" />
+                      </div>
+                      <div className="ml-5 w-0 flex-1">
+                        <dl>
+                          <dt className="text-sm font-medium text-gray-500 truncate">
+                            Premium Businesses
+                          </dt>
+                          <dd className="flex items-baseline">
+                            <div className="text-2xl font-semibold text-gray-900">
+                              {stats.premiumBusinesses}
+                            </div>
+                          </dd>
+                        </dl>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Main content area */}
+            <div className="px-4 sm:px-6 lg:px-8 mt-6">
+              {/* Business Submissions Tab */}
+              {activeTab === 'submissions' && (
+                <div className="bg-white shadow rounded-lg overflow-hidden">
+                  <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                      <h3 className="text-lg leading-6 font-medium text-gray-900">
+                        Business Submissions
+                      </h3>
+                      <div className="mt-3 sm:mt-0 flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+                        <div className="relative rounded-md shadow-sm">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Search className="h-5 w-5 text-gray-400" />
+                          </div>
+                          <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
+                            placeholder="Search submissions..."
+                          />
+                        </div>
+                        <div>
+                          <button
+                            onClick={() => setShowFilters(!showFilters)}
+                            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          >
+                            <Filter className="h-4 w-4 mr-1" />
+                            Filter
+                            {showFilters ? (
+                              <ChevronUp className="h-4 w-4 ml-1" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4 ml-1" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    {showFilters && (
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <button
+                          onClick={() => setStatusFilter('all')}
+                          className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            statusFilter === 'all'
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                          }`}
+                        >
+                          All
+                        </button>
+                        <button
+                          onClick={() => setStatusFilter('pending')}
+                          className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            statusFilter === 'pending'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                          }`}
+                        >
+                          Pending
+                        </button>
+                        <button
+                          onClick={() => setStatusFilter('approved')}
+                          className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            statusFilter === 'approved'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                          }`}
+                        >
+                          Approved
+                        </button>
+                        <button
+                          onClick={() => setStatusFilter('rejected')}
+                          className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            statusFilter === 'rejected'
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                          }`}
+                        >
+                          Rejected
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Business
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                            Contact
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
+                            Location
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+                            Submitted
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {submissionsPagination.getPaginatedItems(getFilteredSubmissions()).map((submission) => (
+                          <tr key={submission.id}>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">{submission.business_name}</div>
+                              <div className="text-sm text-gray-500 hidden sm:block">{submission.category}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
+                              <div className="text-sm text-gray-900">{submission.owner_name}</div>
+                              <div className="text-sm text-gray-500">{submission.email}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap hidden lg:table-cell">
+                              <div className="text-sm text-gray-900">{submission.city}, {submission.state}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadge(submission.status)}`}>
+                                {submission.status}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">
+                              {formatDate(submission.submitted_at)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                              {submission.status === 'pending' ? (
+                                <div className="flex justify-end space-x-2">
+                                  <button
+                                    onClick={() => handleApproveSubmission(submission.id)}
+                                    className="text-green-600 hover:text-green-900"
+                                  >
+                                    <CheckCircle className="h-5 w-5" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleRejectSubmission(submission.id)}
+                                    className="text-red-600 hover:text-red-900"
+                                  >
+                                    <XCircle className="h-5 w-5" />
+                                  </button>
+                                </div>
                               ) : (
-                                <XCircle className="w-5 h-5 text-red-500" />
+                                <span className="text-gray-500">
+                                  {submission.status === 'approved' ? 'Approved' : 'Rejected'}
+                                </span>
                               )}
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              
-              {/* Pagination */}
-              {getTotalSubmissionsPages() > 1 && (
-                <div className="flex items-center justify-between mt-6">
-                  <div className="flex-1 flex justify-between sm:hidden">
-                    <button
-                      onClick={() => setSubmissionsPage(prev => Math.max(prev - 1, 1))}
-                      disabled={submissionsPage === 1}
-                      className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Previous
-                    </button>
-                    <button
-                      onClick={() => setSubmissionsPage(prev => Math.min(prev + 1, getTotalSubmissionsPages()))}
-                      disabled={submissionsPage === getTotalSubmissionsPages()}
-                      className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Next
-                    </button>
-                  </div>
-                  <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                    <div>
-                      <p className="text-sm text-gray-700">
-                        Showing <span className="font-medium">{(submissionsPage - 1) * submissionsPerPage + 1}</span> to{' '}
-                        <span className="font-medium">
-                          {Math.min(submissionsPage * submissionsPerPage, getFilteredBusinessSubmissions().length)}
-                        </span>{' '}
-                        of <span className="font-medium">{getFilteredBusinessSubmissions().length}</span> results
-                      </p>
-                    </div>
-                    <div>
-                      <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                        <button
-                          onClick={() => setSubmissionsPage(prev => Math.max(prev - 1, 1))}
-                          disabled={submissionsPage === 1}
-                          className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <span className="sr-only">Previous</span>
-                          <ChevronUp className="h-5 w-5 rotate-90" />
-                        </button>
-                        
-                        {/* Page numbers */}
-                        {[...Array(getTotalSubmissionsPages())].map((_, i) => (
-                          <button
-                            key={i}
-                            onClick={() => setSubmissionsPage(i + 1)}
-                            className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                              submissionsPage === i + 1
-                                ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                                : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                            }`}
-                          >
-                            {i + 1}
-                          </button>
+                            </td>
+                          </tr>
                         ))}
-                        
+                        {getFilteredSubmissions().length === 0 && (
+                          <tr>
+                            <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
+                              No submissions found
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  {/* Pagination */}
+                  <Pagination
+                    currentPage={submissionsPagination.currentPage}
+                    totalPages={submissionsPagination.getTotalPages(getFilteredSubmissions().length)}
+                    itemsPerPage={submissionsPagination.itemsPerPage}
+                    totalItems={getFilteredSubmissions().length}
+                    onPageChange={submissionsPagination.setCurrentPage}
+                  />
+                </div>
+              )}
+
+              {/* Contact Messages Tab */}
+              {activeTab === 'messages' && (
+                <div className="bg-white shadow rounded-lg overflow-hidden">
+                  <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                      <h3 className="text-lg leading-6 font-medium text-gray-900">
+                        Contact Messages
+                      </h3>
+                      <div className="mt-3 sm:mt-0 flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+                        <div className="relative rounded-md shadow-sm">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Search className="h-5 w-5 text-gray-400" />
+                          </div>
+                          <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
+                            placeholder="Search messages..."
+                          />
+                        </div>
+                        <div>
+                          <button
+                            onClick={() => setShowFilters(!showFilters)}
+                            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          >
+                            <Filter className="h-4 w-4 mr-1" />
+                            Filter
+                            {showFilters ? (
+                              <ChevronUp className="h-4 w-4 ml-1" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4 ml-1" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    {showFilters && (
+                      <div className="mt-4 flex flex-wrap gap-2">
                         <button
-                          onClick={() => setSubmissionsPage(prev => Math.min(prev + 1, getTotalSubmissionsPages()))}
-                          disabled={submissionsPage === getTotalSubmissionsPages()}
-                          className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                          onClick={() => setStatusFilter('all')}
+                          className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            statusFilter === 'all'
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                          }`}
                         >
-                          <span className="sr-only">Next</span>
-                          <ChevronDown className="h-5 w-5 rotate-90" />
+                          All
                         </button>
-                      </nav>
+                        <button
+                          onClick={() => setStatusFilter('new')}
+                          className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            statusFilter === 'new'
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                          }`}
+                        >
+                          New
+                        </button>
+                        <button
+                          onClick={() => setStatusFilter('in_progress')}
+                          className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            statusFilter === 'in_progress'
+                              ? 'bg-purple-100 text-purple-800'
+                              : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                          }`}
+                        >
+                          In Progress
+                        </button>
+                        <button
+                          onClick={() => setStatusFilter('resolved')}
+                          className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            statusFilter === 'resolved'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                          }`}
+                        >
+                          Resolved
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            From
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                            Subject
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
+                            Message
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+                            Received
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {messagesPagination.getPaginatedItems(getFilteredMessages()).map((message) => (
+                          <tr key={message.id}>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">{message.name}</div>
+                              <div className="text-sm text-gray-500">{message.email}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
+                              <div className="text-sm text-gray-900">{message.subject || 'No Subject'}</div>
+                            </td>
+                            <td className="px-6 py-4 hidden lg:table-cell">
+                              <div className="text-sm text-gray-900 truncate max-w-xs">
+                                {message.message.length > 100 
+                                  ? message.message.substring(0, 100) + '...' 
+                                  : message.message}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadge(message.status || 'new')}`}>
+                                {message.status || 'new'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">
+                              {formatDate(message.created_at)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                              {message.status !== 'resolved' ? (
+                                <button
+                                  onClick={() => handleResolveMessage(message.id)}
+                                  className="text-green-600 hover:text-green-900"
+                                >
+                                  <CheckCircle className="h-5 w-5" />
+                                </button>
+                              ) : (
+                                <span className="text-gray-500">
+                                  <Clock className="h-5 w-5" />
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                        {getFilteredMessages().length === 0 && (
+                          <tr>
+                            <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
+                              No messages found
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  {/* Pagination */}
+                  <Pagination
+                    currentPage={messagesPagination.currentPage}
+                    totalPages={messagesPagination.getTotalPages(getFilteredMessages().length)}
+                    itemsPerPage={messagesPagination.itemsPerPage}
+                    totalItems={getFilteredMessages().length}
+                    onPageChange={messagesPagination.setCurrentPage}
+                  />
+                </div>
+              )}
+
+              {/* Directory Businesses Tab */}
+              {activeTab === 'businesses' && (
+                <div className="bg-white shadow rounded-lg overflow-hidden">
+                  <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                      <h3 className="text-lg leading-6 font-medium text-gray-900">
+                        Directory Businesses
+                      </h3>
+                      <div className="mt-3 sm:mt-0 flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+                        <div className="relative rounded-md shadow-sm">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Search className="h-5 w-5 text-gray-400" />
+                          </div>
+                          <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
+                            placeholder="Search businesses..."
+                          />
+                        </div>
+                        <div>
+                          <button
+                            onClick={() => setShowFilters(!showFilters)}
+                            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          >
+                            <Filter className="h-4 w-4 mr-1" />
+                            Filter
+                            {showFilters ? (
+                              <ChevronUp className="h-4 w-4 ml-1" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4 ml-1" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    {showFilters && (
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <button
+                          onClick={() => setStatusFilter('all')}
+                          className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            statusFilter === 'all'
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                          }`}
+                        >
+                          All
+                        </button>
+                        <button
+                          onClick={() => setStatusFilter('active')}
+                          className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            statusFilter === 'active'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                          }`}
+                        >
+                          Active
+                        </button>
+                        <button
+                          onClick={() => setStatusFilter('inactive')}
+                          className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            statusFilter === 'inactive'
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                          }`}
+                        >
+                          Inactive
+                        </button>
+                        <button
+                          onClick={() => setStatusFilter('premium')}
+                          className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            statusFilter === 'premium'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                          }`}
+                        >
+                          Premium
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Business
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                            Category
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
+                            Location
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+                            Added
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {businessesPagination.getPaginatedItems(getFilteredBusinesses()).map((business) => (
+                          <tr key={business.id}>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">{business.name}</div>
+                              <div className="text-sm text-gray-500 hidden sm:block">{business.phone}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
+                              <div className="text-sm text-gray-900">{business.category}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap hidden lg:table-cell">
+                              <div className="text-sm text-gray-900">{business.city}, {business.state}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center">
+                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadge(business.status || 'active')}`}>
+                                  {business.status || 'active'}
+                                </span>
+                                {business.premium && (
+                                  <span className="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                    Premium
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">
+                              {formatDate(business.created_at)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                              <button
+                                className="text-blue-600 hover:text-blue-900"
+                                onClick={() => {
+                                  // View business details
+                                  console.log('View business:', business);
+                                }}
+                              >
+                                View
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                        {getFilteredBusinesses().length === 0 && (
+                          <tr>
+                            <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
+                              No businesses found
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  {/* Pagination */}
+                  <Pagination
+                    currentPage={businessesPagination.currentPage}
+                    totalPages={businessesPagination.getTotalPages(getFilteredBusinesses().length)}
+                    itemsPerPage={businessesPagination.itemsPerPage}
+                    totalItems={getFilteredBusinesses().length}
+                    onPageChange={businessesPagination.setCurrentPage}
+                  />
+                </div>
+              )}
+
+              {/* User Management Tab */}
+              {activeTab === 'users' && (
+                <div className="bg-white shadow rounded-lg overflow-hidden">
+                  <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                      <h3 className="text-lg leading-6 font-medium text-gray-900">
+                        User Management
+                      </h3>
+                      <div className="mt-3 sm:mt-0 flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+                        <div className="relative rounded-md shadow-sm">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Search className="h-5 w-5 text-gray-400" />
+                          </div>
+                          <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
+                            placeholder="Search users..."
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            User
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                            Business
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Role
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
+                            Status
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+                            Joined
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {usersPagination.getPaginatedItems(getFilteredUsers()).map((profile) => (
+                          <tr key={profile.id}>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">{profile.email}</div>
+                              <div className="text-sm text-gray-500">{profile.id.substring(0, 8)}...</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
+                              <div className="text-sm text-gray-900">{profile.business_name}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                profile.role === 'admin' 
+                                  ? 'bg-purple-100 text-purple-800' 
+                                  : 'bg-blue-100 text-blue-800'
+                              }`}>
+                                {profile.role || 'owner'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap hidden lg:table-cell">
+                              <div className="flex items-center">
+                                {profile.premium && (
+                                  <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                    Premium
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">
+                              {formatDate(profile.created_at)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                              <button
+                                className="text-blue-600 hover:text-blue-900"
+                                onClick={() => {
+                                  // View user details
+                                  console.log('View user:', profile);
+                                }}
+                              >
+                                View
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                        {getFilteredUsers().length === 0 && (
+                          <tr>
+                            <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
+                              No users found
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  {/* Pagination */}
+                  <Pagination
+                    currentPage={usersPagination.currentPage}
+                    totalPages={usersPagination.getTotalPages(getFilteredUsers().length)}
+                    itemsPerPage={usersPagination.itemsPerPage}
+                    totalItems={getFilteredUsers().length}
+                    onPageChange={usersPagination.setCurrentPage}
+                  />
+                </div>
+              )}
+
+              {/* Analytics Tab */}
+              {activeTab === 'analytics' && (
+                <div className="bg-white shadow rounded-lg overflow-hidden">
+                  <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
+                    <h3 className="text-lg leading-6 font-medium text-gray-900">
+                      Analytics Dashboard
+                    </h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      View performance metrics and trends
+                    </p>
+                  </div>
+                  <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <h4 className="text-lg font-medium text-gray-900 mb-4">Date Range</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                            <input 
+                              type="date" 
+                              className="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                            <input 
+                              type="date" 
+                              className="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2"
+                            />
+                          </div>
+                        </div>
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          <button className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                            Last 7 Days
+                          </button>
+                          <button className="px-3 py-1 bg-gray-100 text-gray-800 hover:bg-gray-200 rounded-full text-sm font-medium">
+                            Last 30 Days
+                          </button>
+                          <button className="px-3 py-1 bg-gray-100 text-gray-800 hover:bg-gray-200 rounded-full text-sm font-medium">
+                            Last 90 Days
+                          </button>
+                          <button className="px-3 py-1 bg-gray-100 text-gray-800 hover:bg-gray-200 rounded-full text-sm font-medium">
+                            This Year
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <h4 className="text-lg font-medium text-gray-900 mb-4">Period Selection</h4>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                          <button className="px-3 py-2 bg-blue-100 text-blue-800 rounded-md text-sm font-medium">
+                            Day
+                          </button>
+                          <button className="px-3 py-2 bg-gray-100 text-gray-800 hover:bg-gray-200 rounded-md text-sm font-medium">
+                            Week
+                          </button>
+                          <button className="px-3 py-2 bg-gray-100 text-gray-800 hover:bg-gray-200 rounded-md text-sm font-medium">
+                            Month
+                          </button>
+                          <button className="px-3 py-2 bg-gray-100 text-gray-800 hover:bg-gray-200 rounded-md text-sm font-medium">
+                            Year
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 flex items-center justify-center h-64">
+                      <div className="text-center">
+                        <BarChart3 className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                        <p className="text-gray-500">Chart placeholder - Analytics integration coming soon</p>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <h4 className="text-sm font-medium text-gray-500 mb-1">Total Views</h4>
+                        <p className="text-2xl font-bold text-gray-900">12,543</p>
+                        <p className="text-sm text-green-600 mt-1">+12.5% from last period</p>
+                      </div>
+                      
+                      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <h4 className="text-sm font-medium text-gray-500 mb-1">Conversion Rate</h4>
+                        <p className="text-2xl font-bold text-gray-900">3.2%</p>
+                        <p className="text-sm text-red-600 mt-1">-0.5% from last period</p>
+                      </div>
+                      
+                      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <h4 className="text-sm font-medium text-gray-500 mb-1">Premium Conversions</h4>
+                        <p className="text-2xl font-bold text-gray-900">24</p>
+                        <p className="text-sm text-green-600 mt-1">+4 from last period</p>
+                      </div>
                     </div>
                   </div>
                 </div>
               )}
-              
-              {/* Empty State */}
-              {getFilteredBusinessSubmissions().length === 0 && (
-                <div className="text-center py-12">
-                  <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No business submissions found</h3>
-                  <p className="text-gray-500">
-                    {searchQuery || statusFilter !== 'all'
-                      ? 'Try adjusting your search or filter criteria'
-                      : 'Business submissions will appear here when they are submitted'}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
 
-          {/* Contact Messages Tab */}
-          {activeTab === 'messages' && (
-            <div>
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-                <h2 className="text-xl font-semibold text-gray-900">Contact Messages</h2>
-                
-                <div className="flex flex-col sm:flex-row gap-4">
-                  {/* Search */}
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Search messages..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
-                    />
+              {/* Settings Tab */}
+              {activeTab === 'settings' && (
+                <div className="bg-white shadow rounded-lg overflow-hidden">
+                  <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
+                    <h3 className="text-lg leading-6 font-medium text-gray-900">
+                      System Settings
+                    </h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Configure global application settings
+                    </p>
                   </div>
-                  
-                  {/* Status Filter */}
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="all">All Statuses</option>
-                    <option value="new">New</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="resolved">Resolved</option>
-                  </select>
-                  
-                  {/* Sort Direction */}
-                  <button
-                    onClick={() => setSortDirection(prev => prev === 'desc' ? 'asc' : 'desc')}
-                    className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-                  >
-                    {sortDirection === 'desc' ? (
-                      <>
-                        <ChevronDown className="w-4 h-4 mr-2" />
-                        Newest First
-                      </>
-                    ) : (
-                      <>
-                        <ChevronUp className="w-4 h-4 mr-2" />
-                        Oldest First
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-              
-              {/* Results Count */}
-              <div className="text-sm text-gray-500 mb-4">
-                Showing {getFilteredContactMessages().length} messages
-                {searchQuery && ` matching "${searchQuery}"`}
-                {statusFilter !== 'all' && ` with status "${statusFilter}"`}
-              </div>
-              
-              {/* Table */}
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        From
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Subject
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Location
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Received
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {getFilteredContactMessages().map((message) => (
-                      <tr key={message.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{message.name}</div>
-                          <div className="text-sm text-gray-500">{message.email}</div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="text-sm text-gray-900">{message.subject}</div>
-                          <div className="text-sm text-gray-500 truncate max-w-xs">{message.message}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{message.city || 'N/A'}</div>
-                          <div className="text-sm text-gray-500">{message.category || 'General'}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeColor(message.status)}`}>
-                            {message.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {formatDate(message.created_at)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          {message.status !== 'resolved' ? (
-                            <button
-                              onClick={() => handleResolveContactMessage(message.id)}
-                              className="text-green-600 hover:text-green-900"
-                            >
-                              <CheckCircle className="w-5 h-5" />
-                            </button>
+                  <div className="p-6 space-y-6">
+                    {/* Authentication Settings */}
+                    <div>
+                      <h4 className="text-lg font-medium text-gray-900 mb-4">Authentication Settings</h4>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h5 className="text-sm font-medium text-gray-900">User Login</h5>
+                            <p className="text-sm text-gray-500">Enable or disable user login functionality</p>
+                          </div>
+                          <div className="relative inline-block w-12 h-6 transition duration-200 ease-in-out rounded-full">
+                            <input
+                              type="checkbox"
+                              id="toggle-login"
+                              className="absolute w-6 h-6 transition duration-200 ease-in-out transform bg-white border rounded-full appearance-none cursor-pointer peer border-gray-300 checked:right-0 checked:border-blue-600 checked:bg-blue-600"
+                              checked={loginEnabled}
+                              onChange={() => {
+                                setLoginEnabled(!loginEnabled);
+                                setSettingsChanged(true);
+                              }}
+                            />
+                            <label
+                              htmlFor="toggle-login"
+                              className="block h-full overflow-hidden rounded-full cursor-pointer bg-gray-300 peer-checked:bg-blue-300"
+                            ></label>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h5 className="text-sm font-medium text-gray-900">User Tracking</h5>
+                            <p className="text-sm text-gray-500">Enable or disable user engagement tracking</p>
+                          </div>
+                          <div className="relative inline-block w-12 h-6 transition duration-200 ease-in-out rounded-full">
+                            <input
+                              type="checkbox"
+                              id="toggle-tracking"
+                              className="absolute w-6 h-6 transition duration-200 ease-in-out transform bg-white border rounded-full appearance-none cursor-pointer peer border-gray-300 checked:right-0 checked:border-blue-600 checked:bg-blue-600"
+                              checked={trackingEnabled}
+                              onChange={() => {
+                                setTrackingEnabled(!trackingEnabled);
+                                setSettingsChanged(true);
+                              }}
+                            />
+                            <label
+                              htmlFor="toggle-tracking"
+                              className="block h-full overflow-hidden rounded-full cursor-pointer bg-gray-300 peer-checked:bg-blue-300"
+                            ></label>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h5 className="text-sm font-medium text-gray-900">Advertisements</h5>
+                            <p className="text-sm text-gray-500">Enable or disable advertisements on the site</p>
+                          </div>
+                          <div className="relative inline-block w-12 h-6 transition duration-200 ease-in-out rounded-full">
+                            <input
+                              type="checkbox"
+                              id="toggle-ads"
+                              className="absolute w-6 h-6 transition duration-200 ease-in-out transform bg-white border rounded-full appearance-none cursor-pointer peer border-gray-300 checked:right-0 checked:border-blue-600 checked:bg-blue-600"
+                              checked={adsEnabled}
+                              onChange={() => {
+                                setAdsEnabled(!adsEnabled);
+                                setSettingsChanged(true);
+                              }}
+                            />
+                            <label
+                              htmlFor="toggle-ads"
+                              className="block h-full overflow-hidden rounded-full cursor-pointer bg-gray-300 peer-checked:bg-blue-300"
+                            ></label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Save Button */}
+                    {settingsChanged && (
+                      <div className="flex justify-end">
+                        <button
+                          onClick={handleSaveSettings}
+                          disabled={savingSettings}
+                          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {savingSettings ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Saving...
+                            </>
                           ) : (
-                            <span className="text-gray-500">
-                              <Clock className="w-5 h-5" />
-                            </span>
+                            'Save Changes'
                           )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              
-              {/* Empty State */}
-              {getFilteredContactMessages().length === 0 && (
-                <div className="text-center py-12">
-                  <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No contact messages found</h3>
-                  <p className="text-gray-500">
-                    {searchQuery || statusFilter !== 'all'
-                      ? 'Try adjusting your search or filter criteria'
-                      : 'Contact messages will appear here when they are submitted'}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Directory Businesses Tab */}
-          {activeTab === 'users' && (
-            <div>
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900">Directory Businesses</h2>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {getFilteredBusinesses().length} of {businessProfiles.length} businesses
-                    {businessesPage > 1 && ` • Page ${businessesPage} of ${getTotalBusinessesPages()}`}
-                  </p>
-                </div>
-                
-                <div className="flex flex-col sm:flex-row gap-4">
-                  {/* Search */}
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Search businesses..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
-                    />
-                  </div>
-                  
-                  {/* Sort Direction */}
-                  <button
-                    onClick={() => setSortDirection(prev => prev === 'desc' ? 'asc' : 'desc')}
-                    className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-                  >
-                    {sortDirection === 'desc' ? (
-                      <>
-                        <ChevronDown className="w-4 h-4 mr-2" />
-                        Newest First
-                      </>
-                    ) : (
-                      <>
-                        <ChevronUp className="w-4 h-4 mr-2" />
-                        Oldest First
-                      </>
+                        </button>
+                      </div>
                     )}
-                  </button>
-                </div>
-              </div>
-              
-              {/* Table */}
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Business
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Contact
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Role
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Created
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {getPaginatedBusinesses().map((profile) => (
-                      <tr key={profile.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{profile.business_name}</div>
-                          <div className="text-sm text-gray-500">{profile.business_id || 'No ID'}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{profile.email}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">owner</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            profile.premium ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                          }`}>
-                            {profile.premium ? 'Premium' : 'Basic'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {formatDate(profile.created_at)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              
-              {/* Pagination */}
-              {getTotalBusinessesPages() > 1 && (
-                <div className="flex items-center justify-between mt-6">
-                  <div className="flex-1 flex justify-between sm:hidden">
-                    <button
-                      onClick={() => setBusinessesPage(prev => Math.max(prev - 1, 1))}
-                      disabled={businessesPage === 1}
-                      className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Previous
-                    </button>
-                    <button
-                      onClick={() => setBusinessesPage(prev => Math.min(prev + 1, getTotalBusinessesPages()))}
-                      disabled={businessesPage === getTotalBusinessesPages()}
-                      className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Next
-                    </button>
-                  </div>
-                  <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                    <div>
-                      <p className="text-sm text-gray-700">
-                        Showing <span className="font-medium">{(businessesPage - 1) * businessesPerPage + 1}</span> to{' '}
-                        <span className="font-medium">
-                          {Math.min(businessesPage * businessesPerPage, getFilteredBusinesses().length)}
-                        </span>{' '}
-                        of <span className="font-medium">{getFilteredBusinesses().length}</span> results
-                      </p>
-                    </div>
-                    <div>
-                      <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                        <button
-                          onClick={() => setBusinessesPage(prev => Math.max(prev - 1, 1))}
-                          disabled={businessesPage === 1}
-                          className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <span className="sr-only">Previous</span>
-                          <ChevronUp className="h-5 w-5 rotate-90" />
-                        </button>
-                        
-                        {/* Page numbers */}
-                        {[...Array(getTotalBusinessesPages())].map((_, i) => (
-                          <button
-                            key={i}
-                            onClick={() => setBusinessesPage(i + 1)}
-                            className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                              businessesPage === i + 1
-                                ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                                : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                            }`}
-                          >
-                            {i + 1}
-                          </button>
-                        ))}
-                        
-                        <button
-                          onClick={() => setBusinessesPage(prev => Math.min(prev + 1, getTotalBusinessesPages()))}
-                          disabled={businessesPage === getTotalBusinessesPages()}
-                          className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <span className="sr-only">Next</span>
-                          <ChevronDown className="h-5 w-5 rotate-90" />
-                        </button>
-                      </nav>
-                    </div>
                   </div>
                 </div>
               )}
-              
-              {/* Empty State */}
-              {getFilteredBusinesses().length === 0 && (
-                <div className="text-center py-12">
-                  <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No businesses found</h3>
-                  <p className="text-gray-500">
-                    {searchQuery
-                      ? 'Try adjusting your search criteria'
-                      : 'Businesses will appear here when they are created'}
-                  </p>
-                </div>
-              )}
             </div>
-          )}
-
-          {/* Analytics Tab */}
-          {activeTab === 'analytics' && (
-            <div>
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-                <h2 className="text-xl font-semibold text-gray-900">Analytics</h2>
-                
-                <div className="flex flex-col sm:flex-row gap-4">
-                  {/* Date Range */}
-                  <select
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="7d">Last 7 Days</option>
-                    <option value="30d">Last 30 Days</option>
-                    <option value="90d">Last 90 Days</option>
-                    <option value="1y">Last Year</option>
-                    <option value="custom">Custom Range</option>
-                  </select>
-                  
-                  {/* Period */}
-                  <select
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="day">By Day</option>
-                    <option value="week">By Week</option>
-                    <option value="month">By Month</option>
-                  </select>
-                </div>
-              </div>
-              
-              {/* Analytics Placeholder */}
-              <div className="bg-gray-50 rounded-lg p-8 text-center">
-                <BarChart3 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Analytics Coming Soon</h3>
-                <p className="text-gray-500 max-w-md mx-auto">
-                  We're working on comprehensive analytics for your admin dashboard. 
-                  This feature will be available in an upcoming update.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Settings Tab */}
-          {activeTab === 'settings' && (
-            <div>
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-                <h2 className="text-xl font-semibold text-gray-900">System Settings</h2>
-              </div>
-              
-              <div className="space-y-6">
-                {/* Authentication Settings */}
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                    <h3 className="text-lg font-medium text-gray-900">Authentication Settings</h3>
-                  </div>
-                  <div className="p-6 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="text-base font-medium text-gray-900">User Login</h4>
-                        <p className="text-sm text-gray-500">Allow users to log in to the platform</p>
-                      </div>
-                      <div className="relative inline-block w-12 h-6 transition duration-200 ease-in-out rounded-full">
-                        <input
-                          type="checkbox"
-                          id="toggle-login"
-                          className="absolute w-6 h-6 transition duration-200 ease-in-out transform bg-white border rounded-full appearance-none cursor-pointer peer border-gray-300 checked:right-0 checked:border-blue-600 checked:bg-blue-600"
-                          checked={loginEnabled}
-                          onChange={(e) => setLoginEnabled(e.target.checked)}
-                        />
-                        <label
-                          htmlFor="toggle-login"
-                          className="block w-full h-full overflow-hidden rounded-full cursor-pointer bg-gray-300 peer-checked:bg-blue-300"
-                        ></label>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="text-base font-medium text-gray-900">User Engagement Tracking</h4>
-                        <p className="text-sm text-gray-500">Track user interactions with businesses</p>
-                      </div>
-                      <div className="relative inline-block w-12 h-6 transition duration-200 ease-in-out rounded-full">
-                        <input
-                          type="checkbox"
-                          id="toggle-tracking"
-                          className="absolute w-6 h-6 transition duration-200 ease-in-out transform bg-white border rounded-full appearance-none cursor-pointer peer border-gray-300 checked:right-0 checked:border-blue-600 checked:bg-blue-600"
-                          checked={trackingEnabled}
-                          onChange={(e) => setTrackingEnabled(e.target.checked)}
-                        />
-                        <label
-                          htmlFor="toggle-tracking"
-                          className="block w-full h-full overflow-hidden rounded-full cursor-pointer bg-gray-300 peer-checked:bg-blue-300"
-                        ></label>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="text-base font-medium text-gray-900">Advertisements</h4>
-                        <p className="text-sm text-gray-500">Enable or disable ads on the platform</p>
-                      </div>
-                      <div className="relative inline-block w-12 h-6 transition duration-200 ease-in-out rounded-full">
-                        <input
-                          type="checkbox"
-                          id="toggle-ads"
-                          className="absolute w-6 h-6 transition duration-200 ease-in-out transform bg-white border rounded-full appearance-none cursor-pointer peer border-gray-300 checked:right-0 checked:border-blue-600 checked:bg-blue-600"
-                          checked={adsEnabled}
-                          onChange={(e) => setAdsEnabled(e.target.checked)}
-                        />
-                        <label
-                          htmlFor="toggle-ads"
-                          className="block w-full h-full overflow-hidden rounded-full cursor-pointer bg-gray-300 peer-checked:bg-blue-300"
-                        ></label>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                    <button
-                      onClick={handleUpdateSettings}
-                      disabled={settingsLoading}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {settingsLoading ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 inline animate-spin" />
-                          Saving...
-                        </>
-                      ) : (
-                        'Save Settings'
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Test Tab */}
-          {activeTab === 'test' && (
-            <div>
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-                <h2 className="text-xl font-semibold text-gray-900">Admin System Test</h2>
-              </div>
-              
-              <AdminTest />
-            </div>
-          )}
+          </main>
         </div>
       </div>
     </div>
