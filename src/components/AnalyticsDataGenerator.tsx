@@ -146,16 +146,16 @@ const AnalyticsDataGenerator: React.FC = () => {
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4 space-y-4 lg:space-y-0">
         <div>
           <h3 className="text-lg font-semibold text-gray-900">Analytics Data Generator</h3>
           <p className="text-sm text-gray-600">Generate sample engagement data for testing the analytics dashboard</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-2 lg:gap-2">
           <button
             onClick={generateSampleData}
             disabled={isGenerating || isClearing}
-            className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:bg-purple-300 flex items-center"
+            className="px-3 sm:px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:bg-purple-300 flex items-center justify-center text-sm"
           >
             {isGenerating ? (
               <>
@@ -165,7 +165,8 @@ const AnalyticsDataGenerator: React.FC = () => {
             ) : (
               <>
                 <Zap className="w-4 h-4 mr-2" />
-                Generate Sample Data
+                <span className="hidden sm:inline">Generate Sample Data</span>
+                <span className="sm:hidden">Generate Data</span>
               </>
             )}
           </button>
@@ -173,7 +174,7 @@ const AnalyticsDataGenerator: React.FC = () => {
           <button
             onClick={clearSampleData}
             disabled={isGenerating || isClearing}
-            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-red-300 flex items-center"
+            className="px-3 sm:px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-red-300 flex items-center justify-center text-sm"
           >
             {isClearing ? (
               <>
@@ -183,7 +184,8 @@ const AnalyticsDataGenerator: React.FC = () => {
             ) : (
               <>
                 <Trash2 className="w-4 h-4 mr-2" />
-                Clear Sample Data
+                <span className="hidden sm:inline">Clear Sample Data</span>
+                <span className="sm:hidden">Clear Data</span>
               </>
             )}
           </button>
