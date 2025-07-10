@@ -132,13 +132,14 @@ export class D1DataProvider implements IDataProvider {
   async getServices(category: string): Promise<string[]> {
     try {
       const sql = `
-        SELECT DISTINCT category as service 
-        FROM businesses 
-        WHERE category IS NOT NULL AND category != ''
-        ORDER BY category ASC
+        SELECT DISTINCT service 
+        FROM services 
+        WHERE LOWER(category) = LOWER(?)
+        ORDER BY service ASC
       `;
 
-      const services = await this.executeQuery(sql, []);
+      const services = await this.executeQuery(sql, [category]);
+      return services.map((row: any) => row.service);
       return services.map((row: any) => row.service);
     } catch (error) {
       console.error('Failed to get services from D1:', error);
@@ -152,13 +153,14 @@ export class D1DataProvider implements IDataProvider {
   async getNeighborhoods(city: string): Promise<string[]> {
     try {
       const sql = `
-        SELECT DISTINCT city as neighborhood 
-        FROM businesses 
-        WHERE city IS NOT NULL AND city != ''
-        ORDER BY city ASC
+        SELECT DISTINCT neighborhood_name as neighborhood 
+        FROM neighborhoods 
+        WHERE LOWER(city) = LOWER(?)
+        ORDER BY neighborhood_name ASC
       `;
 
-      const neighborhoods = await this.executeQuery(sql, []);
+      const neighborhoods = await this.executeQuery(sql, [city]);
+      return neighborhoods.map((row: any) => row.neighborhood);
       return neighborhoods.map((row: any) => row.neighborhood);
     } catch (error) {
       console.error('Failed to get neighborhoods from D1:', error);
