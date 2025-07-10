@@ -43,9 +43,20 @@ export const parseSubdomain = (hostname: string = window.location.hostname, path
   // Handle localhost and development
   if (hostname === 'localhost' || hostname.startsWith('127.0.0.1') || hostname.includes('stackblitz')) {
     return {
-      category: 'Nail Salons',
-      city: 'Frisco',
-      state: 'Texas'
+      category: 'All Services',
+      city: 'All Cities',
+      state: 'Nationwide',
+      isServices: true
+    };
+  }
+
+  // Check for services.near-me.us pattern (services homepage)
+  if (hostname === 'services.near-me.us' || hostname.includes('services.near-me.us')) {
+    return {
+      category: 'All Services',
+      city: 'All Cities',
+      state: 'Nationwide',
+      isServices: true
     };
   }
 
@@ -92,11 +103,12 @@ export const parseSubdomain = (hostname: string = window.location.hostname, path
     return { category, city, state };
   }
 
-  // Fallback for any other hostname
+  // Fallback for any other hostname - redirect to services homepage
   return {
-    category: 'Nail Salons',
-    city: 'Frisco',
-    state: 'Texas'
+    category: 'All Services',
+    city: 'All Cities',
+    state: 'Nationwide',
+    isServices: true
   };
 };
 

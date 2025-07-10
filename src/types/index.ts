@@ -215,6 +215,7 @@ export interface SubdomainInfo {
   state: string;
   isWaterRefill?: boolean; // Flag for water refill service pattern
   isPathBased?: boolean; // Flag for path-based routing (service.near-me.us/city)
+  isServices?: boolean; // Flag for services homepage (services.near-me.us)
 }
 
 // Stripe related interfaces

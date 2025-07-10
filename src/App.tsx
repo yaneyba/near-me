@@ -4,6 +4,7 @@ import { DataProviderFactory } from './providers/DataProviderFactory';
 import { parseSubdomain } from './utils/subdomainParser';
 import { SubdomainInfo } from './types';
 import HomePage from './pages/HomePage';
+import ServicesHomePage from './pages/ServicesHomePage';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import SitemapPage from './pages/SitemapPage';
@@ -50,7 +51,14 @@ function App() {
       <SubdomainLayout subdomainInfo={subdomainInfo}>
         <Routes>
           {/* Public Routes */}
-          <Route path="/" element={<HomePage subdomainInfo={subdomainInfo} />} />
+          <Route 
+            path="/" 
+            element={
+              subdomainInfo.isServices ? 
+                <ServicesHomePage subdomainInfo={subdomainInfo} /> : 
+                <HomePage subdomainInfo={subdomainInfo} />
+            } 
+          />
           <Route path="/about" element={<AboutPage subdomainInfo={subdomainInfo} />} />
           <Route path="/contact" element={<ContactPage subdomainInfo={subdomainInfo} />} />
           <Route path="/sitemap" element={<SitemapPage />} />
