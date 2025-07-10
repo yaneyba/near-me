@@ -13,7 +13,7 @@ export interface Business {
   reviewCount: number;
   description: string | null;
   services: string[];
-  neighborhood: string | null;
+  neighborhood?: string | null;
   hours: {
     [key: string]: string;
   };

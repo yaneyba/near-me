@@ -104,8 +104,8 @@ export class SEOUtils {
     // Add neighborhood keywords
     const neighborhoods = new Set<string>();
     businesses.forEach(business => {
-      neighborhoods.add(business.neighborhood.toLowerCase());
-      baseKeywords.push(`${category.toLowerCase()} ${business.neighborhood.toLowerCase()}`);
+      neighborhoods.add(business.neighborhood?.toLowerCase() || '');
+      baseKeywords.push(`${category.toLowerCase()} ${business.neighborhood?.toLowerCase() || ''}`);
     });
 
     return [...new Set(baseKeywords)].slice(0, 20); // Limit to 20 keywords
