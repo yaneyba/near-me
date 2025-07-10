@@ -1,4 +1,8 @@
 # Cloudflare Pages redirects for path-based routing
 
-# Main domain and services subdomain - serve React app
-/* /index.html 200
+# API routes (if any) - let them pass through
+/api/* 200
+
+# Static assets with extensions - let them pass through naturally
+# SPA fallback - redirect all other routes to index.html (with force flag to prevent loops)
+/* /index.html 200!
