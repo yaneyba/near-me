@@ -25,13 +25,9 @@ function App() {
   // Configure the data provider factory
   React.useEffect(() => {
     DataProviderFactory.configure({
-      type: 'hybrid', // Use hybrid provider (JSON for business data, Supabase for forms)
-      // In production, you might configure:
-      // type: 'api',
-      // apiBaseUrl: 'https://api.near-me.us',
-      // apiKey: process.env.REACT_APP_API_KEY,
-      // timeout: 10000,
-      // retryAttempts: 3
+      type: 'd1', // Use D1 provider (Cloudflare D1 database)
+      // In production, the D1 provider will use the Cloudflare Pages Functions API
+      // All data operations now go through D1 instead of Supabase
     });
   }, []);
 

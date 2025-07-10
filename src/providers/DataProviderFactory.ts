@@ -1,8 +1,9 @@
 import { IDataProvider } from '../types';
 import { JsonDataProvider } from './JsonDataProvider';
 import { HybridDataProvider } from './HybridDataProvider';
+import { D1DataProvider } from './D1DataProvider';
 
-export type DataProviderType = 'json' | 'hybrid' | 'api' | 'mock';
+export type DataProviderType = 'json' | 'hybrid' | 'api' | 'mock' | 'd1';
 
 export interface DataProviderConfig {
   type: DataProviderType;
@@ -15,7 +16,7 @@ export interface DataProviderConfig {
 export class DataProviderFactory {
   private static instance: IDataProvider | null = null;
   private static config: DataProviderConfig = {
-    type: 'hybrid' // Default to hybrid provider (JSON + Supabase)
+    type: 'd1' // Default to D1 provider (Cloudflare D1 database)
   };
 
   /**
@@ -57,9 +58,12 @@ export class DataProviderFactory {
       case 'hybrid':
         return new HybridDataProvider();
       
+      case 'd1':
+        return new D1DataProvider();
+      
       case 'api':
         // In the future, this would create an API-based provider
-        throw new Error('API provider not yet implemented. Use HybridDataProvider for now.');
+        throw new Error('API provider not yet implemented. Use D1DataProvider for now.');
       
       case 'mock':
         // In the future, this would create a mock provider for testing

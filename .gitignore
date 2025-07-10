@@ -25,3 +25,6 @@ dist-ssr
 .env
 src/data/imported.tsv
 scripts/create-admin-user.js
+
+# Wrangler/Cloudflare local state
+.wrangler/

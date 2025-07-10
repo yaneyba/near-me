@@ -1,0 +1,7 @@
+name = "near-me-migration"
+compatibility_date = "2024-01-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "nearme-db"
+database_id = "86879c31-0686-4532-a66c-f310b89d7a27"
