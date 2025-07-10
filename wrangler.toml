@@ -6,6 +6,3 @@ pages_build_output_dir = "./dist"
 binding = "DB"
 database_name = "nearme-db"
 database_id = "86879c31-0686-4532-a66c-f310b89d7a27"
-
-[vars]
-D1_API_KEY = "nearme-d1-api-2025"
