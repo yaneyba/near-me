@@ -98,7 +98,7 @@ const ServicesHomePage: React.FC<ServicesHomePageProps> = ({ subdomainInfo }) =>
     return () => {
       clearTimeout(timeout);
     };
-  }, [dataProvider, loading]);
+  }, [dataProvider]);
 
   const filteredServices = services.filter(service =>
     service.name.toLowerCase().includes(searchQuery.toLowerCase())
