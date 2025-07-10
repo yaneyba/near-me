@@ -22,14 +22,22 @@ export class SEOUtils {
     businesses: Business[] = [],
     currentPath: string = '/'
   ): SEOMetadata {
-    const { category, city, state } = subdomainInfo;
+    const { category, city, state, isServices } = subdomainInfo;
     const businessCount = businesses.length;
     
-    // Generate URLs
-    const categoryUrl = this.formatForUrl(category);
-    const cityUrl = this.formatForUrl(city);
-    const subdomainUrl = `https://${categoryUrl}.${cityUrl}.near-me.us`;
-    const canonicalUrl = `${subdomainUrl}${currentPath}`;
+    // Generate URLs - use services.near-me.us for services homepage
+    let subdomainUrl: string;
+    let canonicalUrl: string;
+    
+    if (isServices) {
+      subdomainUrl = 'https://services.near-me.us';
+      canonicalUrl = `${subdomainUrl}${currentPath}`;
+    } else {
+      const categoryUrl = this.formatForUrl(category);
+      const cityUrl = this.formatForUrl(city);
+      subdomainUrl = `https://${categoryUrl}.${cityUrl}.near-me.us`;
+      canonicalUrl = `${subdomainUrl}${currentPath}`;
+    }
 
     // Generate title based on page type
     let title: string;
@@ -55,7 +63,7 @@ export class SEOUtils {
     // Generate Open Graph data
     const ogTitle = title.length > 60 ? `${category} in ${city}, ${state}` : title;
     const ogDescription = description.length > 160 ? description.substring(0, 157) + '...' : description;
-    const ogImage = this.generateOGImage(category, city);
+    const ogImage = this.generateOGImage(category, city, isServices);
 
     // Generate structured data
     const structuredData = this.generateStructuredData(subdomainInfo, businesses, currentPath);
@@ -116,9 +124,13 @@ export class SEOUtils {
   /**
    * Generate Open Graph image URL
    */
-  private generateOGImage(category: string, city: string): string {
+  private generateOGImage(category: string, city: string, isServices?: boolean): string {
     // In production, this would generate dynamic OG images
     // For now, return a placeholder that could be replaced with actual image generation
+    if (isServices) {
+      return `${this.baseUrl}/og-images/services-homepage.jpg`;
+    }
+    
     const categoryUrl = this.formatForUrl(category);
     const cityUrl = this.formatForUrl(city);
     return `${this.baseUrl}/og-images/${categoryUrl}-${cityUrl}.jpg`;
@@ -132,10 +144,17 @@ export class SEOUtils {
     businesses: Business[],
     currentPath: string
   ): any {
-    const { category, city, state } = subdomainInfo;
-    const categoryUrl = this.formatForUrl(category);
-    const cityUrl = this.formatForUrl(city);
-    const baseUrl = `https://${categoryUrl}.${cityUrl}.near-me.us`;
+    const { category, city, state, isServices } = subdomainInfo;
+    
+    // Generate base URL - use services.near-me.us for services homepage
+    let baseUrl: string;
+    if (isServices) {
+      baseUrl = 'https://services.near-me.us';
+    } else {
+      const categoryUrl = this.formatForUrl(category);
+      const cityUrl = this.formatForUrl(city);
+      baseUrl = `https://${categoryUrl}.${cityUrl}.near-me.us`;
+    }
 
     const baseStructuredData = {
       "@context": "https://schema.org",
@@ -176,10 +195,17 @@ export class SEOUtils {
    * Generate structured data for individual business
    */
   generateBusinessStructuredData(business: Business, subdomainInfo: SubdomainInfo): any {
-    const { category, city } = subdomainInfo;
-    const categoryUrl = this.formatForUrl(category);
-    const cityUrl = this.formatForUrl(city);
-    const businessUrl = `https://${categoryUrl}.${cityUrl}.near-me.us/business/${this.formatForUrl(business.name)}-${business.id}`;
+    const { category, city, isServices } = subdomainInfo;
+    
+    // Generate business URL - use services.near-me.us for services homepage
+    let businessUrl: string;
+    if (isServices) {
+      businessUrl = `https://services.near-me.us/business/${this.formatForUrl(business.name)}-${business.id}`;
+    } else {
+      const categoryUrl = this.formatForUrl(category);
+      const cityUrl = this.formatForUrl(city);
+      businessUrl = `https://${categoryUrl}.${cityUrl}.near-me.us/business/${this.formatForUrl(business.name)}-${business.id}`;
+    }
 
     return {
       "@context": "https://schema.org",
@@ -228,10 +254,17 @@ export class SEOUtils {
     currentPath: string,
     businessName?: string
   ): any {
-    const { category, city } = subdomainInfo;
-    const categoryUrl = this.formatForUrl(category);
-    const cityUrl = this.formatForUrl(city);
-    const baseUrl = `https://${categoryUrl}.${cityUrl}.near-me.us`;
+    const { category, city, isServices } = subdomainInfo;
+    
+    // Generate base URL - use services.near-me.us for services homepage
+    let baseUrl: string;
+    if (isServices) {
+      baseUrl = 'https://services.near-me.us';
+    } else {
+      const categoryUrl = this.formatForUrl(category);
+      const cityUrl = this.formatForUrl(city);
+      baseUrl = `https://${categoryUrl}.${cityUrl}.near-me.us`;
+    }
 
     const breadcrumbItems = [
       {

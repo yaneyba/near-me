@@ -73,13 +73,32 @@ const ServicesHomePage: React.FC<ServicesHomePageProps> = ({ subdomainInfo }) =>
         setCities(cityData.sort((a, b) => b.count - a.count));
       } catch (error) {
         console.error('Error loading services data:', error);
+        // Set empty arrays to prevent infinite loading
+        setServices([]);
+        setCities([]);
       } finally {
         setLoading(false);
       }
     };
 
-    loadData();
-  }, [dataProvider]);
+    // Add timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      if (loading) {
+        console.warn('Data loading timeout, setting loading to false');
+        setLoading(false);
+        setServices([]);
+        setCities([]);
+      }
+    }, 10000); // 10 second timeout
+
+    loadData().finally(() => {
+      clearTimeout(timeout);
+    });
+
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [dataProvider, loading]);
 
   const filteredServices = services.filter(service =>
     service.name.toLowerCase().includes(searchQuery.toLowerCase())
