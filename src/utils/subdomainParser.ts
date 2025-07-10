@@ -109,12 +109,20 @@ export const parseSubdomain = (hostname: string = window.location.hostname, path
     const rawCity = parts[1];
     
     // Check if this is a valid combination with actual business data
-    if (isValidCombination(rawCategory, rawCity)) {
+    const isValid = isValidCombination(rawCategory, rawCity);
+    
+    if (isValid) {
       const category = formatCategory(rawCategory);
       const city = formatCity(rawCity);
       const state = cityStateMap[rawCity.toLowerCase()] || 'Unknown State';
       
-      return { category, city, state };
+      return { 
+        category, 
+        city, 
+        state, 
+        rawCategory, 
+        rawCity 
+      };
     }
     
     // Invalid combination - redirect to services page

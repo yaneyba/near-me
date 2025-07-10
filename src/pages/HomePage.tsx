@@ -29,7 +29,10 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
 
   // Load data when subdomain info changes
   useEffect(() => {
-    if (subdomainInfo.category && subdomainInfo.city) {
+    if (subdomainInfo.rawCategory && subdomainInfo.rawCity) {
+      loadData(subdomainInfo.rawCategory, subdomainInfo.rawCity);
+    } else if (subdomainInfo.category && subdomainInfo.city) {
+      // Fallback to display format if raw values not available
       loadData(subdomainInfo.category, subdomainInfo.city);
     }
   }, [subdomainInfo]);
@@ -37,9 +40,12 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
   const loadData = async (category: string, city: string) => {
     setLoading(true);
     try {
+      // For services, use raw category if available, otherwise use the passed category
+      const serviceCategory = subdomainInfo.rawCategory || category;
+      
       const [businessData, serviceData] = await Promise.all([
         dataProvider.getBusinesses(category, city),
-        dataProvider.getServices(category)
+        dataProvider.getServices(serviceCategory)
       ]);
       
       setBusinesses(businessData);

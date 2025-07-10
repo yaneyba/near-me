@@ -210,9 +210,11 @@ export interface IDataProvider {
 }
 
 export interface SubdomainInfo {
-  category: string;
-  city: string;
+  category: string; // Display format (e.g., "Nail Salons")
+  city: string; // Display format (e.g., "Austin")
   state: string;
+  rawCategory?: string; // API format (e.g., "nail-salons")
+  rawCity?: string; // API format (e.g., "austin")
   isWaterRefill?: boolean; // Flag for water refill service pattern
   isPathBased?: boolean; // Flag for path-based routing (service.near-me.us/city)
   isServices?: boolean; // Flag for services homepage (services.near-me.us)

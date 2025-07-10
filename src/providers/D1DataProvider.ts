@@ -96,7 +96,7 @@ export class D1DataProvider implements IDataProvider {
 
       const businesses = await this.executeQuery(sql, [category, city]);
       
-      return businesses.map((row: any) => ({
+      const mappedBusinesses = businesses.map((row: any) => ({
         id: row.id,
         business_id: row.business_id || row.id,
         name: row.name,
@@ -120,6 +120,8 @@ export class D1DataProvider implements IDataProvider {
         premium: Boolean(row.premium),
         status: 'active'
       }));
+      
+      return mappedBusinesses;
     } catch (error) {
       console.error('Failed to get businesses from D1:', error);
       return [];
