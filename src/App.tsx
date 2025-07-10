@@ -14,7 +14,7 @@ import BusinessOwnersPage from './pages/BusinessOwnersPage';
 import BusinessDashboardPage from './pages/BusinessDashboardPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import LoginPage from './pages/LoginPage';
-import Layout from './components/Layout';
+import { SubdomainLayout } from './components/layouts';
 import AuthGuard from './components/auth/AuthGuard';
 import { useAuth } from './lib/auth';
 import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
@@ -47,7 +47,7 @@ function App() {
 
   return (
     <Router>
-      <Layout subdomainInfo={subdomainInfo}>
+      <SubdomainLayout subdomainInfo={subdomainInfo}>
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<HomePage subdomainInfo={subdomainInfo} />} />
@@ -113,7 +113,7 @@ function App() {
             } 
           />
         </Routes>
-      </Layout>
+      </SubdomainLayout>
     </Router>
   );
 }

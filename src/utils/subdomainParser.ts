@@ -39,13 +39,42 @@ const formatCity = (city: string): string => {
     .join(' ');
 };
 
-export const parseSubdomain = (hostname: string = window.location.hostname): SubdomainInfo => {
+export const parseSubdomain = (hostname: string = window.location.hostname, pathname: string = window.location.pathname): SubdomainInfo => {
   // Handle localhost and development
   if (hostname === 'localhost' || hostname.startsWith('127.0.0.1') || hostname.includes('stackblitz')) {
     return {
       category: 'Nail Salons',
       city: 'Frisco',
       state: 'Texas'
+    };
+  }
+
+  // Check for water-refill.near-me.us pattern
+  if (hostname === 'water-refill.near-me.us' || hostname.includes('water-refill.near-me.us')) {
+    // Parse path for city: /city-name
+    const pathParts = pathname.split('/').filter(part => part.length > 0);
+    
+    if (pathParts.length > 0) {
+      const rawCity = pathParts[0];
+      const city = formatCity(rawCity);
+      const state = cityStateMap[rawCity.toLowerCase()] || 'Unknown State';
+      
+      return {
+        category: 'Water Refill Stations',
+        city,
+        state,
+        isWaterRefill: true,
+        isPathBased: true
+      };
+    }
+    
+    // Default water refill page (no city specified)
+    return {
+      category: 'Water Refill Stations',
+      city: 'All Cities',
+      state: 'Nationwide',
+      isWaterRefill: true,
+      isPathBased: true
     };
   }
 

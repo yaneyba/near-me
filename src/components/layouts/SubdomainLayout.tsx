@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { SubdomainInfo } from '../types';
-import Header from './Header';
-import Footer from './Footer';
-import Breadcrumb from './Breadcrumb';
-import DevPanel from './DevPanel';
+import { SubdomainInfo } from '../../types';
+import Header from '../Header';
+import Footer from '../Footer';
+import Breadcrumb from '../Breadcrumb';
+import DevPanel from '../DevPanel';
 
 interface LayoutProps {
   children: React.ReactNode;
