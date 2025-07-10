@@ -2,6 +2,7 @@
 
 export interface Env {
   DB: D1Database;
+  D1_API_KEY: string;
 }
 
 // Re-export Cloudflare types

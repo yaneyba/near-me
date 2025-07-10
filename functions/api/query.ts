@@ -4,11 +4,15 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
   
   try {
-    const { sql, params, database_id } = await request.json();
+    const { sql, params } = await request.json();
     
     // Verify API key
     const apiKey = request.headers.get('Authorization')?.replace('Bearer ', '');
-    const expectedApiKey = 'nearme-d1-api-2025';
+    const expectedApiKey = env.D1_API_KEY;
+    
+    if (!expectedApiKey) {
+      return new Response('Server configuration error: API key not configured', { status: 500 });
+    }
     
     if (apiKey !== expectedApiKey) {
       return new Response('Unauthorized', { status: 401 });

@@ -13,20 +13,21 @@ import {
  * This replaces Supabase as the primary data source
  */
 export class D1DataProvider implements IDataProvider {
-  private d1DatabaseId: string;
   private apiBaseUrl: string;
 
   constructor() {
     // Get D1 configuration from environment
-    this.d1DatabaseId = import.meta.env.CF_DATABASE_ID || '86879c31-0686-4532-a66c-f310b89d7a27';
-    this.apiBaseUrl = import.meta.env.VITE_D1_BASE_URL || 'https://near-me-32q.pages.dev';
+    this.apiBaseUrl = import.meta.env.VITE_D1_BASE_URL;
     
-    if (!this.d1DatabaseId) {
-      throw new Error('D1 Database ID not configured. Set CF_DATABASE_ID in environment variables.');
+    if (!this.apiBaseUrl) {
+      throw new Error('VITE_D1_BASE_URL not configured in environment variables.');
     }
     
     // Ensure we use D1 mode when configured
-    if (!import.meta.env.VITE_USE_D1) {
+    const useD1 = import.meta.env.VITE_USE_D1;
+    console.log('D1DataProvider - VITE_USE_D1:', useD1, typeof useD1);
+    
+    if (useD1 !== 'true') {
       console.warn('VITE_USE_D1 is not enabled. D1DataProvider may not work correctly.');
     }
   }
@@ -36,7 +37,11 @@ export class D1DataProvider implements IDataProvider {
    */
   private async executeQuery(sql: string, params: any[] = []): Promise<any> {
     try {
-      const apiKey = import.meta.env.VITE_D1_API_KEY || 'nearme-d1-api-2025';
+      const apiKey = import.meta.env.VITE_D1_API_KEY;
+      
+      if (!apiKey) {
+        throw new Error('VITE_D1_API_KEY not configured in environment variables.');
+      }
       
       const response = await fetch(`${this.apiBaseUrl}/api/query`, {
         method: 'POST',
@@ -46,8 +51,7 @@ export class D1DataProvider implements IDataProvider {
         },
         body: JSON.stringify({
           sql,
-          params,
-          database_id: this.d1DatabaseId
+          params
         })
       });
 
@@ -73,13 +77,24 @@ export class D1DataProvider implements IDataProvider {
    */
   async getBusinesses(category: string, city: string): Promise<Business[]> {
     try {
-      const response = await fetch(`${this.apiBaseUrl}/businesses?category=${encodeURIComponent(category)}&city=${encodeURIComponent(city)}`);
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch businesses: ${response.statusText}`);
-      }
+      const sql = `
+        SELECT 
+          id, name, slug, category, subcategory,
+          description, phone, website, address,
+          city, state, zip, latitude, longitude,
+          image_url, business_hours, featured,
+          verified, premium, created_at, updated_at
+        FROM businesses 
+        WHERE LOWER(category) = LOWER(?) 
+        AND LOWER(city) = LOWER(?)
+        ORDER BY 
+          premium DESC,
+          featured DESC,
+          verified DESC,
+          name ASC
+      `;
 
-      const businesses = await response.json();
+      const businesses = await this.executeQuery(sql, [category, city]);
       
       return businesses.map((row: any) => ({
         id: row.id,
@@ -116,14 +131,15 @@ export class D1DataProvider implements IDataProvider {
    */
   async getServices(category: string): Promise<string[]> {
     try {
-      const response = await fetch(`${this.apiBaseUrl}/services?category=${encodeURIComponent(category)}`);
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch services: ${response.statusText}`);
-      }
+      const sql = `
+        SELECT DISTINCT service 
+        FROM services 
+        WHERE LOWER(category) = LOWER(?)
+        ORDER BY service ASC
+      `;
 
-      const services = await response.json();
-      return Array.isArray(services) ? services : [];
+      const services = await this.executeQuery(sql, [category]);
+      return services.map((row: any) => row.service);
     } catch (error) {
       console.error('Failed to get services from D1:', error);
       return [];
@@ -135,14 +151,15 @@ export class D1DataProvider implements IDataProvider {
    */
   async getNeighborhoods(city: string): Promise<string[]> {
     try {
-      const response = await fetch(`${this.apiBaseUrl}/neighborhoods?city=${encodeURIComponent(city)}`);
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch neighborhoods: ${response.statusText}`);
-      }
+      const sql = `
+        SELECT DISTINCT neighborhood 
+        FROM neighborhoods 
+        WHERE LOWER(city) = LOWER(?)
+        ORDER BY neighborhood ASC
+      `;
 
-      const neighborhoods = await response.json();
-      return Array.isArray(neighborhoods) ? neighborhoods : [];
+      const neighborhoods = await this.executeQuery(sql, [city]);
+      return neighborhoods.map((row: any) => row.neighborhood);
     } catch (error) {
       console.error('Failed to get neighborhoods from D1:', error);
       return [];

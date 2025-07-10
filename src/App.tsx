@@ -24,11 +24,19 @@ import CheckoutCancelPage from './pages/CheckoutCancelPage';
 function App() {
   // Configure the data provider factory
   React.useEffect(() => {
+    // For static generation, use JSON data for speed
+    // For dynamic features, use D1 when available
+    const useD1 = import.meta.env.VITE_USE_D1 === 'true';
+    // Temporarily force JSON for static generation speed
+    const providerType = 'json'; // useD1 ? 'd1' : 'json';
+    
     DataProviderFactory.configure({
-      type: 'd1', // Use D1 provider (Cloudflare D1 database)
-      // In production, the D1 provider will use the Cloudflare Pages Functions API
-      // All data operations now go through D1 instead of Supabase
+      type: providerType,
+      // Using JSON data for fast static generation
+      // D1 available but disabled for now to ensure speed
     });
+    
+    console.log(`Data provider configured: ${providerType} (VITE_USE_D1: ${import.meta.env.VITE_USE_D1}, forced to JSON for speed)`);
   }, []);
 
   // Parse subdomain info once at app level
