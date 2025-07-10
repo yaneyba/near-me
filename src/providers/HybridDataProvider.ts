@@ -129,7 +129,8 @@ export class HybridDataProvider implements IDataProvider {
   }
 
   async getAllBusinesses(): Promise<any[]> {
-    return this.supabaseProvider.getAllBusinesses();
+    // Use JSON provider for business data (consistent with getBusinesses method)
+    return this.jsonProvider.getAllBusinesses();
   }
 
   async getAdminStats(): Promise<{
