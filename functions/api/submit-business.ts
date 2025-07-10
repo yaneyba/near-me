@@ -23,7 +23,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
     const id = 'business_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 
-    await env.NEARME_DB.prepare(query)
+    await env.DB.prepare(query)
       .bind(
         id,
         businessData.name,

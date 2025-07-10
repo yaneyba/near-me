@@ -1,7 +1,7 @@
 // Cloudflare Pages Functions types
 
 export interface Env {
-  NEARME_DB: D1Database;
+  DB: D1Database;
 }
 
 // Re-export Cloudflare types

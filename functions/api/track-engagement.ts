@@ -24,7 +24,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
                      request.headers.get('x-forwarded-for') || 
                      null;
 
-    await env.NEARME_DB.prepare(query)
+    await env.DB.prepare(query)
       .bind(
         id,
         engagementData.businessId || null,

@@ -28,7 +28,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         name ASC
     `;
 
-    const result = await env.NEARME_DB.prepare(query)
+    const result = await env.DB.prepare(query)
       .bind(category, city)
       .all();
 

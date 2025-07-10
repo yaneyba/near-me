@@ -19,10 +19,15 @@ export class D1DataProvider implements IDataProvider {
   constructor() {
     // Get D1 configuration from environment
     this.d1DatabaseId = import.meta.env.CF_DATABASE_ID || '86879c31-0686-4532-a66c-f310b89d7a27';
-    this.apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api/d1';
+    this.apiBaseUrl = import.meta.env.VITE_D1_BASE_URL || 'https://near-me-32q.pages.dev';
     
     if (!this.d1DatabaseId) {
       throw new Error('D1 Database ID not configured. Set CF_DATABASE_ID in environment variables.');
+    }
+    
+    // Ensure we use D1 mode when configured
+    if (!import.meta.env.VITE_USE_D1) {
+      console.warn('VITE_USE_D1 is not enabled. D1DataProvider may not work correctly.');
     }
   }
 
@@ -31,10 +36,13 @@ export class D1DataProvider implements IDataProvider {
    */
   private async executeQuery(sql: string, params: any[] = []): Promise<any> {
     try {
-      const response = await fetch(`${this.apiBaseUrl}/query`, {
+      const apiKey = import.meta.env.VITE_D1_API_KEY || 'nearme-d1-api-2025';
+      
+      const response = await fetch(`${this.apiBaseUrl}/api/query`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
           sql,
@@ -64,63 +72,38 @@ export class D1DataProvider implements IDataProvider {
    * Get businesses from D1 database
    */
   async getBusinesses(category: string, city: string): Promise<Business[]> {
-    const sql = `
-      SELECT 
-        id,
-        business_id,
-        name,
-        description,
-        address,
-        city,
-        state,
-        zip_code,
-        phone,
-        email,
-        website,
-        category,
-        services,
-        hours,
-        rating,
-        review_count,
-        image,
-        logo_url,
-        established,
-        verified,
-        premium,
-        status
-      FROM businesses 
-      WHERE LOWER(category) = LOWER(?) 
-        AND LOWER(city) = LOWER(?)
-        AND status = 'active'
-      ORDER BY premium DESC, rating DESC, name ASC
-    `;
-
     try {
-      const rows = await this.executeQuery(sql, [category, city]);
+      const response = await fetch(`${this.apiBaseUrl}/businesses?category=${encodeURIComponent(category)}&city=${encodeURIComponent(city)}`);
       
-      return rows.map((row: any) => ({
+      if (!response.ok) {
+        throw new Error(`Failed to fetch businesses: ${response.statusText}`);
+      }
+
+      const businesses = await response.json();
+      
+      return businesses.map((row: any) => ({
         id: row.id,
-        business_id: row.business_id,
+        business_id: row.id, // API uses 'id' field
         name: row.name,
         description: row.description,
         address: row.address,
         city: row.city,
         state: row.state,
-        zipCode: row.zip_code,
+        zipCode: row.zip,
         phone: row.phone,
-        email: row.email,
+        email: row.email || '',
         website: row.website,
         category: row.category,
-        services: row.services ? JSON.parse(row.services) : [],
-        hours: row.hours ? JSON.parse(row.hours) : {},
-        rating: row.rating || 0,
-        reviewCount: row.review_count || 0,
-        image: row.image,
-        logoUrl: row.logo_url,
-        established: row.established,
+        services: [], // Will need to fetch separately if needed
+        hours: row.business_hours ? JSON.parse(row.business_hours) : {},
+        rating: 0, // Not in current API response
+        reviewCount: 0, // Not in current API response
+        image: row.image_url,
+        logoUrl: row.image_url,
+        established: row.created_at,
         verified: Boolean(row.verified),
         premium: Boolean(row.premium),
-        status: row.status
+        status: 'active'
       }));
     } catch (error) {
       console.error('Failed to get businesses from D1:', error);
@@ -132,33 +115,15 @@ export class D1DataProvider implements IDataProvider {
    * Get services for a category from D1
    */
   async getServices(category: string): Promise<string[]> {
-    const sql = `
-      SELECT DISTINCT services 
-      FROM businesses 
-      WHERE LOWER(category) = LOWER(?) 
-        AND status = 'active'
-        AND services IS NOT NULL 
-        AND services != '[]'
-    `;
-
     try {
-      const rows = await this.executeQuery(sql, [category]);
-      const servicesSet = new Set<string>();
+      const response = await fetch(`${this.apiBaseUrl}/services?category=${encodeURIComponent(category)}`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch services: ${response.statusText}`);
+      }
 
-      rows.forEach((row: any) => {
-        if (row.services) {
-          try {
-            const services = JSON.parse(row.services);
-            if (Array.isArray(services)) {
-              services.forEach(service => servicesSet.add(service));
-            }
-          } catch (e) {
-            // Skip invalid JSON
-          }
-        }
-      });
-
-      return Array.from(servicesSet).sort();
+      const services = await response.json();
+      return Array.isArray(services) ? services : [];
     } catch (error) {
       console.error('Failed to get services from D1:', error);
       return [];
@@ -169,33 +134,15 @@ export class D1DataProvider implements IDataProvider {
    * Get neighborhoods for a city from D1
    */
   async getNeighborhoods(city: string): Promise<string[]> {
-    const sql = `
-      SELECT DISTINCT address 
-      FROM businesses 
-      WHERE LOWER(city) = LOWER(?) 
-        AND status = 'active'
-        AND address IS NOT NULL
-      LIMIT 100
-    `;
-
     try {
-      const rows = await this.executeQuery(sql, [city]);
-      const neighborhoodSet = new Set<string>();
+      const response = await fetch(`${this.apiBaseUrl}/neighborhoods?city=${encodeURIComponent(city)}`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch neighborhoods: ${response.statusText}`);
+      }
 
-      rows.forEach((row: any) => {
-        if (row.address) {
-          // Extract neighborhood from address (simple heuristic)
-          const parts = row.address.split(',');
-          if (parts.length > 1) {
-            const neighborhood = parts[0].trim();
-            if (neighborhood && neighborhood.length > 3) {
-              neighborhoodSet.add(neighborhood);
-            }
-          }
-        }
-      });
-
-      return Array.from(neighborhoodSet).sort().slice(0, 20); // Limit to 20 neighborhoods
+      const neighborhoods = await response.json();
+      return Array.isArray(neighborhoods) ? neighborhoods : [];
     } catch (error) {
       console.error('Failed to get neighborhoods from D1:', error);
       return [];
