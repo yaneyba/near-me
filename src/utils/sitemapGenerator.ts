@@ -287,10 +287,12 @@ ${sitemaps.map(sitemap => `  <sitemap>
       });
     });
 
-    // Add neighborhood pages
+    // Add neighborhood pages (only if not null)
     const neighborhoods = new Set<string>();
     subdomainBusinesses.forEach(business => {
-      neighborhoods.add(business.neighborhood);
+      if (business.neighborhood) {
+        neighborhoods.add(business.neighborhood);
+      }
     });
 
     Array.from(neighborhoods).forEach(neighborhood => {

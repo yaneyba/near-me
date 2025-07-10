@@ -101,11 +101,13 @@ export class SEOUtils {
       });
     });
 
-    // Add neighborhood keywords
+    // Add neighborhood keywords (only if not null)
     const neighborhoods = new Set<string>();
     businesses.forEach(business => {
-      neighborhoods.add(business.neighborhood?.toLowerCase() || '');
-      baseKeywords.push(`${category.toLowerCase()} ${business.neighborhood?.toLowerCase() || ''}`);
+      if (business.neighborhood) {
+        neighborhoods.add(business.neighborhood.toLowerCase());
+        baseKeywords.push(`${category.toLowerCase()} ${business.neighborhood.toLowerCase()}`);
+      }
     });
 
     return [...new Set(baseKeywords)].slice(0, 20); // Limit to 20 keywords
