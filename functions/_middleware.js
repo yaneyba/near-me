@@ -15,6 +15,21 @@ export async function onRequest(context) {
     return context.next();
   }
   
+  // Handle API requests from subdomains - proxy to main domain
+  if (pathname.startsWith('/api/')) {
+    const parts = hostname.split('.');
+    if (parts.length >= 4 && parts[2] === 'near-me' && parts[3] === 'us') {
+      // This is a subdomain API request - proxy to main domain
+      const targetUrl = `https://near-me-32q.pages.dev${pathname}${url.search}`;
+      const newRequest = new Request(targetUrl, {
+        method: context.request.method,
+        headers: context.request.headers,
+        body: context.request.body
+      });
+      return fetch(newRequest);
+    }
+  }
+  
   // Handle subdomain routing
   const parts = hostname.split('.');
   if (parts.length >= 4 && parts[2] === 'near-me' && parts[3] === 'us') {

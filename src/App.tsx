@@ -27,16 +27,14 @@ function App() {
     // For static generation, use JSON data for speed
     // For dynamic features, use D1 when available
     const useD1 = import.meta.env.VITE_USE_D1 === 'true';
-    // Temporarily force JSON for static generation speed
-    const providerType = 'json'; // useD1 ? 'd1' : 'json';
+    const providerType = useD1 ? 'd1' : 'json';
     
     DataProviderFactory.configure({
       type: providerType,
-      // Using JSON data for fast static generation
-      // D1 available but disabled for now to ensure speed
+      // D1 integration now fully operational with complete data
     });
     
-    console.log(`Data provider configured: ${providerType} (VITE_USE_D1: ${import.meta.env.VITE_USE_D1}, forced to JSON for speed)`);
+    console.log(`Data provider configured: ${providerType} (VITE_USE_D1: ${import.meta.env.VITE_USE_D1})`);
   }, []);
 
   // Parse subdomain info once at app level
