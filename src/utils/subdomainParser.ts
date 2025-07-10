@@ -1,26 +1,26 @@
 // src/utils/subdomainParser.ts
 
 import { SubdomainInfo } from '../types';
+import businessesData from '../data/businesses.json';
+import { isSpecialService, isBlockedSubdomain, cityStateMap } from '../config/subdomainExceptions';
 
-// Map cities to their states
-const cityStateMap: Record<string, string> = {
-  'dallas': 'Texas',
-  'garland': 'Texas',
-  'denver': 'Colorado',
-  'austin': 'Texas',
-  'houston': 'Texas',
-  'frisco': 'Texas',
-  'phoenix': 'Arizona',
-  'chicago': 'Illinois',
-  'atlanta': 'Georgia',
-  'miami': 'Florida',
-  'seattle': 'Washington',
-  'portland': 'Oregon',
-  'san-francisco': 'California',
-  'los-angeles': 'California',
-  'new-york': 'New York',
-  'boston': 'Massachusetts',
-  'philadelphia': 'Pennsylvania'
+// Get valid combinations from business data
+const getValidCombinations = (): Set<string> => {
+  const combinations = new Set<string>();
+  businessesData.forEach(business => {
+    const key = `${business.category}.${business.city}`;
+    combinations.add(key);
+  });
+  return combinations;
+};
+
+// Cache valid combinations for performance
+const validCombinations = getValidCombinations();
+
+// Check if a category-city combination has actual business data
+const isValidCombination = (category: string, city: string): boolean => {
+  const key = `${category}.${city}`;
+  return validCombinations.has(key);
 };
 
 // Format category for display (convert kebab-case to Title Case)
@@ -50,8 +50,8 @@ export const parseSubdomain = (hostname: string = window.location.hostname, path
     };
   }
 
-  // Check for services.near-me.us pattern (services homepage)
-  if (hostname === 'services.near-me.us' || hostname.includes('services.near-me.us')) {
+  // Check for blocked subdomains first
+  if (isBlockedSubdomain(hostname)) {
     return {
       category: 'All Services',
       city: 'All Cities',
@@ -60,32 +60,44 @@ export const parseSubdomain = (hostname: string = window.location.hostname, path
     };
   }
 
-  // Check for water-refill.near-me.us pattern
-  if (hostname === 'water-refill.near-me.us' || hostname.includes('water-refill.near-me.us')) {
-    // Parse path for city: /city-name
-    const pathParts = pathname.split('/').filter(part => part.length > 0);
-    
-    if (pathParts.length > 0) {
-      const rawCity = pathParts[0];
-      const city = formatCity(rawCity);
-      const state = cityStateMap[rawCity.toLowerCase()] || 'Unknown State';
+  // Check for special services
+  const specialService = isSpecialService(hostname);
+  if (specialService) {
+    if (specialService.isWaterRefill) {
+      // Handle water refill path-based routing
+      const pathParts = pathname.split('/').filter(part => part.length > 0);
       
+      if (pathParts.length > 0) {
+        const rawCity = pathParts[0];
+        const city = formatCity(rawCity);
+        const state = cityStateMap[rawCity.toLowerCase()] || 'Unknown State';
+        
+        return {
+          category: specialService.category,
+          city,
+          state,
+          isWaterRefill: true,
+          isPathBased: true
+        };
+      }
+      
+      // Default water refill page (no city specified)
       return {
-        category: 'Water Refill Stations',
-        city,
-        state,
+        category: specialService.category,
+        city: 'All Cities',
+        state: 'Nationwide',
         isWaterRefill: true,
         isPathBased: true
       };
     }
     
-    // Default water refill page (no city specified)
+    // Handle other special services
     return {
-      category: 'Water Refill Stations',
+      category: specialService.category,
       city: 'All Cities',
       state: 'Nationwide',
-      isWaterRefill: true,
-      isPathBased: true
+      isServices: specialService.isServices || false,
+      isPathBased: specialService.isPathBased || false
     };
   }
 
@@ -96,11 +108,22 @@ export const parseSubdomain = (hostname: string = window.location.hostname, path
     const rawCategory = parts[0];
     const rawCity = parts[1];
     
-    const category = formatCategory(rawCategory);
-    const city = formatCity(rawCity);
-    const state = cityStateMap[rawCity.toLowerCase()] || 'Unknown State';
+    // Check if this is a valid combination with actual business data
+    if (isValidCombination(rawCategory, rawCity)) {
+      const category = formatCategory(rawCategory);
+      const city = formatCity(rawCity);
+      const state = cityStateMap[rawCity.toLowerCase()] || 'Unknown State';
+      
+      return { category, city, state };
+    }
     
-    return { category, city, state };
+    // Invalid combination - redirect to services page
+    return {
+      category: 'All Services',
+      city: 'All Cities',
+      state: 'Nationwide',
+      isServices: true
+    };
   }
 
   // Fallback for any other hostname - redirect to services homepage
