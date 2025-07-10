@@ -79,17 +79,17 @@ export class D1DataProvider implements IDataProvider {
     try {
       const sql = `
         SELECT 
-          id, name, slug, category, subcategory,
+          id, business_id, name, category,
           description, phone, website, address,
-          city, state, zip, latitude, longitude,
-          image_url, business_hours, featured,
-          verified, premium, created_at, updated_at
+          city, state, zip_code, 
+          image, logo_url, hours,
+          verified, premium, created_at, updated_at,
+          rating, review_count, established, status
         FROM businesses 
         WHERE LOWER(category) = LOWER(?) 
         AND LOWER(city) = LOWER(?)
         ORDER BY 
           premium DESC,
-          featured DESC,
           verified DESC,
           name ASC
       `;
@@ -98,24 +98,24 @@ export class D1DataProvider implements IDataProvider {
       
       return businesses.map((row: any) => ({
         id: row.id,
-        business_id: row.id, // API uses 'id' field
+        business_id: row.business_id || row.id,
         name: row.name,
         description: row.description,
         address: row.address,
         city: row.city,
         state: row.state,
-        zipCode: row.zip,
+        zipCode: row.zip_code,
         phone: row.phone,
         email: row.email || '',
         website: row.website,
         category: row.category,
-        services: [], // Will need to fetch separately if needed
-        hours: row.business_hours ? JSON.parse(row.business_hours) : {},
-        rating: 0, // Not in current API response
-        reviewCount: 0, // Not in current API response
-        image: row.image_url,
-        logoUrl: row.image_url,
-        established: row.created_at,
+        services: row.services ? JSON.parse(row.services) : [],
+        hours: row.hours ? JSON.parse(row.hours) : {},
+        rating: row.rating || 0,
+        reviewCount: row.review_count || 0,
+        image: row.image,
+        logoUrl: row.logo_url,
+        established: row.established,
         verified: Boolean(row.verified),
         premium: Boolean(row.premium),
         status: 'active'
@@ -132,13 +132,13 @@ export class D1DataProvider implements IDataProvider {
   async getServices(category: string): Promise<string[]> {
     try {
       const sql = `
-        SELECT DISTINCT service 
-        FROM services 
-        WHERE LOWER(category) = LOWER(?)
-        ORDER BY service ASC
+        SELECT DISTINCT category as service 
+        FROM businesses 
+        WHERE category IS NOT NULL AND category != ''
+        ORDER BY category ASC
       `;
 
-      const services = await this.executeQuery(sql, [category]);
+      const services = await this.executeQuery(sql, []);
       return services.map((row: any) => row.service);
     } catch (error) {
       console.error('Failed to get services from D1:', error);
@@ -152,13 +152,13 @@ export class D1DataProvider implements IDataProvider {
   async getNeighborhoods(city: string): Promise<string[]> {
     try {
       const sql = `
-        SELECT DISTINCT neighborhood 
-        FROM neighborhoods 
-        WHERE LOWER(city) = LOWER(?)
-        ORDER BY neighborhood ASC
+        SELECT DISTINCT city as neighborhood 
+        FROM businesses 
+        WHERE city IS NOT NULL AND city != ''
+        ORDER BY city ASC
       `;
 
-      const neighborhoods = await this.executeQuery(sql, [city]);
+      const neighborhoods = await this.executeQuery(sql, []);
       return neighborhoods.map((row: any) => row.neighborhood);
     } catch (error) {
       console.error('Failed to get neighborhoods from D1:', error);
