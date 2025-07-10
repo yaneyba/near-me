@@ -15,24 +15,47 @@ export async function onRequest(context) {
     return context.next();
   }
   
-  // Only handle the main page request
+  // Handle subdomain routing
   const parts = hostname.split('.');
   if (parts.length >= 4 && parts[2] === 'near-me' && parts[3] === 'us') {
     const category = parts[0];
     const city = parts[1];
-    const htmlFileName = `${category}.${city}.html`;
     
-    try {
-      const response = await context.env.ASSETS.fetch(
-        new Request(url.origin + '/' + htmlFileName)
-      );
+    // Known subdomains - check if HTML file exists
+    const knownCombinations = [
+      'nail-salons.dallas',
+      'auto-repair.denver',
+      'nail-salons.austin',
+      'nail-salons.frisco',
+      'nail-salons.garland'
+    ];
+    
+    const combination = `${category}.${city}`;
+    
+    if (knownCombinations.includes(combination)) {
+      const htmlFileName = `${combination}.html`;
       
-      if (response.ok) {
-        return response;
+      try {
+        const response = await context.env.ASSETS.fetch(
+          new Request(url.origin + '/' + htmlFileName)
+        );
+        
+        if (response.ok) {
+          return response;
+        }
+      } catch (error) {
+        console.error('Asset fetch error:', error);
       }
-    } catch (error) {
-      console.error('Asset fetch error:', error);
     }
+    
+    // For unknown subdomains, redirect to services.near-me.us
+    const targetUrl = `https://services.near-me.us${pathname}${url.search}`;
+    return Response.redirect(targetUrl, 301);
+  }
+  
+  // Special handling for services subdomain
+  if (hostname === 'services.near-me.us') {
+    return context.next();
   }
   
   return context.next();
