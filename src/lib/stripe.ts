@@ -1,5 +1,4 @@
 import { StripeProduct, StripeCheckoutResult, StripeSubscription } from '../types';
-import { supabase } from './supabase';
 import { STRIPE_PRODUCTS, getProductByPriceId } from '../stripe-config';
 import { DataProviderFactory } from '../providers';
 
@@ -53,52 +52,14 @@ export const createCheckoutSession = async (
       };
     }
 
-    // Get the Supabase URL
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    if (!supabaseUrl) {
-      return {
-        success: false,
-        message: 'Configuration error. Please contact support.',
-        error: 'MISSING_CONFIG'
-      };
-    }
-
-    // Create success and cancel URLs
-    const origin = window.location.origin;
-    const successUrl = `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`;
-    const cancelUrl = `${origin}/checkout/cancel`;
-
-    // Call the Supabase Edge Function to create a checkout session
-    const { data, error } = await supabase.functions.invoke('create-checkout', {
-      body: {
-        priceId,
-        businessProfileId,
-        successUrl,
-        cancelUrl
-      }
-    });
-
-    if (error) {
-      console.error('Error creating checkout session:', error);
-      return {
-        success: false,
-        message: 'Failed to create checkout session. Please try again later.',
-        error: error.message
-      };
-    }
-
-    if (!data.success || !data.url) {
-      return {
-        success: false,
-        message: data.error || 'Failed to create checkout session',
-        error: 'CHECKOUT_FAILED'
-      };
-    }
-
+    // Payment processing is disabled
+    console.log('Stripe checkout disabled');
+    
+    // Stripe checkout is disabled since Supabase is decommissioned
     return {
-      success: true,
-      message: 'Checkout session created successfully',
-      url: data.url
+      success: false,
+      message: 'Payment processing is currently disabled. Please contact support.',
+      error: 'SERVICE_DISABLED'
     };    } catch (error) {
       console.error('Error in createCheckoutSession:', error);
       return {
@@ -112,69 +73,10 @@ export const createCheckoutSession = async (
 /**
  * Get the current subscription for a business profile
  */
-export const getCurrentSubscription = async (businessProfileId?: string): Promise<StripeSubscription | null> => {
-  try {
-    // If no businessProfileId provided, try to get it from current user
-    let profileId = businessProfileId;
-    
-    if (!profileId) {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
-      
-      // Get business profile for current user using DataProviderFactory
-      const dataProvider = DataProviderFactory.getProvider();
-      const businessProfiles = await dataProvider.getBusinessProfiles();
-      const profile = businessProfiles.find(p => p.user_id === user.id);
-      
-      if (!profile) return null;
-      profileId = profile.id;
-    }
-
-    // Get the business profile with subscription info using DataProviderFactory
-    const dataProvider = DataProviderFactory.getProvider();
-    const businessProfiles = await dataProvider.getBusinessProfiles();
-    const profile = businessProfiles.find(p => p.id === profileId);
-
-    if (!profile) {
-      console.error('Business profile not found:', profileId);
-      return null;
-    }
-
-    // If no subscription, return null
-    if (!profile.stripe_subscription_id || !profile.stripe_price_id) {
-      return null;
-    }
-
-    // Get the product details from our config
-    const product = getProductByPriceId(profile.stripe_price_id);
-    if (!product) {
-      return null;
-    }
-
-    // Create a subscription object with the information we have
-    const subscription: StripeSubscription = {
-      id: profile.stripe_subscription_id,
-      status: profile.premium ? 'active' : 'inactive',
-      current_period_end: profile.stripe_current_period_end || (Date.now() + 30 * 24 * 60 * 60 * 1000),
-      product: {
-        name: product.name,
-        description: product.description
-      },
-      price: {
-        unit_amount: product.price,
-        currency: product.currency || 'usd',
-        recurring: product.interval ? {
-          interval: product.interval
-        } : undefined
-      },
-      created: Date.now() - 24 * 60 * 60 * 1000 // Placeholder: 1 day ago
-    };
-
-    return subscription;
-  } catch (error) {
-    console.error('Error in getCurrentSubscription:', error);
-    return null;
-  }
+export const getCurrentSubscription = async (_businessProfileId?: string): Promise<StripeSubscription | null> => {
+  // Subscriptions disabled since Supabase is decommissioned
+  console.log('Subscription lookup requested but service is disabled');
+  return null;
 };
 
 /**

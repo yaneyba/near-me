@@ -5,9 +5,6 @@ interface ImportMetaEnv {
   readonly VITE_SHOW_SEARCH_BAR_ON_HEADER: string
   readonly VITE_GOOGLE_ANALYTICS_ID: string
   readonly VITE_GOOGLE_TAG_MANAGER_ID: string
-  readonly VITE_SUPABASE_URL: string
-  readonly VITE_SUPABASE_ANON_KEY: string
-  readonly VITE_SUPABASE_SERVICE_ROLE_KEY: string
   readonly VITE_SETTINGS_ENABLE_ADS: string
   readonly VITE_ADS_PROVIDER: string
   readonly VITE_GOOGLE_ADS_CLIENT_ID: string

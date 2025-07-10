@@ -1,9 +1,8 @@
 import { IDataProvider } from '../types';
 import { JsonDataProvider } from './JsonDataProvider';
-import { HybridDataProvider } from './HybridDataProvider';
 import { D1DataProvider } from './D1DataProvider';
 
-export type DataProviderType = 'json' | 'hybrid' | 'api' | 'mock' | 'd1';
+export type DataProviderType = 'json' | 'api' | 'mock' | 'd1';
 
 export interface DataProviderConfig {
   type: DataProviderType;
@@ -54,9 +53,6 @@ export class DataProviderFactory {
     switch (providerConfig.type) {
       case 'json':
         return new JsonDataProvider();
-      
-      case 'hybrid':
-        return new HybridDataProvider();
       
       case 'd1':
         return new D1DataProvider();

@@ -46,14 +46,9 @@ const LoginPage: React.FC = () => {
     }
   }, [location]);
 
-  // Check if Supabase is configured
+  // Check authentication status - now disabled
   useEffect(() => {
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-    
-    if (!supabaseUrl || !supabaseKey) {
-      setAuthError('Supabase configuration is missing. Please set up your environment variables.');
-    }
+    setAuthError('Authentication is currently disabled. Please contact the administrator.');
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
