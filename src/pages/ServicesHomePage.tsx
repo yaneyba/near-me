@@ -30,29 +30,85 @@ const ServicesHomePage: React.FC<ServicesHomePageProps> = ({ subdomainInfo }) =>
 
   const dataProvider = DataProviderFactory.getProvider();
 
+  // Set page title
+  useEffect(() => {
+    document.title = `Find Local Services - ${subdomainInfo.category} Directory`;
+  }, [subdomainInfo]);
+
   useEffect(() => {
     const loadData = async () => {
       try {
-        const businesses = await dataProvider.getAllBusinesses();
+        // Use getBusinesses with 'all' to get all businesses in original format
+        // This works better than getAllBusinesses which transforms the data for admin use
+        const businesses = await dataProvider.getBusinesses('all', 'all');
+        
+        // If that doesn't work, try the direct approach for JsonDataProvider
+        let allBusinesses = businesses;
+        if (businesses.length === 0) {
+          // Fallback: get businesses from all categories and cities we know exist
+          const categories = ['nail-salons', 'auto-repair', 'water-refill', 'hair-salons', 'restaurants'];
+          const cities = ['san-francisco', 'austin', 'dallas', 'denver', 'garland'];
+          
+          allBusinesses = [];
+          for (const category of categories) {
+            for (const city of cities) {
+              try {
+                const categoryBusinesses = await dataProvider.getBusinesses(category, city);
+                allBusinesses.push(...categoryBusinesses);
+              } catch (error) {
+                // Continue if this combination doesn't exist
+              }
+            }
+          }
+        }
         
         // Extract unique categories with counts
         const categoryMap = new Map<string, number>();
-        businesses.forEach(business => {
+        allBusinesses.forEach(business => {
           const category = business.category;
           categoryMap.set(category, (categoryMap.get(category) || 0) + 1);
         });
 
-        const serviceCategories: ServiceCategory[] = Array.from(categoryMap.entries()).map(([name, count]) => ({
-          name,
-          slug: name.toLowerCase().replace(/\s+/g, '-'),
+        const formatCategoryName = (category: string): string => {
+          // Special cases for better display names
+          const specialNames: Record<string, string> = {
+            'water-refill': 'Water Refill Stations',
+            'nail-salons': 'Nail Salons',
+            'auto-repair': 'Auto Repair',
+            'hair-salons': 'Hair Salons'
+          };
+          
+          return specialNames[category] || category
+            .split('-')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+        };
+
+        const getServiceIcon = (category: string): string => {
+          const icons: Record<string, string> = {
+            'water-refill': '💧',
+            'nail-salons': '💅',
+            'auto-repair': '🔧',
+            'hair-salons': '✂️',
+            'restaurants': '🍽️'
+          };
+          
+          return icons[category] || '🏪';
+        };
+
+        const serviceCategories: ServiceCategory[] = Array.from(categoryMap.entries()).map(([category, count]) => ({
+          name: formatCategoryName(category),
+          slug: category,
           count,
-          description: `Find the best ${name.toLowerCase()} near you`,
-          icon: '🏪' // Default icon, can be customized per service
+          description: category === 'water-refill' 
+            ? 'Find water refill stations near you with quality filtered water'
+            : `Find the best ${formatCategoryName(category).toLowerCase()} near you`,
+          icon: getServiceIcon(category)
         }));
 
         // Extract unique cities with counts
         const cityMap = new Map<string, { count: number; state: string }>();
-        businesses.forEach(business => {
+        allBusinesses.forEach(business => {
           const city = business.city;
           const state = business.state;
           const existing = cityMap.get(city);
@@ -162,30 +218,36 @@ const ServicesHomePage: React.FC<ServicesHomePageProps> = ({ subdomainInfo }) =>
             </h2>
             
             <div className="grid gap-4">
-              {filteredServices.map((service) => (
-                <a
-                  key={service.slug}
-                  href={`https://${service.slug}.near-me.us`}
-                  className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6 border border-gray-200 hover:border-blue-300"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <div className="text-2xl">{service.icon}</div>
-                      <div>
-                        <h3 className="text-xl font-semibold text-gray-900">
-                          {service.name}
-                        </h3>
-                        <p className="text-gray-600">{service.description}</p>
+              {filteredServices.map((service) => {
+                const serviceUrl = service.slug === 'water-refill' 
+                  ? 'https://water-refill.near-me.us'
+                  : `https://${service.slug}.near-me.us`;
+                
+                return (
+                  <a
+                    key={service.slug}
+                    href={serviceUrl}
+                    className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6 border border-gray-200 hover:border-blue-300"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="text-2xl">{service.icon}</div>
+                        <div>
+                          <h3 className="text-xl font-semibold text-gray-900">
+                            {service.name}
+                          </h3>
+                          <p className="text-gray-600">{service.description}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2 text-sm text-gray-500">
+                        <Star className="w-4 h-4" />
+                        <span>{service.count} businesses</span>
+                        <ExternalLink className="w-4 h-4 ml-2" />
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2 text-sm text-gray-500">
-                      <Star className="w-4 h-4" />
-                      <span>{service.count} businesses</span>
-                      <ExternalLink className="w-4 h-4 ml-2" />
-                    </div>
-                  </div>
-                </a>
-              ))}
+                  </a>
+                );
+              })}
             </div>
           </div>
 
