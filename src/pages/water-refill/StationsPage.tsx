@@ -43,11 +43,11 @@ const WaterRefillStationsPage: React.FC<WaterRefillStationsPageProps> = ({ subdo
         const transformedStations: WaterStation[] = businesses.map(business => ({
           id: business.id,
           name: business.name,
-          address: business.address,
-          city: business.city,
-          state: business.state,
-          phone: business.phone,
-          rating: business.rating,
+          address: business.address || 'Address not available',
+          city: business.city || 'San Francisco',
+          state: business.state || 'CA',
+          phone: business.phone || undefined,
+          rating: business.rating || 0,
           priceRange: '$', // Default price range for water refill
           distance: '0.5 mi', // This would be calculated based on user location
           isOpen: true, // This would be determined by current time vs business hours

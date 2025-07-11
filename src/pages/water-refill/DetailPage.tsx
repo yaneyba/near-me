@@ -77,14 +77,14 @@ const WaterRefillDetailPage: React.FC<WaterRefillDetailPageProps> = ({ subdomain
           const transformedStation: WaterStation = {
             id: businessData.id,
             name: businessData.name,
-            address: businessData.address,
-            city: businessData.city,
-            state: businessData.state,
+            address: businessData.address || 'Address not available',
+            city: businessData.city || 'San Francisco',
+            state: businessData.state || 'CA',
             zipCode: '94102', // Default for San Francisco
-            phone: businessData.phone,
+            phone: businessData.phone || undefined,
             website: businessData.website || undefined,
-            rating: businessData.rating,
-            reviewCount: businessData.reviewCount,
+            rating: businessData.rating || 0,
+            reviewCount: businessData.review_count || 0,
             pricePerGallon: '$0.50/gal', // Default price
             isOpen: true, // This would be calculated based on current time
             hours: {
@@ -107,7 +107,7 @@ const WaterRefillDetailPage: React.FC<WaterRefillDetailPageProps> = ({ subdomain
           setStation(transformedStation);
 
           // Generate mock reviews based on review count
-          const mockReviews: Review[] = Array.from({ length: Math.min(businessData.reviewCount, 5) }, (_, i) => ({
+          const mockReviews: Review[] = Array.from({ length: Math.min(businessData.review_count || 0, 5) }, (_, i) => ({
             id: `${businessData.id}-review-${i + 1}`,
             userId: `user-${i + 1}`,
             userName: `Customer ${i + 1}`,

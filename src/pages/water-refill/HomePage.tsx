@@ -22,7 +22,7 @@ const WaterRefillHomePage: React.FC<WaterRefillHomePageProps> = ({ subdomainInfo
         
         // Take the top 3 highest-rated stations as featured
         const featured = businesses
-          .sort((a, b) => b.rating - a.rating)
+          .sort((a, b) => (b.rating || 0) - (a.rating || 0))
           .slice(0, 3);
         
         setFeaturedStations(featured);
