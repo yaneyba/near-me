@@ -15,6 +15,7 @@ import BusinessOwnersPage from './pages/BusinessOwnersPage';
 import BusinessDashboardPage from './pages/BusinessDashboardPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import LoginPage from './pages/LoginPage';
+import WaterRefillPage from './pages/WaterRefillPage';
 import { SubdomainLayout } from './components/layouts';
 import AuthGuard from './components/auth/AuthGuard';
 import { useAuth } from './lib/auth';
@@ -50,17 +51,31 @@ function App() {
 
   return (
     <Router>
-      <SubdomainLayout subdomainInfo={subdomainInfo}>
+      {subdomainInfo.isWaterRefill ? (
+        /* Water Refill uses its own layout */
         <Routes>
-          {/* Public Routes */}
           <Route 
             path="/" 
-            element={
-              subdomainInfo.isServices ? 
-                <ServicesHomePage subdomainInfo={subdomainInfo} /> : 
-                <HomePage subdomainInfo={subdomainInfo} />
-            } 
+            element={<WaterRefillPage subdomainInfo={subdomainInfo} />} 
           />
+          <Route 
+            path="/:city" 
+            element={<WaterRefillPage subdomainInfo={subdomainInfo} />} 
+          />
+        </Routes>
+      ) : (
+        /* All other pages use SubdomainLayout */
+        <SubdomainLayout subdomainInfo={subdomainInfo}>
+          <Routes>
+            {/* Public Routes */}
+            <Route 
+              path="/" 
+              element={
+                subdomainInfo.isServices ? 
+                  <ServicesHomePage subdomainInfo={subdomainInfo} /> : 
+                  <HomePage subdomainInfo={subdomainInfo} />
+              } 
+            />
           <Route path="/about" element={<AboutPage subdomainInfo={subdomainInfo} />} />
           <Route path="/contact" element={<ContactPage subdomainInfo={subdomainInfo} />} />
           <Route path="/sitemap" element={<SitemapPage />} />
@@ -122,8 +137,9 @@ function App() {
               </AuthGuard>
             } 
           />
-        </Routes>
-      </SubdomainLayout>
+          </Routes>
+        </SubdomainLayout>
+      )}
     </Router>
   );
 }

@@ -46,5 +46,17 @@
     "Extensions",
     "Beard Trimming",
     "Wedding Hair"
+  ],
+  "water-refill": [
+    "Purified Water",
+    "Alkaline Water",
+    "Distilled Water", 
+    "Reverse Osmosis",
+    "Spring Water",
+    "Electrolyte Water",
+    "pH Balanced Water",
+    "Mineral Water",
+    "Bulk Water Sales",
+    "Water Testing"
   ]
 }
