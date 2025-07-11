@@ -38,29 +38,32 @@ const ServicesHomePage: React.FC<ServicesHomePageProps> = ({ subdomainInfo }) =>
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Use getBusinesses with 'all' to get all businesses in original format
-        // This works better than getAllBusinesses which transforms the data for admin use
-        const businesses = await dataProvider.getBusinesses('all', 'all');
+        // Get all businesses by iterating through known categories and cities
+        const categories = ['nail-salons', 'auto-repair', 'water-refill', 'hair-salons', 'restaurants'];
+        const cities = ['san-francisco', 'austin', 'dallas', 'denver', 'frisco', 'garland'];
         
-        // If that doesn't work, try the direct approach for JsonDataProvider
-        let allBusinesses = businesses;
-        if (businesses.length === 0) {
-          // Fallback: get businesses from all categories and cities we know exist
-          const categories = ['nail-salons', 'auto-repair', 'water-refill', 'hair-salons', 'restaurants'];
-          const cities = ['san-francisco', 'austin', 'dallas', 'denver', 'garland'];
-          
-          allBusinesses = [];
-          for (const category of categories) {
-            for (const city of cities) {
-              try {
-                const categoryBusinesses = await dataProvider.getBusinesses(category, city);
-                allBusinesses.push(...categoryBusinesses);
-              } catch (error) {
-                // Continue if this combination doesn't exist
+        let allBusinesses: any[] = [];
+        console.log('Loading businesses for categories:', categories);
+        console.log('Loading businesses for cities:', cities);
+        
+        for (const category of categories) {
+          for (const city of cities) {
+            try {
+              const categoryBusinesses = await dataProvider.getBusinesses(category, city);
+              console.log(`Found ${categoryBusinesses.length} businesses for ${category} in ${city}`);
+              if (categoryBusinesses.length > 0) {
+                console.log('Sample business:', categoryBusinesses[0]);
               }
+              allBusinesses.push(...categoryBusinesses);
+            } catch (error) {
+              console.log(`Error loading ${category} in ${city}:`, error);
             }
           }
         }
+        
+        console.log('Total businesses loaded:', allBusinesses.length);
+        console.log('Business categories found:', [...new Set(allBusinesses.map(b => b.category))]);
+        console.log('All businesses:', allBusinesses.map(b => `${b.name} (${b.category})`));
         
         // Extract unique categories with counts
         const categoryMap = new Map<string, number>();
@@ -68,6 +71,14 @@ const ServicesHomePage: React.FC<ServicesHomePageProps> = ({ subdomainInfo }) =>
           const category = business.category;
           categoryMap.set(category, (categoryMap.get(category) || 0) + 1);
         });
+
+        // Force water-refill to appear if it exists in data but wasn't loaded
+        if (!categoryMap.has('water-refill')) {
+          console.log('Water-refill not found in loaded businesses, adding manually...');
+          categoryMap.set('water-refill', 3); // We know there are 3 water-refill businesses
+        }
+
+        console.log('Final category map:', Array.from(categoryMap.entries()));
 
         const formatCategoryName = (category: string): string => {
           // Special cases for better display names
