@@ -1,13 +1,75 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { SubdomainInfo } from '../../types';
 import { Layout as WaterRefillLayout } from '../../components/layouts/water-refill';
 import { Link } from 'react-router-dom';
+import { DataProviderFactory } from '../../providers/DataProviderFactory';
 
 interface WaterRefillHomePageProps {
   subdomainInfo: SubdomainInfo;
 }
 
 const WaterRefillHomePage: React.FC<WaterRefillHomePageProps> = ({ subdomainInfo }) => {
+  const [featuredStations, setFeaturedStations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const dataProvider = DataProviderFactory.getProvider();
+
+  useEffect(() => {
+    const loadFeaturedStations = async () => {
+      try {
+        // Get water-refill businesses from data provider
+        const businesses = await dataProvider.getBusinesses('water-refill', 'san-francisco');
+        
+        // Take the top 3 highest-rated stations as featured
+        const featured = businesses
+          .sort((a, b) => b.rating - a.rating)
+          .slice(0, 3);
+        
+        setFeaturedStations(featured);
+      } catch (error) {
+        console.error('Error loading featured stations:', error);
+        setFeaturedStations([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadFeaturedStations();
+  }, [dataProvider]);
+
+  const renderStationCard = (station: any) => (
+    <div key={station.id} className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+      <div className="aspect-video bg-gray-100 rounded-lg mb-4"></div>
+      <h3 className="font-semibold text-lg mb-2">{station.name}</h3>
+      <p className="text-gray-600 text-sm mb-3">{station.address}, {station.city}, {station.state}</p>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center">
+          <span className="text-yellow-400">★</span>
+          <span className="ml-1 text-sm">{station.rating}</span>
+        </div>
+        <div className="text-blue-600 font-semibold">$0.50/gal</div>
+      </div>
+      <div className="flex flex-wrap gap-2 mb-4">
+        {station.services?.slice(0, 3).map((service: string, index: number) => (
+          <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
+            {service}
+          </span>
+        )) || (
+          <>
+            <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Purified</span>
+            <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Quality Water</span>
+          </>
+        )}
+      </div>
+      <Link 
+        to={`/station/${station.id}`}
+        className="w-full bg-blue-50 text-blue-600 py-2 rounded hover:bg-blue-100 block text-center"
+      >
+        View Details
+      </Link>
+    </div>
+  );
+
   return (
     <WaterRefillLayout subdomainInfo={subdomainInfo}>
       {/* Featured Stations Section */}
@@ -16,80 +78,21 @@ const WaterRefillHomePage: React.FC<WaterRefillHomePageProps> = ({ subdomainInfo
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Featured Water Stations</h2>
           <p className="text-lg text-gray-600 mb-8">Top-rated water refill stations trusted by thousands of customers</p>
           
-          {/* Featured station cards would go here */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            {/* Station Card 1 */}
-            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-              <div className="aspect-video bg-gray-100 rounded-lg mb-4"></div>
-              <h3 className="font-semibold text-lg mb-2">AquaPure Station - San Francisco</h3>
-              <p className="text-gray-600 text-sm mb-3">100 Main Street, San Francisco, CA</p>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center">
-                  <span className="text-yellow-400">★</span>
-                  <span className="ml-1 text-sm">4.6</span>
-                </div>
-                <div className="text-blue-600 font-semibold">$0.25/gal</div>
-              </div>
-              <div className="flex flex-wrap gap-2 mb-4">
-                <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Purified</span>
-                <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Reverse Osmosis</span>
-                <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">24/7 Access</span>
-              </div>
-              <button className="w-full bg-blue-50 text-blue-600 py-2 rounded hover:bg-blue-100">
-                View Details
-              </button>
+          {loading ? (
+            <div className="flex justify-center">
+              <div className="text-lg">Loading featured stations...</div>
             </div>
-
-            {/* Station Card 2 */}
-            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-              <div className="aspect-video bg-gray-100 rounded-lg mb-4"></div>
-              <h3 className="font-semibold text-lg mb-2">Crystal Clear Refill - San Francisco</h3>
-              <p className="text-gray-600 text-sm mb-3">101 Main Street, San Francisco, CA</p>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center">
-                  <span className="text-yellow-400">★</span>
-                  <span className="ml-1 text-sm">4.5</span>
-                </div>
-                <div className="text-blue-600 font-semibold">$0.5/gal</div>
-              </div>
-              <div className="flex flex-wrap gap-2 mb-4">
-                <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Purified</span>
-                <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Reverse Osmosis</span>
-                <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">24/7 Access</span>
-              </div>
-              <button className="w-full bg-blue-50 text-blue-600 py-2 rounded hover:bg-blue-100">
-                View Details
-              </button>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              {featuredStations.map(renderStationCard)}
             </div>
-
-            {/* Station Card 3 */}
-            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-              <div className="aspect-video bg-gray-100 rounded-lg mb-4"></div>
-              <h3 className="font-semibold text-lg mb-2">Blue Drop Water - San Francisco</h3>
-              <p className="text-gray-600 text-sm mb-3">102 Main Street, San Francisco, CA</p>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center">
-                  <span className="text-yellow-400">★</span>
-                  <span className="ml-1 text-sm">4.0</span>
-                </div>
-                <div className="text-blue-600 font-semibold">$0.75/gal</div>
-              </div>
-              <div className="flex flex-wrap gap-2 mb-4">
-                <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Purified</span>
-                <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Reverse Osmosis</span>
-                <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">3 more</span>
-              </div>
-              <button className="w-full bg-blue-50 text-blue-600 py-2 rounded hover:bg-blue-100">
-                View Details
-              </button>
-            </div>
-          </div>
-
+          )}
+          
           <Link 
-            to="/stations"
-            className="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 font-medium"
+            to="/stations" 
+            className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            View All Stations
+            View All Stations →
           </Link>
         </div>
       </section>
@@ -150,7 +153,7 @@ const WaterRefillHomePage: React.FC<WaterRefillHomePageProps> = ({ subdomainInfo
             <button className="bg-white text-blue-600 px-8 py-3 rounded-lg font-medium hover:bg-gray-100">
               List Your Business
             </button>
-            <button className="bg-blue-700 text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-800 border border-blue-400">
+            <button className="border border-white text-white px-8 py-3 rounded-lg font-medium hover:bg-white hover:text-blue-600">
               Learn More
             </button>
           </div>

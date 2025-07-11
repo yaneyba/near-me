@@ -3,6 +3,7 @@ import { SubdomainInfo } from '../../types';
 import { Layout as WaterRefillLayout } from '../../components/layouts/water-refill';
 import { Star, MapPin, Clock, Phone, CreditCard, Droplets } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { DataProviderFactory } from '../../providers/DataProviderFactory';
 
 interface WaterStation {
   id: string;
@@ -10,10 +11,9 @@ interface WaterStation {
   address: string;
   city: string;
   state: string;
-  zipCode: string;
   phone?: string;
   rating: number;
-  pricePerGallon: string;
+  priceRange: string;
   distance: string;
   isOpen: boolean;
   hours: string;
@@ -29,64 +29,56 @@ interface WaterRefillStationsPageProps {
 const WaterRefillStationsPage: React.FC<WaterRefillStationsPageProps> = ({ subdomainInfo }) => {
   const [stations, setStations] = useState<WaterStation[]>([]);
   const [selectedStation, setSelectedStation] = useState<WaterStation | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data for water refill stations
+  const dataProvider = DataProviderFactory.getProvider();
+
   useEffect(() => {
-    const mockStations: WaterStation[] = [
-      {
-        id: 'aquapure-station-san-francisco',
-        name: 'AquaPure Station - San Francisco',
-        address: '100 Main Street',
-        city: 'San Francisco',
-        state: 'CA',
-        zipCode: '94102',
-        phone: '(415) 555-0123',
-        rating: 4.6,
-        pricePerGallon: '$0.25/gal',
-        distance: '0.2 mi',
-        isOpen: true,
-        hours: '24/7 Access',
-        amenities: ['Credit Card Accepted', 'Maintenance', '1 more'],
-        lat: 37.7749,
-        lng: -122.4194
-      },
-      {
-        id: 'crystal-clear-refill-san-francisco',
-        name: 'Crystal Clear Refill - San Francisco',
-        address: '101 Main Street',
-        city: 'San Francisco',
-        state: 'CA',
-        zipCode: '94102',
-        phone: '(415) 555-0124',
-        rating: 4.5,
-        pricePerGallon: '$0.5/gal',
-        distance: '0.3 mi',
-        isOpen: true,
-        hours: '24/7 Access',
-        amenities: ['Credit Card Accepted', '2 more'],
-        lat: 37.7849,
-        lng: -122.4094
-      },
-      {
-        id: 'blue-drop-water-san-francisco',
-        name: 'Blue Drop Water - San Francisco',
-        address: '102 Main Street',
-        city: 'San Francisco',
-        state: 'CA',
-        zipCode: '94102',
-        phone: '(415) 555-0125',
-        rating: 4.0,
-        pricePerGallon: '$0.75/gal',
-        distance: '0.4 mi',
-        isOpen: false,
-        hours: '24/7 Access',
-        amenities: ['Credit Card Accepted', '3 more'],
-        lat: 37.7649,
-        lng: -122.4294
+    const loadStations = async () => {
+      try {
+        // Get water-refill businesses from data provider
+        const businesses = await dataProvider.getBusinesses('water-refill', 'san-francisco');
+        
+        // Transform business data to station format
+        const transformedStations: WaterStation[] = businesses.map(business => ({
+          id: business.id,
+          name: business.name,
+          address: business.address,
+          city: business.city,
+          state: business.state,
+          phone: business.phone,
+          rating: business.rating,
+          priceRange: '$', // Default price range for water refill
+          distance: '0.5 mi', // This would be calculated based on user location
+          isOpen: true, // This would be determined by current time vs business hours
+          hours: '24/7 Access', // Simplified for now
+          amenities: ['Credit Card Accepted', 'Quality Water'], // Default amenities
+          lat: business.latitude || 37.7749,
+          lng: business.longitude || -122.4194
+        }));
+
+        setStations(transformedStations);
+      } catch (error) {
+        console.error('Error loading water refill stations:', error);
+        // Fallback to empty array
+        setStations([]);
+      } finally {
+        setLoading(false);
       }
-    ];
-    setStations(mockStations);
-  }, []);
+    };
+
+    loadStations();
+  }, [dataProvider]);
+
+  if (loading) {
+    return (
+      <WaterRefillLayout subdomainInfo={subdomainInfo} showSearchBar={true}>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg">Loading stations...</div>
+        </div>
+      </WaterRefillLayout>
+    );
+  }
 
   const renderStationCard = (station: WaterStation) => (
     <div 
@@ -123,7 +115,7 @@ const WaterRefillStationsPage: React.FC<WaterRefillStationsPageProps> = ({ subdo
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-2">
         <div className="flex items-center">
           <Droplets className="w-4 h-4 text-blue-500 mr-1" />
-          <span className="font-semibold text-lg text-blue-600">{station.pricePerGallon}</span>
+          <span className="font-semibold text-lg text-blue-600">{station.priceRange}</span>
         </div>
         {station.phone && (
           <div className="flex items-center text-sm text-gray-600">

@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { SubdomainInfo } from '../../types';
 import { Layout as WaterRefillLayout } from '../../components/layouts/water-refill';
 import { Star, MapPin, Phone, Globe, CheckCircle } from 'lucide-react';
+import { DataProviderFactory } from '../../providers/DataProviderFactory';
 
 interface WaterStation {
   id: string;
@@ -55,65 +56,79 @@ const WaterRefillDetailPage: React.FC<WaterRefillDetailPageProps> = ({ subdomain
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const dataProvider = DataProviderFactory.getProvider();
+
   useEffect(() => {
-    // Mock data for the station detail
-    const mockStation: WaterStation = {
-      id: 'crystal-clear-refill-san-francisco',
-      name: 'Crystal Clear Refill - San Francisco',
-      address: '101 Main Street',
-      city: 'San Francisco',
-      state: 'CA',
-      zipCode: '10001',
-      phone: '(555) 001-0002',
-      website: 'https://crystalclear.com',
-      rating: 4.0,
-      reviewCount: 2,
-      pricePerGallon: '$0.5',
-      isOpen: true,
-      hours: {
-        monday: '6:00 AM - 10:00 PM',
-        tuesday: '6:00 AM - 10:00 PM',
-        wednesday: '6:00 AM - 10:00 PM',
-        thursday: '6:00 AM - 10:00 PM',
-        friday: '6:00 AM - 11:00 PM',
-        saturday: '7:00 AM - 11:00 PM',
-        sunday: '8:00 AM - 9:00 PM'
-      },
-      waterTypes: ['Purified', 'Reverse Osmosis', 'Spring'],
-      amenities: ['24/7 Access', 'Credit Card Accepted', 'Free Parking', 'Indoor Location'],
-      description: 'High-quality water refill station serving the San Francisco community with premium filtered water.',
-      lat: 37.7849,
-      lng: -122.4094,
-      photos: []
+    const loadStationData = async () => {
+      try {
+        if (!stationId) {
+          setLoading(false);
+          return;
+        }
+
+        // Get all water-refill businesses from San Francisco
+        const businesses = await dataProvider.getBusinesses('water-refill', 'san-francisco');
+        
+        // Find the specific station by ID
+        const businessData = businesses.find(b => b.id === stationId);
+        
+        if (businessData) {
+          // Transform business data to station format
+          const transformedStation: WaterStation = {
+            id: businessData.id,
+            name: businessData.name,
+            address: businessData.address,
+            city: businessData.city,
+            state: businessData.state,
+            zipCode: '94102', // Default for San Francisco
+            phone: businessData.phone,
+            website: businessData.website || undefined,
+            rating: businessData.rating,
+            reviewCount: businessData.reviewCount,
+            pricePerGallon: '$0.50/gal', // Default price
+            isOpen: true, // This would be calculated based on current time
+            hours: {
+              monday: '6:00 AM - 10:00 PM',
+              tuesday: '6:00 AM - 10:00 PM',
+              wednesday: '6:00 AM - 10:00 PM',
+              thursday: '6:00 AM - 10:00 PM',
+              friday: '6:00 AM - 11:00 PM',
+              saturday: '7:00 AM - 11:00 PM',
+              sunday: '8:00 AM - 9:00 PM'
+            },
+            waterTypes: businessData.services || ['Purified', 'Reverse Osmosis', 'Spring'],
+            amenities: ['24/7 Access', 'Credit Card Accepted', 'Free Parking', 'Indoor Location'],
+            description: businessData.description || 'High-quality water refill station serving the community with premium filtered water.',
+            lat: businessData.latitude || 37.7749,
+            lng: businessData.longitude || -122.4194,
+            photos: [] // Default to empty array for now
+          };
+
+          setStation(transformedStation);
+
+          // Generate mock reviews based on review count
+          const mockReviews: Review[] = Array.from({ length: Math.min(businessData.reviewCount, 5) }, (_, i) => ({
+            id: `${businessData.id}-review-${i + 1}`,
+            userId: `user-${i + 1}`,
+            userName: `Customer ${i + 1}`,
+            rating: Math.floor(Math.random() * 2) + 4, // 4-5 star reviews
+            date: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+            title: i === 0 ? 'Great water quality' : 'Convenient location',
+            content: i === 0 ? 'The water here is excellent and the station is well-maintained.' : 'Easy to find and the access is convenient.',
+            helpful: Math.floor(Math.random() * 5) + 1
+          }));
+
+          setReviews(mockReviews);
+        }
+      } catch (error) {
+        console.error('Error loading station data:', error);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    const mockReviews: Review[] = [
-      {
-        id: '1',
-        userId: 'u2',
-        userName: 'User 2',
-        rating: 5,
-        date: '7/9/2025',
-        title: 'Convenient location',
-        content: 'Easy to find and the 24/7 access is perfect for my schedule.',
-        helpful: 1
-      },
-      {
-        id: '2',
-        userId: 'u2',
-        userName: 'User 2', 
-        rating: 5,
-        date: '6/9/2025',
-        title: 'Convenient location',
-        content: 'Easy to find and the 24/7 access is perfect for my schedule.',
-        helpful: 1
-      }
-    ];
-
-    setStation(mockStation);
-    setReviews(mockReviews);
-    setLoading(false);
-  }, [stationId]);
+    loadStationData();
+  }, [stationId, dataProvider]);
 
   if (loading) {
     return (
