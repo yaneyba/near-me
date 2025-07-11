@@ -16,9 +16,12 @@ export class D1DataProvider implements IDataProvider {
   private apiBaseUrl: string;
 
   constructor() {
-    // Use current domain for API calls instead of hardcoded base URL
-    // This ensures we don't have CORS issues with custom domains
-    this.apiBaseUrl = window.location.origin;
+    // Use API base URL from environment variable
+    this.apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+    
+    if (!this.apiBaseUrl) {
+      throw new Error('VITE_API_BASE_URL not configured in environment variables.');
+    }
     
     // Ensure we use D1 mode when configured
     const useD1 = import.meta.env.VITE_USE_D1;
