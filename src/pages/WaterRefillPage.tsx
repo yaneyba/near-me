@@ -21,11 +21,11 @@ interface WaterStation {
   lng: number;
 }
 
-interface WaterRefillPageProps {
+interface WaterRefillStationsPageProps {
   subdomainInfo: SubdomainInfo;
 }
 
-const WaterRefillPage: React.FC<WaterRefillPageProps> = ({ subdomainInfo }) => {
+const WaterRefillStationsPage: React.FC<WaterRefillStationsPageProps> = ({ subdomainInfo }) => {
   const [stations, setStations] = useState<WaterStation[]>([]);
   const [selectedStation, setSelectedStation] = useState<WaterStation | null>(null);
 
@@ -151,15 +151,7 @@ const WaterRefillPage: React.FC<WaterRefillPageProps> = ({ subdomainInfo }) => {
   );
 
   return (
-    <WaterRefillLayout subdomainInfo={subdomainInfo}>
-      {/* Featured Stations Section Header */}
-      <section className="bg-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Featured Water Stations</h2>
-          <p className="text-lg text-gray-600 mb-8">Top-rated water refill stations trusted by thousands of customers</p>
-        </div>
-      </section>
-
+    <WaterRefillLayout subdomainInfo={subdomainInfo} showSearchBar={true}>
       <div className="flex h-screen">
         {/* Left Sidebar - Station List */}
         <div className="w-1/2 bg-white border-r border-gray-200 overflow-y-auto">
@@ -220,4 +212,4 @@ const WaterRefillPage: React.FC<WaterRefillPageProps> = ({ subdomainInfo }) => {
   );
 };
 
-export default WaterRefillPage;
+export default WaterRefillStationsPage;

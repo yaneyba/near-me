@@ -3,14 +3,15 @@ import { SubdomainInfo } from '../../types';
 import Footer from '../Footer';
 import DevPanel from '../DevPanel';
 import { Link } from 'react-router-dom';
-import { Droplets, Search, MapPin } from 'lucide-react';
+import { Droplets, Search, MapPin, Filter } from 'lucide-react';
 
 interface WaterRefillLayoutProps {
   children: React.ReactNode;
   subdomainInfo: SubdomainInfo;
+  showSearchBar?: boolean;
 }
 
-const WaterRefillLayout: React.FC<WaterRefillLayoutProps> = ({ children, subdomainInfo }) => {
+const WaterRefillLayout: React.FC<WaterRefillLayoutProps> = ({ children, subdomainInfo, showSearchBar = false }) => {
   const [devPanelVisible, setDevPanelVisible] = useState(false);
 
   const handleDevSubdomainChange = (_category: string, city: string) => {
@@ -127,11 +128,49 @@ const WaterRefillLayout: React.FC<WaterRefillLayoutProps> = ({ children, subdoma
     );
   };
 
+  // Search bar for stations page
+  const renderSearchBar = () => {
+    return (
+      <div className="bg-white border-b border-gray-200 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center space-x-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search by location, station name, or zip code..."
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 flex items-center">
+              Search
+            </button>
+            <button className="bg-blue-100 text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-200 flex items-center">
+              <MapPin className="w-4 h-4 mr-1" />
+              Near Me
+            </button>
+            <button className="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg hover:bg-gray-200 flex items-center">
+              <Filter className="w-4 h-4 mr-1" />
+              Filters
+            </button>
+            <button className="text-blue-600 hover:text-blue-800">
+              List View
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {renderHeader()}
-      {renderHeroSection()}
-      {renderStatsSection()}
+      {showSearchBar ? renderSearchBar() : (
+        <>
+          {renderHeroSection()}
+          {renderStatsSection()}
+        </>
+      )}
       
       {/* Main Content Area - This will contain the sidebar + map layout */}
       <div className="flex-grow">

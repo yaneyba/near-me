@@ -1,0 +1,163 @@
+import React from 'react';
+import { SubdomainInfo } from '../types';
+import WaterRefillLayout from '../components/layouts/WaterRefillLayout';
+import { Link } from 'react-router-dom';
+
+interface WaterRefillHomePageProps {
+  subdomainInfo: SubdomainInfo;
+}
+
+const WaterRefillHomePage: React.FC<WaterRefillHomePageProps> = ({ subdomainInfo }) => {
+  return (
+    <WaterRefillLayout subdomainInfo={subdomainInfo}>
+      {/* Featured Stations Section */}
+      <section className="bg-white py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Featured Water Stations</h2>
+          <p className="text-lg text-gray-600 mb-8">Top-rated water refill stations trusted by thousands of customers</p>
+          
+          {/* Featured station cards would go here */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            {/* Station Card 1 */}
+            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+              <div className="aspect-video bg-gray-100 rounded-lg mb-4"></div>
+              <h3 className="font-semibold text-lg mb-2">AquaPure Station - San Francisco</h3>
+              <p className="text-gray-600 text-sm mb-3">100 Main Street, San Francisco, CA</p>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center">
+                  <span className="text-yellow-400">★</span>
+                  <span className="ml-1 text-sm">4.6</span>
+                </div>
+                <div className="text-blue-600 font-semibold">$0.25/gal</div>
+              </div>
+              <div className="flex flex-wrap gap-2 mb-4">
+                <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Purified</span>
+                <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Reverse Osmosis</span>
+                <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">24/7 Access</span>
+              </div>
+              <button className="w-full bg-blue-50 text-blue-600 py-2 rounded hover:bg-blue-100">
+                View Details
+              </button>
+            </div>
+
+            {/* Station Card 2 */}
+            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+              <div className="aspect-video bg-gray-100 rounded-lg mb-4"></div>
+              <h3 className="font-semibold text-lg mb-2">Crystal Clear Refill - San Francisco</h3>
+              <p className="text-gray-600 text-sm mb-3">101 Main Street, San Francisco, CA</p>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center">
+                  <span className="text-yellow-400">★</span>
+                  <span className="ml-1 text-sm">4.5</span>
+                </div>
+                <div className="text-blue-600 font-semibold">$0.5/gal</div>
+              </div>
+              <div className="flex flex-wrap gap-2 mb-4">
+                <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Purified</span>
+                <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Reverse Osmosis</span>
+                <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">24/7 Access</span>
+              </div>
+              <button className="w-full bg-blue-50 text-blue-600 py-2 rounded hover:bg-blue-100">
+                View Details
+              </button>
+            </div>
+
+            {/* Station Card 3 */}
+            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+              <div className="aspect-video bg-gray-100 rounded-lg mb-4"></div>
+              <h3 className="font-semibold text-lg mb-2">Blue Drop Water - San Francisco</h3>
+              <p className="text-gray-600 text-sm mb-3">102 Main Street, San Francisco, CA</p>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center">
+                  <span className="text-yellow-400">★</span>
+                  <span className="ml-1 text-sm">4.0</span>
+                </div>
+                <div className="text-blue-600 font-semibold">$0.75/gal</div>
+              </div>
+              <div className="flex flex-wrap gap-2 mb-4">
+                <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Purified</span>
+                <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Reverse Osmosis</span>
+                <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">3 more</span>
+              </div>
+              <button className="w-full bg-blue-50 text-blue-600 py-2 rounded hover:bg-blue-100">
+                View Details
+              </button>
+            </div>
+          </div>
+
+          <Link 
+            to="/stations"
+            className="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 font-medium"
+          >
+            View All Stations
+          </Link>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section className="bg-gray-50 py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">How It Works</h2>
+            <p className="text-lg text-gray-600">Find and refill in three simple steps</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Step 1 */}
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">1. Search & Find</h3>
+              <p className="text-gray-600">Use our search tool to find water refill stations near your location or search by city.</p>
+            </div>
+
+            {/* Step 2 */}
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 01.553-.894L9 2l6 3 5.447-2.724A1 1 0 0121 3.382v10.764a1 1 0 01-.553.894L15 18l-6-3z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">2. Get Directions</h3>
+              <p className="text-gray-600">View detailed information including hours, prices, and get turn-by-turn directions.</p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">3. Refill & Save</h3>
+              <p className="text-gray-600">Enjoy clean, affordable water and help reduce plastic waste in the environment.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Business CTA Section */}
+      <section className="bg-gradient-to-r from-teal-500 to-blue-600 text-white py-16">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl font-bold mb-4">Own a Water Refill Business?</h2>
+          <p className="text-xl text-blue-100 mb-8">
+            List your water refill station and connect with thousands of customers looking for quality water sources.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button className="bg-white text-blue-600 px-8 py-3 rounded-lg font-medium hover:bg-gray-100">
+              List Your Business
+            </button>
+            <button className="bg-blue-700 text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-800 border border-blue-400">
+              Learn More
+            </button>
+          </div>
+        </div>
+      </section>
+    </WaterRefillLayout>
+  );
+};
+
+export default WaterRefillHomePage;
