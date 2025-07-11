@@ -2,6 +2,8 @@
 
 A modern React application that creates SEO-optimized business directory pages with admin approval workflows and subscription management.
 
+**Latest Update:** Production deployment with D1 database integration - January 2025
+
 ## ✨ Key Features
 
 - **Business Approval Workflow**: Admin review system for business submissions
