@@ -42,6 +42,20 @@ const formatCity = (city: string): string => {
 export const parseSubdomain = (hostname: string = window.location.hostname, pathname: string = window.location.pathname): SubdomainInfo => {
   // Handle localhost and development
   if (hostname === 'localhost' || hostname.startsWith('127.0.0.1') || hostname.includes('stackblitz')) {
+    // Check for dev query parameter to simulate subdomains
+    const urlParams = new URLSearchParams(window.location.search);
+    const devSubdomain = urlParams.get('subdomain');
+    
+    if (devSubdomain === 'water-refill') {
+      return {
+        category: 'Water Refill Stations',
+        city: 'All Cities',
+        state: 'Nationwide',
+        isWaterRefill: true,
+        isPathBased: true
+      };
+    }
+    
     return {
       category: 'All Services',
       city: 'All Cities',
