@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { ExternalLink, X } from 'lucide-react';
-import { useAuth } from '../../lib/auth';
+import { useAuth } from '@/lib/auth';
 
 interface AdUnitProps {
   slot: string;

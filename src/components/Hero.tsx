@@ -1,8 +1,8 @@
 import React from 'react';
 import { MapPin, Star } from 'lucide-react';
-import SearchWithLiveResults from './SearchWithLiveResults';
-import { Business } from '../types';
-import stats from '../data/stats.json';
+import SearchWithLiveResults from '@/components/SearchWithLiveResults';
+import { Business } from '@/types';
+import stats from '@/data/stats.json';
 
 interface HeroProps {
   category: string;

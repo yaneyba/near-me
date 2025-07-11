@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import LoadingScreen from './LoadingScreen';
-import { useAuth } from '../../lib/auth';
+import LoadingScreen from '@/components/auth/LoadingScreen';
+import { useAuth } from '@/lib/auth';
 
 interface AuthGuardProps {
   children?: React.ReactNode;

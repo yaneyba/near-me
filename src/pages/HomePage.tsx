@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { DataProviderFactory } from '../providers';
-import { Business, SubdomainInfo } from '../types';
-import { generateTitle } from '../utils/subdomainParser';
-import Hero from '../components/Hero';
-import PremiumListings from '../components/PremiumListings';
-import BusinessListings from '../components/BusinessListings';
-import ServicesSection from '../components/ServicesSection';
+import { DataProviderFactory } from '@/providers';
+import { Business, SubdomainInfo } from '@/types';
+import { generateTitle } from '@/utils/subdomainParser';
+import Hero from '@/components/Hero';
+import PremiumListings from '@/components/PremiumListings';
+import BusinessListings from '@/components/BusinessListings';
+import ServicesSection from '@/components/ServicesSection';
 
 interface HomePageProps {
   subdomainInfo: SubdomainInfo;

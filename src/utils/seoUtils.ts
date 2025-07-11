@@ -1,4 +1,4 @@
-import { Business, SubdomainInfo } from '../types';
+import { Business, SubdomainInfo } from '@/types';
 
 export interface SEOMetadata {
   title: string;

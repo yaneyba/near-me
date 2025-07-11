@@ -1,6 +1,6 @@
 import React from 'react';
 import { Star, ExternalLink, Crown } from 'lucide-react';
-import { useAuth } from '../../lib/auth';
+import { useAuth } from '@/lib/auth';
 
 interface SponsoredContentProps {
   className?: string;

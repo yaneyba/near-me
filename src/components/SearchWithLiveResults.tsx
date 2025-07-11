@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, X, Clock, TrendingUp } from 'lucide-react';
-import { Business } from '../types';
+import { Business } from '@/types';
 
 interface SearchWithLiveResultsProps {
   businesses: Business[];

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Download, FileText, Globe, MapPin, Building, Users } from 'lucide-react';
-import { sitemapGenerator } from '../utils/sitemapGenerator';
+import { sitemapGenerator } from '@/utils/sitemapGenerator';
 
 const SitemapGenerator: React.FC = () => {
   const [sitemaps, setSitemaps] = useState<Record<string, string>>({});

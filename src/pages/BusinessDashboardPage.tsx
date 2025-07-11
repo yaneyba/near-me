@@ -21,11 +21,11 @@ import {
   Star,
   LogOut
 } from 'lucide-react';
-import { DataProviderFactory } from '../providers';
-import { BusinessAnalytics } from '../types';
+import { DataProviderFactory } from '@/providers';
+import { BusinessAnalytics } from '@/types';
 import { useNavigate, useLocation } from 'react-router-dom';
-import SubscriptionManager from '../components/SubscriptionManager';
-import { signOut, useAuth } from '../lib/auth';
+import SubscriptionManager from '@/components/SubscriptionManager';
+import { signOut, useAuth } from '@/lib/auth';
 
 const BusinessDashboardPage: React.FC = () => {
   const [period, setPeriod] = useState<'day' | 'week' | 'month' | 'year'>('week');

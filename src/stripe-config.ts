@@ -1,5 +1,5 @@
 // Stripe product configuration
-import { StripeProduct } from './types';
+import { StripeProduct } from '@/types';
 
 export const STRIPE_PRODUCTS: StripeProduct[] = [
   {

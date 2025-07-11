@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { SubdomainInfo } from '../../types';
-import Footer from '../Footer';
-import DevPanel from '../DevPanel';
+import { SubdomainInfo } from '@/types';
+import Footer from '@/components/Footer';
+import DevPanel from '@/components/DevPanel';
 import { Link } from 'react-router-dom';
 import { MapPin, Search, LucideIcon } from 'lucide-react';
 

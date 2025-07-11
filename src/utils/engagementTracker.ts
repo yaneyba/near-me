@@ -1,5 +1,5 @@
-import { UserEngagementEvent } from '../types';
-import { DataProviderFactory } from '../providers';
+import { UserEngagementEvent } from '@/types';
+import { DataProviderFactory } from '@/providers';
 
 // Read tracking configuration from environment variables
 const TRACKING_ENABLED = import.meta.env.VITE_SETTINGS_ENABLE_TRACKING === 'true';

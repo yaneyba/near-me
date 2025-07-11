@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { DataProviderFactory } from '../providers/DataProviderFactory';
-import { UserEngagementEvent } from '../types';
+import { DataProviderFactory } from '@/providers/DataProviderFactory';
+import { UserEngagementEvent } from '@/types';
 import { Zap, Check, AlertCircle, Trash2 } from 'lucide-react';
 
 const AnalyticsDataGenerator: React.FC = () => {

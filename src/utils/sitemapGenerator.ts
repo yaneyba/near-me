@@ -1,5 +1,5 @@
-import { Business } from '../types';
-import businessesData from '../data/businesses.json';
+import { Business } from '@/types';
+import businessesData from '@/data/businesses.json';
 
 interface SitemapUrl {
   loc: string;

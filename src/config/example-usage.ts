@@ -55,7 +55,7 @@ console.log('\n✅ Configuration additions completed!');
 console.log('\n📝 Usage in Application:');
 console.log(`
 // In your application code:
-import { getCityState, addCityStateMapping } from '../config/subdomainExceptions';
+import { getCityState, addCityStateMapping } from '@/config/subdomainExceptions';
 
 // Add new city when user requests it
 if (!isSupportedCity('new-city')) {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Star, Phone, MapPin, Clock, ExternalLink, Globe, Crown, Zap, ChevronDown, ChevronUp, Calendar, Navigation } from 'lucide-react';
-import { Business } from '../types';
-import { engagementTracker } from '../utils/engagementTracker';
+import { Business } from '@/types';
+import { engagementTracker } from '@/utils/engagementTracker';
 
 interface PremiumListingsProps {
   businesses: Business[];

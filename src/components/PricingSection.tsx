@@ -12,9 +12,9 @@ import {
   Loader2, 
   AlertCircle 
 } from 'lucide-react';
-import { STRIPE_PRODUCTS } from '../stripe-config';
-import { createCheckoutSession } from '../lib/stripe';
-import { useAuth } from '../lib/auth';
+import { STRIPE_PRODUCTS } from '@/stripe-config';
+import { createCheckoutSession } from '@/lib/stripe';
+import { useAuth } from '@/lib/auth';
 
 const PricingSection: React.FC = () => {
   const [loading, setLoading] = useState<string | null>(null);

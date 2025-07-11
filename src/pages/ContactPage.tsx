@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
-import { SubdomainInfo } from '../types';
-import { generateTitle } from '../utils/subdomainParser';
-import ContactSection from '../components/ContactSection';
+import { SubdomainInfo } from '@/types';
+import { generateTitle } from '@/utils/subdomainParser';
+import ContactSection from '@/components/ContactSection';
 
 interface ContactPageProps {
   subdomainInfo: SubdomainInfo;

@@ -24,6 +24,32 @@
  * Last updated: 2025-07-11
  */
 
+// JSON Data Structure (matches businesses.json file)
+export interface BusinessData {
+  id: string;                           // Business identifier from JSON
+  name: string;                         // Business name
+  category: string;                     // Business category (e.g., "auto-repair")
+  city: string;                         // City slug (e.g., "denver")
+  state: string;                        // Full state name (e.g., "Colorado")
+  address: string;                      // Full street address
+  phone: string;                        // Contact phone number
+  website?: string | null;              // Business website URL
+  rating: number;                       // Average rating (0.0-5.0)
+  reviewCount: number;                  // Number of reviews (camelCase in JSON)
+  description?: string | null;          // Business description
+  services: string[];                   // Array of services offered
+  neighborhood?: string | null;         // Neighborhood name
+  hours?: Record<string, string>;       // Operating hours object
+  image?: string | null;                // Primary image URL
+  logo?: string | null;                 // Business logo URL
+  verified?: boolean;                   // Verification status
+  premium?: boolean;                    // Premium listing status
+  established?: number | null;          // Year established
+  parking?: string[] | null;            // Parking options
+  amenities?: string[] | null;          // Available amenities
+  bookingLinks?: string[] | null;       // Online booking links
+}
+
 // Core Business Entity (matches businesses table)
 export interface Business {
   id: string;                           // Primary key (e.g., "auto-repair-denver-03")

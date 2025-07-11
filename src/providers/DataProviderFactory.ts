@@ -1,6 +1,6 @@
-import { IDataProvider } from '../types';
-import { JsonDataProvider } from './JsonDataProvider';
-import { D1DataProvider } from './D1DataProvider';
+import { IDataProvider } from '@/types';
+import { JsonDataProvider } from '@/providers/JsonDataProvider';
+import { D1DataProvider } from '@/providers/D1DataProvider';
 
 export type DataProviderType = 'json' | 'api' | 'mock' | 'd1';
 

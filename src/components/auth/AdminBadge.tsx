@@ -1,6 +1,6 @@
 import React from 'react';
 import { Shield } from 'lucide-react';
-import { useAuth } from '../../lib/auth';
+import { useAuth } from '@/lib/auth';
 
 interface AdminBadgeProps {
   className?: string;

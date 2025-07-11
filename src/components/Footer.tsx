@@ -1,9 +1,9 @@
 import React from 'react';
 import { MapPin, Phone, Mail, Clock, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import businessesData from '../data/businesses.json';
-import { Business } from '../types';
-import { SITE_INFO } from '../siteInfo';
+import businessesData from '@/data/businesses.json';
+import { Business } from '@/types';
+import { SITE_INFO } from '@/siteInfo';
 
 interface FooterProps {
   category: string;

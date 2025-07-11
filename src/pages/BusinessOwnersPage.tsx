@@ -30,10 +30,10 @@ import {
   Eye,
   ThumbsUp
 } from 'lucide-react';
-import businessesData from '../data/businesses.json';
-import { Business } from '../types';
-import { SITE_INFO } from '../siteInfo';
-import PricingSection from '../components/PricingSection';
+import businessesData from '@/data/businesses.json';
+import { Business } from '@/types';
+import { SITE_INFO } from '@/siteInfo';
+import PricingSection from '@/components/PricingSection';
 
 const BusinessOwnersPage: React.FC = () => {
   const [businesses] = useState<Business[]>(businessesData);

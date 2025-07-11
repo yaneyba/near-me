@@ -7,7 +7,6 @@ import {
   FileText, 
   ExternalLink, 
   Search,
-  Filter,
   Grid,
   List,
   ChevronRight,
@@ -18,8 +17,8 @@ import {
   Shield,
   Scale
 } from 'lucide-react';
-import businessesData from '../data/businesses.json';
-import { Business } from '../types';
+import businessesData from '@/data/businesses.json';
+import { BusinessData } from '@/types';
 
 interface SitemapCategory {
   name: string;
@@ -45,7 +44,7 @@ interface SitemapCombination {
 }
 
 const SitemapPage: React.FC = () => {
-  const [businesses] = useState<Business[]>(businessesData);
+  const [businesses] = useState<BusinessData[]>(businessesData);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedState, setSelectedState] = useState<string>('all');
@@ -79,17 +78,15 @@ const SitemapPage: React.FC = () => {
       .join(' ');
   };
 
-  const formatForUrl = (text: string): string => {
-    return text.toLowerCase().replace(/\s+/g, '-');
-  };
-
   // Get unique categories
   const getCategories = (): SitemapCategory[] => {
     const categoryMap = new Map<string, number>();
     
     businesses.forEach(business => {
-      const count = categoryMap.get(business.category) || 0;
-      categoryMap.set(business.category, count + 1);
+      if (business.category) {
+        const count = categoryMap.get(business.category) || 0;
+        categoryMap.set(business.category, count + 1);
+      }
     });
 
     return Array.from(categoryMap.entries())
@@ -106,8 +103,10 @@ const SitemapPage: React.FC = () => {
     const cityMap = new Map<string, number>();
     
     businesses.forEach(business => {
-      const count = cityMap.get(business.city) || 0;
-      cityMap.set(business.city, count + 1);
+      if (business.city) {
+        const count = cityMap.get(business.city) || 0;
+        cityMap.set(business.city, count + 1);
+      }
     });
 
     return Array.from(cityMap.entries())
@@ -125,25 +124,27 @@ const SitemapPage: React.FC = () => {
     const combinationMap = new Map<string, SitemapCombination>();
     
     businesses.forEach(business => {
-      const key = `${business.category}-${business.city}`;
-      const existing = combinationMap.get(key);
-      
-      if (existing) {
-        existing.businessCount++;
-      } else {
-        const categoryName = formatForDisplay(business.category);
-        const cityName = formatForDisplay(business.city);
-        const state = cityStateMap[business.city] || 'Unknown';
+      if (business.category && business.city) {
+        const key = `${business.category}-${business.city}`;
+        const existing = combinationMap.get(key);
         
-        combinationMap.set(key, {
-          category: categoryName,
-          categorySlug: business.category,
-          city: cityName,
-          citySlug: business.city,
-          state,
-          businessCount: 1,
-          url: `https://${business.category}.${business.city}.near-me.us`
-        });
+        if (existing) {
+          existing.businessCount++;
+        } else {
+          const categoryName = formatForDisplay(business.category);
+          const cityName = formatForDisplay(business.city);
+          const state = cityStateMap[business.city] || 'Unknown';
+          
+          combinationMap.set(key, {
+            category: categoryName,
+            categorySlug: business.category,
+            city: cityName,
+            citySlug: business.city,
+            state,
+            businessCount: 1,
+            url: `https://${business.category}.${business.city}.near-me.us`
+          });
+        }
       }
     });
 

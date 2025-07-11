@@ -1,8 +1,8 @@
 // src/utils/subdomainParser.ts
 
-import { SubdomainInfo } from '../types';
-import businessesData from '../data/businesses.json';
-import { isSpecialService, isBlockedSubdomain, cityStateMap } from '../config/subdomainExceptions';
+import { SubdomainInfo } from '@/types';
+import businessesData from '@/data/businesses.json';
+import { isSpecialService, isBlockedSubdomain, cityStateMap } from '@/config/subdomainExceptions';
 
 // Get valid combinations from business data
 const getValidCombinations = (): Set<string> => {

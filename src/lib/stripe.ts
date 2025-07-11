@@ -1,6 +1,6 @@
-import { StripeProduct, StripeCheckoutResult, StripeSubscription } from '../types';
-import { STRIPE_PRODUCTS, getProductByPriceId } from '../stripe-config';
-import { DataProviderFactory } from '../providers';
+import { StripeProduct, StripeCheckoutResult, StripeSubscription } from '@/types';
+import { STRIPE_PRODUCTS, getProductByPriceId } from '@/stripe-config';
+import { DataProviderFactory } from '@/providers';
 
 /**
  * Create a checkout session for a business profile

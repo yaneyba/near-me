@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { SubdomainInfo } from '../types';
-import { DataProviderFactory } from '../providers/DataProviderFactory';
+import { SubdomainInfo } from '@/types';
+import { DataProviderFactory } from '@/providers/DataProviderFactory';
 import { MapPin, Star, ExternalLink, Search } from 'lucide-react';
 
 interface ServicesHomePageProps {

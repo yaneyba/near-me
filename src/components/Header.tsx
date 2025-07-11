@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, MapPin, Phone, Mail, Plus, User, LogIn, LogOut } from 'lucide-react';
-import { SITE_INFO } from '../siteInfo';
-import { signOut, useAuth } from '../lib/auth';
+import { SITE_INFO } from '@/siteInfo';
+import { signOut, useAuth } from '@/lib/auth';
 // Force refresh
 
 interface HeaderProps {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ChevronRight, Home, MapPin, Building, Info, Phone } from 'lucide-react';
-import { SubdomainInfo } from '../types';
+import { SubdomainInfo } from '@/types';
 
 interface BreadcrumbProps {
   subdomainInfo: SubdomainInfo;

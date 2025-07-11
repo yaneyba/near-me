@@ -1,7 +1,7 @@
-import { IDataProvider, Business, ContactSubmission, BusinessSubmission, SubmissionResult, UserEngagementEvent, BusinessAnalytics } from '../types';
-import businessesData from '../data/businesses.json';
-import servicesData from '../data/services.json';
-import neighborhoodsData from '../data/neighborhoods.json';
+import { IDataProvider, Business, ContactSubmission, BusinessSubmission, SubmissionResult, UserEngagementEvent, BusinessAnalytics } from '@/types';
+import businessesData from '@/data/businesses.json';
+import servicesData from '@/data/services.json';
+import neighborhoodsData from '@/data/neighborhoods.json';
 
 export class JsonDataProvider implements IDataProvider {
   private businesses: Business[] = businessesData;

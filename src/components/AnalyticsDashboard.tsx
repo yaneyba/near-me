@@ -14,8 +14,8 @@ import {
   Monitor,
   Tablet
 } from 'lucide-react';
-import { DataProviderFactory } from '../providers/DataProviderFactory';
-import AnalyticsDataGenerator from './AnalyticsDataGenerator';
+import { DataProviderFactory } from '@/providers/DataProviderFactory';
+import AnalyticsDataGenerator from '@/components/AnalyticsDataGenerator';
 
 interface AnalyticsDashboardProps {
   className?: string;

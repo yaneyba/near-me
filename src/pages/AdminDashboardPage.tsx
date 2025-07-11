@@ -16,12 +16,12 @@ import {
   X,
   RefreshCw,
 } from 'lucide-react';
-import { DataProviderFactory } from '../providers';
-import { useAuth } from '../lib/auth';
+import { DataProviderFactory } from '@/providers';
+import { useAuth } from '@/lib/auth';
 import { useNavigate } from 'react-router-dom';
-import Pagination from '../components/Pagination';
-import usePagination from '../hooks/usePagination';
-import AnalyticsDashboard from '../components/AnalyticsDashboard';
+import Pagination from '@/components/Pagination';
+import usePagination from '@/hooks/usePagination';
+import AnalyticsDashboard from '@/components/AnalyticsDashboard';
 
 const AdminDashboardPage: React.FC = () => {
   // State for active tab

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { SubdomainInfo } from '../types';
-import { generateTitle } from '../utils/subdomainParser';
-import { DataProviderFactory } from '../providers';
-import { BusinessSubmission } from '../types';
+import { SubdomainInfo } from '@/types';
+import { generateTitle } from '@/utils/subdomainParser';
+import { DataProviderFactory } from '@/providers';
+import { BusinessSubmission } from '@/types';
 import { 
   Building, 
   Phone, 
@@ -25,8 +25,8 @@ import {
   X,
   Plus
 } from 'lucide-react';
-import stats from '../data/stats.json';
-import { SITE_INFO } from '../siteInfo';
+import stats from '@/data/stats.json';
+import { SITE_INFO } from '@/siteInfo';
 
 interface AddBusinessPageProps {
   subdomainInfo: SubdomainInfo;

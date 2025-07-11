@@ -30,9 +30,9 @@ import {
   Eye,
   ThumbsUp
 } from 'lucide-react';
-import businessesData from '../data/businesses.json';
-import { Business } from '../types';
-import { SITE_INFO } from '../siteInfo';
+import businessesData from '@/data/businesses.json';
+import { Business } from '@/types';
+import { SITE_INFO } from '@/siteInfo';
 
 const BusinessOwnersPage: React.FC = () => {
   const [businesses] = useState<Business[]>(businessesData);
