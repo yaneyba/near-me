@@ -8,6 +8,8 @@ This folder contains comprehensive documentation for the Near Me Business Direct
 - **[ADMIN-GUIDE.md](./ADMIN-GUIDE.md)**: Complete admin functionality and user management
 - **[ADMIN-DASHBOARD-IMPLEMENTATION.md](./ADMIN-DASHBOARD-IMPLEMENTATION.md)**: Admin dashboard implementation details
 - **[ARCHITECTURE.md](./ARCHITECTURE.md)**: System architecture and technical overview
+- **[DATABASE-ENTITIES.md](./DATABASE-ENTITIES.md)**: Complete database schema and entity documentation
+- **[SCALING-PROCESS.md](./SCALING-PROCESS.md)**: Automated scaling system for new categories and cities
 - **[DEPLOYMENT-GUIDE.md](./DEPLOYMENT-GUIDE.md)**: Production deployment instructions
 - **[HOW-IT-WORKS.md](./HOW-IT-WORKS.md)**: Application functionality explanation
 
