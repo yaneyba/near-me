@@ -73,18 +73,19 @@ export class D1DataProvider implements IDataProvider {
     try {
       const sql = `
         SELECT 
-          id, name, slug, category, subcategory,
-          description, phone, website, address,
-          city, state, zip, latitude, longitude,
-          image_url, business_hours, featured,
-          verified, premium, created_at, updated_at
+          id, business_id, name, description, address,
+          city, state, zip_code as zip, phone, email, website, 
+          category, services, hours as business_hours, 
+          rating, review_count, image as image_url, logo_url,
+          established, verified, premium, status,
+          created_at, updated_at
         FROM businesses 
         WHERE LOWER(category) = LOWER(?) 
         AND LOWER(city) = LOWER(?)
         ORDER BY 
           premium DESC,
-          featured DESC,
           verified DESC,
+          rating DESC,
           name ASC
       `;
       
