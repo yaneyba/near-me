@@ -1,6 +1,6 @@
 import React from 'react';
-import { SubdomainInfo } from '../types';
-import WaterRefillLayout from '../components/layouts/WaterRefillLayout';
+import { SubdomainInfo } from '../../types';
+import { Layout as WaterRefillLayout } from '../../components/layouts/water-refill';
 import { Link } from 'react-router-dom';
 
 interface WaterRefillHomePageProps {

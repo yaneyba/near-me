@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { SubdomainInfo } from '../types';
-import WaterRefillLayout from '../components/layouts/WaterRefillLayout';
+import { SubdomainInfo } from '../../types';
+import { Layout as WaterRefillLayout } from '../../components/layouts/water-refill';
 import { Star, MapPin, Clock, Phone, CreditCard, Droplets } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface WaterStation {
   id: string;
@@ -33,7 +34,7 @@ const WaterRefillStationsPage: React.FC<WaterRefillStationsPageProps> = ({ subdo
   useEffect(() => {
     const mockStations: WaterStation[] = [
       {
-        id: '1',
+        id: 'aquapure-station-san-francisco',
         name: 'AquaPure Station - San Francisco',
         address: '100 Main Street',
         city: 'San Francisco',
@@ -50,7 +51,7 @@ const WaterRefillStationsPage: React.FC<WaterRefillStationsPageProps> = ({ subdo
         lng: -122.4194
       },
       {
-        id: '2',
+        id: 'crystal-clear-refill-san-francisco',
         name: 'Crystal Clear Refill - San Francisco',
         address: '101 Main Street',
         city: 'San Francisco',
@@ -67,7 +68,7 @@ const WaterRefillStationsPage: React.FC<WaterRefillStationsPageProps> = ({ subdo
         lng: -122.4094
       },
       {
-        id: '3',
+        id: 'blue-drop-water-san-francisco',
         name: 'Blue Drop Water - San Francisco',
         address: '102 Main Street',
         city: 'San Francisco',
@@ -144,9 +145,12 @@ const WaterRefillStationsPage: React.FC<WaterRefillStationsPageProps> = ({ subdo
         ))}
       </div>
 
-      <button className="w-full bg-blue-50 text-blue-600 py-2 rounded-md hover:bg-blue-100 transition-colors">
+      <Link 
+        to={`/station/${station.id}`}
+        className="w-full bg-blue-50 text-blue-600 py-2 rounded-md hover:bg-blue-100 transition-colors text-center block"
+      >
         View Details
-      </button>
+      </Link>
     </div>
   );
 

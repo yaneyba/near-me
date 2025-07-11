@@ -15,8 +15,11 @@ import BusinessOwnersPage from './pages/BusinessOwnersPage';
 import BusinessDashboardPage from './pages/BusinessDashboardPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import LoginPage from './pages/LoginPage';
-import WaterRefillHomePage from './pages/WaterRefillHomePage';
-import WaterRefillStationsPage from './pages/WaterRefillPage';
+import { 
+  HomePage as WaterRefillHomePage, 
+  StationsPage as WaterRefillStationsPage, 
+  DetailPage as WaterRefillDetailPage 
+} from './pages/water-refill';
 import { SubdomainLayout } from './components/layouts';
 import AuthGuard from './components/auth/AuthGuard';
 import { useAuth } from './lib/auth';
@@ -62,6 +65,10 @@ function App() {
           <Route 
             path="/stations" 
             element={<WaterRefillStationsPage subdomainInfo={subdomainInfo} />} 
+          />
+          <Route 
+            path="/station/:stationId" 
+            element={<WaterRefillDetailPage subdomainInfo={subdomainInfo} />} 
           />
           <Route 
             path="/:city" 
