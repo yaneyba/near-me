@@ -25,7 +25,9 @@ INSERT INTO businesses (
     status, 
     created_at, 
     updated_at, 
-    premium
+    premium,
+    latitude,
+    longitude
 ) VALUES 
 (
     'wr-sf-001',
@@ -50,7 +52,9 @@ INSERT INTO businesses (
     'active',
     datetime('now'),
     datetime('now'),
-    0
+    0,
+    37.7749,
+    -122.4194
 ),
 (
     'wr-sf-002',
@@ -75,7 +79,9 @@ INSERT INTO businesses (
     'active',
     datetime('now'),
     datetime('now'),
-    0
+    0,
+    37.7849,
+    -122.4094
 ),
 (
     'wr-sf-003',
@@ -100,5 +106,7 @@ INSERT INTO businesses (
     'active',
     datetime('now'),
     datetime('now'),
-    0
+    0,
+    37.7649,
+    -122.4294
 );

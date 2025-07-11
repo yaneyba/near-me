@@ -13,18 +13,21 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
   try {
     const query = `
       SELECT 
-        id, name, slug, category, subcategory,
+        id, business_id, name, category,
         description, phone, website, address,
-        city, state, zip, latitude, longitude,
-        image_url, business_hours, featured,
-        verified, premium, created_at, updated_at
+        city, state, zip_code, 
+        image, hours, services,
+        rating, review_count,
+        verified, premium, status,
+        established, created_at, updated_at
       FROM businesses 
       WHERE LOWER(category) = LOWER(?) 
       AND LOWER(city) = LOWER(?)
+      AND status = 'active'
       ORDER BY 
         premium DESC,
-        featured DESC,
         verified DESC,
+        rating DESC,
         name ASC
     `;
 
