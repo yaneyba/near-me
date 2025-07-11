@@ -43,12 +43,7 @@ const WaterRefillLayout: React.FC<WaterRefillLayoutProps> = ({ children, subdoma
               <Link to="/for-business" className="hover:text-blue-200">For Business</Link>
               <Link to="/about" className="hover:text-blue-200">About</Link>
               <Link to="/contact" className="hover:text-blue-200">Contact</Link>
-              <Link to="/login" className="bg-blue-700 hover:bg-blue-800 px-4 py-2 rounded">
-                Sign In
-              </Link>
-              <Link to="/signup" className="bg-white text-blue-600 hover:bg-gray-100 px-4 py-2 rounded font-medium">
-                Get Started
-              </Link>
+              <Link to="/login" className="hover:text-blue-200">Sign In</Link>
             </nav>
 
             {/* Mobile menu button */}
