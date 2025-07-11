@@ -91,27 +91,27 @@ const WaterRefillStationsPage: React.FC<WaterRefillStationsPageProps> = ({ subdo
   const renderStationCard = (station: WaterStation) => (
     <div 
       key={station.id}
-      className={`bg-white border rounded-lg p-4 mb-4 cursor-pointer hover:shadow-md transition-shadow ${
+      className={`bg-white border rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow ${
         selectedStation?.id === station.id ? 'border-blue-500 shadow-md' : 'border-gray-200'
       }`}
       onClick={() => setSelectedStation(station)}
     >
-      <div className="flex justify-between items-start mb-2">
-        <h3 className="font-semibold text-gray-900">{station.name}</h3>
-        <div className="flex items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-2 gap-2">
+        <h3 className="font-semibold text-gray-900 text-lg">{station.name}</h3>
+        <div className="flex items-center flex-shrink-0">
           <Star className="w-4 h-4 text-yellow-400 fill-current" />
           <span className="ml-1 text-sm text-gray-600">{station.rating}</span>
         </div>
       </div>
       
-      <div className="flex items-center text-sm text-gray-600 mb-1">
-        <MapPin className="w-4 h-4 mr-1" />
-        <span>{station.address}, {station.city}, {station.state}</span>
+      <div className="flex items-start text-sm text-gray-600 mb-3">
+        <MapPin className="w-4 h-4 mr-1 mt-0.5 flex-shrink-0" />
+        <span className="break-words">{station.address}, {station.city}, {station.state}</span>
       </div>
       
-      <div className="flex items-center justify-between text-sm text-gray-600 mb-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm text-gray-600 mb-3 gap-2">
         <div className="flex items-center">
-          <Clock className="w-4 h-4 mr-1" />
+          <Clock className="w-4 h-4 mr-1 flex-shrink-0" />
           <span className={station.isOpen ? 'text-green-600' : 'text-red-600'}>
             {station.isOpen ? 'Open' : 'Closed'}
           </span>
@@ -120,14 +120,14 @@ const WaterRefillStationsPage: React.FC<WaterRefillStationsPageProps> = ({ subdo
         <span className="text-blue-600 font-medium">{station.distance}</span>
       </div>
 
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-2">
         <div className="flex items-center">
           <Droplets className="w-4 h-4 text-blue-500 mr-1" />
           <span className="font-semibold text-lg text-blue-600">{station.pricePerGallon}</span>
         </div>
         {station.phone && (
           <div className="flex items-center text-sm text-gray-600">
-            <Phone className="w-4 h-4 mr-1" />
+            <Phone className="w-4 h-4 mr-1 flex-shrink-0" />
             <span>{station.phone}</span>
           </div>
         )}
@@ -147,7 +147,7 @@ const WaterRefillStationsPage: React.FC<WaterRefillStationsPageProps> = ({ subdo
 
       <Link 
         to={`/station/${station.id}`}
-        className="w-full bg-blue-50 text-blue-600 py-2 rounded-md hover:bg-blue-100 transition-colors text-center block"
+        className="w-full bg-blue-50 text-blue-600 py-3 rounded-md hover:bg-blue-100 transition-colors text-center block font-medium"
       >
         View Details
       </Link>
@@ -156,29 +156,31 @@ const WaterRefillStationsPage: React.FC<WaterRefillStationsPageProps> = ({ subdo
 
   return (
     <WaterRefillLayout subdomainInfo={subdomainInfo} showSearchBar={true}>
-      <div className="flex h-screen">
-        {/* Left Sidebar - Station List */}
-        <div className="w-1/2 bg-white border-r border-gray-200 overflow-y-auto">
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col lg:flex-row min-h-screen">
+        {/* Station List - Full width on mobile, half on desktop */}
+        <div className="w-full lg:w-1/2 bg-white border-b lg:border-r lg:border-b-0 border-gray-200 overflow-y-auto">
+          <div className="p-4 md:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
               <h3 className="text-xl font-semibold text-gray-900">
                 Water Stations ({stations.length})
               </h3>
-              <select className="border border-gray-300 rounded-md px-3 py-1 text-sm">
+              <select className="border border-gray-300 rounded-md px-3 py-2 text-sm w-full sm:w-auto">
                 <option>Sort by distance</option>
                 <option>Sort by price</option>
                 <option>Sort by rating</option>
               </select>
             </div>
             
-            {stations.map(renderStationCard)}
+            <div className="space-y-4">
+              {stations.map(renderStationCard)}
+            </div>
           </div>
         </div>
 
-        {/* Right Side - Map */}
-        <div className="w-1/2 bg-gray-100 relative">
+        {/* Map - Hidden on mobile, visible on desktop */}
+        <div className="hidden lg:block w-full lg:w-1/2 bg-gray-100 relative min-h-[600px]">
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center">
+            <div className="text-center p-6">
               <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <MapPin className="w-12 h-12 text-blue-500" />
               </div>
@@ -210,6 +212,20 @@ const WaterRefillStationsPage: React.FC<WaterRefillStationsPageProps> = ({ subdo
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Mobile Map Toggle Button */}
+        <div className="lg:hidden fixed bottom-4 right-4 z-10">
+          <button 
+            className="bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+            onClick={() => {
+              // TODO: Implement mobile map modal/overlay
+              alert('Map view coming soon for mobile!');
+            }}
+          >
+            <MapPin className="w-4 h-4" />
+            <span>Map</span>
+          </button>
         </div>
       </div>
     </WaterRefillLayout>
