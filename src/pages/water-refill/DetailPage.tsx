@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { SubdomainInfo } from '../../types';
-import { Layout as WaterRefillLayout } from '../../components/layouts/water-refill';
+import { SubdomainInfo } from '@/types';
+import { Layout as WaterRefillLayout } from '@/components/layouts/water-refill';
 import { Star, MapPin, Phone, Globe, CheckCircle } from 'lucide-react';
-import { DataProviderFactory } from '../../providers/DataProviderFactory';
+import { DataProviderFactory } from '@/providers/DataProviderFactory';
 
 interface WaterStation {
   id: string;

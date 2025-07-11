@@ -1,30 +1,30 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { DataProviderFactory } from './providers/DataProviderFactory';
-import { parseSubdomain } from './utils/subdomainParser';
-import { SubdomainInfo } from './types';
-import HomePage from './pages/HomePage';
-import ServicesHomePage from './pages/ServicesHomePage';
-import AboutPage from './pages/AboutPage';
-import ContactPage from './pages/ContactPage';
-import SitemapPage from './pages/SitemapPage';
-import AddBusinessPage from './pages/AddBusinessPage';
-import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
-import TermsOfServicePage from './pages/TermsOfServicePage';
-import BusinessOwnersPage from './pages/BusinessOwnersPage';
-import BusinessDashboardPage from './pages/BusinessDashboardPage';
-import AdminDashboardPage from './pages/AdminDashboardPage';
-import LoginPage from './pages/LoginPage';
+import { DataProviderFactory } from '@/providers/DataProviderFactory';
+import { parseSubdomain } from '@/utils/subdomainParser';
+import { SubdomainInfo } from '@/types';
+import HomePage from '@/pages/HomePage';
+import ServicesHomePage from '@/pages/ServicesHomePage';
+import AboutPage from '@/pages/AboutPage';
+import ContactPage from '@/pages/ContactPage';
+import SitemapPage from '@/pages/SitemapPage';
+import AddBusinessPage from '@/pages/AddBusinessPage';
+import PrivacyPolicyPage from '@/pages/PrivacyPolicyPage';
+import TermsOfServicePage from '@/pages/TermsOfServicePage';
+import BusinessOwnersPage from '@/pages/BusinessOwnersPage';
+import BusinessDashboardPage from '@/pages/BusinessDashboardPage';
+import AdminDashboardPage from '@/pages/AdminDashboardPage';
+import LoginPage from '@/pages/LoginPage';
 import { 
   HomePage as WaterRefillHomePage, 
   StationsPage as WaterRefillStationsPage, 
   DetailPage as WaterRefillDetailPage 
-} from './pages/water-refill';
-import { SubdomainLayout } from './components/layouts';
-import AuthGuard from './components/auth/AuthGuard';
-import { useAuth } from './lib/auth';
-import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
-import CheckoutCancelPage from './pages/CheckoutCancelPage';
+} from '@/pages/water-refill';
+import { SubdomainLayout } from '@/components/layouts';
+import AuthGuard from '@/components/auth/AuthGuard';
+import { useAuth } from '@/lib/auth';
+import CheckoutSuccessPage from '@/pages/CheckoutSuccessPage';
+import CheckoutCancelPage from '@/pages/CheckoutCancelPage';
 
 function App() {
   // Configure the data provider factory

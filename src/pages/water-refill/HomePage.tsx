@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { SubdomainInfo } from '../../types';
-import { Layout as WaterRefillLayout } from '../../components/layouts/water-refill';
+import { SubdomainInfo } from '@/types';
+import { Layout as WaterRefillLayout } from '@/components/layouts/water-refill';
 import { Link } from 'react-router-dom';
-import { DataProviderFactory } from '../../providers/DataProviderFactory';
+import { DataProviderFactory } from '@/providers/DataProviderFactory';
 
 interface WaterRefillHomePageProps {
   subdomainInfo: SubdomainInfo;
