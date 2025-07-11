@@ -14,12 +14,13 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     const query = `
       SELECT 
         id, business_id, name, category,
-        description, phone, website, address,
+        description, phone, email, website, address,
         city, state, zip_code, 
-        image, hours, services,
+        image, logo_url, hours, services,
         rating, review_count,
         verified, premium, status,
-        established, created_at, updated_at
+        established, site_id, latitude, longitude,
+        created_at, updated_at
       FROM businesses 
       WHERE LOWER(category) = LOWER(?) 
       AND LOWER(city) = LOWER(?)
@@ -35,7 +36,18 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
       .bind(category, city)
       .all();
 
-    return new Response(JSON.stringify(result.results || []), {
+    // Transform database results to match TypeScript Business interface
+    const transformedResults = result.results?.map((row: any) => ({
+      ...row,
+      // Parse JSON fields
+      services: row.services ? JSON.parse(row.services) : [],
+      hours: row.hours ? JSON.parse(row.hours) : {},
+      // Convert integer booleans to actual booleans
+      verified: Boolean(row.verified),
+      premium: Boolean(row.premium),
+    })) || [];
+
+    return new Response(JSON.stringify(transformedResults), {
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',

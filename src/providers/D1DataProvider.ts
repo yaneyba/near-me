@@ -4,7 +4,7 @@ import {
   ContactSubmission, 
   BusinessSubmission, 
   SubmissionResult, 
-  UserEngagementEvent, 
+  UserEngagementEventDB, 
   BusinessAnalytics 
 } from '../types';
 
@@ -67,53 +67,22 @@ export class D1DataProvider implements IDataProvider {
   }
 
   /**
-   * Get businesses from D1 database via query endpoint
+   * Get businesses from D1 database via specialized businesses API endpoint
    */
   async getBusinesses(category: string, city: string): Promise<Business[]> {
     try {
-      const sql = `
-        SELECT 
-          id, business_id, name, description, address,
-          city, state, zip_code as zip, phone, email, website, 
-          category, services, hours as business_hours, 
-          rating, review_count, image as image_url, logo_url,
-          established, verified, premium, status,
-          created_at, updated_at
-        FROM businesses 
-        WHERE LOWER(category) = LOWER(?) 
-        AND LOWER(city) = LOWER(?)
-        ORDER BY 
-          premium DESC,
-          verified DESC,
-          rating DESC,
-          name ASC
-      `;
+      const response = await fetch(
+        `${this.apiBaseUrl}/api/businesses?category=${encodeURIComponent(category)}&city=${encodeURIComponent(city)}`
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch businesses: ${response.statusText}`);
+      }
+
+      const businesses = await response.json();
       
-      const result = await this.executeQuery(sql, [category, city]);
-      
-      // Transform the raw data to match the Business interface
-      return (result.data || []).map((row: any) => ({
-        id: row.id,
-        name: row.name,
-        category: row.category,
-        city: row.city,
-        state: row.state,
-        address: row.address,
-        phone: row.phone,
-        website: row.website,
-        rating: row.rating || 0,
-        reviewCount: row.review_count || 0,
-        description: row.description,
-        services: row.services ? JSON.parse(row.services) : [],
-        hours: row.business_hours ? JSON.parse(row.business_hours) : {},
-        image: row.image_url || '',
-        premium: Boolean(row.premium),
-        // Optional fields for premium businesses
-        bookingLinks: [],
-        latitude: undefined,
-        longitude: undefined,
-        neighborhood: undefined
-      }));
+      // The API now returns data that matches our Business interface exactly
+      return businesses as Business[];
     } catch (error) {
       console.error('Failed to get businesses from API:', error);
       return [];
@@ -258,19 +227,21 @@ export class D1DataProvider implements IDataProvider {
   /**
    * Track user engagement events via query endpoint
    */
-  async trackEngagement(event: UserEngagementEvent): Promise<void> {
+  async trackEngagement(event: UserEngagementEventDB): Promise<void> {
     try {
       const sql = `
-        INSERT INTO user_engagement (
-          business_id, business_name, event_type, event_data, timestamp
-        ) VALUES (?, ?, ?, ?, datetime('now'))
+        INSERT INTO user_engagement_events (
+          business_id, event_type, event_data, timestamp, user_agent, ip_address, session_id
+        ) VALUES (?, ?, ?, datetime('now'), ?, ?, ?)
       `;
       
       await this.executeQuery(sql, [
-        event.businessId,
-        event.businessName,
-        event.eventType,
-        JSON.stringify(event.eventData || {})
+        event.business_id,
+        event.event_type,
+        JSON.stringify(event.event_data || {}),
+        event.user_agent,
+        event.ip_address,
+        event.session_id
       ]);
     } catch (error) {
       console.warn('Failed to track engagement via API:', error);
