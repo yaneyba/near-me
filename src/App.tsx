@@ -1,4 +1,4 @@
-import React from 'react';
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { DataProviderFactory } from '@/providers/DataProviderFactory';
 import { parseSubdomain } from '@/utils/subdomainParser';
@@ -28,7 +28,7 @@ import CheckoutCancelPage from '@/pages/CheckoutCancelPage';
 
 function App() {
   // Configure the data provider factory
-  React.useEffect(() => {
+  useEffect(() => {
     // Always use D1 data provider
     DataProviderFactory.configure({
       type: 'd1'
@@ -42,7 +42,7 @@ function App() {
   const { user } = useAuth();
 
   // Redirect admin users to admin dashboard
-  React.useEffect(() => {
+  useEffect(() => {
     if (user?.isAdmin && window.location.pathname === '/') {
       window.location.href = '/admin/dashboard';
     }
