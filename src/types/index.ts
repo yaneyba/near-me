@@ -508,3 +508,17 @@ export interface SubdomainConfig {
   keywords: string[];
   created: string;
 }
+
+// Subdomain parsing result interface
+export interface SubdomainInfo {
+  category: string;                     // Display category name
+  city: string;                         // Display city name  
+  state: string;                        // Display state name
+  rawCategory?: string;                 // Raw category from URL (kebab-case)
+  rawCity?: string;                     // Raw city from URL (kebab-case)
+  isServices?: boolean;                 // Is this the services homepage
+  isWaterRefill?: boolean;              // Is this a water refill subdomain
+  isPathBased?: boolean;                // Uses path-based routing instead of subdomain
+}
+
+// Configuration Types - For scaling system and subdomain management
