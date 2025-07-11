@@ -29,18 +29,12 @@ import CheckoutCancelPage from '@/pages/CheckoutCancelPage';
 function App() {
   // Configure the data provider factory
   React.useEffect(() => {
-    // For local development, always use JSON data
-    // For production, use D1 when available
-    const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname.includes('127.0.0.1');
-    const useD1 = !isLocalDev && import.meta.env.VITE_USE_D1 === 'true';
-    const providerType = useD1 ? 'd1' : 'json';
-    
+    // Always use D1 data provider
     DataProviderFactory.configure({
-      type: providerType,
-      // D1 integration now fully operational with complete data
+      type: 'd1'
     });
     
-    console.log(`Data provider configured: ${providerType} (localhost: ${isLocalDev}, VITE_USE_D1: ${import.meta.env.VITE_USE_D1})`);
+    console.log('Data provider configured: d1 (D1 Database)');
   }, []);
 
   // Parse subdomain info once at app level

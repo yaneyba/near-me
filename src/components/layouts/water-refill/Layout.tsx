@@ -13,6 +13,7 @@ interface WaterRefillLayoutProps {
 
 const WaterRefillLayout: React.FC<WaterRefillLayoutProps> = ({ children, subdomainInfo, showSearchBar = false }) => {
   const [devPanelVisible, setDevPanelVisible] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleDevSubdomainChange = (_category: string, city: string) => {
     const newUrl = `water-refill.near-me.us/${city.toLowerCase().replace(/\s+/g, '-')}`;
@@ -48,13 +49,71 @@ const WaterRefillLayout: React.FC<WaterRefillLayoutProps> = ({ children, subdoma
 
             {/* Mobile menu button */}
             <div className="md:hidden">
-              <button className="text-white hover:text-blue-200">
+              <button 
+                className="text-white hover:text-blue-200"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d={mobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} 
+                  />
                 </svg>
               </button>
             </div>
           </div>
+
+          {/* Mobile menu dropdown */}
+          {mobileMenuOpen && (
+            <div className="md:hidden bg-blue-700 border-t border-blue-500">
+              <div className="px-2 pt-2 pb-3 space-y-1">
+                <Link 
+                  to="/" 
+                  className="block px-3 py-2 text-white hover:bg-blue-800 rounded-md"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Find Stations
+                </Link>
+                <Link 
+                  to="/for-business" 
+                  className="block px-3 py-2 text-white hover:bg-blue-800 rounded-md"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  For Business
+                </Link>
+                <Link 
+                  to="/about" 
+                  className="block px-3 py-2 text-white hover:bg-blue-800 rounded-md"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  About
+                </Link>
+                <Link 
+                  to="/contact" 
+                  className="block px-3 py-2 text-white hover:bg-blue-800 rounded-md"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Contact
+                </Link>
+                <Link 
+                  to="/login" 
+                  className="block px-3 py-2 text-white hover:bg-blue-800 rounded-md"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Sign In
+                </Link>
+                <Link 
+                  to="/signup" 
+                  className="block px-3 py-2 bg-white text-blue-600 hover:bg-gray-100 rounded-md mx-3 mt-2 text-center font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Get Started
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       </header>
     );
