@@ -28,7 +28,7 @@ const WaterRefillLayout: React.FC<WaterRefillLayoutProps> = ({ children, subdoma
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo and Brand */}
-            <div className="flex items-center">
+            <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
               <Droplets className="w-8 h-8 mr-3 text-blue-200" />
               <div>
                 <h1 className="text-xl font-bold">
@@ -36,7 +36,7 @@ const WaterRefillLayout: React.FC<WaterRefillLayoutProps> = ({ children, subdoma
                 </h1>
                 <p className="text-blue-200 text-sm">Find Water Stations</p>
               </div>
-            </div>
+            </Link>
 
             {/* Navigation */}
             <nav className="hidden md:flex space-x-6">
