@@ -37,19 +37,59 @@ export class D1DataProvider implements IDataProvider {
    * Execute a D1 query via generic API (used for admin functions)
    * @deprecated Use specialized endpoints for better performance
    */
+  private async executeQuery(sql: string, params: any[] = []): Promise<any> {
+    try {
+      const apiKey = import.meta.env.VITE_D1_API_KEY;
+      
+      if (!apiKey) {
+        throw new Error('VITE_D1_API_KEY not configured in environment variables.');
+      }
+      
+      const response = await fetch(`${this.apiBaseUrl}/api/query`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({ sql, params })
+      });
+
+      if (!response.ok) {
+        throw new Error(`D1 query failed: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error('D1 executeQuery error:', error);
+      throw error;
+    }
+  }
+
   /**
-   * Get businesses from D1 database via specialized API endpoint
+   * Get businesses from D1 database via query endpoint
    */
   async getBusinesses(category: string, city: string): Promise<Business[]> {
     try {
-      const response = await fetch(`${this.apiBaseUrl}/api/businesses?category=${encodeURIComponent(category)}&city=${encodeURIComponent(city)}`);
+      const sql = `
+        SELECT 
+          id, name, slug, category, subcategory,
+          description, phone, website, address,
+          city, state, zip, latitude, longitude,
+          image_url, business_hours, featured,
+          verified, premium, created_at, updated_at
+        FROM businesses 
+        WHERE LOWER(category) = LOWER(?) 
+        AND LOWER(city) = LOWER(?)
+        ORDER BY 
+          premium DESC,
+          featured DESC,
+          verified DESC,
+          name ASC
+      `;
       
-      if (!response.ok) {
-        throw new Error(`Businesses API failed: ${response.statusText}`);
-      }
-
-      const businesses = await response.json();
-      return businesses; // The API already returns properly formatted Business objects
+      const result = await this.executeQuery(sql, [category, city]);
+      return result.data || [];
     } catch (error) {
       console.error('Failed to get businesses from API:', error);
       return [];
@@ -57,18 +97,19 @@ export class D1DataProvider implements IDataProvider {
   }
 
   /**
-   * Get services for a category via specialized API endpoint
+   * Get services for a category via query endpoint
    */
   async getServices(category: string): Promise<string[]> {
     try {
-      const response = await fetch(`${this.apiBaseUrl}/api/services?category=${encodeURIComponent(category)}`);
+      const sql = `
+        SELECT DISTINCT service_name 
+        FROM services 
+        WHERE LOWER(category) = LOWER(?)
+        ORDER BY service_name ASC
+      `;
       
-      if (!response.ok) {
-        throw new Error(`Services API failed: ${response.statusText}`);
-      }
-
-      const services = await response.json();
-      return services; // The API already returns string array
+      const result = await this.executeQuery(sql, [category]);
+      return (result.data || []).map((row: any) => row.service_name);
     } catch (error) {
       console.error('Failed to get services from API:', error);
       return [];
@@ -76,18 +117,19 @@ export class D1DataProvider implements IDataProvider {
   }
 
   /**
-   * Get neighborhoods for a city via specialized API endpoint
+   * Get neighborhoods for a city via query endpoint
    */
   async getNeighborhoods(city: string): Promise<string[]> {
     try {
-      const response = await fetch(`${this.apiBaseUrl}/api/neighborhoods?city=${encodeURIComponent(city)}`);
+      const sql = `
+        SELECT DISTINCT neighborhood_name 
+        FROM neighborhoods 
+        WHERE LOWER(city) = LOWER(?)
+        ORDER BY neighborhood_name ASC
+      `;
       
-      if (!response.ok) {
-        throw new Error(`Neighborhoods API failed: ${response.statusText}`);
-      }
-
-      const neighborhoods = await response.json();
-      return neighborhoods; // The API already returns string array
+      const result = await this.executeQuery(sql, [city]);
+      return (result.data || []).map((row: any) => row.neighborhood_name);
     } catch (error) {
       console.error('Failed to get neighborhoods from API:', error);
       return [];
@@ -95,24 +137,38 @@ export class D1DataProvider implements IDataProvider {
   }
 
   /**
-   * Submit contact form via specialized API endpoint
+   * Submit contact form via query endpoint
    */
   async submitContact(contactData: ContactSubmission): Promise<SubmissionResult> {
     try {
-      const response = await fetch(`${this.apiBaseUrl}/api/contact`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(contactData)
-      });
+      const sql = `
+        INSERT INTO contact_submissions (
+          name, email, phone, business_name, subject, message, 
+          inquiry_type, preferred_contact, urgency, category, city, state, 
+          submission_date
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      `;
+      
+      await this.executeQuery(sql, [
+        contactData.name,
+        contactData.email,
+        contactData.phone || null,
+        contactData.businessName || null,
+        contactData.subject,
+        contactData.message,
+        contactData.inquiryType,
+        contactData.preferredContact,
+        contactData.urgency,
+        contactData.category,
+        contactData.city,
+        contactData.state
+      ]);
 
-      if (!response.ok) {
-        throw new Error(`Contact API failed: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      return result;
+      return {
+        success: true,
+        message: "Thank you for your message! We'll get back to you soon.",
+        errors: []
+      };
     } catch (error) {
       console.error('Failed to submit contact via API:', error);
       return {
@@ -124,24 +180,47 @@ export class D1DataProvider implements IDataProvider {
   }
 
   /**
-   * Submit business application via specialized API endpoint
+   * Submit business application via query endpoint
    */
   async submitBusiness(businessData: BusinessSubmission): Promise<SubmissionResult> {
     try {
-      const response = await fetch(`${this.apiBaseUrl}/api/submit-business`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(businessData)
-      });
+      const sql = `
+        INSERT INTO business_submissions (
+          business_name, owner_name, email, phone, website, category, 
+          address, city, state, zip_code, description, 
+          services, custom_services, hours, social_media,
+          business_type, years_in_business, employee_count, special_offers,
+          submission_date, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), 'pending')
+      `;
+      
+      await this.executeQuery(sql, [
+        businessData.businessName,
+        businessData.ownerName,
+        businessData.email,
+        businessData.phone,
+        businessData.website || null,
+        businessData.category,
+        businessData.address,
+        businessData.city,
+        businessData.state,
+        businessData.zipCode,
+        businessData.description,
+        JSON.stringify(businessData.services),
+        JSON.stringify(businessData.customServices),
+        JSON.stringify(businessData.hours),
+        JSON.stringify(businessData.socialMedia),
+        businessData.businessType,
+        businessData.yearsInBusiness,
+        businessData.employeeCount,
+        businessData.specialOffers
+      ]);
 
-      if (!response.ok) {
-        throw new Error(`Business submission API failed: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      return result;
+      return {
+        success: true,
+        message: "Thank you for your business submission! We'll review it and get back to you within 48 hours.",
+        errors: []
+      };
     } catch (error) {
       console.error('Failed to submit business via API:', error);
       return {
@@ -153,21 +232,22 @@ export class D1DataProvider implements IDataProvider {
   }
 
   /**
-   * Track user engagement events via specialized API endpoint
+   * Track user engagement events via query endpoint
    */
   async trackEngagement(event: UserEngagementEvent): Promise<void> {
     try {
-      const response = await fetch(`${this.apiBaseUrl}/api/track-engagement`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(event)
-      });
-
-      if (!response.ok) {
-        console.warn(`Engagement tracking failed: ${response.statusText}`);
-      }
+      const sql = `
+        INSERT INTO user_engagement (
+          business_id, business_name, event_type, event_data, timestamp
+        ) VALUES (?, ?, ?, ?, datetime('now'))
+      `;
+      
+      await this.executeQuery(sql, [
+        event.businessId,
+        event.businessName,
+        event.eventType,
+        JSON.stringify(event.eventData || {})
+      ]);
     } catch (error) {
       console.warn('Failed to track engagement via API:', error);
       // Don't throw error for tracking failures
