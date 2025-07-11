@@ -102,14 +102,14 @@ export class D1DataProvider implements IDataProvider {
   async getServices(category: string): Promise<string[]> {
     try {
       const sql = `
-        SELECT DISTINCT service_name 
+        SELECT DISTINCT service 
         FROM services 
         WHERE LOWER(category) = LOWER(?)
-        ORDER BY service_name ASC
+        ORDER BY service ASC
       `;
       
       const result = await this.executeQuery(sql, [category]);
-      return (result.data || []).map((row: any) => row.service_name);
+      return (result.data || []).map((row: any) => row.service);
     } catch (error) {
       console.error('Failed to get services from API:', error);
       return [];
