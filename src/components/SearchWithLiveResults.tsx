@@ -61,7 +61,7 @@ const SearchWithLiveResults: React.FC<SearchWithLiveResultsProps> = ({
 
       // Business name matches
       businesses.forEach(business => {
-        if (business.name.toLowerCase().includes(queryLower)) {
+        if (business.name && business.name.toLowerCase().includes(queryLower)) {
           newSuggestions.push({
             type: 'business',
             text: business.name,
@@ -73,21 +73,23 @@ const SearchWithLiveResults: React.FC<SearchWithLiveResultsProps> = ({
       // Service matches
       const serviceMatches = new Set<string>();
       businesses.forEach(business => {
-        business.services.forEach(service => {
-          if (service.toLowerCase().includes(queryLower) && !serviceMatches.has(service)) {
-            serviceMatches.add(service);
-            newSuggestions.push({
-              type: 'service',
-              text: service
-            });
-          }
-        });
+        if (business.services && Array.isArray(business.services)) {
+          business.services.forEach(service => {
+            if (service && service.toLowerCase().includes(queryLower) && !serviceMatches.has(service)) {
+              serviceMatches.add(service);
+              newSuggestions.push({
+                type: 'service',
+                text: service
+              });
+            }
+          });
+        }
       });
 
       // Neighborhood matches
       const neighborhoodMatches = new Set<string>();
       businesses.forEach(business => {
-        if (business.neighborhood.toLowerCase().includes(queryLower) && !neighborhoodMatches.has(business.neighborhood)) {
+        if (business.neighborhood && business.neighborhood.toLowerCase().includes(queryLower) && !neighborhoodMatches.has(business.neighborhood)) {
           neighborhoodMatches.add(business.neighborhood);
           newSuggestions.push({
             type: 'neighborhood',
