@@ -36,43 +36,6 @@ export class D1DataProvider implements IDataProvider {
    * Execute a D1 query via generic API (used for admin functions)
    * @deprecated Use specialized endpoints for better performance
    */
-  private async executeQuery(sql: string, params: any[] = []): Promise<any> {
-    try {
-      const apiKey = import.meta.env.VITE_D1_API_KEY;
-      
-      if (!apiKey) {
-        throw new Error('VITE_D1_API_KEY not configured in environment variables.');
-      }
-      
-      const response = await fetch(`${this.apiBaseUrl}/api/query`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          sql,
-          params
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`D1 Query failed: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      
-      if (result.error) {
-        throw new Error(`D1 Error: ${result.error}`);
-      }
-
-      return result.data;
-    } catch (error) {
-      console.error('D1 Query Error:', error);
-      throw error;
-    }
-  }
-
   /**
    * Get businesses from D1 database via specialized API endpoint
    */
@@ -307,59 +270,55 @@ export class D1DataProvider implements IDataProvider {
     };
   }
 
-  // Admin methods - delegate to D1 queries
+  // Admin methods - delegate to specialized admin endpoints
   async getBusinessSubmissions(): Promise<any[]> {
-    const sql = `
-      SELECT * FROM business_submissions 
-      ORDER BY created_at DESC
-    `;
-    
     try {
-      return await this.executeQuery(sql);
+      const response = await fetch(`${this.apiBaseUrl}/api/admin/business-submissions`);
+      if (!response.ok) {
+        throw new Error(`Business submissions API failed: ${response.statusText}`);
+      }
+      return await response.json();
     } catch (error) {
-      console.error('Failed to get business submissions from D1:', error);
+      console.error('Failed to get business submissions from API:', error);
       return [];
     }
   }
 
   async getBusinessProfiles(): Promise<any[]> {
-    const sql = `
-      SELECT * FROM business_profiles 
-      ORDER BY created_at DESC
-    `;
-    
     try {
-      return await this.executeQuery(sql);
+      const response = await fetch(`${this.apiBaseUrl}/api/admin/business-profiles`);
+      if (!response.ok) {
+        throw new Error(`Business profiles API failed: ${response.statusText}`);
+      }
+      return await response.json();
     } catch (error) {
-      console.error('Failed to get business profiles from D1:', error);
+      console.error('Failed to get business profiles from API:', error);
       return [];
     }
   }
 
   async getContactMessages(): Promise<any[]> {
-    const sql = `
-      SELECT * FROM contact_messages 
-      ORDER BY created_at DESC
-    `;
-    
     try {
-      return await this.executeQuery(sql);
+      const response = await fetch(`${this.apiBaseUrl}/api/admin/contact-messages`);
+      if (!response.ok) {
+        throw new Error(`Contact messages API failed: ${response.statusText}`);
+      }
+      return await response.json();
     } catch (error) {
-      console.error('Failed to get contact messages from D1:', error);
+      console.error('Failed to get contact messages from API:', error);
       return [];
     }
   }
 
   async getAllBusinesses(): Promise<any[]> {
-    const sql = `
-      SELECT * FROM businesses 
-      ORDER BY created_at DESC
-    `;
-    
     try {
-      return await this.executeQuery(sql);
+      const response = await fetch(`${this.apiBaseUrl}/api/admin/businesses?type=all`);
+      if (!response.ok) {
+        throw new Error(`All businesses API failed: ${response.statusText}`);
+      }
+      return await response.json();
     } catch (error) {
-      console.error('Failed to get all businesses from D1:', error);
+      console.error('Failed to get all businesses from API:', error);
       return [];
     }
   }
@@ -372,22 +331,20 @@ export class D1DataProvider implements IDataProvider {
     premiumBusinesses: number;
   }> {
     try {
-      const [submissions, messages, businesses, profiles] = await Promise.all([
-        this.executeQuery(`SELECT COUNT(*) as count FROM business_submissions WHERE status = 'pending'`),
-        this.executeQuery(`SELECT COUNT(*) as count FROM contact_messages WHERE status = 'new'`),
-        this.executeQuery(`SELECT COUNT(*) as count FROM businesses`),
-        this.executeQuery(`SELECT COUNT(*) as count FROM business_profiles`)
-      ]);
-
+      const response = await fetch(`${this.apiBaseUrl}/api/admin/stats`);
+      if (!response.ok) {
+        throw new Error(`Admin stats API failed: ${response.statusText}`);
+      }
+      const stats = await response.json();
       return {
-        pendingBusinesses: submissions[0]?.count || 0,
-        totalBusinesses: businesses[0]?.count || 0,
-        newMessages: messages[0]?.count || 0,
-        totalUsers: profiles[0]?.count || 0,
-        premiumBusinesses: 0 // TODO: Implement premium count
+        pendingBusinesses: stats.pendingBusinesses || 0,
+        totalBusinesses: stats.totalBusinesses || 0,
+        newMessages: stats.newMessages || 0,
+        totalUsers: stats.totalUsers || 0,
+        premiumBusinesses: stats.premiumBusinesses || 0
       };
     } catch (error) {
-      console.error('Failed to get admin stats from D1:', error);
+      console.error('Failed to get admin stats from API:', error);
       return {
         pendingBusinesses: 0,
         totalBusinesses: 0,
@@ -399,14 +356,22 @@ export class D1DataProvider implements IDataProvider {
   }
 
   async approveBusinessSubmission(id: string, reviewerNotes?: string): Promise<void> {
-    const sql = `
-      UPDATE business_submissions 
-      SET status = 'approved', reviewed_at = datetime('now'), reviewer_notes = ?
-      WHERE id = ?
-    `;
-    
     try {
-      await this.executeQuery(sql, [reviewerNotes || null, id]);
+      const response = await fetch(`${this.apiBaseUrl}/api/admin/business-submissions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'approve',
+          submissionId: id,
+          reviewerNotes
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Approve business submission API failed: ${response.statusText}`);
+      }
     } catch (error) {
       console.error('Failed to approve business submission:', error);
       throw error;
@@ -414,14 +379,22 @@ export class D1DataProvider implements IDataProvider {
   }
 
   async rejectBusinessSubmission(id: string, reviewerNotes?: string): Promise<void> {
-    const sql = `
-      UPDATE business_submissions 
-      SET status = 'rejected', reviewed_at = datetime('now'), reviewer_notes = ?
-      WHERE id = ?
-    `;
-    
     try {
-      await this.executeQuery(sql, [reviewerNotes || null, id]);
+      const response = await fetch(`${this.apiBaseUrl}/api/admin/business-submissions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'reject',
+          submissionId: id,
+          reviewerNotes
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Reject business submission API failed: ${response.statusText}`);
+      }
     } catch (error) {
       console.error('Failed to reject business submission:', error);
       throw error;
@@ -429,14 +402,23 @@ export class D1DataProvider implements IDataProvider {
   }
 
   async resolveContactMessage(id: string, resolvedBy?: string, adminNotes?: string): Promise<void> {
-    const sql = `
-      UPDATE contact_messages 
-      SET status = 'resolved', resolved_at = datetime('now'), resolved_by = ?, admin_notes = ?
-      WHERE id = ?
-    `;
-    
     try {
-      await this.executeQuery(sql, [resolvedBy || null, adminNotes || null, id]);
+      const response = await fetch(`${this.apiBaseUrl}/api/admin/contact-messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'resolve',
+          messageId: id,
+          resolvedBy,
+          adminNotes
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Resolve contact message API failed: ${response.statusText}`);
+      }
     } catch (error) {
       console.error('Failed to resolve contact message:', error);
       throw error;
@@ -444,18 +426,26 @@ export class D1DataProvider implements IDataProvider {
   }
 
   /**
-   * Clear sample engagement data (optional method)
+   * Clear sample engagement data (optional method) - delegates to engagement endpoint
    */
   async clearSampleEngagementData(sampleDataIdentifier: string): Promise<void> {
-    const sql = `
-      DELETE FROM user_engagement_events 
-      WHERE event_data LIKE ?
-    `;
-    
     try {
-      await this.executeQuery(sql, [`%${sampleDataIdentifier}%`]);
+      const response = await fetch(`${this.apiBaseUrl}/api/admin/engagement`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'clear-sample',
+          identifier: sampleDataIdentifier
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Clear engagement data API failed: ${response.statusText}`);
+      }
     } catch (error) {
-      console.error('Failed to clear sample engagement data:', error);
+      console.error('Failed to clear sample engagement data via API:', error);
       throw error;
     }
   }
