@@ -15,7 +15,19 @@
     "preview": "vite preview",
     "deploy:staging": "npm run build && echo 'Deploy to staging'",
     "deploy:production": "npm run build:production && echo 'Deploy to production'",
-    "toggle-auth": "node scripts/toggle-auth-features.js"
+    "toggle-auth": "node scripts/toggle-auth-features.js",
+    "migration:generate": "node scripts/generate-migration.js",
+    "migration:run": "wrangler d1 execute nearme-db --remote",
+    "import:businesses": "node scripts/business-importer.js",
+    "subdomain:add": "node scripts/manage-subdomains.js add",
+    "subdomain:remove": "node scripts/manage-subdomains.js remove", 
+    "subdomain:list": "node scripts/manage-subdomains.js list",
+    "subdomain:cloudflare": "node scripts/manage-subdomains.js cloudflare",
+    "deploy:category": "node scripts/deploy-category.js",
+    "rollback:category": "node scripts/deploy-category.js rollback",
+    "db:migrate": "wrangler d1 migrations apply nearme-db --remote",
+    "db:backup": "wrangler d1 export nearme-db --remote",
+    "db:query": "wrangler d1 execute nearme-db --remote --command"
   },
   "dependencies": {
     "dotenv": "^16.6.1",
