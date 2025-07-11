@@ -90,7 +90,30 @@ export class D1DataProvider implements IDataProvider {
       `;
       
       const result = await this.executeQuery(sql, [category, city]);
-      return result.data || [];
+      
+      // Transform the raw data to match the Business interface
+      return (result.data || []).map((row: any) => ({
+        id: row.id,
+        name: row.name,
+        category: row.category,
+        city: row.city,
+        state: row.state,
+        address: row.address,
+        phone: row.phone,
+        website: row.website,
+        rating: row.rating || 0,
+        reviewCount: row.review_count || 0,
+        description: row.description,
+        services: row.services ? JSON.parse(row.services) : [],
+        hours: row.business_hours ? JSON.parse(row.business_hours) : {},
+        image: row.image_url || '',
+        premium: Boolean(row.premium),
+        // Optional fields for premium businesses
+        bookingLinks: [],
+        latitude: undefined,
+        longitude: undefined,
+        neighborhood: undefined
+      }));
     } catch (error) {
       console.error('Failed to get businesses from API:', error);
       return [];
