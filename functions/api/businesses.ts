@@ -16,7 +16,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         id, business_id, name, category,
         description, phone, email, website, address,
         city, state, zip_code, 
-        image, logo_url, hours, services,
+        image_url, logo_url, hours, services,
         rating, review_count,
         verified, premium, status,
         established, site_id, latitude, longitude,
@@ -39,6 +39,8 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     // Transform database results to match TypeScript Business interface
     const transformedResults = result.results?.map((row: any) => ({
       ...row,
+      // Map database column names to frontend expectations
+      image: row.image_url,
       // Parse JSON fields
       services: row.services ? JSON.parse(row.services) : [],
       hours: row.hours ? JSON.parse(row.hours) : {},
@@ -48,28 +50,41 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     })) || [];
 
     return new Response(JSON.stringify(transformedResults), {
+      status: 200,
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        'Access-Control-Allow-Credentials': 'false',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
+        'Access-Control-Max-Age': '86400',
+        'Vary': 'Origin',
       },
     });
   } catch (error) {
     console.error('Error fetching businesses:', error);
-    return new Response('Internal server error', { status: 500 });
+    return new Response(JSON.stringify({ error: 'Internal server error' }), { 
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
+        'Access-Control-Max-Age': '86400',
+        'Vary': 'Origin',
+      },
+    });
   }
 };
 
 export const onRequestOptions: PagesFunction = async () => {
   return new Response(null, {
-    status: 200,
+    status: 204,
     headers: {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      'Access-Control-Allow-Credentials': 'false',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
+      'Access-Control-Max-Age': '86400',
+      'Vary': 'Origin',
     },
   });
 };
