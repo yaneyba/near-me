@@ -1,6 +1,6 @@
 import React from 'react';
 import { MapPin, Star } from 'lucide-react';
-import SearchWithLiveResults from '@/components/SearchWithLiveResults';
+import { SearchWithLiveResults } from '@/components/shared/ui';
 import { Business } from '@/types';
 import stats from '@/data/stats.json';
 

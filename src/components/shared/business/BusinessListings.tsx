@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Star, Phone, MapPin, Clock, ExternalLink, Globe, Filter, SortAsc, ChevronLeft, ChevronRight, Crown, ChevronDown, ChevronUp, MoreHorizontal, Calendar, Navigation, TrendingUp } from 'lucide-react';
 import { Business } from '@/types';
 import { AdUnit, SponsoredContent } from '@/components/ads';
-import PremiumUpgrade from '@/components/PremiumUpgrade';
+import { PremiumUpgrade } from '@/components/shared/business';
 import { engagementTracker } from '@/utils/engagementTracker';
 import { useAuth } from '@/lib/auth';
 

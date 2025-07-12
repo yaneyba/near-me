@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { SubdomainInfo } from '@/types';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import Breadcrumb from '@/components/Breadcrumb';
+import { Breadcrumb } from '@/components/shared/ui';
 import DevPanel from '@/components/DevPanel';
 
 interface LayoutProps {
