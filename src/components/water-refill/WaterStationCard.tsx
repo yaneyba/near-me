@@ -49,7 +49,7 @@ const WaterStationCard: React.FC<WaterStationCardProps> = ({
   if (isHomePage) {
     return (
       <div 
-        className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm"
+        className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
         onClick={onClick}
       >
         <div className="aspect-video bg-gray-100 rounded-lg mb-4 overflow-hidden relative">
@@ -67,35 +67,52 @@ const WaterStationCard: React.FC<WaterStationCardProps> = ({
             </div>
           )}
         </div>
-        <h3 className="font-semibold text-lg mb-2">{station.name}</h3>
-        <p className="text-gray-600 text-sm mb-3">
-          {formatAddress(station.address, station.city, station.state)}
-        </p>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center">
-            <span className="text-yellow-400">★</span>
-            <span className="ml-1 text-sm">{station.rating}</span>
+        
+        <div className="space-y-3">
+          <h3 className="font-bold text-xl text-gray-900 leading-tight">{station.name}</h3>
+          
+          <div className="flex items-start text-gray-600">
+            <MapPin className="w-4 h-4 mr-2 mt-1 text-gray-400 flex-shrink-0" />
+            <p className="text-sm leading-relaxed">
+              {formatAddress(station.address, station.city, station.state)}
+            </p>
           </div>
-          <div className="text-blue-600 font-semibold">{station.priceRange || '$0.50/gal'}</div>
+          
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-1">
+              <Star className="w-4 h-4 text-yellow-400 fill-current" />
+              <span className="font-semibold text-gray-900">{station.rating}</span>
+              <span className="text-sm text-gray-500">(4.2k reviews)</span>
+            </div>
+            <div className="bg-blue-50 px-3 py-1 rounded-full">
+              <span className="text-blue-700 font-bold text-lg">{station.priceRange || '$0.50/gal'}</span>
+            </div>
+          </div>
+          
+          <div className="flex flex-wrap gap-2">
+            {station.amenities?.slice(0, 3).map((service: string, index: number) => (
+              <span key={index} className="bg-gray-100 text-gray-700 text-xs font-medium px-2.5 py-1.5 rounded-full border">
+                {service}
+              </span>
+            )) || (
+              <>
+                <span className="bg-blue-50 text-blue-700 text-xs font-medium px-2.5 py-1.5 rounded-full border border-blue-200">
+                  Purified Water
+                </span>
+                <span className="bg-green-50 text-green-700 text-xs font-medium px-2.5 py-1.5 rounded-full border border-green-200">
+                  Quality Tested
+                </span>
+              </>
+            )}
+          </div>
+          
+          <Link 
+            to={`/station/${station.id}`}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 block text-center shadow-sm hover:shadow-md"
+          >
+            View Details
+          </Link>
         </div>
-        <div className="flex flex-wrap gap-2 mb-4">
-          {station.amenities?.slice(0, 3).map((service: string, index: number) => (
-            <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-              {service}
-            </span>
-          )) || (
-            <>
-              <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Purified</span>
-              <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Quality Water</span>
-            </>
-          )}
-        </div>
-        <Link 
-          to={`/station/${station.id}`}
-          className="w-full bg-blue-50 text-blue-600 py-2 rounded hover:bg-blue-100 block text-center"
-        >
-          View Details
-        </Link>
       </div>
     );
   }
