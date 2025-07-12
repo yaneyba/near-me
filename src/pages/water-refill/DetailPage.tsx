@@ -102,7 +102,18 @@ const WaterRefillDetailPage: React.FC<WaterRefillDetailPageProps> = ({ subdomain
                 </div>
                 
                 <p className="text-gray-600 mb-4 break-words">
-                  {[station.address, station.city, station.state, station.zipCode].filter(Boolean).join(', ') || 'Address not available'}
+                  {(() => {
+                    // If address already contains city/state info, just use the address
+                    if (station.address && (
+                      station.address.toLowerCase().includes('san francisco') ||
+                      station.address.toLowerCase().includes('california') ||
+                      station.address.toLowerCase().includes('ca ')
+                    )) {
+                      return station.address;
+                    }
+                    // Otherwise, combine address with city/state/zip
+                    return [station.address, station.city, station.state, station.zipCode].filter(Boolean).join(', ') || 'Address not available';
+                  })()}
                 </p>
                 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-6 mb-6">
