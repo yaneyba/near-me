@@ -1,5 +1,46 @@
 import { WaterStation, WaterStationDetail } from './types';
 
+// Helper function to format address dynamically
+export const formatAddress = (address: string, city: string, state: string, zipCode?: string): string => {
+  if (!address) {
+    return [city?.replace('-', ' '), state, zipCode].filter(Boolean).join(', ') || 'Address not available';
+  }
+  
+  // Create normalized versions for comparison
+  const normalizedAddress = address.toLowerCase();
+  const normalizedCity = city?.toLowerCase().replace('-', ' ') || '';
+  const normalizedState = state?.toLowerCase() || '';
+  
+  // Check if address already contains city or state information
+  const containsCity = normalizedCity && normalizedAddress.includes(normalizedCity);
+  const containsState = normalizedState && normalizedAddress.includes(normalizedState);
+  
+  // Common state abbreviation mappings
+  const stateAbbreviations: { [key: string]: string } = {
+    'alabama': 'al', 'alaska': 'ak', 'arizona': 'az', 'arkansas': 'ar', 'california': 'ca',
+    'colorado': 'co', 'connecticut': 'ct', 'delaware': 'de', 'florida': 'fl', 'georgia': 'ga',
+    'hawaii': 'hi', 'idaho': 'id', 'illinois': 'il', 'indiana': 'in', 'iowa': 'ia',
+    'kansas': 'ks', 'kentucky': 'ky', 'louisiana': 'la', 'maine': 'me', 'maryland': 'md',
+    'massachusetts': 'ma', 'michigan': 'mi', 'minnesota': 'mn', 'mississippi': 'ms', 'missouri': 'mo',
+    'montana': 'mt', 'nebraska': 'ne', 'nevada': 'nv', 'new hampshire': 'nh', 'new jersey': 'nj',
+    'new mexico': 'nm', 'new york': 'ny', 'north carolina': 'nc', 'north dakota': 'nd', 'ohio': 'oh',
+    'oklahoma': 'ok', 'oregon': 'or', 'pennsylvania': 'pa', 'rhode island': 'ri', 'south carolina': 'sc',
+    'south dakota': 'sd', 'tennessee': 'tn', 'texas': 'tx', 'utah': 'ut', 'vermont': 'vt',
+    'virginia': 'va', 'washington': 'wa', 'west virginia': 'wv', 'wisconsin': 'wi', 'wyoming': 'wy'
+  };
+  
+  const stateAbbr = stateAbbreviations[normalizedState];
+  const containsStateAbbr = stateAbbr && normalizedAddress.includes(stateAbbr + ' ');
+  
+  // If address already contains city/state info, just use the address
+  if (containsCity || containsState || containsStateAbbr) {
+    return address;
+  }
+  
+  // Otherwise, combine address with city/state/zip
+  return [address, city?.replace('-', ' '), state, zipCode].filter(Boolean).join(', ');
+}
+
 export const transformBusinessToWaterStation = (business: any): WaterStation => {
   // Format hours for display
   const formatHours = (hoursObj: any): string => {

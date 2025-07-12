@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Star, MapPin, Clock, Phone, CreditCard, Droplets } from 'lucide-react';
 import { WaterStation } from '@/components/water-refill/types';
+import { formatAddress } from '@/components/water-refill/utils';
 
 interface WaterStationCardProps {
   station: WaterStation;
@@ -60,18 +61,7 @@ const WaterStationCard: React.FC<WaterStationCardProps> = ({
           <div className="flex items-start text-sm text-gray-600 mb-2">
             <MapPin className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0 text-gray-400" />
             <span className="break-words leading-relaxed">
-              {(() => {
-                // If address already contains city/state info, just use the address
-                if (station.address && (
-                  station.address.toLowerCase().includes('san francisco') ||
-                  station.address.toLowerCase().includes('california') ||
-                  station.address.toLowerCase().includes('ca ')
-                )) {
-                  return station.address;
-                }
-                // Otherwise, combine address with city/state
-                return [station.address, station.city, station.state].filter(Boolean).join(', ') || 'Address not available';
-              })()}
+              {formatAddress(station.address, station.city, station.state)}
             </span>
           </div>
       
