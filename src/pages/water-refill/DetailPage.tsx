@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { SubdomainInfo, Business } from '@/types';
 import { Layout as WaterRefillLayout } from '@/components/layouts/water-refill';
-import { MapPin, Phone, Globe, CheckCircle } from 'lucide-react';
+import { MapPin, Phone, Globe, CheckCircle, Home, ChevronRight, Droplets } from 'lucide-react';
 import { DataProviderFactory } from '@/providers/DataProviderFactory';
 import { Stars, WaterStationDetail, transformBusinessToWaterStationDetail, formatAddress } from '@/components/water-refill';
 
@@ -94,10 +94,16 @@ const WaterRefillDetailPage: React.FC<WaterRefillDetailPageProps> = ({ subdomain
         <div className="bg-white border-b">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
             <nav className="flex flex-wrap items-center text-sm text-gray-500 gap-1">
-              <Link to="/" className="hover:text-blue-600 transition-colors">Home</Link>
-              <span className="mx-1 sm:mx-2">/</span>
-              <Link to="/stations" className="hover:text-blue-600 transition-colors">Find Stations</Link>
-              <span className="mx-1 sm:mx-2">/</span>
+              <Link to="/" className="flex items-center hover:text-blue-600 transition-colors">
+                <Home className="w-4 h-4 mr-1" />
+                Home
+              </Link>
+              <ChevronRight className="w-4 h-4 text-gray-400 mx-1" />
+              <Link to="/stations" className="flex items-center hover:text-blue-600 transition-colors">
+                <Droplets className="w-4 h-4 mr-1" />
+                Find Stations
+              </Link>
+              <ChevronRight className="w-4 h-4 text-gray-400 mx-1" />
               <span className="text-gray-900 truncate">{station.name}</span>
             </nav>
           </div>

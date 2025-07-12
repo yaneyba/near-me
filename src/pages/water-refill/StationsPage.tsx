@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { SubdomainInfo } from '@/types';
 import { Layout as WaterRefillLayout } from '@/components/layouts/water-refill';
-import { MapPin, Droplets, X } from 'lucide-react';
+import { MapPin, Droplets, X, Home, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { DataProviderFactory } from '@/providers/DataProviderFactory';
 import { 
   WaterStationCard, 
@@ -140,6 +141,26 @@ const WaterRefillStationsPage: React.FC<WaterRefillStationsPageProps> = ({ subdo
 
   return (
     <WaterRefillLayout subdomainInfo={subdomainInfo} showSearchBar={true}>
+      {/* Breadcrumb */}
+      <div className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <nav className="flex flex-wrap items-center text-sm text-gray-500 gap-1">
+            <Link to="/" className="flex items-center hover:text-blue-600 transition-colors">
+              <Home className="w-4 h-4 mr-1" />
+              Home
+            </Link>
+            <ChevronRight className="w-4 h-4 text-gray-400 mx-1" />
+            <span className="flex items-center text-gray-900">
+              <Droplets className="w-4 h-4 mr-1" />
+              {subdomainInfo.city === 'All Cities' 
+                ? 'Find Stations' 
+                : `Find Stations in ${subdomainInfo.city}`
+              }
+            </span>
+          </nav>
+        </div>
+      </div>
+
       {/* Main container with max-width constraint for optimal readability */}
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50">
