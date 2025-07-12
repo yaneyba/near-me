@@ -356,6 +356,7 @@ export interface BusinessAnalytics {
 export interface IDataProvider {
   // Core business operations (using database-accurate types)
   getBusinesses(category: string, city: string): Promise<Business[]>;
+  getBusinessesByCategory(category: string): Promise<Business[]>;
   getServices(category: string): Promise<string[]>;
   getNeighborhoods(city: string): Promise<string[]>;
   

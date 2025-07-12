@@ -18,11 +18,22 @@ const WaterRefillHomePage: React.FC<WaterRefillHomePageProps> = ({ subdomainInfo
   useEffect(() => {
     const loadFeaturedStations = async () => {
       try {
-        // Get water-refill businesses from data provider
-        const businesses = await dataProvider.getBusinesses('water-refill', 'san-francisco');
+        // Use city from subdomainInfo, fallback to 'All Cities' if not available
+        const cityToUse = subdomainInfo?.city || 'All Cities';
+        
+        let allBusinesses: any[] = [];
+        
+        if (cityToUse === 'All Cities' || !subdomainInfo?.city) {
+          // Single efficient query: SELECT * WHERE category = 'water-refill'
+          console.log('Loading featured stations from all cities with single query...');
+          allBusinesses = await dataProvider.getBusinessesByCategory('water-refill');
+        } else {
+          // Get water-refill businesses from specific city
+          allBusinesses = await dataProvider.getBusinesses('water-refill', cityToUse);
+        }
         
         // Take the top 3 highest-rated stations as featured and transform them
-        const featured = businesses
+        const featured = allBusinesses
           .sort((a, b) => (b.rating || 0) - (a.rating || 0))
           .slice(0, 3)
           .map(transformBusinessToWaterStation);
@@ -37,7 +48,19 @@ const WaterRefillHomePage: React.FC<WaterRefillHomePageProps> = ({ subdomainInfo
     };
 
     loadFeaturedStations();
-  }, [dataProvider]);
+  }, [dataProvider, subdomainInfo?.city]);
+
+  // Fallback if subdomainInfo is not available
+  if (!subdomainInfo) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Loading...</h1>
+          <p className="text-gray-600">Initializing water refill station finder</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <WaterRefillLayout subdomainInfo={subdomainInfo}>

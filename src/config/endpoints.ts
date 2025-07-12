@@ -5,6 +5,7 @@
 export enum ApiEndpoints {
   // Core business data endpoints
   BUSINESSES = '/api/businesses',
+  BUSINESSES_BY_CATEGORY = '/api/businesses-by-category',
   SERVICES = '/api/services', 
   NEIGHBORHOODS = '/api/neighborhoods',
   CITIES = '/api/cities',
@@ -51,6 +52,12 @@ export const EndpointBuilder = {
    */
   businessesWithParams: (category: string, city: string) => 
     `${ApiEndpoints.BUSINESSES}?${new URLSearchParams({ category, city })}`,
+  
+  /**
+   * Build businesses by category endpoint (all cities)
+   */
+  businessesByCategory: (category: string) => 
+    `${ApiEndpoints.BUSINESSES_BY_CATEGORY}?${new URLSearchParams({ category })}`,
   
   /**
    * Build services endpoint with category param
