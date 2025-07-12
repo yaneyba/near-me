@@ -90,19 +90,20 @@ export class D1DataProvider implements IDataProvider {
   }
 
   /**
-   * Get services for a category via query endpoint
+   * Get services for a category via specialized services API endpoint
    */
   async getServices(category: string): Promise<string[]> {
     try {
-      const sql = `
-        SELECT display_name as service
-        FROM services
-        WHERE LOWER(category) = LOWER(?)
-        ORDER BY display_name ASC
-      `;
-      
-      const result = await this.executeQuery(sql, [category]);
-      return (result.data || []).map((row: any) => row.service);
+      const response = await fetch(
+        `${this.apiBaseUrl}/api/services?category=${encodeURIComponent(category)}`
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch services: ${response.statusText}`);
+      }
+
+      const services = await response.json();
+      return services as string[];
     } catch (error) {
       console.error('Failed to get services from API:', error);
       return [];
@@ -110,20 +111,20 @@ export class D1DataProvider implements IDataProvider {
   }
 
   /**
-   * Get neighborhoods for a city via query endpoint
+   * Get neighborhoods for a city via specialized neighborhoods API endpoint
    */
   async getNeighborhoods(city: string): Promise<string[]> {
     try {
-      const sql = `
-        SELECT n.display_name as neighborhood
-        FROM neighborhoods n
-        JOIN cities c ON n.city_id = c.id
-        WHERE LOWER(c.name) = LOWER(?) OR LOWER(c.id) = LOWER(?)
-        ORDER BY n.display_name ASC
-      `;
-      
-      const result = await this.executeQuery(sql, [city, city]);
-      return (result.data || []).map((row: any) => row.neighborhood);
+      const response = await fetch(
+        `${this.apiBaseUrl}/api/neighborhoods?city=${encodeURIComponent(city)}`
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch neighborhoods: ${response.statusText}`);
+      }
+
+      const neighborhoods = await response.json();
+      return neighborhoods as string[];
     } catch (error) {
       console.error('Failed to get neighborhoods from API:', error);
       return [];
@@ -144,7 +145,7 @@ export class D1DataProvider implements IDataProvider {
   }
 
   /**
-   * Get all cities via query endpoint
+   * Get all cities via direct database query
    */
   async getCities(): Promise<string[]> {
     try {
@@ -158,25 +159,45 @@ export class D1DataProvider implements IDataProvider {
       return (result.data || []).map((row: any) => row.name);
     } catch (error) {
       console.error('Failed to get cities from API:', error);
-      return [];
+      throw error;
     }
   }
 
   /**
-   * Get city to state mapping
+   * Get city to state mapping from database
    */
   async getCityStateMap(): Promise<Record<string, string>> {
-    return {
-      'san-francisco': 'California',
-      'los-angeles': 'California',
-      'san-diego': 'California',
-      'san-jose': 'California',
-      'sacramento': 'California',
-      'phoenix': 'Arizona',
-      'las-vegas': 'Nevada',
-      'denver': 'Colorado',
-      'seattle': 'Washington'
-    };
+    try {
+      const sql = `
+        SELECT name, state 
+        FROM cities 
+        WHERE state IS NOT NULL
+        ORDER BY name ASC
+      `;
+      
+      const result = await this.executeQuery(sql, []);
+      const cityStateMap: Record<string, string> = {};
+      
+      (result.data || []).forEach((row: any) => {
+        cityStateMap[row.name] = row.state;
+      });
+      
+      return cityStateMap;
+    } catch (error) {
+      console.error('Failed to get city-state mapping from API:', error);
+      // Fallback to hardcoded values if database query fails
+      return {
+        'san-francisco': 'California',
+        'los-angeles': 'California',
+        'san-diego': 'California',
+        'san-jose': 'California',
+        'sacramento': 'California',
+        'phoenix': 'Arizona',
+        'las-vegas': 'Nevada',
+        'denver': 'Colorado',
+        'seattle': 'Washington'
+      };
+    }
   }
 
   /**
@@ -202,11 +223,10 @@ export class D1DataProvider implements IDataProvider {
   async submitContact(contactData: ContactSubmission): Promise<SubmissionResult> {
     try {
       const sql = `
-        INSERT INTO contact_submissions (
+        INSERT INTO contact_messages (
           name, email, phone, business_name, subject, message, 
-          inquiry_type, preferred_contact, urgency, category, city, state, 
-          submission_date
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+          category, city, state, status, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'new', datetime('now'))
       `;
       
       await this.executeQuery(sql, [
@@ -216,9 +236,6 @@ export class D1DataProvider implements IDataProvider {
         contactData.businessName || null,
         contactData.subject,
         contactData.message,
-        contactData.inquiryType,
-        contactData.preferredContact,
-        contactData.urgency,
         contactData.category,
         contactData.city,
         contactData.state
