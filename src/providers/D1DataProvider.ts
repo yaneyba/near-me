@@ -95,10 +95,10 @@ export class D1DataProvider implements IDataProvider {
   async getServices(category: string): Promise<string[]> {
     try {
       const sql = `
-        SELECT DISTINCT service 
-        FROM services 
+        SELECT display_name as service
+        FROM services
         WHERE LOWER(category) = LOWER(?)
-        ORDER BY service ASC
+        ORDER BY display_name ASC
       `;
       
       const result = await this.executeQuery(sql, [category]);
@@ -115,14 +115,15 @@ export class D1DataProvider implements IDataProvider {
   async getNeighborhoods(city: string): Promise<string[]> {
     try {
       const sql = `
-        SELECT DISTINCT neighborhood_name 
-        FROM neighborhoods 
-        WHERE LOWER(city) = LOWER(?)
-        ORDER BY neighborhood_name ASC
+        SELECT n.display_name as neighborhood
+        FROM neighborhoods n
+        JOIN cities c ON n.city_id = c.id
+        WHERE LOWER(c.name) = LOWER(?) OR LOWER(c.id) = LOWER(?)
+        ORDER BY n.display_name ASC
       `;
       
-      const result = await this.executeQuery(sql, [city]);
-      return (result.data || []).map((row: any) => row.neighborhood_name);
+      const result = await this.executeQuery(sql, [city, city]);
+      return (result.data || []).map((row: any) => row.neighborhood);
     } catch (error) {
       console.error('Failed to get neighborhoods from API:', error);
       return [];
@@ -148,13 +149,13 @@ export class D1DataProvider implements IDataProvider {
   async getCities(): Promise<string[]> {
     try {
       const sql = `
-        SELECT DISTINCT city_name 
+        SELECT name 
         FROM cities 
-        ORDER BY city_name ASC
+        ORDER BY display_name ASC
       `;
       
       const result = await this.executeQuery(sql, []);
-      return (result.data || []).map((row: any) => row.city_name);
+      return (result.data || []).map((row: any) => row.name);
     } catch (error) {
       console.error('Failed to get cities from API:', error);
       return [];
