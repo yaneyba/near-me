@@ -25,11 +25,26 @@ const WaterRefillDetailPage: React.FC<WaterRefillDetailPageProps> = ({ subdomain
           return;
         }
 
-        // Get all water-refill businesses for the current city
-        const businesses = await dataProvider.getBusinesses('water-refill', subdomainInfo.city);
+        let businessData = null;
         
-        // Find the specific station by ID
-        const businessData = businesses.find(b => b.id === stationId);
+        if (subdomainInfo.city === 'All Cities') {
+          // If no specific city, search across all cities
+          const cities = await dataProvider.getCities();
+          
+          for (const city of cities) {
+            try {
+              const businesses = await dataProvider.getBusinesses('water-refill', city);
+              businessData = businesses.find(b => b.id === stationId);
+              if (businessData) break;
+            } catch (error) {
+              console.warn(`Failed to search in city ${city}:`, error);
+            }
+          }
+        } else {
+          // Get all water-refill businesses for the current city
+          const businesses = await dataProvider.getBusinesses('water-refill', subdomainInfo.city);
+          businessData = businesses.find(b => b.id === stationId);
+        }
         
         if (businessData) {
           // Transform business data to station format - ONLY use real data
