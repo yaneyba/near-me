@@ -175,6 +175,26 @@ export class D1DataProvider implements IDataProvider {
     return combinations;
   }
 
+  async getBusinessById(id: string): Promise<Business | null> {
+    try {
+      const business = await this.apiRequest<Business>(`/api/business/${id}`);
+      return business;
+    } catch (error) {
+      console.error(`Failed to get business by ID ${id}:`, error);
+      return null;
+    }
+  }
+
+  async getWaterStationById(stationId: string): Promise<Business | null> {
+    try {
+      const station = await this.apiRequest<Business>(`/api/water-stations/${stationId}`);
+      return station;
+    } catch (error) {
+      console.error(`Failed to get water station by ID ${stationId}:`, error);
+      return null;
+    }
+  }
+
   // ==========================================
   // SUBMISSION METHODS
   // ==========================================

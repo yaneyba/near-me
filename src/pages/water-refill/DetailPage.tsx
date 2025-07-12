@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { SubdomainInfo } from '@/types';
+import { SubdomainInfo, Business } from '@/types';
 import { Layout as WaterRefillLayout } from '@/components/layouts/water-refill';
 import { MapPin, Phone, Globe, CheckCircle } from 'lucide-react';
 import { DataProviderFactory } from '@/providers/DataProviderFactory';
@@ -25,25 +25,31 @@ const WaterRefillDetailPage: React.FC<WaterRefillDetailPageProps> = ({ subdomain
           return;
         }
 
-        let businessData = null;
+        // Try to get station directly by ID first
+        let businessData: Business | null = await dataProvider.getWaterStationById(stationId);
         
-        if (subdomainInfo.city === 'All Cities') {
-          // If no specific city, search across all cities
-          const cities = await dataProvider.getCities();
+        // If direct lookup fails, fall back to searching through cities
+        if (!businessData) {
+          console.log('Direct lookup failed, searching through cities...');
           
-          for (const city of cities) {
-            try {
-              const businesses = await dataProvider.getBusinesses('water-refill', city);
-              businessData = businesses.find(b => b.id === stationId);
-              if (businessData) break;
-            } catch (error) {
-              console.warn(`Failed to search in city ${city}:`, error);
+          if (subdomainInfo.city === 'All Cities') {
+            // If no specific city, search across all cities
+            const cities = await dataProvider.getCities();
+            
+            for (const city of cities) {
+              try {
+                const businesses = await dataProvider.getBusinesses('water-refill', city);
+                businessData = businesses.find(b => b.id === stationId) || null;
+                if (businessData) break;
+              } catch (error) {
+                console.warn(`Failed to search in city ${city}:`, error);
+              }
             }
+          } else {
+            // Get all water-refill businesses for the current city
+            const businesses = await dataProvider.getBusinesses('water-refill', subdomainInfo.city);
+            businessData = businesses.find(b => b.id === stationId) || null;
           }
-        } else {
-          // Get all water-refill businesses for the current city
-          const businesses = await dataProvider.getBusinesses('water-refill', subdomainInfo.city);
-          businessData = businesses.find(b => b.id === stationId);
         }
         
         if (businessData) {

@@ -430,6 +430,9 @@ export interface IDataProvider {
   
   // Sample data management
   clearSampleEngagementData?(sampleDataIdentifier: string): Promise<void>;
+
+  // Direct lookup methods
+  getWaterStationById(stationId: string): Promise<Business | null>;
 }
 
 /**
