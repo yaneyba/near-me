@@ -18,16 +18,41 @@ const WaterRefillHomePage: React.FC<WaterRefillHomePageProps> = ({ subdomainInfo
   useEffect(() => {
     const loadFeaturedStations = async () => {
       try {
-        // Get water-refill businesses from data provider
-        const businesses = await dataProvider.getBusinesses('water-refill', 'san-francisco');
-        
-        // Take the top 3 highest-rated stations as featured and transform them
-        const featured = businesses
-          .sort((a, b) => (b.rating || 0) - (a.rating || 0))
-          .slice(0, 3)
-          .map(transformBusinessToWaterStation);
-        
-        setFeaturedStations(featured);
+        // Handle case where no specific city is selected (All Cities)
+        if (subdomainInfo.city === 'All Cities') {
+          // Get all available cities and fetch from ALL cities
+          const cities = await dataProvider.getCities();
+          const allBusinesses: any[] = [];
+          
+          // Get businesses from ALL cities
+          for (const city of cities) {
+            try {
+              const cityBusinesses = await dataProvider.getBusinesses('water-refill', city);
+              allBusinesses.push(...cityBusinesses);
+            } catch (error) {
+              console.warn(`Failed to load businesses for ${city}:`, error);
+            }
+          }
+          
+          // Get top 3 highest rated from ALL cities
+          const featured = allBusinesses
+            .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+            .slice(0, 3)
+            .map(transformBusinessToWaterStation);
+          
+          setFeaturedStations(featured);
+        } else {
+          // Get water-refill businesses from data provider using dynamic city from subdomain
+          const businesses = await dataProvider.getBusinesses('water-refill', subdomainInfo.city);
+          
+          // Take the top 3 highest-rated stations as featured and transform them
+          const featured = businesses
+            .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+            .slice(0, 3)
+            .map(transformBusinessToWaterStation);
+          
+          setFeaturedStations(featured);
+        }
       } catch (error) {
         console.error('Error loading featured stations:', error);
         setFeaturedStations([]);
