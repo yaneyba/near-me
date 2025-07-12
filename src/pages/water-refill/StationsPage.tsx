@@ -91,10 +91,12 @@ const WaterRefillStationsPage: React.FC<WaterRefillStationsPageProps> = ({ subdo
 
   return (
     <WaterRefillLayout subdomainInfo={subdomainInfo} showSearchBar={true}>
-      <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50">
-        {/* Station List - Full width on mobile, half on desktop */}
-        <div className="w-full lg:w-1/2 bg-white border-b lg:border-r lg:border-b-0 border-gray-200 overflow-y-auto" data-station-list>
-          <div className="p-4 sm:p-6 lg:p-8">
+      {/* Main container with max-width constraint for optimal readability */}
+      <div className="max-w-7xl mx-auto">
+        <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50">
+          {/* Station List - Constrained width with optimal spacing */}
+          <div className="w-full lg:w-1/2 bg-white border-b lg:border-r lg:border-b-0 border-gray-200 overflow-y-auto" data-station-list>
+            <div className="max-w-2xl mx-auto p-4 sm:p-6 lg:p-8">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
               <div>
                 <h3 className="text-xl sm:text-2xl font-bold text-gray-900">
@@ -293,6 +295,7 @@ const WaterRefillStationsPage: React.FC<WaterRefillStationsPageProps> = ({ subdo
           </div>
         </div>
       )}
+      </div>
     </WaterRefillLayout>
   );
 };
