@@ -31,7 +31,10 @@ const WaterStationCard: React.FC<WaterStationCardProps> = ({
     const stateLower = state?.toLowerCase() || '';
     
     // Check if address already contains city and/or state
-    const hasCity = cityLower && addressLower.includes(cityLower);
+    const hasCity = cityLower && (
+      addressLower.includes(cityLower) || 
+      addressLower.includes(cityLower.replace('-', ' '))
+    );
     const hasState = stateLower && (addressLower.includes(stateLower) || addressLower.includes(stateLower.substring(0, 2)));
     
     // Build address parts
