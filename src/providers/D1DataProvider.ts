@@ -7,10 +7,17 @@ import {
   UserEngagementEventDB, 
   BusinessAnalytics 
 } from '@/types';
+import { ApiEndpoints, EndpointBuilder } from '@/config/endpoints';
 
 /**
  * Optimized D1 Data Provider - Clean, efficient API wrapper
  * Focuses on consistency, error handling, and performance
+ * 
+ * ARCHITECTURE: Pure API client - all endpoints managed via ApiEndpoints enum
+ * - No direct database queries (consistent API-first approach)
+ * - Type-safe endpoint management with EndpointBuilder helpers
+ * - Centralized error handling and response formatting
+ * - Single source of truth for all data operations
  */
 export class D1DataProvider implements IDataProvider {
   private readonly apiBaseUrl: string;
@@ -68,33 +75,24 @@ export class D1DataProvider implements IDataProvider {
     }
   }
 
-  /**
-   * SQL query execution for admin/complex operations
-   */
-  private async executeQuery<T>(sql: string, params: any[] = []): Promise<T> {
-    return this.apiRequest<T>('/api/query', {
-      method: 'POST',
-      body: JSON.stringify({ sql, params })
-    });
-  }
+  // ==========================================
+  // PUBLIC DIRECTORY METHODS
+  // ==========================================
 
   // ==========================================
   // PUBLIC DIRECTORY METHODS
   // ==========================================
 
   async getBusinesses(category: string, city: string): Promise<Business[]> {
-    const params = new URLSearchParams({ category, city });
-    return this.apiRequest<Business[]>(`/api/businesses?${params}`);
+    return this.apiRequest<Business[]>(EndpointBuilder.businessesWithParams(category, city));
   }
 
   async getServices(category: string): Promise<string[]> {
-    const params = new URLSearchParams({ category });
-    return this.apiRequest<string[]>(`/api/services?${params}`);
+    return this.apiRequest<string[]>(EndpointBuilder.servicesWithCategory(category));
   }
 
   async getNeighborhoods(city: string): Promise<string[]> {
-    const params = new URLSearchParams({ city });
-    return this.apiRequest<string[]>(`/api/neighborhoods?${params}`);
+    return this.apiRequest<string[]>(EndpointBuilder.neighborhoodsWithCity(city));
   }
 
   async getCategories(): Promise<string[]> {
@@ -116,21 +114,24 @@ export class D1DataProvider implements IDataProvider {
   }
 
   async getCities(): Promise<string[]> {
-    const result = await this.executeQuery<{ data: Array<{ name: string }> }>(
-      'SELECT name FROM cities ORDER BY display_name ASC'
-    );
-    return result.data?.map(row => row.name) || [];
+    try {
+      const cities = await this.apiRequest<Array<{ name: string }>>(ApiEndpoints.CITIES);
+      return cities.map(city => city.name);
+    } catch (error) {
+      console.error('Failed to get cities:', error);
+      return [];
+    }
   }
 
   async getCityStateMap(): Promise<Record<string, string>> {
     try {
-      const result = await this.executeQuery<{ data: Array<{ name: string; state: string }> }>(
-        'SELECT name, state FROM cities WHERE state IS NOT NULL ORDER BY name ASC'
+      const cities = await this.apiRequest<Array<{ name: string; state: string }>>(
+        EndpointBuilder.citiesWithState(true)
       );
       
       const cityStateMap: Record<string, string> = {};
-      result.data?.forEach(row => {
-        cityStateMap[row.name] = row.state;
+      cities.forEach(city => {
+        cityStateMap[city.name] = city.state;
       });
       
       return cityStateMap;
@@ -177,7 +178,7 @@ export class D1DataProvider implements IDataProvider {
 
   async getBusinessById(id: string): Promise<Business | null> {
     try {
-      const business = await this.apiRequest<Business>(`/api/business/${id}`);
+      const business = await this.apiRequest<Business>(EndpointBuilder.businessById(id));
       return business;
     } catch (error) {
       console.error(`Failed to get business by ID ${id}:`, error);
@@ -187,7 +188,7 @@ export class D1DataProvider implements IDataProvider {
 
   async getWaterStationById(stationId: string): Promise<Business | null> {
     try {
-      const station = await this.apiRequest<Business>(`/api/water-stations/${stationId}`);
+      const station = await this.apiRequest<Business>(EndpointBuilder.waterStationById(stationId));
       return station;
     } catch (error) {
       console.error(`Failed to get water station by ID ${stationId}:`, error);
@@ -201,29 +202,11 @@ export class D1DataProvider implements IDataProvider {
 
   async submitContact(contactData: ContactSubmission): Promise<SubmissionResult> {
     try {
-      await this.executeQuery(
-        `INSERT INTO contact_messages (
-          name, email, phone, business_name, subject, message, 
-          category, city, state, status, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'new', datetime('now'))`,
-        [
-          contactData.name,
-          contactData.email,
-          contactData.phone || null,
-          contactData.businessName || null,
-          contactData.subject,
-          contactData.message,
-          contactData.category,
-          contactData.city,
-          contactData.state
-        ]
-      );
-
-      return {
-        success: true,
-        message: "Thank you for your message! We'll get back to you soon.",
-        errors: []
-      };
+      const result = await this.apiRequest<SubmissionResult>(ApiEndpoints.CONTACT, {
+        method: 'POST',
+        body: JSON.stringify(contactData)
+      });
+      return result;
     } catch (error) {
       console.error('Contact submission failed:', error);
       return {
@@ -236,42 +219,11 @@ export class D1DataProvider implements IDataProvider {
 
   async submitBusiness(businessData: BusinessSubmission): Promise<SubmissionResult> {
     try {
-      await this.executeQuery(
-        `INSERT INTO business_submissions (
-          business_name, owner_name, email, phone, website, category, 
-          address, city, state, zip_code, description, 
-          services, custom_services, hours, social_media,
-          business_type, years_in_business, employee_count, special_offers,
-          submission_date, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), 'pending')`,
-        [
-          businessData.businessName,
-          businessData.ownerName,
-          businessData.email,
-          businessData.phone,
-          businessData.website || null,
-          businessData.category,
-          businessData.address,
-          businessData.city,
-          businessData.state,
-          businessData.zipCode,
-          businessData.description,
-          JSON.stringify(businessData.services),
-          JSON.stringify(businessData.customServices),
-          JSON.stringify(businessData.hours),
-          JSON.stringify(businessData.socialMedia),
-          businessData.businessType,
-          businessData.yearsInBusiness,
-          businessData.employeeCount,
-          businessData.specialOffers
-        ]
-      );
-
-      return {
-        success: true,
-        message: "Thank you for your business submission! We'll review it and get back to you within 48 hours.",
-        errors: []
-      };
+      const result = await this.apiRequest<SubmissionResult>(ApiEndpoints.SUBMIT_BUSINESS, {
+        method: 'POST',
+        body: JSON.stringify(businessData)
+      });
+      return result;
     } catch (error) {
       console.error('Business submission failed:', error);
       return {
@@ -288,19 +240,10 @@ export class D1DataProvider implements IDataProvider {
 
   async trackEngagement(event: UserEngagementEventDB): Promise<void> {
     try {
-      await this.executeQuery(
-        `INSERT INTO user_engagement_events (
-          business_id, event_type, event_data, timestamp, user_agent, ip_address, session_id
-        ) VALUES (?, ?, ?, datetime('now'), ?, ?, ?)`,
-        [
-          event.business_id,
-          event.event_type,
-          JSON.stringify(event.event_data || {}),
-          event.user_agent,
-          event.ip_address,
-          event.session_id
-        ]
-      );
+      await this.apiRequest(ApiEndpoints.TRACK_ENGAGEMENT, {
+        method: 'POST',
+        body: JSON.stringify(event)
+      });
     } catch (error) {
       console.warn('Failed to track engagement:', error);
       // Don't throw - tracking failures shouldn't break user experience
@@ -323,9 +266,9 @@ export class D1DataProvider implements IDataProvider {
   }
 
   async getOverallAnalytics(
-    period: "day" | "week" | "month" | "year" = "week",
-    startDate?: Date,
-    endDate?: Date
+    _period: "day" | "week" | "month" | "year" = "week",
+    _startDate?: Date,
+    _endDate?: Date
   ): Promise<any> {
     try {
       // TODO: Implement real overall analytics
@@ -341,19 +284,19 @@ export class D1DataProvider implements IDataProvider {
   // ==========================================
 
   async getBusinessSubmissions(): Promise<any[]> {
-    return this.apiRequest<any[]>('/api/admin/business-submissions');
+    return this.apiRequest<any[]>(ApiEndpoints.ADMIN_BUSINESS_SUBMISSIONS);
   }
 
   async getBusinessProfiles(): Promise<any[]> {
-    return this.apiRequest<any[]>('/api/admin/business-profiles');
+    return this.apiRequest<any[]>(ApiEndpoints.ADMIN_BUSINESS_PROFILES);
   }
 
   async getContactMessages(): Promise<any[]> {
-    return this.apiRequest<any[]>('/api/admin/contact-messages');
+    return this.apiRequest<any[]>(ApiEndpoints.ADMIN_CONTACT_MESSAGES);
   }
 
   async getAllBusinesses(): Promise<any[]> {
-    return this.apiRequest<any[]>('/api/admin/businesses?type=all');
+    return this.apiRequest<any[]>(EndpointBuilder.adminBusinessesWithType('all'));
   }
 
   async getAdminStats(): Promise<{
@@ -363,7 +306,7 @@ export class D1DataProvider implements IDataProvider {
     totalUsers: number;
     premiumBusinesses: number;
   }> {
-    const stats = await this.apiRequest<any>('/api/admin/stats');
+    const stats = await this.apiRequest<any>(ApiEndpoints.ADMIN_STATS);
     return {
       pendingBusinesses: stats.pendingBusinesses || 0,
       totalBusinesses: stats.totalBusinesses || 0,
@@ -374,7 +317,7 @@ export class D1DataProvider implements IDataProvider {
   }
 
   async approveBusinessSubmission(id: string, reviewerNotes?: string): Promise<void> {
-    await this.apiRequest('/api/admin/business-submissions', {
+    await this.apiRequest(ApiEndpoints.ADMIN_BUSINESS_SUBMISSIONS, {
       method: 'POST',
       body: JSON.stringify({
         action: 'approve',
@@ -385,7 +328,7 @@ export class D1DataProvider implements IDataProvider {
   }
 
   async rejectBusinessSubmission(id: string, reviewerNotes?: string): Promise<void> {
-    await this.apiRequest('/api/admin/business-submissions', {
+    await this.apiRequest(ApiEndpoints.ADMIN_BUSINESS_SUBMISSIONS, {
       method: 'POST',
       body: JSON.stringify({
         action: 'reject',
@@ -396,7 +339,7 @@ export class D1DataProvider implements IDataProvider {
   }
 
   async resolveContactMessage(id: string, resolvedBy?: string, adminNotes?: string): Promise<void> {
-    await this.apiRequest('/api/admin/contact-messages', {
+    await this.apiRequest(ApiEndpoints.ADMIN_CONTACT_MESSAGES, {
       method: 'POST',
       body: JSON.stringify({
         action: 'resolve',
@@ -408,7 +351,7 @@ export class D1DataProvider implements IDataProvider {
   }
 
   async clearSampleEngagementData(sampleDataIdentifier: string): Promise<void> {
-    await this.apiRequest('/api/admin/engagement', {
+    await this.apiRequest(ApiEndpoints.ADMIN_ENGAGEMENT, {
       method: 'DELETE',
       body: JSON.stringify({
         action: 'clear-sample',
