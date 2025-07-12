@@ -1,13 +1,10 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Star, MapPin, Clock, Phone, CreditCard, Droplets } from 'lucide-react';
 import { WaterStation } from '@/components/water-refill/types';
-import { Business } from '@/types';
-import { formatAddress } from '@/components/water-refill/utils';
 
 interface WaterStationCardProps {
-  station?: WaterStation;
-  business?: Business;
+  station: WaterStation;
   isSelected?: boolean;
   onClick?: () => void;
   showImage?: boolean;
@@ -15,40 +12,92 @@ interface WaterStationCardProps {
 }
 
 const WaterStationCard: React.FC<WaterStationCardProps> = ({ 
-  station: propStation, 
-  business,
-  isSelected = false, 
-  onClick, 
+  station, 
+  onClick,
+  isSelected = false,
   showImage = true,
-  compact = false 
+  compact = false
 }) => {
-  // Smart detection: use the business prop to create a water station if provided, otherwise use station prop
-  const station = React.useMemo(() => {
-    if (business) {
-      return {
-        id: business.id,
-        name: business.name,
-        address: business.address || '',
-        city: business.city || '',
-        state: business.state || '',
-        rating: business.rating || 0,
-        hours: typeof business.hours === 'string' ? business.hours : business.hours?.Monday || 'Hours not available',
-        phone: business.phone || '',
-        image: business.image || '',
-        priceRange: '$', // Default for water stations
-        amenities: business.services || [],
-        distance: '', // Distance would be calculated separately
-        isOpen: true, // Default to open
-        lat: business.latitude || 0,
-        lng: business.longitude || 0,
-      };
-    }
-    return propStation;
-  }, [business, propStation]);
-
-  if (!station) {
-    return null;
+  // Smart HomePage detection
+  const location = useLocation();
+  const isHomePage = location.pathname === '/';
+  
+  // Smart address formatting - avoid duplication
+  const formatAddress = (address: string, city: string, state: string): string => {
+    if (!address) return [city, state].filter(Boolean).join(', ') || 'Address not available';
+    
+    const addressLower = address.toLowerCase();
+    const cityLower = city?.toLowerCase() || '';
+    const stateLower = state?.toLowerCase() || '';
+    
+    // Check if address already contains city and/or state
+    const hasCity = cityLower && addressLower.includes(cityLower);
+    const hasState = stateLower && (addressLower.includes(stateLower) || addressLower.includes(stateLower.substring(0, 2)));
+    
+    // Build address parts
+    const parts = [address];
+    if (!hasCity && city) parts.push(city);
+    if (!hasState && state) parts.push(state);
+    
+    return parts.join(', ');
+  };
+  
+  // Render original card layout ONLY on HomePage
+  if (isHomePage) {
+    return (
+      <div 
+        className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm"
+        onClick={onClick}
+      >
+        <div className="aspect-video bg-gray-100 rounded-lg mb-4 overflow-hidden relative">
+          {station.image ? (
+            <img 
+              src={station.image} 
+              alt={station.name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
+              <svg className="w-12 h-12 text-blue-300" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+              </svg>
+            </div>
+          )}
+        </div>
+        <h3 className="font-semibold text-lg mb-2">{station.name}</h3>
+        <p className="text-gray-600 text-sm mb-3">
+          {formatAddress(station.address, station.city, station.state)}
+        </p>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center">
+            <span className="text-yellow-400">★</span>
+            <span className="ml-1 text-sm">{station.rating}</span>
+          </div>
+          <div className="text-blue-600 font-semibold">{station.priceRange || '$0.50/gal'}</div>
+        </div>
+        <div className="flex flex-wrap gap-2 mb-4">
+          {station.amenities?.slice(0, 3).map((service: string, index: number) => (
+            <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
+              {service}
+            </span>
+          )) || (
+            <>
+              <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Purified</span>
+              <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Quality Water</span>
+            </>
+          )}
+        </div>
+        <Link 
+          to={`/station/${station.id}`}
+          className="w-full bg-blue-50 text-blue-600 py-2 rounded hover:bg-blue-100 block text-center"
+        >
+          View Details
+        </Link>
+      </div>
+    );
   }
+  
+  // Render compact/list layout for other pages (stations page, etc.)
   return (
     <div 
       className={`bg-white border rounded-lg p-4 cursor-pointer hover:shadow-lg active:scale-[0.98] transition-all duration-200 max-w-full ${
@@ -56,21 +105,22 @@ const WaterStationCard: React.FC<WaterStationCardProps> = ({
       }`}
       onClick={onClick}
     >
-      {/* Optimized layout with image and content side by side on larger screens */}
       <div className={`flex ${showImage && station.image ? 'flex-col sm:flex-row sm:gap-4' : 'flex-col'}`}>
         
-        {/* Station Image - Smaller and more compact */}
-        {showImage && station.image && (
+        {/* Station Image - Compact for listing pages */}
+        {showImage && (
           <div className={`flex-shrink-0 ${compact ? 'w-full sm:w-20 h-16 sm:h-16' : 'w-full sm:w-24 h-20 sm:h-20'} mb-3 sm:mb-0 rounded-lg overflow-hidden bg-gray-100`}>
-            <img 
-              src={station.image} 
-              alt={station.name}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                // Hide the image container if image fails to load
-                (e.target as HTMLElement).parentElement!.style.display = 'none';
-              }}
-            />
+            {station.image ? (
+              <img 
+                src={station.image} 
+                alt={station.name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600">
+                <Droplets className="w-6 h-6" />
+              </div>
+            )}
           </div>
         )}
 
