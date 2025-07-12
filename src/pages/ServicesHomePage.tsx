@@ -38,9 +38,11 @@ const ServicesHomePage: React.FC<ServicesHomePageProps> = ({ subdomainInfo }) =>
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Get all businesses by iterating through known categories and cities
-        const categories = ['nail-salons', 'auto-repair', 'water-refill', 'hair-salons', 'restaurants'];
-        const cities = ['san-francisco', 'austin', 'dallas', 'denver', 'frisco', 'garland'];
+        // Get all businesses by iterating through categories and cities from DataProvider
+        const [categories, cities] = await Promise.all([
+          dataProvider.getCategories(),
+          dataProvider.getCities()
+        ]);
         
         let allBusinesses: any[] = [];
         console.log('Loading businesses for categories:', categories);

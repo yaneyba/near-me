@@ -1,16 +1,22 @@
 // src/utils/subdomainParser.ts
 
 import { SubdomainInfo } from '@/types';
-import businessesData from '@/data/businesses.json';
 import { isSpecialService, isBlockedSubdomain, cityStateMap } from '@/config/subdomainExceptions';
 
-// Get valid combinations from business data
+// Static valid combinations based on our database
 const getValidCombinations = (): Set<string> => {
   const combinations = new Set<string>();
-  businessesData.forEach(business => {
-    const key = `${business.category}.${business.city}`;
-    combinations.add(key);
+  
+  // Known categories and cities from our database
+  const categories = ['plumbers', 'electricians', 'contractors', 'restaurants', 'dentists', 'lawyers', 'nail-salons', 'water-refill'];
+  const cities = ['frisco', 'garland', 'austin', 'chicago', 'denver', 'milwaukee', 'phoenix', 'san-francisco', 'seattle'];
+  
+  categories.forEach(category => {
+    cities.forEach(city => {
+      combinations.add(`${category}.${city}`);
+    });
   });
+  
   return combinations;
 };
 

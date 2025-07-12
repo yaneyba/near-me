@@ -17,8 +17,8 @@ import {
   Shield,
   Scale
 } from 'lucide-react';
-import businessesData from '@/data/businesses.json';
 import { BusinessData } from '@/types';
+import { DataProviderFactory } from '@/providers/DataProviderFactory';
 
 interface SitemapCategory {
   name: string;
@@ -44,7 +44,8 @@ interface SitemapCombination {
 }
 
 const SitemapPage: React.FC = () => {
-  const [businesses] = useState<BusinessData[]>(businessesData);
+  const [businesses, setBusinesses] = useState<BusinessData[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedState, setSelectedState] = useState<string>('all');
@@ -52,6 +53,96 @@ const SitemapPage: React.FC = () => {
 
   useEffect(() => {
     document.title = 'Sitemap - Near Me Directory';
+    
+    // Load businesses from database using DataProvider
+    const loadBusinesses = async () => {
+      try {
+        setLoading(true);
+        const dataProvider = DataProviderFactory.getProvider();
+        const allBusinesses: BusinessData[] = [];
+        
+        // Get all available categories and cities from the database dynamically
+        // First, get a sample to determine available categories and cities
+        try {
+          // Get known combinations from DataProvider instead of hardcoded list
+          const knownCombinations = await dataProvider.getKnownCombinations();
+          
+          const availableCategories = new Set<string>();
+          const availableCities = new Set<string>();
+          
+          // Test each combination to see what's available
+          for (const combo of knownCombinations) {
+            try {
+              const businesses = await dataProvider.getBusinesses(combo.category, combo.city);
+              if (businesses.length > 0) {
+                availableCategories.add(combo.category);
+                availableCities.add(combo.city);
+              }
+            } catch (error) {
+              console.warn(`No businesses found for ${combo.category} in ${combo.city}`);
+            }
+          }
+          
+          // Add additional cities that might have businesses
+          const additionalCities = ['seattle'];
+          for (const city of additionalCities) {
+            for (const category of Array.from(availableCategories)) {
+              try {
+                const businesses = await dataProvider.getBusinesses(category, city);
+                if (businesses.length > 0) {
+                  availableCities.add(city);
+                }
+              } catch (error) {
+                // Ignore errors for non-existent combinations
+              }
+            }
+          }
+          
+          // Now get all businesses for available combinations
+          for (const category of Array.from(availableCategories)) {
+            for (const city of Array.from(availableCities)) {
+              try {
+                const categoryBusinesses = await dataProvider.getBusinesses(category, city);
+                const businessData = categoryBusinesses.map((b: any) => ({
+                  id: b.id || '',
+                  name: b.name || '',
+                  category: b.category || category,
+                  city: b.city || city,
+                  state: b.state || '',
+                  address: b.address || '',
+                  phone: b.phone || '',
+                  website: b.website || '',
+                  rating: b.rating || 0,
+                  reviewCount: b.review_count || 0,
+                  description: b.description || '',
+                  services: b.services || [],
+                  hours: b.hours || {},
+                  image: b.image || '',
+                  premium: b.premium || false,
+                  verified: b.verified || false,
+                  established: b.established || null,
+                  latitude: b.latitude || null,
+                  longitude: b.longitude || null
+                }));
+                allBusinesses.push(...businessData);
+              } catch (error) {
+                console.warn(`Failed to load businesses for ${category} in ${city}:`, error);
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Failed to determine available categories and cities:', error);
+        }
+        
+        setBusinesses(allBusinesses);
+      } catch (error) {
+        console.error('Failed to load businesses for sitemap:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadBusinesses();
   }, []);
 
   // City-state mapping
@@ -181,6 +272,18 @@ const SitemapPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {loading ? (
+          <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Globe className="w-8 h-8 text-blue-600 animate-spin" />
+              </div>
+              <h1 className="text-4xl font-bold text-gray-900 mb-4">Site Map</h1>
+              <p className="text-lg text-gray-600">Loading business data...</p>
+            </div>
+          </div>
+        ) : (
+        <>
         {/* Header */}
         <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
           <div className="text-center">
@@ -500,6 +603,8 @@ const SitemapPage: React.FC = () => {
             </div>
           )}
         </div>
+        </>
+        )}
       </div>
     </div>
   );

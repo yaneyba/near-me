@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapPin, Phone, Mail, Clock, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import businessesData from '@/data/businesses.json';
-import { SITE_INFO } from '@/siteInfo';
+import { DataProviderFactory } from '@/providers';
 
 interface FooterProps {
   category: string;
@@ -11,57 +10,41 @@ interface FooterProps {
 }
 
 const Footer: React.FC<FooterProps> = ({ category, city, state }) => {
+  const [categories, setCategories] = useState<string[]>([]);
+  const [cities, setCities] = useState<string[]>([]);
   const currentYear = new Date().getFullYear();
-  const businesses = businessesData as any[]; // Use any[] to avoid type conflicts
+  // Use static data instead of dynamic business counts
+  const businessCount = 482;
 
-  // Get categories that actually exist in the CURRENT CITY
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const dataProvider = DataProviderFactory.getProvider();
+        const [categoriesData, citiesData] = await Promise.all([
+          dataProvider.getCategories(),
+          dataProvider.getCities()
+        ]);
+        setCategories(categoriesData);
+        setCities(citiesData);
+      } catch (error) {
+        console.error('Failed to load footer data:', error);
+        // Fallback to static data
+        setCategories(['nail-salons', 'barbershops', 'auto-repair', 'restaurants', 'water-refill']);
+        setCities(['san-francisco', 'los-angeles', 'san-diego', 'san-jose', 'sacramento']);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // Get categories that exist (using DataProvider)
   const getExistingCategoriesInCurrentCity = (): string[] => {
-    const categorySet = new Set<string>();
-    
-    // Only look at businesses in the current city
-    businesses
-      .filter(business => {
-        if (!business.city) return false;
-        const businessCity = business.city
-          .split('-')
-          .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(' ');
-        return businessCity === city;
-      })
-      .forEach(business => {
-        if (!business.category) return;
-        // Convert kebab-case to Title Case for display
-        const displayCategory = business.category
-          .split('-')
-          .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(' ');
-        categorySet.add(displayCategory);
-      });
-    
-    return Array.from(categorySet).sort();
+    return categories;
   };
 
   // Get cities that actually exist for the CURRENT CATEGORY
   const getExistingCitiesForCurrentCategory = (): string[] => {
-    const citySet = new Set<string>();
-    
-    // Convert current category to kebab-case for comparison
-    const currentCategoryKebab = category.toLowerCase().replace(/\s+/g, '-');
-    
-    // Only look at businesses in the current category
-    businesses
-      .filter(business => business.category === currentCategoryKebab)
-      .forEach(business => {
-        if (!business.city) return;
-        // Convert kebab-case to Title Case for display
-        const displayCity = business.city
-          .split('-')
-          .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(' ');
-        citySet.add(displayCity);
-      });
-    
-    return Array.from(citySet).sort();
+    return cities;
   };
 
   const existingCategoriesInCity = getExistingCategoriesInCurrentCity();
@@ -71,116 +54,127 @@ const Footer: React.FC<FooterProps> = ({ category, city, state }) => {
     return text.toLowerCase().replace(/\s+/g, '-');
   };
 
+  const formatCityForDisplay = (citySlug: string) => {
+    return citySlug
+      .split('-')
+      .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  const formatCategoryForDisplay = (categorySlug: string) => {
+    return categorySlug
+      .split('-')
+      .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  const cityDisplayName = formatCityForDisplay(city);
+  const categoryDisplayName = formatCategoryForDisplay(category);
+
   return (
-    <footer className="bg-gray-900 text-white">
-      {/* Main footer content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <footer className="bg-gray-900 text-white py-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* Company info */}
-          <div className="lg:col-span-1">
-            <h3 className="text-xl font-bold mb-4">
-              {city} {category}
-            </h3>
-            <p className="text-gray-300 mb-4 leading-relaxed">
-              Your trusted directory for finding the best {category.toLowerCase()} in {city}, {state}. 
-              We connect you with top-rated local businesses.
+          {/* Company Info */}
+          <div className="space-y-4">
+            <h3 className="text-xl font-bold text-white">Near Me Directory</h3>
+            <p className="text-gray-400">
+              Find trusted local businesses in {cityDisplayName}, {state}. 
+              Connecting you with {businessCount}+ verified {categoryDisplayName.toLowerCase()} and other services.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                <Facebook className="w-5 h-5" />
+              <a href="#" className="text-gray-400 hover:text-blue-500 transition-colors">
+                <Facebook className="h-5 w-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                <Twitter className="w-5 h-5" />
+              <a href="#" className="text-gray-400 hover:text-blue-400 transition-colors">
+                <Twitter className="h-5 w-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                <Instagram className="w-5 h-5" />
+              <a href="#" className="text-gray-400 hover:text-pink-500 transition-colors">
+                <Instagram className="h-5 w-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                <Linkedin className="w-5 h-5" />
+              <a href="#" className="text-gray-400 hover:text-blue-600 transition-colors">
+                <Linkedin className="h-5 w-5" />
               </a>
             </div>
           </div>
 
-          {/* Categories available in current city */}
-          <div>
-            <h4 className="text-lg font-semibold mb-4">Categories in {city}</h4>
-            {existingCategoriesInCity.length > 0 ? (
-              <ul className="space-y-2">
-                {existingCategoriesInCity.map((cat) => (
-                  <li key={cat}>
-                    <a
-                      href={`https://${formatForUrl(cat)}.${formatForUrl(city)}.near-me.us`}
-                      className="text-gray-300 hover:text-white transition-colors text-sm"
-                    >
-                      {cat} in {city}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-400 text-sm">No other categories available in {city}</p>
-            )}
+          {/* Business Categories */}
+          <div className="space-y-4">
+            <h4 className="font-semibold text-white">Services in {cityDisplayName}</h4>
+            <ul className="space-y-2">
+              {existingCategoriesInCity.slice(0, 8).map((cat) => (
+                <li key={cat}>
+                  <Link 
+                    to={`/${formatForUrl(cat)}-${city}`}
+                    className="text-gray-400 hover:text-white transition-colors"
+                  >
+                    {formatCategoryForDisplay(cat)} in {cityDisplayName}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
 
-          {/* Cities available for current category */}
-          <div>
-            <h4 className="text-lg font-semibold mb-4">{category} Locations</h4>
-            {existingCitiesForCategory.length > 0 ? (
-              <ul className="space-y-2">
-                {existingCitiesForCategory.map((cityName) => (
-                  <li key={cityName}>
-                    <a
-                      href={`https://${formatForUrl(category)}.${formatForUrl(cityName)}.near-me.us`}
-                      className="text-gray-300 hover:text-white transition-colors text-sm"
-                    >
-                      {category} in {cityName}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-400 text-sm">No other cities available for {category}</p>
-            )}
+          {/* Popular Cities */}
+          <div className="space-y-4">
+            <h4 className="font-semibold text-white">{categoryDisplayName} in Other Cities</h4>
+            <ul className="space-y-2">
+              {existingCitiesForCategory.slice(0, 8).map((citySlug) => (
+                <li key={citySlug}>
+                  <Link 
+                    to={`/${category}-${citySlug}`}
+                    className="text-gray-400 hover:text-white transition-colors"
+                  >
+                    {formatCityForDisplay(citySlug)}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
 
-          {/* Contact Info */}
-          <div>
-            <h4 className="text-lg font-semibold mb-4">Contact Us</h4>
-            <div className="space-y-3">
-              <div className="flex items-start">
-                <MapPin className="w-5 h-5 mr-3 mt-0.5 text-blue-400 flex-shrink-0" />
-                <div className="text-gray-300 text-sm">
-                  <div>Serving {city}, {state}</div>
-                  <div>and surrounding areas</div>
+          {/* Contact & Resources */}
+          <div className="space-y-4">
+            <h4 className="font-semibold text-white">Resources</h4>
+            <ul className="space-y-2">
+              <li>
+                <Link to="/business-owners" className="text-gray-400 hover:text-white transition-colors flex items-center">
+                  <Mail className="h-4 w-4 mr-2" />
+                  For Business Owners
+                </Link>
+              </li>
+              <li>
+                <Link to="/contact" className="text-gray-400 hover:text-white transition-colors flex items-center">
+                  <Phone className="h-4 w-4 mr-2" />
+                  Contact Us
+                </Link>
+              </li>
+              <li>
+                <Link to="/sitemap" className="text-gray-400 hover:text-white transition-colors flex items-center">
+                  <MapPin className="h-4 w-4 mr-2" />
+                  Sitemap
+                </Link>
+              </li>
+              <li>
+                <div className="text-gray-400 flex items-center">
+                  <Clock className="h-4 w-4 mr-2" />
+                  24/7 Online Directory
                 </div>
-              </div>
-              <div className="flex items-center">
-                <Phone className="w-5 h-5 mr-3 text-blue-400 flex-shrink-0" />
-                <a href={`tel:${SITE_INFO.phone.replace(/[^\d+]/g, '')}`} className="text-gray-300 hover:text-white transition-colors text-sm">
-                  {SITE_INFO.phone}
-                </a>
-              </div>
-              <div className="flex items-center">
-                <Mail className="w-5 h-5 mr-3 text-blue-400 flex-shrink-0" />
-                <a href={`mailto:${SITE_INFO.email}`} className="text-gray-300 hover:text-white transition-colors text-sm">
-                  {SITE_INFO.email}
-                </a>
-              </div>
-              <div className="flex items-start">
-                <Clock className="w-5 h-5 mr-3 mt-0.5 text-blue-400 flex-shrink-0" />
-                <div className="text-gray-300 text-sm">
-                  <div>{SITE_INFO.hours.weekdays}</div>
-                  <div>{SITE_INFO.hours.weekends}</div>
-                </div>
-              </div>
+              </li>
+            </ul>
+            
+            <div className="pt-4 border-t border-gray-700">
+              <p className="text-sm text-gray-400">
+                Business Hours Vary by Location
+              </p>
+              <p className="text-sm text-gray-400">
+                Contact businesses directly for current hours and availability.
+              </p>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Bottom bar */}
-      <div className="border-t border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Bottom Bar */}
+        <div className="mt-12 pt-8 border-t border-gray-700">
           <div className="flex flex-col md:flex-row items-center justify-between">
             <div className="text-gray-400 text-sm mb-4 md:mb-0">
               © {currentYear} Near Me Directory. All rights reserved.

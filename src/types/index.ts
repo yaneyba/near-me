@@ -359,6 +359,12 @@ export interface IDataProvider {
   getServices(category: string): Promise<string[]>;
   getNeighborhoods(city: string): Promise<string[]>;
   
+  // Static data methods - replace hardcoded data
+  getCategories(): Promise<string[]>;
+  getCities(): Promise<string[]>;
+  getCityStateMap(): Promise<Record<string, string>>;
+  getKnownCombinations(): Promise<Array<{ category: string; city: string }>>;
+  
   // Form submissions (legacy compatibility)
   submitContact(contactData: ContactSubmission): Promise<SubmissionResult>;
   submitBusiness(businessData: BusinessSubmission): Promise<SubmissionResult>;

@@ -130,6 +130,72 @@ export class D1DataProvider implements IDataProvider {
   }
 
   /**
+   * Get all available categories
+   */
+  async getCategories(): Promise<string[]> {
+    return [
+      'nail-salons',
+      'barbershops', 
+      'auto-repair',
+      'restaurants',
+      'water-refill'
+    ];
+  }
+
+  /**
+   * Get all cities via query endpoint
+   */
+  async getCities(): Promise<string[]> {
+    try {
+      const sql = `
+        SELECT DISTINCT city_name 
+        FROM cities 
+        ORDER BY city_name ASC
+      `;
+      
+      const result = await this.executeQuery(sql, []);
+      return (result.data || []).map((row: any) => row.city_name);
+    } catch (error) {
+      console.error('Failed to get cities from API:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get city to state mapping
+   */
+  async getCityStateMap(): Promise<Record<string, string>> {
+    return {
+      'san-francisco': 'California',
+      'los-angeles': 'California',
+      'san-diego': 'California',
+      'san-jose': 'California',
+      'sacramento': 'California',
+      'phoenix': 'Arizona',
+      'las-vegas': 'Nevada',
+      'denver': 'Colorado',
+      'seattle': 'Washington'
+    };
+  }
+
+  /**
+   * Get known category-city combinations
+   */
+  async getKnownCombinations(): Promise<Array<{ category: string; city: string }>> {
+    return [
+      { category: 'nail-salons', city: 'san-francisco' },
+      { category: 'nail-salons', city: 'los-angeles' },
+      { category: 'barbershops', city: 'san-francisco' },
+      { category: 'barbershops', city: 'los-angeles' },
+      { category: 'auto-repair', city: 'san-francisco' },
+      { category: 'auto-repair', city: 'los-angeles' },
+      { category: 'restaurants', city: 'san-francisco' },
+      { category: 'restaurants', city: 'los-angeles' },
+      { category: 'water-refill', city: 'san-francisco' }
+    ];
+  }
+
+  /**
    * Submit contact form via query endpoint
    */
   async submitContact(contactData: ContactSubmission): Promise<SubmissionResult> {

@@ -1,5 +1,5 @@
 import { Business } from '@/types';
-import businessesData from '@/data/businesses.json';
+import { DataProviderFactory } from '@/providers';
 
 interface SitemapUrl {
   loc: string;
@@ -17,72 +17,54 @@ interface SitemapData {
 
 export class SitemapGenerator {
   private baseUrl = 'https://near-me.us';
-  private businesses: Business[] = businessesData.map(b => ({
-    ...b,
-    website: b.website ?? null
-  }));
-
-  // City-state mapping for generating combinations
-  private cityStateMap: Record<string, string> = {
-    'dallas': 'Texas',
-    'garland': 'Texas',
-    'denver': 'Colorado',
-    'austin': 'Texas',
-    'houston': 'Texas',
-    'phoenix': 'Arizona',
-    'chicago': 'Illinois',
-    'atlanta': 'Georgia',
-    'miami': 'Florida',
-    'seattle': 'Washington',
-    'portland': 'Oregon'
-  };
+  private businesses: Business[] = []; // Will be populated when needed
+  private dataProvider = DataProviderFactory.getProvider();
 
   /**
-   * Get all unique categories from business data
+   * Get all unique categories from DataProvider
    */
-  private getCategories(): string[] {
-    const categories = new Set<string>();
-    this.businesses.forEach(business => {
-      const displayCategory = this.formatForDisplay(business.category);
-      categories.add(displayCategory);
-    });
-    return Array.from(categories).sort();
+  private async getCategories(): Promise<string[]> {
+    try {
+      const categories = await this.dataProvider.getCategories();
+      return categories.map(category => this.formatForDisplay(category)).sort();
+    } catch (error) {
+      console.error('Failed to load categories from DataProvider:', error);
+      return [];
+    }
   }
 
   /**
-   * Get all unique cities from business data
+   * Get all unique cities from DataProvider
    */
-  private getCities(): string[] {
-    const cities = new Set<string>();
-    this.businesses.forEach(business => {
-      const displayCity = this.formatForDisplay(business.city);
-      cities.add(displayCity);
-    });
-    return Array.from(cities).sort();
+  private async getCities(): Promise<string[]> {
+    try {
+      const cities = await this.dataProvider.getCities();
+      return cities.map(city => this.formatForDisplay(city)).sort();
+    } catch (error) {
+      console.error('Failed to load cities from DataProvider:', error);
+      return [];
+    }
   }
 
   /**
-   * Get all valid category-city combinations
+   * Get all valid category-city combinations from DataProvider
    */
-  private getCombinations(): Array<{ category: string; city: string; state: string }> {
-    const combinations = new Set<string>();
-    const result: Array<{ category: string; city: string; state: string }> = [];
-
-    this.businesses.forEach(business => {
-      const key = `${business.category}-${business.city}`;
-      if (!combinations.has(key)) {
-        combinations.add(key);
-        result.push({
-          category: this.formatForDisplay(business.category),
-          city: this.formatForDisplay(business.city),
-          state: this.cityStateMap[business.city] || 'Unknown'
-        });
-      }
-    });
-
-    return result.sort((a, b) => 
-      a.category.localeCompare(b.category) || a.city.localeCompare(b.city)
-    );
+  private async getCombinations(): Promise<Array<{ category: string; city: string; state: string }>> {
+    try {
+      const knownCombinations = await this.dataProvider.getKnownCombinations();
+      const cityStateMap = await this.dataProvider.getCityStateMap();
+      
+      return knownCombinations.map(combo => ({
+        category: this.formatForDisplay(combo.category),
+        city: this.formatForDisplay(combo.city),
+        state: cityStateMap[combo.city] || 'Unknown'
+      })).sort((a, b) => 
+        a.category.localeCompare(b.category) || a.city.localeCompare(b.city)
+      );
+    } catch (error) {
+      console.error('Failed to load combinations from DataProvider:', error);
+      return [];
+    }
   }
 
   /**
@@ -134,8 +116,8 @@ ${sitemaps.map(sitemap => `  <sitemap>
   /**
    * Generate categories sitemap
    */
-  generateCategoriesSitemap(): string {
-    const categories = this.getCategories();
+  async generateCategoriesSitemap(): Promise<string> {
+    const categories = await this.getCategories();
     const urls: SitemapUrl[] = categories.map(category => ({
       loc: `${this.baseUrl}/categories/${this.formatForUrl(category)}`,
       lastmod: this.getCurrentDate(),
@@ -149,8 +131,8 @@ ${sitemaps.map(sitemap => `  <sitemap>
   /**
    * Generate cities sitemap
    */
-  generateCitiesSitemap(): string {
-    const cities = this.getCities();
+  async generateCitiesSitemap(): Promise<string> {
+    const cities = await this.getCities();
     const urls: SitemapUrl[] = cities.map(city => ({
       loc: `${this.baseUrl}/cities/${this.formatForUrl(city)}`,
       lastmod: this.getCurrentDate(),
@@ -164,8 +146,8 @@ ${sitemaps.map(sitemap => `  <sitemap>
   /**
    * Generate category-city combinations sitemap
    */
-  generateCombinationsSitemap(): string {
-    const combinations = this.getCombinations();
+  async generateCombinationsSitemap(): Promise<string> {
+    const combinations = await this.getCombinations();
     const urls: SitemapUrl[] = combinations.map(combo => {
       const categoryUrl = this.formatForUrl(combo.category);
       const cityUrl = this.formatForUrl(combo.city);
@@ -207,18 +189,20 @@ ${sitemaps.map(sitemap => `  <sitemap>
    * Generate businesses sitemap
    */
   generateBusinessesSitemap(): string {
-    const urls: SitemapUrl[] = this.businesses.map(business => {
-      const categoryUrl = this.formatForUrl(this.formatForDisplay(business.category));
-      const cityUrl = this.formatForUrl(this.formatForDisplay(business.city));
-      const businessUrl = this.formatForUrl(business.name);
-      
-      return {
-        loc: `https://${categoryUrl}.${cityUrl}.near-me.us/business/${businessUrl}-${business.id}`,
-        lastmod: this.getCurrentDate(),
-        changefreq: 'weekly',
-        priority: 0.7
-      };
-    });
+    const urls: SitemapUrl[] = this.businesses
+      .filter(business => business.category && business.city) // Only include businesses with valid data
+      .map(business => {
+        const categoryUrl = this.formatForUrl(this.formatForDisplay(business.category!));
+        const cityUrl = this.formatForUrl(this.formatForDisplay(business.city!));
+        const businessUrl = this.formatForUrl(business.name);
+        
+        return {
+          loc: `https://${categoryUrl}.${cityUrl}.near-me.us/business/${businessUrl}-${business.id}`,
+          lastmod: this.getCurrentDate(),
+          changefreq: 'weekly',
+          priority: 0.7
+        };
+      });
 
     return this.generateXmlSitemap(urls);
   }
@@ -274,7 +258,9 @@ ${sitemaps.map(sitemap => `  <sitemap>
     // Add service pages
     const services = new Set<string>();
     subdomainBusinesses.forEach(business => {
-      business.services.forEach(service => services.add(service));
+      if (business.services) {
+        business.services.forEach(service => services.add(service));
+      }
     });
 
     Array.from(services).forEach(service => {
@@ -287,7 +273,9 @@ ${sitemaps.map(sitemap => `  <sitemap>
       });
     });
 
-    // Add neighborhood pages (only if not null)
+    // Add neighborhood pages would go here if Business type had neighborhood property
+    // Currently Business type doesn't have neighborhood, so this section is commented out
+    /*
     const neighborhoods = new Set<string>();
     subdomainBusinesses.forEach(business => {
       if (business.neighborhood) {
@@ -304,6 +292,7 @@ ${sitemaps.map(sitemap => `  <sitemap>
         priority: 0.6
       });
     });
+    */
 
     return this.generateXmlSitemap(urls);
   }
@@ -311,8 +300,8 @@ ${sitemaps.map(sitemap => `  <sitemap>
   /**
    * Generate robots.txt content
    */
-  generateRobotsTxt(): string {
-    const combinations = this.getCombinations();
+  async generateRobotsTxt(): Promise<string> {
+    const combinations = await this.getCombinations();
     
     let robotsTxt = `User-agent: *
 Allow: /
@@ -366,11 +355,17 @@ ${urls.map(url => `  <url>
   /**
    * Get all sitemap data for analysis
    */
-  getSitemapData(): SitemapData {
+  async getSitemapData(): Promise<SitemapData> {
+    const [categories, cities, combinations] = await Promise.all([
+      this.getCategories(),
+      this.getCities(),
+      this.getCombinations()
+    ]);
+
     return {
-      categories: this.getCategories(),
-      cities: this.getCities(),
-      combinations: this.getCombinations(),
+      categories,
+      cities,
+      combinations,
       businesses: this.businesses
     };
   }
@@ -378,15 +373,22 @@ ${urls.map(url => `  <url>
   /**
    * Generate all sitemaps and return as object
    */
-  generateAllSitemaps(): Record<string, string> {
-    const combinations = this.getCombinations();
+  async generateAllSitemaps(): Promise<Record<string, string>> {
+    const [combinations, categoriesSitemap, citiesSitemap, combinationsSitemap, robotsTxt] = await Promise.all([
+      this.getCombinations(),
+      this.generateCategoriesSitemap(),
+      this.generateCitiesSitemap(),
+      this.generateCombinationsSitemap(),
+      this.generateRobotsTxt()
+    ]);
+
     const sitemaps: Record<string, string> = {
       'sitemap.xml': this.generateMasterSitemap(),
-      'sitemap-categories.xml': this.generateCategoriesSitemap(),
-      'sitemap-cities.xml': this.generateCitiesSitemap(),
-      'sitemap-combinations.xml': this.generateCombinationsSitemap(),
+      'sitemap-categories.xml': categoriesSitemap,
+      'sitemap-cities.xml': citiesSitemap,
+      'sitemap-combinations.xml': combinationsSitemap,
       'sitemap-businesses.xml': this.generateBusinessesSitemap(),
-      'robots.txt': this.generateRobotsTxt()
+      'robots.txt': robotsTxt
     };
 
     // Generate subdomain-specific sitemaps

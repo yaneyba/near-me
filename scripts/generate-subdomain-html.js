@@ -5,52 +5,59 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Import business data
-const businessesData = JSON.parse(
-  fs.readFileSync(path.join(__dirname, '../src/data/businesses.json'), 'utf8')
-);
+// Static data for subdomain generation (matches DataProvider data)
+const categories = ['nail-salons', 'barbershops', 'auto-repair', 'restaurants', 'water-refill'];
+const cities = ['san-francisco', 'los-angeles', 'san-diego', 'san-jose', 'sacramento', 'phoenix', 'las-vegas', 'denver', 'seattle'];
 
-// City-state mapping
+// Known combinations from DataProvider
+const knownCombinations = [
+  { category: 'nail-salons', city: 'san-francisco' },
+  { category: 'nail-salons', city: 'los-angeles' },
+  { category: 'barbershops', city: 'san-francisco' },
+  { category: 'barbershops', city: 'los-angeles' },
+  { category: 'auto-repair', city: 'san-francisco' },
+  { category: 'auto-repair', city: 'los-angeles' },
+  { category: 'restaurants', city: 'san-francisco' },
+  { category: 'restaurants', city: 'los-angeles' },
+  { category: 'water-refill', city: 'san-francisco' }
+];
+
+// City-state mapping (matches DataProvider)
 const cityStateMap = {
-  'dallas': 'Texas',
-  'garland': 'Texas',
+  'san-francisco': 'California',
+  'los-angeles': 'California',
+  'san-diego': 'California',
+  'san-jose': 'California',
+  'sacramento': 'California',
+  'phoenix': 'Arizona',
+  'las-vegas': 'Nevada',
   'denver': 'Colorado',
-  'austin': 'Texas',
-  'houston': 'Texas',
-  'frisco': 'Texas'
+  'seattle': 'Washington'
 };
 
-// Get unique combinations from business data
+// Get unique combinations from static data
 function getUniqueCombinations() {
-  const combinations = new Set();
   const result = [];
 
-  businessesData.forEach(business => {
-    const key = `${business.category}-${business.city}`;
-    if (!combinations.has(key)) {
-      combinations.add(key);
-      
-      const categoryDisplay = business.category
-        .split('-')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-      
-      const cityDisplay = business.city
-        .split('-')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
+  knownCombinations.forEach(combo => {
+    const categoryDisplay = combo.category
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+    
+    const cityDisplay = combo.city
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
 
-      result.push({
-        category: categoryDisplay,
-        city: cityDisplay,
-        state: cityStateMap[business.city] || 'Unknown',
-        categoryUrl: business.category,
-        cityUrl: business.city,
-        businessCount: businessesData.filter(b => 
-          b.category === business.category && b.city === business.city
-        ).length
-      });
-    }
+    result.push({
+      category: categoryDisplay,
+      city: cityDisplay,
+      state: cityStateMap[combo.city] || 'Unknown',
+      categoryUrl: combo.category,
+      cityUrl: combo.city,
+      businessCount: 50 // Static count since we don't have dynamic business data
+    });
   });
 
   return result;
