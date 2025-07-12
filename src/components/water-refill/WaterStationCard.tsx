@@ -2,10 +2,12 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Star, MapPin, Clock, Phone, CreditCard, Droplets } from 'lucide-react';
 import { WaterStation } from '@/components/water-refill/types';
+import { Business } from '@/types';
 import { formatAddress } from '@/components/water-refill/utils';
 
 interface WaterStationCardProps {
-  station: WaterStation;
+  station?: WaterStation;
+  business?: Business;
   isSelected?: boolean;
   onClick?: () => void;
   showImage?: boolean;
@@ -13,12 +15,40 @@ interface WaterStationCardProps {
 }
 
 const WaterStationCard: React.FC<WaterStationCardProps> = ({ 
-  station, 
+  station: propStation, 
+  business,
   isSelected = false, 
   onClick, 
   showImage = true,
   compact = false 
 }) => {
+  // Smart detection: use the business prop to create a water station if provided, otherwise use station prop
+  const station = React.useMemo(() => {
+    if (business) {
+      return {
+        id: business.id,
+        name: business.name,
+        address: business.address || '',
+        city: business.city || '',
+        state: business.state || '',
+        rating: business.rating || 0,
+        hours: typeof business.hours === 'string' ? business.hours : business.hours?.Monday || 'Hours not available',
+        phone: business.phone || '',
+        image: business.image || '',
+        priceRange: '$', // Default for water stations
+        amenities: business.services || [],
+        distance: '', // Distance would be calculated separately
+        isOpen: true, // Default to open
+        lat: business.latitude || 0,
+        lng: business.longitude || 0,
+      };
+    }
+    return propStation;
+  }, [business, propStation]);
+
+  if (!station) {
+    return null;
+  }
   return (
     <div 
       className={`bg-white border rounded-lg p-4 cursor-pointer hover:shadow-lg active:scale-[0.98] transition-all duration-200 max-w-full ${
