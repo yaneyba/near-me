@@ -187,15 +187,15 @@ export class D1DataProvider implements IDataProvider {
       console.error('Failed to get city-state mapping from API:', error);
       // Fallback to hardcoded values if database query fails
       return {
-        'san-francisco': 'California',
-        'los-angeles': 'California',
-        'san-diego': 'California',
-        'san-jose': 'California',
-        'sacramento': 'California',
-        'phoenix': 'Arizona',
-        'las-vegas': 'Nevada',
-        'denver': 'Colorado',
-        'seattle': 'Washington'
+        'san-francisco': 'CA',
+        'los-angeles': 'CA',
+        'san-diego': 'CA',
+        'san-jose': 'CA',
+        'sacramento': 'CA',
+        'phoenix': 'AZ',
+        'las-vegas': 'NV',
+        'denver': 'CO',
+        'seattle': 'WA'
       };
     }
   }
