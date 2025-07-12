@@ -13,15 +13,9 @@ import {
   Loader2, 
   Clock, 
   Star,
-  Globe,
-  Camera,
-  DollarSign,
-  Users,
-  Award,
   Zap,
   ArrowRight,
   ArrowLeft,
-  Upload,
   X,
   Plus
 } from 'lucide-react';
@@ -74,9 +68,7 @@ interface SubmissionResult {
 const SubmissionSuccess: React.FC<{ 
   result: SubmissionResult; 
   onReset: () => void;
-  category: string;
-  city: string;
-}> = ({ result, onReset, category, city }) => {
+}> = ({ result, onReset }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center py-12">
       <div className="max-w-2xl mx-auto px-4 text-center">
@@ -603,7 +595,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
   };
 
   // Helper function to render field label with required indicator
-  const renderFieldLabel = (label: string, fieldName: string, required: boolean = false) => {
+  const renderFieldLabel = (label: string, required: boolean = false) => {
     return (
       <label className="block text-sm font-medium text-gray-700 mb-2">
         {label}
@@ -631,8 +623,6 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
       <SubmissionSuccess 
         result={submitResult} 
         onReset={resetForm}
-        category={subdomainInfo.category}
-        city={subdomainInfo.city}
       />
     );
   }
@@ -650,7 +640,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                {renderFieldLabel('Business Name', 'businessName', true)}
+                {renderFieldLabel('Business Name', true)}
                 <input
                   type="text"
                   value={formData.businessName}
@@ -664,7 +654,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
               </div>
 
               <div>
-                {renderFieldLabel('Owner/Manager Name', 'ownerName', true)}
+                {renderFieldLabel('Owner/Manager Name', true)}
                 <input
                   type="text"
                   value={formData.ownerName}
@@ -678,7 +668,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
               </div>
 
               <div>
-                {renderFieldLabel('Email Address', 'email', true)}
+                {renderFieldLabel('Email Address', true)}
                 <input
                   type="email"
                   value={formData.email}
@@ -692,7 +682,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
               </div>
 
               <div>
-                {renderFieldLabel('Phone Number', 'phone', true)}
+                {renderFieldLabel('Phone Number', true)}
                 <input
                   type="tel"
                   value={formData.phone}
@@ -707,7 +697,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
             </div>
 
             <div>
-              {renderFieldLabel('Business Description', 'description')}
+              {renderFieldLabel('Business Description')}
               <textarea
                 value={formData.description}
                 onChange={(e) => handleInputChange('description', e.target.value)}
@@ -720,7 +710,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
             </div>
 
             <div>
-              {renderFieldLabel('Website', 'website')}
+              {renderFieldLabel('Website')}
               <input
                 type="url"
                 value={formData.website}
@@ -744,7 +734,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
             </div>
 
             <div>
-              {renderFieldLabel('Street Address', 'address', true)}
+              {renderFieldLabel('Street Address', true)}
               <input
                 type="text"
                 value={formData.address}
@@ -759,7 +749,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                {renderFieldLabel('City', 'city', true)}
+                {renderFieldLabel('City', true)}
                 <input
                   type="text"
                   value={formData.city}
@@ -772,7 +762,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
               </div>
 
               <div>
-                {renderFieldLabel('State', 'state', true)}
+                {renderFieldLabel('State', true)}
                 <input
                   type="text"
                   value={formData.state}
@@ -786,7 +776,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
               </div>
 
               <div>
-                {renderFieldLabel('ZIP Code', 'zipCode', true)}
+                {renderFieldLabel('ZIP Code', true)}
                 <input
                   type="text"
                   value={formData.zipCode}
@@ -802,7 +792,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                {renderFieldLabel('Business Type', 'businessType')}
+                {renderFieldLabel('Business Type')}
                 <select
                   value={formData.businessType}
                   onChange={(e) => handleInputChange('businessType', e.target.value)}
@@ -816,7 +806,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
               </div>
 
               <div>
-                {renderFieldLabel('Years in Business', 'yearsInBusiness')}
+                {renderFieldLabel('Years in Business')}
                 <select
                   value={formData.yearsInBusiness}
                   onChange={(e) => handleInputChange('yearsInBusiness', e.target.value)}
@@ -950,7 +940,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                {renderFieldLabel('Facebook Page', 'facebook')}
+                {renderFieldLabel('Facebook Page')}
                 <input
                   type="url"
                   value={formData.socialMedia.facebook}
@@ -962,7 +952,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
               </div>
 
               <div>
-                {renderFieldLabel('Instagram Profile', 'instagram')}
+                {renderFieldLabel('Instagram Profile')}
                 <input
                   type="url"
                   value={formData.socialMedia.instagram}
@@ -974,7 +964,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
               </div>
 
               <div>
-                {renderFieldLabel('Twitter Profile', 'twitter')}
+                {renderFieldLabel('Twitter Profile')}
                 <input
                   type="url"
                   value={formData.socialMedia.twitter}
@@ -987,7 +977,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
             </div>
 
             <div>
-              {renderFieldLabel('Special Offers or Promotions', 'specialOffers')}
+              {renderFieldLabel('Special Offers or Promotions')}
               <textarea
                 value={formData.specialOffers}
                 onChange={(e) => handleInputChange('specialOffers', e.target.value)}
@@ -999,7 +989,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
             </div>
 
             <div>
-              {renderFieldLabel('Number of Employees', 'employeeCount')}
+              {renderFieldLabel('Number of Employees')}
               <select
                 value={formData.employeeCount}
                 onChange={(e) => handleInputChange('employeeCount', e.target.value)}
