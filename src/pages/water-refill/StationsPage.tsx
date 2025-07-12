@@ -30,7 +30,7 @@ const WaterRefillStationsPage: React.FC<WaterRefillStationsPageProps> = ({ subdo
     const loadStations = async () => {
       try {
         // Get water-refill businesses from data provider
-        const businesses = await dataProvider.getBusinesses('water-refill', 'san-francisco');
+        const businesses = await dataProvider.getBusinesses('water-refill', subdomainInfo.city);
         
         // Transform business data to station format - ONLY use real data
         const transformedStations: WaterStationType[] = businesses.map(transformBusinessToWaterStation);
