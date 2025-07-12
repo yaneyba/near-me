@@ -58,8 +58,10 @@ function generateBusinessId(name, index) {
   const cleanName = name.toLowerCase()
     .replace(/[^a-z0-9\s]/g, '')
     .replace(/\s+/g, '-')
-    .substring(0, 30);
-  return `water-refill-sf-${String(index + 1).padStart(3, '0')}-${cleanName}`;
+    .substring(0, 20); // Shorter limit
+  
+  // Much simpler ID format - no redundant prefixes
+  return `sf-${String(index + 1).padStart(3, '0')}-${cleanName}`;
 }
 
 function getCityFromAddress(address) {

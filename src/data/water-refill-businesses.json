@@ -1,7 +1,7 @@
 [
   {
-    "id": "water-refill-sf-001-sfo-water-filling-station",
-    "business_id": "water-refill-sf-001-sfo-water-filling-station",
+    "id": "sf-001-sfo-water-station",
+    "business_id": "sf-001-sfo-water-station",
     "name": "SFO Water Filling Station",
     "category": "water-refill",
     "city": "san-francisco",
@@ -54,8 +54,8 @@
     "google_cid": "8163080993961811081"
   },
   {
-    "id": "water-refill-sf-002-aqua-spring",
-    "business_id": "water-refill-sf-002-aqua-spring",
+    "id": "sf-002-aqua-spring",
+    "business_id": "sf-002-aqua-spring",
     "name": "Aqua Spring",
     "category": "water-refill",
     "city": "san-francisco",
@@ -111,8 +111,8 @@
     "google_cid": "1742820985789604448"
   },
   {
-    "id": "water-refill-sf-003-primo-water-refill",
-    "business_id": "water-refill-sf-003-primo-water-refill",
+    "id": "sf-003-primo",
+    "business_id": "sf-003-primo",
     "name": "Primo Water Refill",
     "category": "water-refill",
     "city": "san-francisco",
@@ -168,8 +168,8 @@
     "google_cid": "10402976416871610974"
   },
   {
-    "id": "water-refill-sf-004-primo-water-refill",
-    "business_id": "water-refill-sf-004-primo-water-refill",
+    "id": "sf-004-primo",
+    "business_id": "sf-004-primo",
     "name": "Primo Water Refill",
     "category": "water-refill",
     "city": "san-francisco",
@@ -225,8 +225,8 @@
     "google_cid": "15846637123964512471"
   },
   {
-    "id": "water-refill-sf-005-primo-water-refill",
-    "business_id": "water-refill-sf-005-primo-water-refill",
+    "id": "sf-005-primo",
+    "business_id": "sf-005-primo",
     "name": "Primo Water Refill",
     "category": "water-refill",
     "city": "san-francisco",
@@ -282,8 +282,8 @@
     "google_cid": "1335173419312197773"
   },
   {
-    "id": "water-refill-sf-006-primo-water-refill",
-    "business_id": "water-refill-sf-006-primo-water-refill",
+    "id": "sf-006-primo",
+    "business_id": "sf-006-primo",
     "name": "Primo Water Refill",
     "category": "water-refill",
     "city": "san-francisco",
@@ -339,8 +339,8 @@
     "google_cid": "14905158550718310094"
   },
   {
-    "id": "water-refill-sf-007-primo-water-refill",
-    "business_id": "water-refill-sf-007-primo-water-refill",
+    "id": "sf-007-primo",
+    "business_id": "sf-007-primo",
     "name": "Primo Water Refill",
     "category": "water-refill",
     "city": "san-francisco",
@@ -396,8 +396,8 @@
     "google_cid": "15335275501404951465"
   },
   {
-    "id": "water-refill-sf-008-primo-water-refill",
-    "business_id": "water-refill-sf-008-primo-water-refill",
+    "id": "sf-008-primo",
+    "business_id": "sf-008-primo",
     "name": "Primo Water Refill",
     "category": "water-refill",
     "city": "san-francisco",
@@ -453,8 +453,8 @@
     "google_cid": "11911719032906053962"
   },
   {
-    "id": "water-refill-sf-009-primo-water-refill",
-    "business_id": "water-refill-sf-009-primo-water-refill",
+    "id": "sf-009-primo",
+    "business_id": "sf-009-primo",
     "name": "Primo Water Refill",
     "category": "water-refill",
     "city": "san-francisco",
@@ -510,8 +510,8 @@
     "google_cid": "1043020503944903246"
   },
   {
-    "id": "water-refill-sf-010-california-pure-water",
-    "business_id": "water-refill-sf-010-california-pure-water",
+    "id": "sf-010-california-pure-water",
+    "business_id": "sf-010-california-pure-water",
     "name": "California Pure Water",
     "category": "water-refill",
     "city": "san-francisco",
@@ -566,8 +566,8 @@
     "google_cid": "8379774897738521684"
   },
   {
-    "id": "water-refill-sf-011-primo-water-refill",
-    "business_id": "water-refill-sf-011-primo-water-refill",
+    "id": "sf-011-primo",
+    "business_id": "sf-011-primo",
     "name": "Primo Water Refill",
     "category": "water-refill",
     "city": "san-francisco",
@@ -623,8 +623,8 @@
     "google_cid": "2779231574091180286"
   },
   {
-    "id": "water-refill-sf-012-primo-water-refill",
-    "business_id": "water-refill-sf-012-primo-water-refill",
+    "id": "sf-012-primo",
+    "business_id": "sf-012-primo",
     "name": "Primo Water Refill",
     "category": "water-refill",
     "city": "san-francisco",
@@ -680,8 +680,8 @@
     "google_cid": "9600329133491899124"
   },
   {
-    "id": "water-refill-sf-013-primo-water-refill",
-    "business_id": "water-refill-sf-013-primo-water-refill",
+    "id": "sf-013-primo",
+    "business_id": "sf-013-primo",
     "name": "Primo Water Refill",
     "category": "water-refill",
     "city": "san-francisco",
@@ -737,8 +737,8 @@
     "google_cid": "16294531016821420886"
   },
   {
-    "id": "water-refill-sf-014-primo-water-refill",
-    "business_id": "water-refill-sf-014-primo-water-refill",
+    "id": "sf-014-primo",
+    "business_id": "sf-014-primo",
     "name": "Primo Water Refill",
     "category": "water-refill",
     "city": "san-francisco",
@@ -794,8 +794,8 @@
     "google_cid": "488940642225136700"
   },
   {
-    "id": "water-refill-sf-015-primo-water-refill",
-    "business_id": "water-refill-sf-015-primo-water-refill",
+    "id": "sf-015-primo",
+    "business_id": "sf-015-primo",
     "name": "Primo Water Refill",
     "category": "water-refill",
     "city": "san-francisco",
@@ -851,8 +851,8 @@
     "google_cid": "5325931104463290556"
   },
   {
-    "id": "water-refill-sf-016-glacier-water-refill-station",
-    "business_id": "water-refill-sf-016-glacier-water-refill-station",
+    "id": "sf-016-glacier-station",
+    "business_id": "sf-016-glacier-station",
     "name": "Glacier Water Refill Station",
     "category": "water-refill",
     "city": "san-francisco",
@@ -909,8 +909,8 @@
     "google_cid": "676644366156531946"
   },
   {
-    "id": "water-refill-sf-017-glacier-water-refill-station",
-    "business_id": "water-refill-sf-017-glacier-water-refill-station",
+    "id": "sf-017-glacier-station",
+    "business_id": "sf-017-glacier-station",
     "name": "Glacier Water Refill Station",
     "category": "water-refill",
     "city": "san-francisco",
@@ -966,8 +966,8 @@
     "google_cid": "14026529355942572337"
   },
   {
-    "id": "water-refill-sf-018-primo-water-refill",
-    "business_id": "water-refill-sf-018-primo-water-refill",
+    "id": "sf-018-primo",
+    "business_id": "sf-018-primo",
     "name": "Primo Water Refill",
     "category": "water-refill",
     "city": "san-francisco",
@@ -1023,8 +1023,8 @@
     "google_cid": "3923997686693013168"
   },
   {
-    "id": "water-refill-sf-019-bay-pure-water",
-    "business_id": "water-refill-sf-019-bay-pure-water",
+    "id": "sf-019-bay-pure-water",
+    "business_id": "sf-019-bay-pure-water",
     "name": "Bay Pure Water",
     "category": "water-refill",
     "city": "san-francisco",
@@ -1079,8 +1079,8 @@
     "google_cid": "10074991852317895816"
   },
   {
-    "id": "water-refill-sf-020-primo-water-refill",
-    "business_id": "water-refill-sf-020-primo-water-refill",
+    "id": "sf-020-primo",
+    "business_id": "sf-020-primo",
     "name": "Primo Water Refill",
     "category": "water-refill",
     "city": "san-francisco",
