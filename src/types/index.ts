@@ -548,3 +548,39 @@ export interface SubdomainInfo {
 }
 
 // Configuration Types - For scaling system and subdomain management
+
+// Stripe Types
+export interface StripeProduct {
+  priceId: string;
+  name: string;
+  description: string;
+  price: number;
+  mode: 'subscription' | 'payment';
+  interval?: 'month' | 'year';
+  currency: string;
+}
+
+export interface StripeSubscription {
+  id: string;
+  status: string;
+  current_period_end: number;
+  current_period_start: number;
+  product: StripeProduct;
+  cancel_at_period_end: boolean;
+  created: number;
+  price: {
+    unit_amount: number;
+    currency: string;
+    recurring?: {
+      interval: string;
+    };
+  };
+}
+
+export interface StripeCheckoutResult {
+  success: boolean;
+  message?: string;
+  error?: string;
+  sessionId?: string;
+  url?: string;
+}

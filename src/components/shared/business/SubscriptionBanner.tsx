@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Crown, Star, TrendingUp, ArrowRight } from 'lucide-react';
+import { Crown, Star, ArrowRight } from 'lucide-react';
 import { getCurrentSubscription } from '@/lib/stripe';
 import { getProductByPriceId } from '@/stripe-config';
 

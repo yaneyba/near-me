@@ -15,7 +15,7 @@ import {
   Tablet
 } from 'lucide-react';
 import { DataProviderFactory } from '@/providers/DataProviderFactory';
-import AnalyticsDataGenerator from '@/components/AnalyticsDataGenerator';
+import AnalyticsDataGenerator from '@/components/shared/analytics/AnalyticsDataGenerator';
 
 interface AnalyticsDashboardProps {
   className?: string;

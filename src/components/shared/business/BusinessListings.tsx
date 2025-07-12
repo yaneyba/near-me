@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Star, Phone, MapPin, Clock, ExternalLink, Globe, Filter, SortAsc, ChevronLeft, ChevronRight, Crown, ChevronDown, ChevronUp, MoreHorizontal, Calendar, Navigation, TrendingUp } from 'lucide-react';
+import { Star, Phone, MapPin, Clock, ExternalLink, Globe, Filter, ChevronLeft, ChevronRight, Crown, ChevronDown, ChevronUp, MoreHorizontal, Calendar, Navigation } from 'lucide-react';
 import { Business } from '@/types';
 import { AdUnit, SponsoredContent } from '@/components/ads';
 import { PremiumUpgrade } from '@/components/shared/business';
@@ -48,10 +48,10 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
         if (!searchQuery) return true;
         const query = searchQuery.toLowerCase();
         return (
-          business.name.toLowerCase().includes(query) ||
+          business.name?.toLowerCase().includes(query) ||
           business.description?.toLowerCase().includes(query) ||
-          business.services.some(service => service.toLowerCase().includes(query)) ||
-          business.neighborhood?.toLowerCase().includes(query)
+          (business.services && business.services.some(service => service.toLowerCase().includes(query))) ||
+          business.city?.toLowerCase().includes(query)
         );
       });
 
@@ -61,10 +61,10 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
           filtered = filtered.filter(business => business.premium);
           break;
         case 'top-rated':
-          filtered = filtered.filter(business => business.rating >= 4.5);
+          filtered = filtered.filter(business => (business.rating || 0) >= 4.5);
           break;
         case 'most-reviewed':
-          filtered = filtered.filter(business => business.reviewCount >= 100);
+          filtered = filtered.filter(business => (business.review_count || 0) >= 100);
           break;
         default:
           break;
@@ -77,11 +77,11 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
             // Premium businesses first, then by rating
             if (a.premium && !b.premium) return -1;
             if (!a.premium && b.premium) return 1;
-            return b.rating - a.rating;
+            return (b.rating || 0) - (a.rating || 0);
           case 'rating':
-            return b.rating - a.rating;
+            return (b.rating || 0) - (a.rating || 0);
           case 'reviews':
-            return b.reviewCount - a.reviewCount;
+            return (b.review_count || 0) - (a.review_count || 0);
           case 'name':
             return a.name.localeCompare(b.name);
           default:
@@ -163,7 +163,7 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
   };
 
   const handlePhoneClick = (business: Business) => {
-    engagementTracker.trackPhoneClick(business.id, business.name, business.phone);
+    engagementTracker.trackPhoneClick(business.id, business.name, business.phone || '');
   };
 
   const handleWebsiteClick = (business: Business) => {
@@ -270,17 +270,14 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
   };
 
   const renderBookingLinks = (business: Business) => {
-    if (!business.premium) {
-      return null;
-    }
-
-    // Show booking links if available
-    if (business.bookingLinks && business.bookingLinks.length > 0) {
+    const bookingLinks = (business as any).bookingLinks as string[] | undefined;
+    
+    if (bookingLinks && bookingLinks.length > 0) {
       return (
         <div className="mb-4">
           <div className="text-sm font-medium text-gray-900 mb-2">Quick Booking:</div>
           <div className="flex flex-wrap gap-2">
-            {business.bookingLinks.map((link, index) => (
+            {bookingLinks.map((link: string, index: number) => (
               <a
                 key={index}
                 href={link}
@@ -393,6 +390,10 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
   };
 
   const renderServices = (business: Business) => {
+    if (!business.services || business.services.length === 0) {
+      return null;
+    }
+    
     const isExpanded = expandedServices.has(business.id);
     const displayServices = isExpanded ? business.services : business.services.slice(0, 3);
     const hasMoreServices = business.services.length > 3;
@@ -500,13 +501,13 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
 
           <div className="relative h-48 overflow-hidden">
             <img
-              src={business.image}
+              src={business.image || '/placeholder-business.jpg'}
               alt={business.name}
               className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
-              onClick={() => engagementTracker.trackPhotoView(business.id, business.name, business.image)}
+              onClick={() => engagementTracker.trackPhotoView(business.id, business.name, business.image || '')}
             />
             <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-sm font-semibold text-gray-900 border border-white/20">
-              {business.neighborhood}
+              {business.city || 'Location'}
             </div>
             {searchQuery && (
               <div className="absolute bottom-4 left-4 bg-blue-600 text-white px-2 py-1 rounded-full text-xs font-medium">
@@ -535,7 +536,7 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
               )}
             </div>
             
-            {renderStars(business.rating, business.reviewCount)}
+            {renderStars(business.rating || 0, business.review_count || 0)}
             
             <p className="text-gray-600 mt-3 mb-4 leading-relaxed">
               {business.description}
@@ -559,7 +560,7 @@ const BusinessListings: React.FC<BusinessListingsProps> = ({
               >
                 <Clock className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0 mt-0.5" />
                 <div>
-                  <div className="font-medium">Today: {business.hours.Monday}</div>
+                  <div className="font-medium">Today: {business.hours?.Monday || 'Hours not available'}</div>
                 </div>
               </div>
             </div>

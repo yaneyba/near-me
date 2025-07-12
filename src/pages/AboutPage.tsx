@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { SubdomainInfo } from '@/types';
 import { generateTitle } from '@/utils/subdomainParser';
-import AboutSection from '@/components/AboutSection';
+import { AboutSection } from '@/components/shared/content';
 
 interface AboutPageProps {
   subdomainInfo: SubdomainInfo;

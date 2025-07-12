@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Star, Phone, MapPin, Clock, ExternalLink, Globe, Crown, Zap, ChevronDown, ChevronUp, Calendar, Navigation } from 'lucide-react';
+import { Star, Phone, MapPin, Clock, ExternalLink, Globe, Crown, Zap, ChevronDown, ChevronUp, Navigation } from 'lucide-react';
 import { Business } from '@/types';
 import { engagementTracker } from '@/utils/engagementTracker';
 
@@ -46,7 +46,7 @@ const PremiumListings: React.FC<PremiumListingsProps> = ({ businesses, category,
   };
 
   const handlePhoneClick = (business: Business) => {
-    engagementTracker.trackPhoneClick(business.id, business.name, business.phone);
+    engagementTracker.trackPhoneClick(business.id, business.name, business.phone || '');
   };
 
   const handleWebsiteClick = (business: Business) => {
@@ -68,7 +68,7 @@ const PremiumListings: React.FC<PremiumListingsProps> = ({ businesses, category,
   };
 
   const handlePhotoView = (business: Business) => {
-    engagementTracker.trackPhotoView(business.id, business.name, business.image);
+    engagementTracker.trackPhotoView(business.id, business.name, business.image || '');
   };
 
   const renderStars = (rating: number, reviewCount: number) => {
@@ -93,6 +93,10 @@ const PremiumListings: React.FC<PremiumListingsProps> = ({ businesses, category,
   };
 
   const renderServices = (business: Business) => {
+    if (!business.services || business.services.length === 0) {
+      return null;
+    }
+    
     const isExpanded = expandedServices.has(business.id);
     const displayServices = isExpanded ? business.services : business.services.slice(0, 4);
     const hasMoreServices = business.services.length > 4;
@@ -121,7 +125,7 @@ const PremiumListings: React.FC<PremiumListingsProps> = ({ businesses, category,
                 </>
               ) : (
                 <>
-                  +{business.services.length - 4} more
+                  +{business.services?.length! - 4} more
                   <ChevronDown className="w-3 h-3 ml-1" />
                 </>
               )}
@@ -133,13 +137,14 @@ const PremiumListings: React.FC<PremiumListingsProps> = ({ businesses, category,
   };
 
   const renderBookingLinks = (business: Business) => {
-    // Show booking links if available
-    if (business.bookingLinks && business.bookingLinks.length > 0) {
+    const bookingLinks = (business as any).bookingLinks;
+    
+    if (bookingLinks?.length > 0) {
       return (
         <div className="mb-6">
           <div className="text-sm font-semibold text-gray-900 mb-3">Quick Booking:</div>
           <div className="flex flex-wrap gap-3">
-            {business.bookingLinks.map((link, index) => (
+            {bookingLinks.map((link: string, index: number) => (
               <a
                 key={index}
                 href={link}
@@ -148,7 +153,6 @@ const PremiumListings: React.FC<PremiumListingsProps> = ({ businesses, category,
                 onClick={() => handleBookingClick(business, link)}
                 className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white text-sm font-semibold rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
               >
-                <Calendar className="w-4 h-4 mr-2" />
                 Book Online
                 <ExternalLink className="w-4 h-4 ml-2" />
               </a>
@@ -158,12 +162,10 @@ const PremiumListings: React.FC<PremiumListingsProps> = ({ businesses, category,
       );
     }
 
-    // Show "Coming Soon" for premium businesses without booking links
     return (
       <div className="mb-6">
         <div className="text-sm font-semibold text-gray-900 mb-3">Quick Booking:</div>
         <div className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-600 text-sm font-medium rounded-lg border border-gray-200">
-          <Calendar className="w-4 h-4 mr-2" />
           Coming Soon
         </div>
       </div>
@@ -277,14 +279,14 @@ const PremiumListings: React.FC<PremiumListingsProps> = ({ businesses, category,
               {/* Business Image */}
               <div className="relative h-64 overflow-hidden">
                 <img
-                  src={business.image}
+                  src={business.image || '/placeholder-business.jpg'}
                   alt={business.name}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   onClick={() => handlePhotoView(business)}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                 <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-semibold text-gray-900 border border-white/20">
-                  {business.neighborhood}
+                  {business.city || 'Premium'}
                 </div>
               </div>
 
@@ -309,7 +311,7 @@ const PremiumListings: React.FC<PremiumListingsProps> = ({ businesses, category,
 
                 {/* Rating with enhanced styling */}
                 <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                  {renderStars(business.rating, business.reviewCount)}
+                  {renderStars(business.rating || 0, business.review_count || 0)}
                 </div>
 
                 <p className="text-gray-600 mb-6 leading-relaxed text-lg">
@@ -319,42 +321,46 @@ const PremiumListings: React.FC<PremiumListingsProps> = ({ businesses, category,
                 {/* Business Details */}
                 <div className="space-y-4 mb-6">
                   {renderLocationInfo(business)}
-                  <div className="flex items-center text-gray-600">
-                    <Phone className="w-5 h-5 mr-3 text-yellow-500 flex-shrink-0" />
-                    <a 
-                      href={`tel:${business.phone}`}
-                      onClick={() => handlePhoneClick(business)}
-                      className="hover:text-yellow-600 transition-colors font-medium"
-                    >
-                      {business.phone}
-                    </a>
-                  </div>
+                  {business.phone && (
+                    <div className="flex items-center text-gray-600">
+                      <Phone className="w-5 h-5 mr-3 text-yellow-500 flex-shrink-0" />
+                      <a 
+                        href={`tel:${business.phone}`}
+                        onClick={() => handlePhoneClick(business)}
+                        className="hover:text-yellow-600 transition-colors font-medium"
+                      >
+                        {business.phone}
+                      </a>
+                    </div>
+                  )}
                   <div 
                     className="flex items-start text-gray-600"
                     onClick={() => handleHoursView(business)}
                   >
                     <Clock className="w-5 h-5 mr-3 text-yellow-500 flex-shrink-0 mt-0.5" />
                     <div>
-                      <div className="font-medium">Today: {business.hours.Monday}</div>
+                      <div className="font-medium">
+                        Today: {business.hours?.Monday || 'Hours not available'}
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Services */}
                 {renderServices(business)}
-
-                {/* Booking Links */}
                 {renderBookingLinks(business)}
 
                 {/* Action Buttons */}
                 <div className="flex gap-3 pt-4 border-t border-gray-100">
-                  <a
-                    href={`tel:${business.phone}`}
-                    onClick={() => handlePhoneClick(business)}
-                    className="flex-1 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white py-3 px-6 rounded-xl font-semibold text-center transition-all duration-200 focus:ring-4 focus:ring-yellow-300/50 focus:outline-none shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                  >
-                    Call Now
-                  </a>
+                  {business.phone && (
+                    <a
+                      href={`tel:${business.phone}`}
+                      onClick={() => handlePhoneClick(business)}
+                      className="flex-1 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white py-3 px-6 rounded-xl font-semibold text-center transition-all duration-200 focus:ring-4 focus:ring-yellow-300/50 focus:outline-none shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                    >
+                      Call Now
+                    </a>
+                  )}
                   {business.website && (
                     <a
                       href={business.website}

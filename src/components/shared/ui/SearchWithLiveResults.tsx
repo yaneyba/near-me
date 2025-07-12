@@ -86,14 +86,14 @@ const SearchWithLiveResults: React.FC<SearchWithLiveResultsProps> = ({
         }
       });
 
-      // Neighborhood matches
-      const neighborhoodMatches = new Set<string>();
+      // City/Location matches
+      const locationMatches = new Set<string>();
       businesses.forEach(business => {
-        if (business.neighborhood && business.neighborhood.toLowerCase().includes(queryLower) && !neighborhoodMatches.has(business.neighborhood)) {
-          neighborhoodMatches.add(business.neighborhood);
+        if (business.city && business.city.toLowerCase().includes(queryLower) && !locationMatches.has(business.city)) {
+          locationMatches.add(business.city);
           newSuggestions.push({
             type: 'neighborhood',
-            text: business.neighborhood
+            text: business.city
           });
         }
       });
@@ -344,7 +344,7 @@ const SearchWithLiveResults: React.FC<SearchWithLiveResultsProps> = ({
                     </div>
                     {suggestion.business && (
                       <div className="text-sm text-gray-500 mt-1">
-                        {suggestion.business.neighborhood} • ⭐ {suggestion.business.rating}
+                        {suggestion.business.city} • ⭐ {suggestion.business.rating || 'N/A'}
                       </div>
                     )}
                     {suggestion.type === 'service' && (

@@ -24,7 +24,7 @@ import {
 import { DataProviderFactory } from '@/providers';
 import { BusinessAnalytics } from '@/types';
 import { useNavigate, useLocation } from 'react-router-dom';
-import SubscriptionManager from '@/components/SubscriptionManager';
+import { SubscriptionManager } from '@/components/shared/business';
 import { signOut, useAuth } from '@/lib/auth';
 
 const BusinessDashboardPage: React.FC = () => {

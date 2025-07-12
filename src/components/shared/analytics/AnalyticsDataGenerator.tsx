@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { DataProviderFactory } from '@/providers/DataProviderFactory';
-import { UserEngagementEvent } from '@/types';
+import { UserEngagementEventDB } from '@/types';
 import { Zap, Check, AlertCircle, Trash2 } from 'lucide-react';
 
 const AnalyticsDataGenerator: React.FC = () => {
@@ -28,7 +28,7 @@ const AnalyticsDataGenerator: React.FC = () => {
         return;
       }
 
-      const sampleEvents: UserEngagementEvent[] = [];
+      const sampleEvents: UserEngagementEventDB[] = [];
       const eventTypes = ['phone_click', 'website_click', 'booking_click', 'directions_click', 'email_click'] as const;
       const sources = ['search', 'category', 'premium', 'related'];
       const devices = ['mobile', 'tablet', 'desktop'] as const;
@@ -61,25 +61,26 @@ const AnalyticsDataGenerator: React.FC = () => {
             eventTime.setHours(Math.floor(Math.random() * 24));
             eventTime.setMinutes(Math.floor(Math.random() * 60));
 
-            const event: UserEngagementEvent = {
-              businessId: business.business_id,
-              businessName: business.name,
-              eventType: eventTypes[Math.floor(Math.random() * eventTypes.length)],
-              eventData: {
+            const event: UserEngagementEventDB = {
+              id: `event_${day}_${business.business_id}_${i}_${Date.now()}_${Math.random()}`,
+              business_id: business.business_id,
+              event_type: eventTypes[Math.floor(Math.random() * eventTypes.length)],
+              event_data: {
+                businessName: business.name,
                 source: sources[Math.floor(Math.random() * sources.length)],
                 deviceType: devices[Math.floor(Math.random() * devices.length)],
                 searchQuery: Math.random() > 0.7 ? `${business.category} near me` : undefined,
                 userAgent: `Analytics Data Generator - ${SAMPLE_DATA_IDENTIFIER}`,
                 sampleDataId: SAMPLE_DATA_IDENTIFIER, // Mark as sample data for easy cleanup
                 location: {
-                  city: business.city,
-                  state: business.state,
+                  city: business.city || undefined,
+                  state: business.state || undefined,
                   country: 'US'
                 }
               },
-              timestamp: eventTime,
-              userSessionId: `session_${day}_${business.business_id}_${i}_${Date.now()}`,
-              ipAddress: `192.168.1.${Math.floor(Math.random() * 255)}`
+              timestamp: eventTime.toISOString(),
+              session_id: `session_${day}_${business.business_id}_${i}_${Date.now()}`,
+              ip_address: `192.168.1.${Math.floor(Math.random() * 255)}`
             };
 
             sampleEvents.push(event);

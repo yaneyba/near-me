@@ -5,10 +5,6 @@ import {
   CheckCircle, 
   Star, 
   TrendingUp, 
-  BarChart3, 
-  Calendar, 
-  Navigation, 
-  Camera, 
   Loader2, 
   AlertCircle 
 } from 'lucide-react';
@@ -22,7 +18,11 @@ const PricingSection: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubscribe = async (priceId: string, productName: string) => {
+  // Get products by price ID
+  const premiumProduct = STRIPE_PRODUCTS.find(p => p.priceId === 'price_premium_business');
+  const featuredProduct = STRIPE_PRODUCTS.find(p => p.priceId === 'price_featured_business');
+
+  const handleSubscribe = async (priceId: string) => {
     try {
       if (!user) {
         navigate('/login', { state: { from: '/business-owners', message: 'Please log in to subscribe to a plan' } });
@@ -32,12 +32,16 @@ const PricingSection: React.FC = () => {
       setLoading(priceId);
       setError(null);
 
-      const { url } = await createCheckoutSession(priceId);
+      // For now, use a placeholder business profile ID
+      // In production, this would come from the user's authenticated profile
+      const businessProfileId = 'current-business-profile-id';
       
-      if (url) {
-        window.location.href = url;
+      const result = await createCheckoutSession(priceId, businessProfileId);
+      
+      if (result.success && result.url) {
+        window.location.href = result.url;
       } else {
-        throw new Error('Failed to create checkout session');
+        throw new Error(result.message || result.error || 'Failed to create checkout session');
       }
     } catch (err) {
       console.error('Checkout error:', err);
@@ -76,7 +80,7 @@ const PricingSection: React.FC = () => {
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden border-2 border-yellow-200 transform transition-all duration-300 hover:scale-105 hover:shadow-2xl">
             <div className="bg-gradient-to-r from-yellow-400 to-orange-500 p-6">
               <div className="flex items-center justify-between">
-                <h3 className="text-2xl font-bold text-white">{STRIPE_PRODUCTS.PREMIUM_BUSINESS.name}</h3>
+                <h3 className="text-2xl font-bold text-white">{premiumProduct?.name}</h3>
                 <Crown className="w-8 h-8 text-white" />
               </div>
               <div className="mt-4 flex items-baseline">
@@ -87,7 +91,7 @@ const PricingSection: React.FC = () => {
             
             <div className="p-6">
               <p className="text-gray-600 mb-6">
-                {STRIPE_PRODUCTS.PREMIUM_BUSINESS.description}
+                {premiumProduct?.description}
               </p>
               
               <div className="space-y-4 mb-8">
@@ -129,11 +133,11 @@ const PricingSection: React.FC = () => {
               </div>
               
               <button
-                onClick={() => handleSubscribe(STRIPE_PRODUCTS.PREMIUM_BUSINESS.priceId, STRIPE_PRODUCTS.PREMIUM_BUSINESS.name)}
+                onClick={() => handleSubscribe(premiumProduct?.priceId || '')}
                 disabled={loading !== null}
                 className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white py-3 px-6 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                {loading === STRIPE_PRODUCTS.PREMIUM_BUSINESS.priceId ? (
+                {loading === premiumProduct?.priceId ? (
                   <>
                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                     Processing...
@@ -152,7 +156,7 @@ const PricingSection: React.FC = () => {
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden border-2 border-purple-200 transform transition-all duration-300 hover:scale-105 hover:shadow-2xl">
             <div className="bg-gradient-to-r from-purple-500 to-indigo-600 p-6">
               <div className="flex items-center justify-between">
-                <h3 className="text-2xl font-bold text-white">{STRIPE_PRODUCTS.FEATURED_BUSINESS.name}</h3>
+                <h3 className="text-2xl font-bold text-white">{featuredProduct?.name}</h3>
                 <TrendingUp className="w-8 h-8 text-white" />
               </div>
               <div className="mt-4 flex items-baseline">
@@ -163,7 +167,7 @@ const PricingSection: React.FC = () => {
             
             <div className="p-6">
               <p className="text-gray-600 mb-6">
-                {STRIPE_PRODUCTS.FEATURED_BUSINESS.description}
+                {featuredProduct?.description}
               </p>
               
               <div className="space-y-4 mb-8">
@@ -205,11 +209,11 @@ const PricingSection: React.FC = () => {
               </div>
               
               <button
-                onClick={() => handleSubscribe(STRIPE_PRODUCTS.FEATURED_BUSINESS.priceId, STRIPE_PRODUCTS.FEATURED_BUSINESS.name)}
+                onClick={() => handleSubscribe(featuredProduct?.priceId || '')}
                 disabled={loading !== null}
                 className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white py-3 px-6 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                {loading === STRIPE_PRODUCTS.FEATURED_BUSINESS.priceId ? (
+                {loading === featuredProduct?.priceId ? (
                   <>
                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                     Processing...

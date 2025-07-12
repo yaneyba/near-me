@@ -1,42 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  Building, 
   TrendingUp, 
   Users, 
   Star, 
   Crown, 
   CheckCircle, 
   ArrowRight, 
-  Phone, 
-  Mail, 
   MapPin,
-  Calendar,
-  DollarSign,
-  Target,
-  Zap,
   Shield,
   Globe,
   BarChart3,
   MessageSquare,
-  Camera,
-  Clock,
-  Award,
-  Lightbulb,
-  FileText,
   HelpCircle,
   Plus,
-  Search,
-  Eye,
-  ThumbsUp
+  Eye
 } from 'lucide-react';
 import businessesData from '@/data/businesses.json';
-import { Business } from '@/types';
 import { SITE_INFO } from '@/siteInfo';
-import PricingSection from '@/components/PricingSection';
+import { PricingSection } from '@/components/shared/content';
 
 const BusinessOwnersPage: React.FC = () => {
-  const [businesses] = useState<Business[]>(businessesData);
+  const [businesses] = useState<any[]>(businessesData);
   const [stats, setStats] = useState({
     totalBusinesses: 0,
     totalCategories: 0,

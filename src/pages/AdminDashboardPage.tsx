@@ -19,9 +19,9 @@ import {
 import { DataProviderFactory } from '@/providers';
 import { useAuth } from '@/lib/auth';
 import { useNavigate } from 'react-router-dom';
-import Pagination from '@/components/Pagination';
+import { Pagination } from '@/components/shared/ui';
 import usePagination from '@/hooks/usePagination';
-import AnalyticsDashboard from '@/components/AnalyticsDashboard';
+import { AnalyticsDashboard } from '@/components/shared/analytics';
 
 const AdminDashboardPage: React.FC = () => {
   // State for active tab

@@ -2,13 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { 
   Crown, 
   CreditCard, 
-  Calendar, 
   CheckCircle, 
   Clock, 
-  ArrowRight, 
   AlertCircle, 
   Loader2,
-  DollarSign,
   Star,
   Shield,
   Zap,
