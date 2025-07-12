@@ -1,5 +1,5 @@
-import { UserEngagementEvent } from '@/types';
-import { DataProviderFactory } from '@/providers';
+import { UserEngagementEventDB } from '@/types';
+import { DataProviderFactory } from '@/providers/DataProviderFactory';
 
 // Read tracking configuration from environment variables
 const TRACKING_ENABLED = import.meta.env.VITE_SETTINGS_ENABLE_TRACKING === 'true';
@@ -83,8 +83,8 @@ class EngagementTracker {
   async trackEvent(
     businessId: string,
     businessName: string,
-    eventType: UserEngagementEvent['eventType'],
-    eventData?: UserEngagementEvent['eventData']
+    eventType: 'view' | 'phone_click' | 'website_click' | 'booking_click' | 'directions_click' | 'email_click' | 'hours_view' | 'services_expand' | 'photo_view',
+    eventData?: Record<string, any>
   ): Promise<void> {
     try {
       // Check if tracking is enabled - early return if disabled
@@ -102,11 +102,12 @@ class EngagementTracker {
 
       const location = await this.getLocationData();
       
-      const event: UserEngagementEvent = {
-        businessId,
-        businessName,
-        eventType,
-        eventData: {
+      const event: UserEngagementEventDB = {
+        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        business_id: businessId,
+        event_type: eventType,
+        event_data: {
+          businessName,
           ...eventData,
           userAgent: navigator.userAgent,
           referrer: document.referrer,
@@ -114,8 +115,9 @@ class EngagementTracker {
           deviceType: this.getDeviceType(),
           location
         },
-        timestamp: new Date(),
-        userSessionId: this.sessionId
+        timestamp: new Date().toISOString(),
+        user_agent: navigator.userAgent,
+        session_id: this.sessionId
       };
 
       // Track the event
