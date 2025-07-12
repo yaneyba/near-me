@@ -3,13 +3,14 @@ import { SubdomainInfo } from '@/types';
 import { Layout as WaterRefillLayout } from '@/components/layouts/water-refill';
 import { Link } from 'react-router-dom';
 import { DataProviderFactory } from '@/providers/DataProviderFactory';
+import { WaterStationCard, transformBusinessToWaterStation, WaterStation } from '@/components/water-refill';
 
 interface WaterRefillHomePageProps {
   subdomainInfo: SubdomainInfo;
 }
 
 const WaterRefillHomePage: React.FC<WaterRefillHomePageProps> = ({ subdomainInfo }) => {
-  const [featuredStations, setFeaturedStations] = useState<any[]>([]);
+  const [featuredStations, setFeaturedStations] = useState<WaterStation[]>([]);
   const [loading, setLoading] = useState(true);
 
   const dataProvider = DataProviderFactory.getProvider();
@@ -20,10 +21,11 @@ const WaterRefillHomePage: React.FC<WaterRefillHomePageProps> = ({ subdomainInfo
         // Get water-refill businesses from data provider
         const businesses = await dataProvider.getBusinesses('water-refill', 'san-francisco');
         
-        // Take the top 3 highest-rated stations as featured
+        // Take the top 3 highest-rated stations as featured and transform them
         const featured = businesses
           .sort((a, b) => (b.rating || 0) - (a.rating || 0))
-          .slice(0, 3);
+          .slice(0, 3)
+          .map(transformBusinessToWaterStation);
         
         setFeaturedStations(featured);
       } catch (error) {
@@ -36,53 +38,6 @@ const WaterRefillHomePage: React.FC<WaterRefillHomePageProps> = ({ subdomainInfo
 
     loadFeaturedStations();
   }, [dataProvider]);
-
-  const renderStationCard = (station: any) => (
-    <div key={station.id} className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-      <div className="aspect-video bg-gray-100 rounded-lg mb-4 overflow-hidden relative">
-        {station.imageUrl ? (
-          <img 
-            src={station.imageUrl} 
-            alt={station.name}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
-            <svg className="w-12 h-12 text-blue-300" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
-            </svg>
-          </div>
-        )}
-      </div>
-      <h3 className="font-semibold text-lg mb-2">{station.name}</h3>
-      <p className="text-gray-600 text-sm mb-3">{station.address}, {station.city}, {station.state}</p>
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center">
-          <span className="text-yellow-400">★</span>
-          <span className="ml-1 text-sm">{station.rating}</span>
-        </div>
-        <div className="text-blue-600 font-semibold">$0.50/gal</div>
-      </div>
-      <div className="flex flex-wrap gap-2 mb-4">
-        {station.services?.slice(0, 3).map((service: string, index: number) => (
-          <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-            {service}
-          </span>
-        )) || (
-          <>
-            <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Purified</span>
-            <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Quality Water</span>
-          </>
-        )}
-      </div>
-      <Link 
-        to={`/station/${station.id}`}
-        className="w-full bg-blue-50 text-blue-600 py-2 rounded hover:bg-blue-100 block text-center"
-      >
-        View Details
-      </Link>
-    </div>
-  );
 
   return (
     <WaterRefillLayout subdomainInfo={subdomainInfo}>
@@ -98,7 +53,13 @@ const WaterRefillHomePage: React.FC<WaterRefillHomePageProps> = ({ subdomainInfo
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              {featuredStations.map(renderStationCard)}
+              {featuredStations.map(station => (
+                <WaterStationCard
+                  key={station.id}
+                  station={station}
+                  compact={true}
+                />
+              ))}
             </div>
           )}
           

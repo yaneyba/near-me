@@ -1,34 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { SubdomainInfo } from '@/types';
 import { Layout as WaterRefillLayout } from '@/components/layouts/water-refill';
-import { Star, MapPin, Clock, Phone, CreditCard, Droplets, X } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { MapPin, Droplets, X } from 'lucide-react';
 import { DataProviderFactory } from '@/providers/DataProviderFactory';
-
-interface WaterStation {
-  id: string;
-  name: string;
-  address: string;
-  city: string;
-  state: string;
-  phone?: string;
-  rating: number;
-  priceRange: string;
-  distance: string;
-  isOpen: boolean;
-  hours: string;
-  amenities: string[];
-  lat: number;
-  lng: number;
-}
+import { 
+  WaterStationCard, 
+  WaterStation as WaterStationType, 
+  transformBusinessToWaterStation 
+} from '@/components/water-refill';
 
 interface WaterRefillStationsPageProps {
   subdomainInfo: SubdomainInfo;
 }
 
 const WaterRefillStationsPage: React.FC<WaterRefillStationsPageProps> = ({ subdomainInfo }) => {
-  const [stations, setStations] = useState<WaterStation[]>([]);
-  const [selectedStation, setSelectedStation] = useState<WaterStation | null>(null);
+  const [stations, setStations] = useState<WaterStationType[]>([]);
+  const [selectedStation, setSelectedStation] = useState<WaterStationType | null>(null);
   const [loading, setLoading] = useState(true);
   const [showMobileMap, setShowMobileMap] = useState(false);
 
@@ -40,23 +27,8 @@ const WaterRefillStationsPage: React.FC<WaterRefillStationsPageProps> = ({ subdo
         // Get water-refill businesses from data provider
         const businesses = await dataProvider.getBusinesses('water-refill', 'san-francisco');
         
-        // Transform business data to station format
-        const transformedStations: WaterStation[] = businesses.map(business => ({
-          id: business.id,
-          name: business.name,
-          address: business.address || 'Address not available',
-          city: business.city || 'San Francisco',
-          state: business.state || 'CA',
-          phone: business.phone || undefined,
-          rating: business.rating || 0,
-          priceRange: '$', // Default price range for water refill
-          distance: '0.5 mi', // This would be calculated based on user location
-          isOpen: true, // This would be determined by current time vs business hours
-          hours: '24/7 Access', // Simplified for now
-          amenities: ['Credit Card Accepted', 'Quality Water'], // Default amenities
-          lat: business.latitude || 37.7749,
-          lng: business.longitude || -122.4194
-        }));
+        // Transform business data to station format - ONLY use real data
+        const transformedStations: WaterStationType[] = businesses.map(transformBusinessToWaterStation);
 
         setStations(transformedStations);
       } catch (error) {
@@ -80,72 +52,6 @@ const WaterRefillStationsPage: React.FC<WaterRefillStationsPageProps> = ({ subdo
       </WaterRefillLayout>
     );
   }
-
-  const renderStationCard = (station: WaterStation) => (
-    <div 
-      key={station.id}
-      className={`bg-white border rounded-lg p-4 sm:p-6 cursor-pointer hover:shadow-lg active:scale-[0.98] transition-all duration-200 ${
-        selectedStation?.id === station.id ? 'border-blue-500 shadow-lg ring-2 ring-blue-100' : 'border-gray-200'
-      }`}
-      onClick={() => setSelectedStation(station)}
-    >
-      <div className="flex flex-col xs:flex-row xs:justify-between xs:items-start mb-3 gap-2">
-        <h3 className="font-semibold text-gray-900 text-lg leading-tight">{station.name}</h3>
-        <div className="flex items-center flex-shrink-0 xs:ml-2">
-          <Star className="w-4 h-4 text-yellow-400 fill-current" />
-          <span className="ml-1 text-sm font-medium text-gray-600">{station.rating}</span>
-        </div>
-      </div>
-      
-      <div className="flex items-start text-sm text-gray-600 mb-3">
-        <MapPin className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0 text-gray-400" />
-        <span className="break-words leading-relaxed">{station.address}, {station.city}, {station.state}</span>
-      </div>
-      
-      <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between text-sm text-gray-600 mb-3 gap-2">
-        <div className="flex items-center flex-wrap">
-          <Clock className="w-4 h-4 mr-1 flex-shrink-0 text-gray-400" />
-          <span className={`font-medium ${station.isOpen ? 'text-green-600' : 'text-red-600'}`}>
-            {station.isOpen ? 'Open' : 'Closed'}
-          </span>
-          <span className="ml-1 text-gray-500">• {station.hours}</span>
-        </div>
-        <span className="text-blue-600 font-semibold text-sm">{station.distance}</span>
-      </div>
-
-      <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between mb-4 gap-2">
-        <div className="flex items-center">
-          <Droplets className="w-4 h-4 text-blue-500 mr-2" />
-          <span className="font-bold text-lg text-blue-600">{station.priceRange}</span>
-        </div>
-        {station.phone && (
-          <div className="flex items-center text-sm text-gray-600">
-            <Phone className="w-4 h-4 mr-1 flex-shrink-0 text-gray-400" />
-            <span className="truncate">{station.phone}</span>
-          </div>
-        )}
-      </div>
-
-      <div className="flex flex-wrap gap-1.5 mb-4">
-        {station.amenities.map((amenity, index) => (
-          <span 
-            key={index}
-            className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border"
-          >
-            {amenity.includes('Credit Card') && <CreditCard className="w-3 h-3 mr-1" />}
-            {amenity}
-          </span>
-        ))}
-      </div>
-
-      <Link 
-        to={`/station/${station.id}`}
-        className="w-full bg-blue-600 text-white py-3.5 px-4 rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors text-center font-semibold shadow-sm hover:shadow-md min-h-[44px] touch-manipulation flex items-center justify-center"
-      >
-        View Details
-      </Link>
-    </div>
-  );
 
   return (
     <WaterRefillLayout subdomainInfo={subdomainInfo} showSearchBar={true}>
@@ -178,7 +84,14 @@ const WaterRefillStationsPage: React.FC<WaterRefillStationsPageProps> = ({ subdo
             
             <div className="space-y-4 sm:space-y-6">
               {stations.length > 0 ? (
-                stations.map(renderStationCard)
+                stations.map(station => (
+                  <WaterStationCard
+                    key={station.id}
+                    station={station}
+                    isSelected={selectedStation?.id === station.id}
+                    onClick={() => setSelectedStation(station)}
+                  />
+                ))
               ) : (
                 <div className="text-center py-12">
                   <Droplets className="w-12 h-12 text-gray-400 mx-auto mb-4" />
