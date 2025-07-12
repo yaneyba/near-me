@@ -4,6 +4,7 @@ import { Droplets } from 'lucide-react';
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
   variant?: 'full' | 'icon-only' | 'text-only';
+  theme?: 'light' | 'dark';
   className?: string;
   onClick?: () => void;
 }
@@ -11,6 +12,7 @@ interface LogoProps {
 const Logo: React.FC<LogoProps> = ({ 
   size = 'md', 
   variant = 'full', 
+  theme = 'light',
   className = '',
   onClick 
 }) => {
@@ -45,24 +47,44 @@ const Logo: React.FC<LogoProps> = ({
   const config = sizeConfig[size];
   const isClickable = !!onClick;
 
+  // Theme-based color configuration
+  const themeColors = {
+    light: {
+      icon: 'text-blue-500',
+      iconFill: 'fill-current',
+      droplet: 'bg-blue-300',
+      title: 'text-gray-900',
+      subtitle: 'text-blue-600'
+    },
+    dark: {
+      icon: 'text-blue-200',
+      iconFill: 'fill-current',
+      droplet: 'bg-blue-400',
+      title: 'text-white',
+      subtitle: 'text-blue-200'
+    }
+  };
+
+  const colors = themeColors[theme];
+
   const LogoContent = () => (
     <>
       {/* Icon */}
       {(variant === 'full' || variant === 'icon-only') && (
         <div className="relative">
-          <Droplets className={`${config.icon} text-blue-500 fill-current`} />
+          <Droplets className={`${config.icon} ${colors.icon} ${colors.iconFill}`} />
           {/* Water droplet effect */}
-          <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-300 rounded-full opacity-70 animate-pulse"></div>
+          <div className={`absolute -top-1 -right-1 w-2 h-2 ${colors.droplet} rounded-full opacity-70 animate-pulse`}></div>
         </div>
       )}
 
       {/* Text */}
       {(variant === 'full' || variant === 'text-only') && (
         <div className="flex flex-col">
-          <h1 className={`${config.text} font-bold text-gray-900 leading-tight`}>
+          <h1 className={`${config.text} font-bold ${colors.title} leading-tight`}>
             AquaFinder
           </h1>
-          <p className={`${config.subtitle} text-blue-600 font-medium leading-tight`}>
+          <p className={`${config.subtitle} ${colors.subtitle} font-medium leading-tight`}>
             Find Water Stations
           </p>
         </div>

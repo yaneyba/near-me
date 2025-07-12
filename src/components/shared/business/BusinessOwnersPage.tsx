@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  Building, 
   TrendingUp, 
   Users, 
   Star, 
@@ -12,30 +11,21 @@ import {
   Mail, 
   MapPin,
   Calendar,
-  DollarSign,
-  Target,
   Zap,
   Shield,
   Globe,
   BarChart3,
   MessageSquare,
   Camera,
-  Clock,
-  Award,
-  Lightbulb,
-  FileText,
   HelpCircle,
   Plus,
-  Search,
-  Eye,
-  ThumbsUp
+  Eye
 } from 'lucide-react';
 import businessesData from '@/data/businesses.json';
-import { Business } from '@/types';
 import { SITE_INFO } from '@/siteInfo';
 
 const BusinessOwnersPage: React.FC = () => {
-  const [businesses] = useState<Business[]>(businessesData);
+  const [businesses] = useState<any[]>(businessesData as any[]);
   const [stats, setStats] = useState({
     totalBusinesses: 0,
     totalCategories: 0,
@@ -47,8 +37,8 @@ const BusinessOwnersPage: React.FC = () => {
     document.title = 'For Business Owners - Near Me Directory';
     
     // Calculate stats
-    const categories = new Set(businesses.map(b => b.category));
-    const cities = new Set(businesses.map(b => b.city));
+    const categories = new Set(businesses.map(b => b.category).filter(Boolean));
+    const cities = new Set(businesses.map(b => b.city).filter(Boolean));
     const premium = businesses.filter(b => b.premium);
     
     setStats({

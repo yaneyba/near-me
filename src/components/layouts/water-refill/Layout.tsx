@@ -3,7 +3,8 @@ import { SubdomainInfo } from '@/types';
 import Footer from '@/components/Footer';
 import DevPanel from '@/components/DevPanel';
 import { Link } from 'react-router-dom';
-import { Droplets, Search, MapPin, Filter } from 'lucide-react';
+import { Search, MapPin, Filter } from 'lucide-react';
+import { Logo } from '@/components/water-refill';
 
 interface WaterRefillLayoutProps {
   children: React.ReactNode;
@@ -28,15 +29,12 @@ const WaterRefillLayout: React.FC<WaterRefillLayoutProps> = ({ children, subdoma
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo and Brand */}
-            <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
-              <Droplets className="w-8 h-8 mr-3 text-blue-200" />
-              <div>
-                <h1 className="text-xl font-bold">
-                  AquaFinder
-                </h1>
-                <p className="text-blue-200 text-sm">Find Water Stations</p>
-              </div>
-            </Link>
+            <Logo 
+              size="md" 
+              variant="full" 
+              theme="dark"
+              onClick={() => window.location.href = '/'}
+            />
 
             {/* Navigation */}
             <nav className="hidden md:flex space-x-6">

@@ -2,7 +2,6 @@ import React from 'react';
 import { MapPin, Phone, Mail, Clock, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import businessesData from '@/data/businesses.json';
-import { Business } from '@/types';
 import { SITE_INFO } from '@/siteInfo';
 
 interface FooterProps {
@@ -13,7 +12,7 @@ interface FooterProps {
 
 const Footer: React.FC<FooterProps> = ({ category, city, state }) => {
   const currentYear = new Date().getFullYear();
-  const businesses = businessesData as Business[];
+  const businesses = businessesData as any[]; // Use any[] to avoid type conflicts
 
   // Get categories that actually exist in the CURRENT CITY
   const getExistingCategoriesInCurrentCity = (): string[] => {
@@ -22,17 +21,19 @@ const Footer: React.FC<FooterProps> = ({ category, city, state }) => {
     // Only look at businesses in the current city
     businesses
       .filter(business => {
+        if (!business.city) return false;
         const businessCity = business.city
           .split('-')
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
           .join(' ');
         return businessCity === city;
       })
       .forEach(business => {
+        if (!business.category) return;
         // Convert kebab-case to Title Case for display
         const displayCategory = business.category
           .split('-')
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
           .join(' ');
         categorySet.add(displayCategory);
       });
@@ -51,10 +52,11 @@ const Footer: React.FC<FooterProps> = ({ category, city, state }) => {
     businesses
       .filter(business => business.category === currentCategoryKebab)
       .forEach(business => {
+        if (!business.city) return;
         // Convert kebab-case to Title Case for display
         const displayCity = business.city
           .split('-')
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
           .join(' ');
         citySet.add(displayCity);
       });
