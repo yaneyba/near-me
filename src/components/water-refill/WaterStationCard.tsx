@@ -22,7 +22,7 @@ const WaterStationCard: React.FC<WaterStationCardProps> = ({
   const location = useLocation();
   const isHomePage = location.pathname === '/';
   
-  // Smart address formatting - avoid duplication
+  // Simple address formatting - avoid duplication
   const formatAddress = (address: string, city: string, state: string): string => {
     if (!address) return [city, state].filter(Boolean).join(', ') || 'Address not available';
     
@@ -71,11 +71,34 @@ const WaterStationCard: React.FC<WaterStationCardProps> = ({
         <div className="space-y-3">
           <h3 className="font-bold text-xl text-gray-900 leading-tight">{station.name}</h3>
           
-          <div className="flex items-start text-gray-600">
-            <MapPin className="w-4 h-4 mr-2 mt-1 text-gray-400 flex-shrink-0" />
-            <p className="text-sm leading-relaxed">
-              {formatAddress(station.address, station.city, station.state)}
-            </p>
+          <div className="flex items-start space-x-2">
+            <div className="bg-gray-100 p-2 rounded-lg flex-shrink-0">
+              <MapPin className="w-4 h-4 text-gray-500" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm text-gray-700 leading-relaxed font-medium space-y-1">
+                {(() => {
+                  const fullAddress = formatAddress(station.address, station.city, station.state);
+                  const parts = fullAddress.split(', ');
+                  
+                  if (parts.length >= 3) {
+                    // Extract street and city/state parts
+                    const street = parts[0];
+                    const cityStateParts = parts.slice(1).join(', ');
+                    
+                    return (
+                      <>
+                        <div>{street}</div>
+                        <div className="text-gray-600">{cityStateParts}</div>
+                      </>
+                    );
+                  }
+                  
+                  return <div>{fullAddress}</div>;
+                })()}
+              </div>
+              <p className="text-xs text-gray-500 mt-2">Water refill location</p>
+            </div>
           </div>
           
           <div className="flex items-center justify-between">
@@ -160,9 +183,27 @@ const WaterStationCard: React.FC<WaterStationCardProps> = ({
       
           <div className="flex items-start text-sm text-gray-600 mb-2">
             <MapPin className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0 text-gray-400" />
-            <span className="break-words leading-relaxed">
-              {formatAddress(station.address, station.city, station.state)}
-            </span>
+            <div className="break-words leading-relaxed space-y-0.5">
+              {(() => {
+                const fullAddress = formatAddress(station.address, station.city, station.state);
+                const parts = fullAddress.split(', ');
+                
+                if (parts.length >= 3) {
+                  // Extract street and city/state parts
+                  const street = parts[0];
+                  const cityStateParts = parts.slice(1).join(', ');
+                  
+                  return (
+                    <>
+                      <div>{street}</div>
+                      <div className="text-gray-500 text-xs">{cityStateParts}</div>
+                    </>
+                  );
+                }
+                
+                return <div>{fullAddress}</div>;
+              })()}
+            </div>
           </div>
       
           {(station.hours || station.distance) && (
