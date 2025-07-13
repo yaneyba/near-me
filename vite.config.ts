@@ -46,7 +46,10 @@ export default defineConfig({
     // Optimize chunks
     chunkSizeWarningLimit: 1000,
     // Force rebuild on changes
-    emptyOutDir: true
+    emptyOutDir: true,
+    // Additional cache busting
+    target: 'esnext',
+    minify: 'esbuild'
   },
   // Add version to build
   define: {
