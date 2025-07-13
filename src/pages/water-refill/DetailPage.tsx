@@ -6,11 +6,11 @@ import { MapPin, Phone, Globe, CheckCircle, Home, ChevronRight, Droplets } from 
 import { DataProviderFactory } from '@/providers/DataProviderFactory';
 import { Stars, WaterStationDetail, transformBusinessToWaterStationDetail, formatAddress } from '@/components/water-refill';
 
-interface WaterRefillDetailPageProps {
+interface DetailPageProps {
   subdomainInfo: SubdomainInfo;
 }
 
-const WaterRefillDetailPage: React.FC<WaterRefillDetailPageProps> = ({ subdomainInfo }) => {
+const DetailPage: React.FC<DetailPageProps> = ({ subdomainInfo }) => {
   const { stationId } = useParams<{ stationId: string }>();
   const [station, setStation] = useState<WaterStationDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -304,4 +304,4 @@ const WaterRefillDetailPage: React.FC<WaterRefillDetailPageProps> = ({ subdomain
   );
 };
 
-export default WaterRefillDetailPage;
+export default DetailPage;

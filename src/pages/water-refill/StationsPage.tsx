@@ -11,11 +11,11 @@ import {
   Pagination
 } from '@/components/water-refill';
 
-interface WaterRefillStationsPageProps {
+interface StationsPageProps {
   subdomainInfo: SubdomainInfo;
 }
 
-const WaterRefillStationsPage: React.FC<WaterRefillStationsPageProps> = ({ subdomainInfo }) => {
+const StationsPage: React.FC<StationsPageProps> = ({ subdomainInfo }) => {
   const [stations, setStations] = useState<WaterStationType[]>([]);
   const [selectedStation, setSelectedStation] = useState<WaterStationType | null>(null);
   const [loading, setLoading] = useState(true);
@@ -370,4 +370,4 @@ const WaterRefillStationsPage: React.FC<WaterRefillStationsPageProps> = ({ subdo
   );
 };
 
-export default WaterRefillStationsPage;
+export default StationsPage;

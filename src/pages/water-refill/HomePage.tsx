@@ -5,11 +5,11 @@ import { Link } from 'react-router-dom';
 import { DataProviderFactory } from '@/providers/DataProviderFactory';
 import { WaterStationCard, transformBusinessToWaterStation, WaterStation } from '@/components/water-refill';
 
-interface WaterRefillHomePageProps {
+interface HomePageProps {
   subdomainInfo: SubdomainInfo;
 }
 
-const WaterRefillHomePage: React.FC<WaterRefillHomePageProps> = ({ subdomainInfo }) => {
+const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
   const [featuredStations, setFeaturedStations] = useState<WaterStation[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -161,4 +161,4 @@ const WaterRefillHomePage: React.FC<WaterRefillHomePageProps> = ({ subdomainInfo
   );
 };
 
-export default WaterRefillHomePage;
+export default HomePage;

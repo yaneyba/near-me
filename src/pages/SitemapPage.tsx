@@ -17,7 +17,7 @@ import {
   Shield,
   Scale
 } from 'lucide-react';
-import { BusinessData } from '@/types';
+import { BusinessData, SubdomainInfo } from '@/types';
 import { DataProviderFactory } from '@/providers/DataProviderFactory';
 
 interface SitemapCategory {
@@ -43,7 +43,11 @@ interface SitemapCombination {
   url: string;
 }
 
-const SitemapPage: React.FC = () => {
+interface SitemapPageProps {
+  subdomainInfo: SubdomainInfo;
+}
+
+const SitemapPage: React.FC<SitemapPageProps> = ({ subdomainInfo }) => {
   const [businesses, setBusinesses] = useState<BusinessData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
