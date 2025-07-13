@@ -57,7 +57,15 @@ export class D1DataProvider implements IDataProvider {
     options: RequestInit = {}
   ): Promise<T> {
     try {
-      const url = `${this.apiBaseUrl}${endpoint}`;
+      // Check if we're on a subdomain - if so, use relative URLs to go through middleware proxy
+      const hostname = window.location.hostname;
+      const isSubdomain = hostname.includes('.near-me.us') && !hostname.startsWith('near-me.us');
+      
+      const url = isSubdomain ? endpoint : `${this.apiBaseUrl}${endpoint}`;
+      
+      // Debug logging
+      console.log(`D1DataProvider: hostname=${hostname}, isSubdomain=${isSubdomain}, url=${url}`);
+      
       const response = await fetch(url, {
         headers: this.defaultHeaders,
         ...options,
@@ -362,6 +370,76 @@ export class D1DataProvider implements IDataProvider {
         identifier: sampleDataIdentifier
       })
     });
+  }
+
+  // ==========================================
+  // FALLBACK AND STATISTICS METHODS
+  // ==========================================
+
+  async getFallbackCategories(): Promise<string[]> {
+    // Return static fallback categories if API fails
+    return [
+      'nail-salons',
+      'barbershops', 
+      'auto-repair',
+      'restaurants',
+      'water-refill',
+      'hair-salons',
+      'coffee-shops',
+      'dentists',
+      'lawyers',
+      'plumbers',
+      'electricians',
+      'gyms'
+    ];
+  }
+
+  async getFallbackCities(): Promise<string[]> {
+    // Return static fallback cities if API fails
+    return [
+      'san-francisco',
+      'los-angeles',
+      'san-diego',
+      'san-jose',
+      'sacramento',
+      'phoenix',
+      'las-vegas',
+      'denver',
+      'seattle',
+      'chicago',
+      'dallas',
+      'austin',
+      'miami',
+      'atlanta',
+      'boston'
+    ];
+  }
+
+  async getStatistics(): Promise<{
+    totalBusinesses: number;
+    totalCategories: number;
+    totalCities: number;
+    premiumBusinesses: number;
+  }> {
+    try {
+      // Try to get real statistics from API
+      const stats = await this.apiRequest<any>(ApiEndpoints.ADMIN_STATS);
+      return {
+        totalBusinesses: stats.totalBusinesses || 0,
+        totalCategories: stats.totalCategories || 12,
+        totalCities: stats.totalCities || 15,
+        premiumBusinesses: stats.premiumBusinesses || 0
+      };
+    } catch (error) {
+      console.warn('Failed to get statistics, using fallback:', error);
+      // Return fallback statistics
+      return {
+        totalBusinesses: 0,
+        totalCategories: 12,
+        totalCities: 15,
+        premiumBusinesses: 0
+      };
+    }
   }
 
   // ==========================================
