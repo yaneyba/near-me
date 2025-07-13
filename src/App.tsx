@@ -98,7 +98,7 @@ function App() {
           />
           <Route 
             path="/sitemap" 
-            element={<SitemapPage />} 
+            element={<SitemapPage subdomainInfo={subdomainInfo} />} 
           />
           <Route 
             path="/business-owners" 
@@ -124,8 +124,8 @@ function App() {
             />
           <Route path="/about" element={<AboutPage subdomainInfo={subdomainInfo} />} />
           <Route path="/contact" element={<ContactPage subdomainInfo={subdomainInfo} />} />
-          <Route path="/sitemap" element={<SitemapPage />} />
-          <Route path="/sitemap-generator" element={<SitemapPage />} />
+          <Route path="/sitemap" element={<SitemapPage subdomainInfo={subdomainInfo} />} />
+          <Route path="/sitemap-generator" element={<SitemapPage subdomainInfo={subdomainInfo} />} />
           <Route path="/add-business" element={<AddBusinessPage subdomainInfo={subdomainInfo} />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/terms-of-service" element={<TermsOfServicePage />} />
