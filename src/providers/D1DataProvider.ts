@@ -365,6 +365,60 @@ export class D1DataProvider implements IDataProvider {
   }
 
   // ==========================================
+  // STATISTICS CONFIGURATION
+  // ==========================================
+
+  async getStatistics(): Promise<any> {
+    try {
+      // Import the statistics configuration dynamically
+      const { getStatistics } = await import('@/config/statistics');
+      return getStatistics();
+    } catch (error) {
+      console.error('Failed to load statistics configuration:', error);
+      // Return minimal fallback
+      return {
+        general: {
+          defaultBusinessCount: 25
+        },
+        waterRefill: {
+          verifiedStations: 2500,
+          citiesCovered: 150,
+          customerSatisfaction: 4.8
+        },
+        contact: {
+          email: {
+            support: 'support@near-me.us',
+            business: 'business@near-me.us',
+            privacy: 'privacy@near-me.us',
+            legal: 'legal@near-me.us'
+          }
+        }
+      };
+    }
+  }
+
+  // Fallback data methods
+  async getFallbackCategories(): Promise<string[]> {
+    try {
+      const { STATISTICS } = await import('@/config/statistics');
+      return STATISTICS.general.fallbackCategories;
+    } catch (error) {
+      console.error('Failed to load fallback categories:', error);
+      return [];
+    }
+  }
+
+  async getFallbackCities(): Promise<string[]> {
+    try {
+      const { STATISTICS } = await import('@/config/statistics');
+      return STATISTICS.general.fallbackCities;
+    } catch (error) {
+      console.error('Failed to load fallback cities:', error);
+      return [];
+    }
+  }
+
+  // ==========================================
   // PRIVATE HELPER METHODS
   // ==========================================
 

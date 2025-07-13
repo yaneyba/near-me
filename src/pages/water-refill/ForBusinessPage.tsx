@@ -18,12 +18,15 @@ import {
   DollarSign,
   Clock
 } from 'lucide-react';
+import { getStatistics } from '@/config/statistics';
 
 interface WaterRefillForBusinessPageProps {
   subdomainInfo: SubdomainInfo;
 }
 
 const WaterRefillForBusinessPage: React.FC<WaterRefillForBusinessPageProps> = ({ subdomainInfo }) => {
+  const stats = getStatistics();
+  
   // Update document title
   useEffect(() => {
     document.title = 'For Business - Water Refill Station Finder';
@@ -219,19 +222,19 @@ const WaterRefillForBusinessPage: React.FC<WaterRefillForBusinessPageProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
               <div>
-                <div className="text-3xl font-bold text-blue-600 mb-2">2,500+</div>
+                <div className="text-3xl font-bold text-blue-600 mb-2">{stats.waterRefill.listedStations}+</div>
                 <div className="text-gray-600">Listed Stations</div>
               </div>
               <div>
-                <div className="text-3xl font-bold text-blue-600 mb-2">50K+</div>
+                <div className="text-3xl font-bold text-blue-600 mb-2">{stats.waterRefill.monthlySearches}</div>
                 <div className="text-gray-600">Monthly Searches</div>
               </div>
               <div>
-                <div className="text-3xl font-bold text-blue-600 mb-2">4.8★</div>
+                <div className="text-3xl font-bold text-blue-600 mb-2">{stats.waterRefill.averageRating}★</div>
                 <div className="text-gray-600">Average Rating</div>
               </div>
               <div>
-                <div className="text-3xl font-bold text-blue-600 mb-2">95%</div>
+                <div className="text-3xl font-bold text-blue-600 mb-2">{stats.waterRefill.customerSatisfaction}%</div>
                 <div className="text-gray-600">Customer Satisfaction</div>
               </div>
             </div>

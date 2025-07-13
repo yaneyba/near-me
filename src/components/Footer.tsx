@@ -12,9 +12,8 @@ interface FooterProps {
 const Footer: React.FC<FooterProps> = ({ category, city, state }) => {
   const [categories, setCategories] = useState<string[]>([]);
   const [cities, setCities] = useState<string[]>([]);
+  const [businessCount, setBusinessCount] = useState<number>(0);
   const currentYear = new Date().getFullYear();
-  // Use static data instead of dynamic business counts
-  const businessCount = 482;
 
   useEffect(() => {
     const loadData = async () => {
@@ -26,16 +25,46 @@ const Footer: React.FC<FooterProps> = ({ category, city, state }) => {
         ]);
         setCategories(categoriesData);
         setCities(citiesData);
+        
+        // Get business count for current category and city
+        try {
+          const businesses = await dataProvider.getBusinesses(category, city);
+          setBusinessCount(businesses.length);
+        } catch (error) {
+          console.warn('Failed to load business count, using fallback:', error);
+          // Get fallback from data provider statistics
+          try {
+            const stats = await dataProvider.getStatistics();
+            setBusinessCount(stats.general?.defaultBusinessCount);
+          } catch (statsError) {
+            console.warn('Failed to load statistics, using configuration fallback:', statsError);
+            // This will use the fallback defined in the data provider's getStatistics method
+            const fallbackStats = await dataProvider.getStatistics();
+            setBusinessCount(fallbackStats.general?.defaultBusinessCount);
+          }
+        }
       } catch (error) {
         console.error('Failed to load footer data:', error);
-        // Fallback to static data
-        setCategories(['nail-salons', 'barbershops', 'auto-repair', 'restaurants', 'water-refill']);
-        setCities(['san-francisco', 'los-angeles', 'san-diego', 'san-jose', 'sacramento']);
+        // Fallback to centralized static data
+        try {
+          const dataProvider = DataProviderFactory.getProvider();
+          const [fallbackCategories, fallbackCities, stats] = await Promise.all([
+            dataProvider.getFallbackCategories(),
+            dataProvider.getFallbackCities(),
+            dataProvider.getStatistics()
+          ]);
+          setCategories(fallbackCategories);
+          setCities(fallbackCities);
+          setBusinessCount(stats.general?.defaultBusinessCount);
+        } catch (statsError) {
+          console.error('Critical: Failed to load any fallback data, contact system admin:', statsError);
+          setBusinessCount(0); // Explicit failure state
+        }
       }
     };
 
     loadData();
-  }, []);
+  }, [category, city]);
 
   // Get categories that exist (using DataProvider)
   const getExistingCategoriesInCurrentCity = (): string[] => {

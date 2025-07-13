@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { FileText, Scale, Shield, AlertTriangle, CheckCircle, Users, Building, Globe, Mail, Phone, MapPin } from 'lucide-react';
+import { STATISTICS } from '../config/statistics';
 
 const TermsOfServicePage: React.FC = () => {
   useEffect(() => {
@@ -484,8 +485,8 @@ const TermsOfServicePage: React.FC = () => {
                   <Mail className="w-5 h-5 text-blue-600" />
                   <div>
                     <div className="font-medium text-blue-900">Email</div>
-                    <a href="mailto:legal@near-me.us" className="text-blue-700 hover:text-blue-800 underline">
-                      legal@near-me.us
+                    <a href={`mailto:${STATISTICS.contact.email.legal}`} className="text-blue-700 hover:text-blue-800 underline">
+                      {STATISTICS.contact.email.legal}
                     </a>
                   </div>
                 </div>
@@ -494,8 +495,8 @@ const TermsOfServicePage: React.FC = () => {
                   <Phone className="w-5 h-5 text-blue-600" />
                   <div>
                     <div className="font-medium text-blue-900">Phone</div>
-                    <a href="tel:+15551234567" className="text-blue-700 hover:text-blue-800">
-                      (555) 123-4567
+                    <a href={`tel:${STATISTICS.contact.phone}`} className="text-blue-700 hover:text-blue-800">
+                      {STATISTICS.contact.phoneFormatted}
                     </a>
                   </div>
                 </div>
@@ -507,8 +508,8 @@ const TermsOfServicePage: React.FC = () => {
                     <div className="text-blue-700">
                       Near Me Directory<br />
                       Legal Department<br />
-                      123 Business Ave<br />
-                      Dallas, TX 75201
+                      {STATISTICS.contact.address.street}, {STATISTICS.contact.address.suite}<br />
+                      {STATISTICS.contact.address.city}, {STATISTICS.contact.address.state} {STATISTICS.contact.address.zipCode}
                     </div>
                   </div>
                 </div>

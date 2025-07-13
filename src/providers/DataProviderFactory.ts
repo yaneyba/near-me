@@ -86,4 +86,32 @@ export class DataProviderFactory {
   static isInitialized(): boolean {
     return this.instance !== null;
   }
+
+  /**
+   * Get fallback categories from centralized configuration
+   */
+  static async getFallbackCategories(): Promise<string[]> {
+    try {
+      const { getStatistics } = await import('@/config/statistics');
+      const stats = getStatistics();
+      return stats.general?.fallbackCategories || [];
+    } catch (error) {
+      console.error('Failed to load fallback categories from config:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get fallback cities from centralized configuration
+   */
+  static async getFallbackCities(): Promise<string[]> {
+    try {
+      const { getStatistics } = await import('@/config/statistics');
+      const stats = getStatistics();
+      return stats.general?.fallbackCities || [];
+    } catch (error) {
+      console.error('Failed to load fallback cities from config:', error);
+      return [];
+    }
+  }
 }

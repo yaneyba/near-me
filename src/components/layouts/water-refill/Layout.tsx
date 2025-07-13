@@ -5,6 +5,7 @@ import DevPanel from '@/components/DevPanel';
 import { Link } from 'react-router-dom';
 import { Search, MapPin, Filter } from 'lucide-react';
 import { Logo } from '@/components/water-refill';
+import { getStatistics } from '@/config/statistics';
 
 interface WaterRefillLayoutProps {
   children: React.ReactNode;
@@ -157,24 +158,34 @@ const WaterRefillLayout: React.FC<WaterRefillLayoutProps> = ({ children, subdoma
 
   // Stats section like AquaFinder
   const renderStatsSection = () => {
+    const stats = getStatistics();
+    
     return (
       <section className="bg-gray-50 py-8 sm:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 text-center">
             <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-100">
-              <div className="text-2xl sm:text-3xl font-bold text-blue-600 mb-2">2,500+</div>
+              <div className="text-2xl sm:text-3xl font-bold text-blue-600 mb-2">
+                {stats.waterRefill.verifiedStations}+
+              </div>
               <div className="text-gray-600 text-sm sm:text-base">Verified Stations</div>
             </div>
             <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-100">
-              <div className="text-2xl sm:text-3xl font-bold text-blue-600 mb-2">50+</div>
+              <div className="text-2xl sm:text-3xl font-bold text-blue-600 mb-2">
+                {stats.waterRefill.citiesCovered}+
+              </div>
               <div className="text-gray-600 text-sm sm:text-base">Cities Covered</div>
             </div>
             <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-100">
-              <div className="text-2xl sm:text-3xl font-bold text-blue-600 mb-2">$0.25</div>
+              <div className="text-2xl sm:text-3xl font-bold text-blue-600 mb-2">
+                {stats.waterRefill.averagePricePerGallon}
+              </div>
               <div className="text-gray-600 text-sm sm:text-base">Average Price/Gallon</div>
             </div>
             <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-100">
-              <div className="text-2xl sm:text-3xl font-bold text-blue-600 mb-2">98%</div>
+              <div className="text-2xl sm:text-3xl font-bold text-blue-600 mb-2">
+                {stats.waterRefill.customerSatisfaction}%
+              </div>
               <div className="text-gray-600 text-sm sm:text-base">Customer Satisfaction</div>
             </div>
           </div>
