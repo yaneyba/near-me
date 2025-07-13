@@ -89,6 +89,22 @@ function App() {
             element={<LoginPage />} 
           />
           <Route 
+            path="/privacy-policy" 
+            element={<PrivacyPolicyPage />} 
+          />
+          <Route 
+            path="/terms-of-service" 
+            element={<TermsOfServicePage />} 
+          />
+          <Route 
+            path="/sitemap" 
+            element={<SitemapPage />} 
+          />
+          <Route 
+            path="/business-owners" 
+            element={<Navigate to="/for-business" replace />} 
+          />
+          <Route 
             path="/:city" 
             element={<WaterRefillHomePage subdomainInfo={subdomainInfo} />} 
           />
