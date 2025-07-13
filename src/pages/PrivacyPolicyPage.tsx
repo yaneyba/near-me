@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { Shield, Eye, Lock, Database, Users, Mail, Phone, MapPin, Calendar, AlertTriangle, CheckCircle } from 'lucide-react';
-import { STATISTICS } from '@/config/statistics';
 
 const PrivacyPolicyPage: React.FC = () => {
   useEffect(() => {
@@ -411,8 +410,8 @@ const PrivacyPolicyPage: React.FC = () => {
                   <Mail className="w-5 h-5 text-blue-600" />
                   <div>
                     <div className="font-medium text-blue-900">Email</div>
-                    <a href={`mailto:${STATISTICS.contact.email.privacy}`} className="text-blue-700 hover:text-blue-800 underline">
-                      {STATISTICS.contact.email.privacy}
+                    <a href="mailto:privacy@near-me.us" className="text-blue-700 hover:text-blue-800 underline">
+                      privacy@near-me.us
                     </a>
                   </div>
                 </div>
@@ -421,8 +420,8 @@ const PrivacyPolicyPage: React.FC = () => {
                   <Phone className="w-5 h-5 text-blue-600" />
                   <div>
                     <div className="font-medium text-blue-900">Phone</div>
-                    <a href={`tel:${STATISTICS.contact.phone}`} className="text-blue-700 hover:text-blue-800">
-                      {STATISTICS.contact.phoneFormatted}
+                    <a href="tel:+15551234567" className="text-blue-700 hover:text-blue-800">
+                      (555) 123-4567
                     </a>
                   </div>
                 </div>
@@ -434,8 +433,8 @@ const PrivacyPolicyPage: React.FC = () => {
                     <div className="text-blue-700">
                       Near Me Directory<br />
                       Privacy Department<br />
-                      {STATISTICS.contact.address.street}, {STATISTICS.contact.address.suite}<br />
-                      {STATISTICS.contact.address.city}, {STATISTICS.contact.address.state} {STATISTICS.contact.address.zipCode}
+                      123 Business Ave<br />
+                      Dallas, TX 75201
                     </div>
                   </div>
                 </div>

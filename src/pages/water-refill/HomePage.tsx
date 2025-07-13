@@ -148,18 +148,12 @@ const WaterRefillHomePage: React.FC<WaterRefillHomePageProps> = ({ subdomainInfo
             List your water refill station and connect with thousands of customers looking for quality water sources.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link 
-              to="/for-business" 
-              className="bg-white text-blue-600 px-8 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors inline-block text-center"
-            >
+            <button className="bg-white text-blue-600 px-8 py-3 rounded-lg font-medium hover:bg-gray-100">
               List Your Business
-            </Link>
-            <Link 
-              to="/about" 
-              className="border border-white text-white px-8 py-3 rounded-lg font-medium hover:bg-white hover:text-blue-600 transition-colors inline-block text-center"
-            >
+            </button>
+            <button className="border border-white text-white px-8 py-3 rounded-lg font-medium hover:bg-white hover:text-blue-600">
               Learn More
-            </Link>
+            </button>
           </div>
         </div>
       </section>

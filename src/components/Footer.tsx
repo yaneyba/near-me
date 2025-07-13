@@ -28,7 +28,14 @@ const Footer: React.FC<FooterProps> = ({ category, city, state }) => {
         
         // Get business count for current category and city
         try {
-          const businesses = await dataProvider.getBusinesses(category, city);
+          let businesses;
+          if (city === 'All Cities' || !city) {
+            // Use category-wide search for all cities
+            businesses = await dataProvider.getBusinessesByCategory(category);
+          } else {
+            // Use specific city search
+            businesses = await dataProvider.getBusinesses(category, city);
+          }
           setBusinessCount(businesses.length);
         } catch (error) {
           console.warn('Failed to load business count, using fallback:', error);
@@ -84,6 +91,7 @@ const Footer: React.FC<FooterProps> = ({ category, city, state }) => {
   };
 
   const formatCityForDisplay = (citySlug: string) => {
+    if (!citySlug || citySlug === 'All Cities') return 'All Cities';
     return citySlug
       .split('-')
       .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -91,14 +99,16 @@ const Footer: React.FC<FooterProps> = ({ category, city, state }) => {
   };
 
   const formatCategoryForDisplay = (categorySlug: string) => {
+    if (!categorySlug) return 'Services';
     return categorySlug
       .split('-')
       .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
   };
 
-  const cityDisplayName = formatCityForDisplay(city);
-  const categoryDisplayName = formatCategoryForDisplay(category);
+  const cityDisplayName = formatCityForDisplay(city || 'All Cities');
+  const categoryDisplayName = formatCategoryForDisplay(category || 'services');
+  const stateDisplayName = state || 'Nationwide';
 
   return (
     <footer className="bg-gray-900 text-white py-16">
@@ -108,7 +118,7 @@ const Footer: React.FC<FooterProps> = ({ category, city, state }) => {
           <div className="space-y-4">
             <h3 className="text-xl font-bold text-white">Near Me Directory</h3>
             <p className="text-gray-400">
-              Find trusted local businesses in {cityDisplayName}, {state}. 
+              Find trusted local businesses in {cityDisplayName}, {stateDisplayName}. 
               Connecting you with {businessCount}+ verified {categoryDisplayName.toLowerCase()} and other services.
             </p>
             <div className="flex space-x-4">

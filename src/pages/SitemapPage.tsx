@@ -15,10 +15,9 @@ import {
   Phone,
   Plus,
   Shield,
-  Scale,
-  Droplets
+  Scale
 } from 'lucide-react';
-import { BusinessData, SubdomainInfo } from '@/types';
+import { BusinessData } from '@/types';
 import { DataProviderFactory } from '@/providers/DataProviderFactory';
 
 interface SitemapCategory {
@@ -44,11 +43,7 @@ interface SitemapCombination {
   url: string;
 }
 
-interface SitemapPageProps {
-  subdomainInfo?: SubdomainInfo;
-}
-
-const SitemapPage: React.FC<SitemapPageProps> = ({ subdomainInfo }) => {
+const SitemapPage: React.FC = () => {
   const [businesses, setBusinesses] = useState<BusinessData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -57,9 +52,7 @@ const SitemapPage: React.FC<SitemapPageProps> = ({ subdomainInfo }) => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   useEffect(() => {
-    document.title = subdomainInfo?.isWaterRefill 
-      ? 'Sitemap - Water Refill Station Finder' 
-      : 'Sitemap - Near Me Directory';
+    document.title = 'Sitemap - Near Me Directory';
     
     // Load businesses from database using DataProvider
     const loadBusinesses = async () => {
@@ -150,7 +143,7 @@ const SitemapPage: React.FC<SitemapPageProps> = ({ subdomainInfo }) => {
     };
     
     loadBusinesses();
-  }, [subdomainInfo]);
+  }, []);
 
   // City-state mapping
   const cityStateMap: Record<string, string> = {
@@ -339,26 +332,10 @@ const SitemapPage: React.FC<SitemapPageProps> = ({ subdomainInfo }) => {
               <Home className="w-5 h-5 text-gray-500 group-hover:text-blue-600 mr-3" />
               <div>
                 <div className="font-medium text-gray-900 group-hover:text-blue-900">Home</div>
-                <div className="text-sm text-gray-500">
-                  {subdomainInfo?.isWaterRefill ? 'Water refill station finder' : 'Main directory page'}
-                </div>
+                <div className="text-sm text-gray-500">Main directory page</div>
               </div>
               <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-blue-600 ml-auto" />
             </Link>
-
-            {subdomainInfo?.isWaterRefill && (
-              <Link
-                to="/stations"
-                className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors group"
-              >
-                <Droplets className="w-5 h-5 text-gray-500 group-hover:text-blue-600 mr-3" />
-                <div>
-                  <div className="font-medium text-gray-900 group-hover:text-blue-900">Find Stations</div>
-                  <div className="text-sm text-gray-500">Browse water refill stations</div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-blue-600 ml-auto" />
-              </Link>
-            )}
 
             <Link
               to="/about"
@@ -367,9 +344,7 @@ const SitemapPage: React.FC<SitemapPageProps> = ({ subdomainInfo }) => {
               <Info className="w-5 h-5 text-gray-500 group-hover:text-blue-600 mr-3" />
               <div>
                 <div className="font-medium text-gray-900 group-hover:text-blue-900">About</div>
-                <div className="text-sm text-gray-500">
-                  {subdomainInfo?.isWaterRefill ? 'About water refill finder' : 'Learn about our platform'}
-                </div>
+                <div className="text-sm text-gray-500">Learn about our platform</div>
               </div>
               <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-blue-600 ml-auto" />
             </Link>
@@ -387,17 +362,13 @@ const SitemapPage: React.FC<SitemapPageProps> = ({ subdomainInfo }) => {
             </Link>
 
             <Link
-              to={subdomainInfo?.isWaterRefill ? "/for-business" : "/add-business"}
+              to="/add-business"
               className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors group"
             >
               <Plus className="w-5 h-5 text-gray-500 group-hover:text-blue-600 mr-3" />
               <div>
-                <div className="font-medium text-gray-900 group-hover:text-blue-900">
-                  {subdomainInfo?.isWaterRefill ? 'For Business' : 'Add Business'}
-                </div>
-                <div className="text-sm text-gray-500">
-                  {subdomainInfo?.isWaterRefill ? 'List your water refill station' : 'List your business'}
-                </div>
+                <div className="font-medium text-gray-900 group-hover:text-blue-900">Add Business</div>
+                <div className="text-sm text-gray-500">List your business</div>
               </div>
               <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-blue-600 ml-auto" />
             </Link>
