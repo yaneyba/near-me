@@ -238,19 +238,6 @@ const ContactSection: React.FC<ContactSectionProps> = ({ category, city, state }
               
               <div className="space-y-6">
                 <div className="flex items-start space-x-4">
-                  <div className="bg-blue-100 p-3 rounded-full">
-                    <Phone className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Phone</h4>
-                    <a href={`tel:${SITE_INFO.phone.replace(/[^\d+]/g, '')}`} className="text-blue-600 hover:text-blue-700 transition-colors">
-                      {SITE_INFO.phone}
-                    </a>
-                    <p className="text-sm text-gray-500 mt-1">{SITE_INFO.hours.weekdays}</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-4">
                   <div className="bg-green-100 p-3 rounded-full">
                     <Mail className="w-6 h-6 text-green-600" />
                   </div>
