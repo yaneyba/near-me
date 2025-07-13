@@ -13,22 +13,34 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
     const query = `
       INSERT INTO contact_messages (
-        id, name, email, message, business_id, 
-        subject, phone, created_at, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), 'pending')
+        id, name, email, subject, message, category, city, status, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'new', datetime('now'))
     `;
 
     const id = 'contact_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 
+    // Extract only the fields that exist in the database schema
+    const dbFields = {
+      name: contactData.name,
+      email: contactData.email,
+      subject: contactData.subject || 'General Inquiry',
+      message: contactData.message,
+      category: contactData.category || null,
+      city: contactData.city || null
+    };
+
+    console.log('Contact API - Received data:', JSON.stringify(contactData, null, 2));
+    console.log('Contact API - DB fields:', JSON.stringify(dbFields, null, 2));
+
     await env.DB.prepare(query)
       .bind(
         id,
-        contactData.name,
-        contactData.email,
-        contactData.message,
-        contactData.businessId || null,
-        contactData.subject || 'General Inquiry',
-        contactData.phone || null
+        dbFields.name,
+        dbFields.email,
+        dbFields.subject,
+        dbFields.message,
+        dbFields.category,
+        dbFields.city
       )
       .run();
 
@@ -46,9 +58,16 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     });
   } catch (error) {
     console.error('Error submitting contact form:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    
     return new Response(JSON.stringify({
       success: false,
-      message: 'Failed to submit contact form'
+      message: 'Failed to submit contact form',
+      error: error.message
     }), {
       status: 500,
       headers: {
