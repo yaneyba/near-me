@@ -20,7 +20,8 @@ import {
   StationsPage as WaterRefillStationsPage, 
   DetailPage as WaterRefillDetailPage,
   AboutPage as WaterRefillAboutPage,
-  ContactPage as WaterRefillContactPage
+  ContactPage as WaterRefillContactPage,
+  ForBusinessPage as WaterRefillForBusinessPage
 } from '@/pages/water-refill';
 import { SubdomainLayout } from '@/components/layouts';
 import AuthGuard from '@/components/auth/AuthGuard';
@@ -69,7 +70,7 @@ function App() {
           />
           <Route 
             path="/for-business" 
-            element={<BusinessOwnersPage />} 
+            element={<WaterRefillForBusinessPage subdomainInfo={subdomainInfo} />} 
           />
           <Route 
             path="/about" 
