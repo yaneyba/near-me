@@ -18,7 +18,9 @@ import LoginPage from '@/pages/LoginPage';
 import { 
   HomePage as WaterRefillHomePage, 
   StationsPage as WaterRefillStationsPage, 
-  DetailPage as WaterRefillDetailPage 
+  DetailPage as WaterRefillDetailPage,
+  AboutPage as WaterRefillAboutPage,
+  ContactPage as WaterRefillContactPage
 } from '@/pages/water-refill';
 import { SubdomainLayout } from '@/components/layouts';
 import AuthGuard from '@/components/auth/AuthGuard';
@@ -64,6 +66,26 @@ function App() {
           <Route 
             path="/station/:stationId" 
             element={<WaterRefillDetailPage subdomainInfo={subdomainInfo} />} 
+          />
+          <Route 
+            path="/for-business" 
+            element={<BusinessOwnersPage />} 
+          />
+          <Route 
+            path="/about" 
+            element={<WaterRefillAboutPage subdomainInfo={subdomainInfo} />} 
+          />
+          <Route 
+            path="/contact" 
+            element={<WaterRefillContactPage subdomainInfo={subdomainInfo} />} 
+          />
+          <Route 
+            path="/login" 
+            element={<LoginPage />} 
+          />
+          <Route 
+            path="/signup" 
+            element={<LoginPage />} 
           />
           <Route 
             path="/:city" 
