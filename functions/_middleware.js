@@ -54,6 +54,13 @@ export async function onRequest(context) {
   
   // Handle subdomain routing
   const parts = hostname.split('.');
+  
+  // Special case: water-refill.near-me.us (3 parts only)
+  if (parts.length === 3 && parts[0] === 'water-refill' && parts[1] === 'near-me' && parts[2] === 'us') {
+    // This is water-refill.near-me.us - serve the main React app
+    return context.next();
+  }
+  
   if (parts.length >= 4 && parts[2] === 'near-me' && parts[3] === 'us') {
     const category = parts[0];
     const city = parts[1];
