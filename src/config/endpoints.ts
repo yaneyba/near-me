@@ -50,8 +50,13 @@ export const EndpointBuilder = {
   /**
    * Build businesses endpoint with query params
    */
-  businessesWithParams: (category: string, city: string) => 
-    `${ApiEndpoints.BUSINESSES}?${new URLSearchParams({ category, city })}`,
+  businessesWithParams: (category: string, city?: string) => {
+    const params = new URLSearchParams({ category });
+    if (city) {
+      params.append('city', city);
+    }
+    return `${ApiEndpoints.BUSINESSES}?${params}`;
+  },
   
   /**
    * Build businesses by category endpoint (all cities)

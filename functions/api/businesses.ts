@@ -6,34 +6,63 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
   const category = url.searchParams.get('category');
   const city = url.searchParams.get('city');
 
-  if (!category || !city) {
-    return new Response('Missing category or city parameter', { status: 400 });
+  if (!category) {
+    return new Response('Missing category parameter', { status: 400 });
   }
 
   try {
-    const query = `
-      SELECT 
-        id, business_id, name, category,
-        description, phone, email, website, address,
-        city, state, zip_code, 
-        image_url, logo_url, hours, services,
-        rating, review_count,
-        verified, premium, status,
-        established, site_id, latitude, longitude,
-        created_at, updated_at
-      FROM businesses 
-      WHERE LOWER(category) = LOWER(?) 
-      AND LOWER(city) = LOWER(?)
-      AND status = 'active'
-      ORDER BY 
-        premium DESC,
-        verified DESC,
-        rating DESC,
-        name ASC
-    `;
+    let query: string;
+    let bindParams: string[];
+
+    if (city) {
+      // City provided: filter by both category and city
+      query = `
+        SELECT 
+          id, business_id, name, category,
+          description, phone, email, website, address,
+          city, state, zip_code, 
+          image_url, logo_url, hours, services,
+          rating, review_count,
+          verified, premium, status,
+          established, site_id, latitude, longitude,
+          created_at, updated_at
+        FROM businesses 
+        WHERE LOWER(category) = LOWER(?) 
+        AND LOWER(city) = LOWER(?)
+        AND status = 'active'
+        ORDER BY 
+          premium DESC,
+          verified DESC,
+          rating DESC,
+          name ASC
+      `;
+      bindParams = [category, city];
+    } else {
+      // No city: show ALL businesses in that category
+      query = `
+        SELECT 
+          id, business_id, name, category,
+          description, phone, email, website, address,
+          city, state, zip_code, 
+          image_url, logo_url, hours, services,
+          rating, review_count,
+          verified, premium, status,
+          established, site_id, latitude, longitude,
+          created_at, updated_at
+        FROM businesses 
+        WHERE LOWER(category) = LOWER(?)
+        AND status = 'active'
+        ORDER BY 
+          premium DESC,
+          verified DESC,
+          rating DESC,
+          name ASC
+      `;
+      bindParams = [category];
+    }
 
     const result = await env.DB.prepare(query)
-      .bind(category, city)
+      .bind(...bindParams)
       .all();
 
     // Transform database results to match TypeScript Business interface

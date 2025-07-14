@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Water Refill Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .debug { background: #f5f5f5; padding: 10px; margin: 10px 0; }
+        pre { background: #222; color: #0f0; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Water Refill Debug Page</h1>
+    
+    <div class="debug">
+        <h3>URL Info:</h3>
+        <p><strong>Hostname:</strong> <span id="hostname"></span></p>
+        <p><strong>Pathname:</strong> <span id="pathname"></span></p>
+        <p><strong>Full URL:</strong> <span id="fullurl"></span></p>
+    </div>
+
+    <div class="debug">
+        <h3>Domain Parsing Test:</h3>
+        <pre id="parsing-result"></pre>
+    </div>
+
+    <div class="debug">
+        <h3>Expected Result:</h3>
+        <pre>
+For water-refill.near-me.us:
+- parts: ['water-refill', 'near-me', 'us'] (3 parts)
+- Should match special case in middleware
+- Should serve React app
+- SubdomainInfo should have isWaterRefill: true
+        </pre>
+    </div>
+
+    <script>
+        // Display current URL info
+        document.getElementById('hostname').textContent = window.location.hostname;
+        document.getElementById('pathname').textContent = window.location.pathname;
+        document.getElementById('fullurl').textContent = window.location.href;
+
+        // Test domain parsing logic
+        const hostname = window.location.hostname;
+        const parts = hostname.split('.');
+        
+        const result = {
+            hostname: hostname,
+            parts: parts,
+            partsLength: parts.length,
+            isWaterRefillPattern: parts.length === 3 && parts[0] === 'water-refill' && parts[1] === 'near-me' && parts[2] === 'us',
+            middlewareAction: parts.length === 3 && parts[0] === 'water-refill' && parts[1] === 'near-me' && parts[2] === 'us' 
+                ? 'Should call context.next() - serve React app'
+                : 'Will not match special case - may redirect'
+        };
+
+        document.getElementById('parsing-result').textContent = JSON.stringify(result, null, 2);
+    </script>
+</body>
+</html>

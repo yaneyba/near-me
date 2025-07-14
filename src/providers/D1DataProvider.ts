@@ -98,7 +98,8 @@ export class D1DataProvider implements IDataProvider {
   }
 
   async getBusinessesByCategory(category: string): Promise<Business[]> {
-    return this.apiRequest<Business[]>(EndpointBuilder.businessesByCategory(category));
+    // Use the main businesses endpoint without city parameter to get ALL businesses in category
+    return this.apiRequest<Business[]>(EndpointBuilder.businessesWithParams(category));
   }
 
   async getServices(category: string): Promise<string[]> {
