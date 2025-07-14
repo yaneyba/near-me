@@ -31,71 +31,78 @@ interface WaterRefillWorldProps {
  * - Business registration for water stations
  */
 export const WaterRefillWorld: React.FC<WaterRefillWorldProps> = ({ subdomainInfo }) => {
+  // Determine the base path for routes
+  const basePath = subdomainInfo.isPathBased ? '/water-refill' : '';
+  
   return (
     <Routes>
       {/* Main water refill homepage */}
       <Route 
-        path="/" 
+        path={`${basePath}/`} 
+        element={<WaterRefillHomePage subdomainInfo={subdomainInfo} />} 
+      />
+      <Route 
+        path={`${basePath}`} 
         element={<WaterRefillHomePage subdomainInfo={subdomainInfo} />} 
       />
       
       {/* All stations listing */}
       <Route 
-        path="/stations" 
+        path={`${basePath}/stations`} 
         element={<WaterRefillStationsPage subdomainInfo={subdomainInfo} />} 
       />
       
       {/* Individual station details */}
       <Route 
-        path="/station/:stationId" 
+        path={`${basePath}/station/:stationId`} 
         element={<WaterRefillDetailPage subdomainInfo={subdomainInfo} />} 
       />
       
       {/* Business-related pages */}
       <Route 
-        path="/for-business" 
+        path={`${basePath}/for-business`} 
         element={<WaterRefillForBusinessPage subdomainInfo={subdomainInfo} />} 
       />
       <Route 
-        path="/business-owners" 
-        element={<Navigate to="/for-business" replace />} 
+        path={`${basePath}/business-owners`} 
+        element={<Navigate to={`${basePath}/for-business`} replace />} 
       />
       
       {/* Information pages */}
       <Route 
-        path="/about" 
+        path={`${basePath}/about`} 
         element={<WaterRefillAboutPage subdomainInfo={subdomainInfo} />} 
       />
       <Route 
-        path="/contact" 
+        path={`${basePath}/contact`} 
         element={<WaterRefillContactPage subdomainInfo={subdomainInfo} />} 
       />
       <Route 
-        path="/privacy-policy" 
+        path={`${basePath}/privacy-policy`} 
         element={<WaterRefillPrivacyPolicyPage subdomainInfo={subdomainInfo} />} 
       />
       <Route 
-        path="/terms-of-service" 
+        path={`${basePath}/terms-of-service`} 
         element={<WaterRefillTermsOfServicePage subdomainInfo={subdomainInfo} />} 
       />
       <Route 
-        path="/sitemap" 
+        path={`${basePath}/sitemap`} 
         element={<WaterRefillSitemapPage subdomainInfo={subdomainInfo} />} 
       />
       
       {/* Auth pages */}
       <Route 
-        path="/login" 
+        path={`${basePath}/login`} 
         element={<LoginPage />} 
       />
       <Route 
-        path="/signup" 
+        path={`${basePath}/signup`} 
         element={<LoginPage />} 
       />
       
       {/* City-specific water refill pages */}
       <Route 
-        path="/:city" 
+        path={`${basePath}/:city`} 
         element={<WaterRefillHomePage subdomainInfo={subdomainInfo} />} 
       />
     </Routes>

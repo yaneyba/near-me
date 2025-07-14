@@ -62,6 +62,17 @@ export const parseSubdomain = (hostname: string = window.location.hostname, path
       };
     }
     
+    // Check for path-based water-refill routing on localhost
+    if (pathname.startsWith('/water-refill')) {
+      return {
+        category: 'Water Refill Stations',
+        city: 'All Cities',
+        state: 'Nationwide',
+        isWaterRefill: true,
+        isPathBased: true
+      };
+    }
+    
     return {
       category: 'All Services',
       city: 'All Cities',
