@@ -141,16 +141,22 @@ const Footer: React.FC<FooterProps> = ({ category, city, state }) => {
           <div className="space-y-4">
             <h4 className="font-semibold text-white">Services in {cityDisplayName}</h4>
             <ul className="space-y-2">
-              {existingCategoriesInCity.slice(0, 8).map((cat) => (
-                <li key={cat}>
-                  <Link 
-                    to={`/${formatForUrl(cat)}-${city}`}
-                    className="text-gray-400 hover:text-white transition-colors"
-                  >
-                    {formatCategoryForDisplay(cat)} in {cityDisplayName}
-                  </Link>
-                </li>
-              ))}
+              {existingCategoriesInCity.slice(0, 8).map((cat) => {
+                const linkPath = city === 'All Cities' 
+                  ? `/${formatForUrl(cat)}` 
+                  : `/${formatForUrl(cat)}-${city}`;
+                
+                return (
+                  <li key={cat}>
+                    <Link 
+                      to={linkPath}
+                      className="text-gray-400 hover:text-white transition-colors"
+                    >
+                      {formatCategoryForDisplay(cat)} in {cityDisplayName}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </div>
 
@@ -158,16 +164,22 @@ const Footer: React.FC<FooterProps> = ({ category, city, state }) => {
           <div className="space-y-4">
             <h4 className="font-semibold text-white">{categoryDisplayName} in Other Cities</h4>
             <ul className="space-y-2">
-              {existingCitiesForCategory.slice(0, 8).map((citySlug) => (
-                <li key={citySlug}>
-                  <Link 
-                    to={`/${category}-${citySlug}`}
-                    className="text-gray-400 hover:text-white transition-colors"
-                  >
-                    {formatCityForDisplay(citySlug)}
-                  </Link>
-                </li>
-              ))}
+              {existingCitiesForCategory.slice(0, 8).map((citySlug) => {
+                const linkPath = citySlug === 'All Cities' 
+                  ? `/${category}` 
+                  : `/${category}-${citySlug}`;
+                
+                return (
+                  <li key={citySlug}>
+                    <Link 
+                      to={linkPath}
+                      className="text-gray-400 hover:text-white transition-colors"
+                    >
+                      {formatCityForDisplay(citySlug)}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </div>
 
