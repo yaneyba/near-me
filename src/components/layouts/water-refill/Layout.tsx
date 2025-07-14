@@ -10,10 +10,11 @@ interface WaterRefillLayoutProps {
   children: React.ReactNode;
   subdomainInfo: SubdomainInfo;
   showSearchBar?: boolean;
+  hideAllBelowHeader?: boolean;
   onSearch?: (query: string) => void;
 }
 
-const WaterRefillLayout: React.FC<WaterRefillLayoutProps> = ({ children, subdomainInfo, showSearchBar = false, onSearch }) => {
+const WaterRefillLayout: React.FC<WaterRefillLayoutProps> = ({ children, subdomainInfo, showSearchBar = false, hideAllBelowHeader = false, onSearch }) => {
   const [devPanelVisible, setDevPanelVisible] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -256,11 +257,13 @@ const WaterRefillLayout: React.FC<WaterRefillLayoutProps> = ({ children, subdoma
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {renderHeader()}
-      {showSearchBar ? renderSearchBar() : (
-        <>
-          {renderHeroSection()}
-          {renderStatsSection()}
-        </>
+      {!hideAllBelowHeader && (
+        showSearchBar ? renderSearchBar() : (
+          <>
+            {renderHeroSection()}
+            {renderStatsSection()}
+          </>
+        )
       )}
       
       {/* Main Content Area - This will contain the sidebar + map layout */}
