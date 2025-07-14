@@ -5,7 +5,7 @@ import { SubdomainInfo } from '@/types';
 
 // Import services pages
 import { 
-  ServicesHomePage, 
+  HomePage, 
   SitemapPage 
 } from '@/pages/core';
 import { 
@@ -50,7 +50,7 @@ export const ServicesWorld: React.FC<ServicesWorldProps> = ({ subdomainInfo }) =
         {/* 🌐 Main services homepage */}
         <Route 
           path="/" 
-          element={<ServicesHomePage subdomainInfo={subdomainInfo} />} 
+          element={<HomePage subdomainInfo={subdomainInfo} />} 
         />
         
         {/* 📄 Information pages */}

@@ -5,7 +5,7 @@ import { SubdomainInfo } from '@/types';
 
 // Import business pages
 import { 
-  HomePage, 
+  CategoryHomePage, 
   SitemapPage 
 } from '@/pages/core';
 import { 
@@ -51,7 +51,7 @@ export const BusinessWorld: React.FC<BusinessWorldProps> = ({ subdomainInfo }) =
         {/* 🏠 Main homepage for this category/city */}
         <Route 
           path="/" 
-          element={<HomePage subdomainInfo={subdomainInfo} />} 
+          element={<CategoryHomePage subdomainInfo={subdomainInfo} />} 
         />
         
         {/* 📄 Information pages */}
