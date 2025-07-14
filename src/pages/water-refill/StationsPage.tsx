@@ -10,6 +10,7 @@ import {
   transformBusinessToWaterStation,
   Pagination
 } from '@/components/water-refill';
+import { useSearch } from '@/hooks/useSearch';
 
 interface StationsPageProps {
   subdomainInfo: SubdomainInfo;
@@ -17,6 +18,7 @@ interface StationsPageProps {
 
 const StationsPage: React.FC<StationsPageProps> = ({ subdomainInfo }) => {
   const [stations, setStations] = useState<WaterStationType[]>([]);
+  const [allStations, setAllStations] = useState<WaterStationType[]>([]);
   const [selectedStation, setSelectedStation] = useState<WaterStationType | null>(null);
   const [loading, setLoading] = useState(true);
   const [showMobileMap, setShowMobileMap] = useState(false);
@@ -26,6 +28,12 @@ const StationsPage: React.FC<StationsPageProps> = ({ subdomainInfo }) => {
   const [itemsPerPage, setItemsPerPage] = useState(10); // Default 10 stations per page
 
   const dataProvider = DataProviderFactory.getProvider();
+
+  // Use search hook to filter stations
+  const { handleSearch, getEffectiveSearchQuery, clearSearch, searchQuery } = useSearch({
+    enableUrlParams: true,
+    scrollTargetId: 'station-list'
+  });
 
   useEffect(() => {
     const loadStations = async () => {
@@ -52,6 +60,7 @@ const StationsPage: React.FC<StationsPageProps> = ({ subdomainInfo }) => {
           // Transform business data to station format
           const transformedStations: WaterStationType[] = allBusinesses.map(transformBusinessToWaterStation);
           console.log(`Transformed to ${transformedStations.length} stations:`, transformedStations);
+          setAllStations(transformedStations);
           setStations(transformedStations);
         } else {
           // Get water-refill businesses from data provider for specific city
@@ -78,17 +87,20 @@ const StationsPage: React.FC<StationsPageProps> = ({ subdomainInfo }) => {
             // Transform business data to station format
             const transformedStations: WaterStationType[] = allBusinesses.map(transformBusinessToWaterStation);
             console.log(`Transformed to ${transformedStations.length} stations:`, transformedStations);
+            setAllStations(transformedStations);
             setStations(transformedStations);
           } else {
             // Transform business data to station format - ONLY use real data
             const transformedStations: WaterStationType[] = businesses.map(transformBusinessToWaterStation);
             console.log(`Transformed to ${transformedStations.length} stations:`, transformedStations);
+            setAllStations(transformedStations);
             setStations(transformedStations);
           }
         }
       } catch (error) {
         console.error('Error loading water refill stations:', error);
         // Fallback to empty array
+        setAllStations([]);
         setStations([]);
       } finally {
         setLoading(false);
@@ -97,6 +109,25 @@ const StationsPage: React.FC<StationsPageProps> = ({ subdomainInfo }) => {
 
     loadStations();
   }, [dataProvider, subdomainInfo.city]);
+
+  // Filter stations based on search query
+  useEffect(() => {
+    const searchQuery = getEffectiveSearchQuery();
+    if (!searchQuery) {
+      // No search - show all stations
+      setStations(allStations);
+    } else {
+      // Filter stations based on search query
+      const filtered = allStations.filter(station =>
+        station.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        station.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        station.city.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setStations(filtered);
+    }
+    // Reset to first page when search changes
+    setCurrentPage(1);
+  }, [allStations, getEffectiveSearchQuery]);
 
   // Calculate pagination
   const totalPages = Math.ceil(stations.length / itemsPerPage);
@@ -131,7 +162,13 @@ const StationsPage: React.FC<StationsPageProps> = ({ subdomainInfo }) => {
 
   if (loading) {
     return (
-      <WaterRefillLayout subdomainInfo={subdomainInfo} showSearchBar={true}>
+      <WaterRefillLayout 
+        subdomainInfo={subdomainInfo} 
+        showSearchBar={true}
+        onSearch={handleSearch}
+        onClearSearch={clearSearch}
+        currentSearchQuery={searchQuery}
+      >
         <div className="flex items-center justify-center h-64">
           <div className="text-lg">Loading stations...</div>
         </div>
@@ -140,7 +177,13 @@ const StationsPage: React.FC<StationsPageProps> = ({ subdomainInfo }) => {
   }
 
   return (
-    <WaterRefillLayout subdomainInfo={subdomainInfo} showSearchBar={true}>
+    <WaterRefillLayout 
+      subdomainInfo={subdomainInfo} 
+      showSearchBar={true}
+      onSearch={handleSearch}
+      onClearSearch={clearSearch}
+      currentSearchQuery={searchQuery}
+    >
       {/* Breadcrumb */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
@@ -165,15 +208,18 @@ const StationsPage: React.FC<StationsPageProps> = ({ subdomainInfo }) => {
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50">
           {/* Station List - Constrained width with optimal spacing */}
-          <div className="w-full lg:w-1/2 bg-white border-b lg:border-r lg:border-b-0 border-gray-200 overflow-y-auto" data-station-list>
+          <div className="w-full lg:w-1/2 bg-white border-b lg:border-r lg:border-b-0 border-gray-200 overflow-y-auto" id="station-list" data-station-list>
             <div className="max-w-2xl mx-auto p-4 sm:p-6 lg:p-8">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
               <div>
                 <h3 className="text-xl sm:text-2xl font-bold text-gray-900">
-                  Water Stations
+                  {getEffectiveSearchQuery() ? 'Search Results' : 'Water Stations'}
                 </h3>
                 <p className="text-sm text-gray-600 mt-1">
-                  {stations.length} station{stations.length !== 1 ? 's' : ''} found
+                  {getEffectiveSearchQuery() 
+                    ? `${stations.length} station${stations.length !== 1 ? 's' : ''} found for "${getEffectiveSearchQuery()}"`
+                    : `${stations.length} station${stations.length !== 1 ? 's' : ''} found`
+                  }
                   {stations.length > itemsPerPage && (
                     <span className="ml-1">
                       (showing {startIndex + 1}-{Math.min(endIndex, stations.length)})
@@ -217,11 +263,18 @@ const StationsPage: React.FC<StationsPageProps> = ({ subdomainInfo }) => {
                     onClick={() => setSelectedStation(station)}
                   />
                 ))
+              ) : stations.length === 0 && getEffectiveSearchQuery() ? (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">🔍</div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No stations found</h3>
+                  <p className="text-gray-600 mb-4">No water stations match your search for "{getEffectiveSearchQuery()}"</p>
+                  <p className="text-sm text-gray-500">Try a different search term or check the spelling</p>
+                </div>
               ) : stations.length === 0 ? (
                 <div className="text-center py-12">
                   <Droplets className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No stations found</h3>
-                  <p className="text-gray-600">Try adjusting your search criteria or check back later.</p>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No stations available</h3>
+                  <p className="text-gray-600">Check back soon for new water refill stations</p>
                 </div>
               ) : null}
             </div>
