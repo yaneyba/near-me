@@ -1,7 +1,7 @@
 import React from 'react';
 import { SubdomainInfo } from '@/types';
 import { Layout as WaterRefillLayout } from '@/components/layouts/water-refill';
-import SitemapPage from '@/pages/SitemapPage';
+import SitemapPage from '@/pages/core/SitemapPage';
 
 interface WaterRefillSitemapPageProps {
   subdomainInfo: SubdomainInfo;

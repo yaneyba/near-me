@@ -1,7 +1,7 @@
 import React from 'react';
 import { SubdomainInfo } from '@/types';
 import { Layout as WaterRefillLayout } from '@/components/layouts/water-refill';
-import PrivacyPolicyPage from '@/pages/PrivacyPolicyPage';
+import PrivacyPolicyPage from '@/pages/info/PrivacyPolicyPage';
 
 interface WaterRefillPrivacyPolicyPageProps {
   subdomainInfo: SubdomainInfo;
