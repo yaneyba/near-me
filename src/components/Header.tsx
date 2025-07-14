@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, MapPin, Phone, Mail, Plus, User, LogIn, LogOut } from 'lucide-react';
-import { SITE_INFO } from '@/siteInfo';
+import { Menu, X, MapPin, Mail, Plus, User, LogIn, LogOut } from 'lucide-react';
 import { signOut, useAuth } from '@/lib/auth';
 // Force refresh
 
@@ -51,14 +50,12 @@ const Header: React.FC<HeaderProps> = ({ category, city, state }) => {
                 <MapPin className="w-4 h-4 mr-1" />
                 <span>Serving {city}, {state}</span>
               </div>
-              <div className="hidden sm:flex items-center">
-                <Phone className="w-4 h-4 mr-1" />
-                <span>{SITE_INFO.phone}</span>
-              </div>
             </div>
             <div className="hidden sm:flex items-center">
               <Mail className="w-4 h-4 mr-1" />
-              <span>{SITE_INFO.email}</span>
+              <Link to="/contact" className="text-gray-600 hover:text-blue-600 transition-colors">
+                Contact Us
+              </Link>
             </div>
           </div>
         </div>

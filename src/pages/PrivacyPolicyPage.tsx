@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
-import { Shield, Eye, Lock, Database, Users, Mail, Phone, MapPin, Calendar, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Shield, Eye, Database, AlertTriangle, CheckCircle, Users, Building, Globe, Mail, Lock, Calendar } from 'lucide-react';
 
 const PrivacyPolicyPage: React.FC = () => {
+  
   useEffect(() => {
     document.title = 'Privacy Policy - Near Me Directory';
   }, []);
@@ -86,7 +87,7 @@ const PrivacyPolicyPage: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">
-                    <MapPin className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
+                    <Building className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
                     <div>
                       <div className="font-medium text-gray-900">Business Information</div>
                       <div className="text-sm text-gray-600">Business name, address, services, hours, and description when you submit a business listing</div>
@@ -120,7 +121,7 @@ const PrivacyPolicyPage: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">
-                    <MapPin className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
+                    <Globe className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
                     <div>
                       <div className="font-medium text-gray-900">Location Data</div>
                       <div className="text-sm text-gray-600">General location based on IP address to show relevant local businesses</div>
@@ -401,44 +402,12 @@ const PrivacyPolicyPage: React.FC = () => {
             </h2>
             
             <div className="bg-blue-50 rounded-lg p-6">
-              <p className="text-blue-900 mb-4">
-                If you have questions about this Privacy Policy or our data practices, please contact us:
+              <p className="text-blue-900">
+                If you have questions about this Privacy Policy or our data practices, please{' '}
+                <a href="/contact" className="text-blue-700 hover:text-blue-800 underline font-medium">
+                  contact us
+                </a>.
               </p>
-              
-              <div className="space-y-3">
-                <div className="flex items-center space-x-3">
-                  <Mail className="w-5 h-5 text-blue-600" />
-                  <div>
-                    <div className="font-medium text-blue-900">Email</div>
-                    <a href="mailto:privacy@near-me.us" className="text-blue-700 hover:text-blue-800 underline">
-                      privacy@near-me.us
-                    </a>
-                  </div>
-                </div>
-                
-                <div className="flex items-center space-x-3">
-                  <Phone className="w-5 h-5 text-blue-600" />
-                  <div>
-                    <div className="font-medium text-blue-900">Phone</div>
-                    <a href="tel:+15551234567" className="text-blue-700 hover:text-blue-800">
-                      (555) 123-4567
-                    </a>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-3">
-                  <MapPin className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <div className="font-medium text-blue-900">Address</div>
-                    <div className="text-blue-700">
-                      Near Me Directory<br />
-                      Privacy Department<br />
-                      123 Business Ave<br />
-                      Dallas, TX 75201
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
           </section>
         </div>

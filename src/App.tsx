@@ -21,7 +21,10 @@ import {
   DetailPage as WaterRefillDetailPage,
   AboutPage as WaterRefillAboutPage,
   ContactPage as WaterRefillContactPage,
-  ForBusinessPage as WaterRefillForBusinessPage
+  ForBusinessPage as WaterRefillForBusinessPage,
+  PrivacyPolicyPage as WaterRefillPrivacyPolicyPage,
+  TermsOfServicePage as WaterRefillTermsOfServicePage,
+  SitemapPage as WaterRefillSitemapPage
 } from '@/pages/water-refill';
 import { SubdomainLayout } from '@/components/layouts';
 import AuthGuard from '@/components/auth/AuthGuard';
@@ -90,15 +93,15 @@ function App() {
           />
           <Route 
             path="/privacy-policy" 
-            element={<PrivacyPolicyPage />} 
+            element={<WaterRefillPrivacyPolicyPage subdomainInfo={subdomainInfo} />} 
           />
           <Route 
             path="/terms-of-service" 
-            element={<TermsOfServicePage />} 
+            element={<WaterRefillTermsOfServicePage subdomainInfo={subdomainInfo} />} 
           />
           <Route 
             path="/sitemap" 
-            element={<SitemapPage subdomainInfo={subdomainInfo} />} 
+            element={<WaterRefillSitemapPage subdomainInfo={subdomainInfo} />} 
           />
           <Route 
             path="/business-owners" 

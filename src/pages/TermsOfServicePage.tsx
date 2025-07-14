@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
-import { FileText, Scale, Shield, AlertTriangle, CheckCircle, Users, Building, Globe, Mail, Phone, MapPin } from 'lucide-react';
+import { FileText, Scale, Shield, AlertTriangle, CheckCircle, Users, Building, Globe, Mail } from 'lucide-react';
 
 const TermsOfServicePage: React.FC = () => {
+  
   useEffect(() => {
     document.title = 'Terms of Service - Near Me Directory';
   }, []);
@@ -475,44 +476,12 @@ const TermsOfServicePage: React.FC = () => {
             </h2>
             
             <div className="bg-blue-50 rounded-lg p-6">
-              <p className="text-blue-900 mb-4">
-                If you have questions about these Terms of Service, please contact us:
+              <p className="text-blue-900">
+                If you have questions about these Terms of Service, please{' '}
+                <a href="/contact" className="text-blue-700 hover:text-blue-800 underline font-medium">
+                  contact us
+                </a>.
               </p>
-              
-              <div className="space-y-3">
-                <div className="flex items-center space-x-3">
-                  <Mail className="w-5 h-5 text-blue-600" />
-                  <div>
-                    <div className="font-medium text-blue-900">Email</div>
-                    <a href="mailto:legal@near-me.us" className="text-blue-700 hover:text-blue-800 underline">
-                      legal@near-me.us
-                    </a>
-                  </div>
-                </div>
-                
-                <div className="flex items-center space-x-3">
-                  <Phone className="w-5 h-5 text-blue-600" />
-                  <div>
-                    <div className="font-medium text-blue-900">Phone</div>
-                    <a href="tel:+15551234567" className="text-blue-700 hover:text-blue-800">
-                      (555) 123-4567
-                    </a>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-3">
-                  <MapPin className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <div className="font-medium text-blue-900">Address</div>
-                    <div className="text-blue-700">
-                      Near Me Directory<br />
-                      Legal Department<br />
-                      123 Business Ave<br />
-                      Dallas, TX 75201
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
           </section>
         </div>

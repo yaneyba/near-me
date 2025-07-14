@@ -53,7 +53,6 @@ const WaterRefillLayout: React.FC<WaterRefillLayoutProps> = ({ children, subdoma
             {/* Navigation */}
             <nav className="hidden md:flex space-x-6">
               <Link to="/" className="hover:text-blue-200">Find Stations</Link>
-              <Link to="/for-business" className="hover:text-blue-200">For Business</Link>
               <Link to="/about" className="hover:text-blue-200">About</Link>
               <Link to="/contact" className="hover:text-blue-200">Contact</Link>
               <Link to="/login" className="hover:text-blue-200">Sign In</Link>
@@ -87,13 +86,6 @@ const WaterRefillLayout: React.FC<WaterRefillLayoutProps> = ({ children, subdoma
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Find Stations
-                </Link>
-                <Link 
-                  to="/for-business" 
-                  className="block px-3 py-2 text-white hover:bg-blue-800 rounded-md"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  For Business
                 </Link>
                 <Link 
                   to="/about" 
