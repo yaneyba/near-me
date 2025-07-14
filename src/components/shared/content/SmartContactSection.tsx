@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { DataProviderFactory } from '@/providers';
 import { ContactSubmission } from '@/types';
-import { SITE_INFO } from '@/siteInfo';
+import { SITE_INFO } from '@/config/siteInfo';
 import { getPageConfig } from '@/config/pageConfigs';
 
 interface SmartContactSectionProps {

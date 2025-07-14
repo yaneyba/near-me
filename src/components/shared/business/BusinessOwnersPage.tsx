@@ -21,7 +21,7 @@ import {
   Plus,
   Eye
 } from 'lucide-react';
-import { SITE_INFO } from '@/siteInfo';
+import { SITE_INFO } from '@/config/siteInfo';
 import { DataProviderFactory } from '@/providers';
 
 const BusinessOwnersPage: React.FC = () => {

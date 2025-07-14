@@ -8,7 +8,7 @@ import {
   Loader2, 
   AlertCircle 
 } from 'lucide-react';
-import { STRIPE_PRODUCTS } from '@/stripe-config';
+import { STRIPE_PRODUCTS } from '@/config/stripe-config';
 import { createCheckoutSession } from '@/lib/stripe';
 import { useAuth } from '@/lib/auth';
 

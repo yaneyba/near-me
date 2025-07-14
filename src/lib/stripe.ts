@@ -1,5 +1,5 @@
 import { StripeProduct, StripeCheckoutResult, StripeSubscription } from '@/types';
-import { STRIPE_PRODUCTS, getProductByPriceId } from '@/stripe-config';
+import { STRIPE_PRODUCTS, getProductByPriceId } from '@/config/stripe-config';
 import { DataProviderFactory } from '@/providers';
 
 /**

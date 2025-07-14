@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Crown, X, Star, Zap, BarChart3, Calendar, Navigation, Camera, MessageSquare, Award, ArrowRight, CheckCircle, Mail, Phone } from 'lucide-react';
-import { SITE_INFO } from '@/siteInfo';
+import { SITE_INFO } from '@/config/siteInfo';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 

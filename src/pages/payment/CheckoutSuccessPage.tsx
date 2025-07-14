@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle, Home, Building } from 'lucide-react';
 import { getCurrentSubscription } from '@/lib/stripe';
-import { getProductByPriceId } from '@/stripe-config';
+import { getProductByPriceId } from '@/config/stripe-config';
 
 const CheckoutSuccessPage: React.FC = () => {
   const [searchParams] = useSearchParams();

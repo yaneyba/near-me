@@ -20,7 +20,7 @@ import {
   Plus
 } from 'lucide-react';
 import stats from '@/data/stats.json';
-import { SITE_INFO } from '@/siteInfo';
+import { SITE_INFO } from '@/config/siteInfo';
 
 interface AddBusinessPageProps {
   subdomainInfo: SubdomainInfo;

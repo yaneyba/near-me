@@ -17,7 +17,7 @@ import {
   Eye
 } from 'lucide-react';
 // Removed: import businessesData from '@/data/businesses.json'; - now using database
-import { SITE_INFO } from '@/siteInfo';
+import { SITE_INFO } from '@/config/siteInfo';
 import { SmartPricingSection } from '@/components/shared/content';
 import { DataProviderFactory } from '@/providers';
 

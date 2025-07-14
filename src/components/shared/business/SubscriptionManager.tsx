@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { StripeProduct, StripeSubscription } from '@/types';
 import { createCheckoutSession, getCurrentSubscription, getAvailableProducts } from '@/lib/stripe';
-import { formatPrice } from '@/stripe-config';
+import { formatPrice } from '@/config/stripe-config';
 
 interface SubscriptionManagerProps {
   businessProfileId?: string;
