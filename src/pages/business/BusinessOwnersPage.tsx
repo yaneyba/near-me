@@ -27,22 +27,18 @@ const BusinessOwnersPage: React.FC = () => {
     totalBusinesses: 0,
     totalCategories: 0,
     totalCities: 0,
-    premiumBusinesses: 0
+    premiumBusinesses: 0,
+    averageRating: '4.8'
   });
 
   useEffect(() => {
     document.title = 'For Business Owners - Near Me Directory';
     
-    // Calculate stats from database
-    const calculateStats = async () => {
+    // Load real statistics from database
+    const loadStats = async () => {
       try {
-        const analytics = await dataProvider.getOverallAnalytics();
-        setStats({
-          totalBusinesses: analytics.activeBusinesses || 482,
-          totalCategories: 8, // Static for now since not in analytics
-          totalCities: 9, // Static for now since not in analytics  
-          premiumBusinesses: 0 // Static for now since not in analytics
-        });
+        const dbStats = await dataProvider.getStatistics();
+        setStats(dbStats);
       } catch (error) {
         console.error('Error loading business stats:', error);
         // Set default stats on error
@@ -50,12 +46,13 @@ const BusinessOwnersPage: React.FC = () => {
           totalBusinesses: 482,
           totalCategories: 8,
           totalCities: 9,
-          premiumBusinesses: 0
+          premiumBusinesses: 0,
+          averageRating: '4.8'
         });
       }
     };
     
-    calculateStats();
+    loadStats();
   }, [dataProvider]);
 
   const features = [

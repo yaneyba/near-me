@@ -1,7 +1,6 @@
 import React from 'react';
 import { Business } from '@/types';
-import ConfigurableHero from './ConfigurableHero';
-import { getHeroConfig } from '@/config/heroConfigs';
+import Hero from './Hero';
 
 interface SmartHeroProps {
   category: string;
@@ -10,6 +9,13 @@ interface SmartHeroProps {
   businesses: Business[];
   onSearch: (query: string) => void;
   customConfig?: any;
+  dbStats?: {
+    totalBusinesses: number;
+    totalCategories: number;
+    totalCities: number;
+    premiumBusinesses: number;
+    averageRating: string;
+  } | null;
 }
 
 const SmartHero: React.FC<SmartHeroProps> = ({ 
@@ -18,34 +24,16 @@ const SmartHero: React.FC<SmartHeroProps> = ({
   state, 
   businesses, 
   onSearch,
-  customConfig 
+  dbStats 
 }) => {
-  const heroConfig = getHeroConfig(category, customConfig);
-  
-  // Build the configuration object with resolved functions
-  const resolvedConfig = {
-    title: typeof heroConfig.title === 'function' 
-      ? heroConfig.title(category, city) 
-      : heroConfig.title,
-    subtitle: typeof heroConfig.subtitle === 'function' 
-      ? heroConfig.subtitle(category, city, state) 
-      : heroConfig.subtitle,
-    searchPlaceholder: heroConfig.searchPlaceholder,
-    searchTip: heroConfig.searchTip,
-    gradient: heroConfig.gradient,
-    showStats: heroConfig.showStats,
-    showLocation: heroConfig.showLocation,
-    stats: heroConfig.stats || []
-  };
-
   return (
-    <ConfigurableHero
+    <Hero
       category={category}
       city={city}
       state={state}
       businesses={businesses}
       onSearch={onSearch}
-      config={resolvedConfig}
+      dbStats={dbStats || undefined}
     />
   );
 };

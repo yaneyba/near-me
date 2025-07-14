@@ -14,6 +14,13 @@ const CategoryPage: React.FC<CategoryPageProps> = ({ subdomainInfo }) => {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [services, setServices] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dbStats, setDbStats] = useState<{
+    totalBusinesses: number;
+    totalCategories: number;
+    totalCities: number;
+    premiumBusinesses: number;
+    averageRating: string;
+  } | null>(null);
   
   const dataProvider = DataProviderFactory.getProvider();
 
@@ -48,13 +55,15 @@ const CategoryPage: React.FC<CategoryPageProps> = ({ subdomainInfo }) => {
       // For services, use raw category if available, otherwise use the passed category
       const serviceCategory = subdomainInfo.rawCategory || category;
       
-      const [businessData, serviceData] = await Promise.all([
+      const [businessData, serviceData, statsData] = await Promise.all([
         dataProvider.getBusinesses(category, city),
-        dataProvider.getServices(serviceCategory)
+        dataProvider.getServices(serviceCategory),
+        dataProvider.getStatistics()
       ]);
       
       setBusinesses(businessData);
       setServices(serviceData);
+      setDbStats(statsData);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -85,6 +94,7 @@ const CategoryPage: React.FC<CategoryPageProps> = ({ subdomainInfo }) => {
         state={subdomainInfo.state}
         businesses={businesses}
         onSearch={handleSearch}
+        dbStats={dbStats}
       />
       
       {/* Show Premium Listings section only if there are premium businesses and no active filters */}

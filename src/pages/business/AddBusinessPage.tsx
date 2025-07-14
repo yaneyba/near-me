@@ -19,7 +19,6 @@ import {
   X,
   Plus
 } from 'lucide-react';
-import stats from '@/data/stats.json';
 import { SITE_INFO } from '@/config/siteInfo';
 
 interface AddBusinessPageProps {
@@ -147,6 +146,11 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
+  const [stats, setStats] = useState([
+    { id: "local-businesses", label: "Local Businesses", value: "Loading..." },
+    { id: "total-categories", label: "Business Categories", value: "Loading..." },
+    { id: "total-cities", label: "Cities Served", value: "Loading..." }
+  ]);
   const totalSteps = 4;
 
   const dataProvider = DataProviderFactory.getProvider();
@@ -189,6 +193,36 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
   useEffect(() => {
     document.title = `Add Your Business - ${generateTitle(subdomainInfo.category, subdomainInfo.city, subdomainInfo.state)}`;
   }, [subdomainInfo]);
+
+  // Load real statistics from database
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const dbStats = await dataProvider.getStatistics();
+        setStats([
+          { 
+            id: "local-businesses", 
+            label: "Local Businesses", 
+            value: `${dbStats.totalBusinesses}+` 
+          },
+          { 
+            id: "total-categories", 
+            label: "Business Categories", 
+            value: `${dbStats.totalCategories}+` 
+          },
+          { 
+            id: "total-cities", 
+            label: "Cities Served", 
+            value: `${dbStats.totalCities}+` 
+          }
+        ]);
+      } catch (error) {
+        console.error('Failed to load stats:', error);
+      }
+    };
+    
+    loadStats();
+  }, [dataProvider]);
 
   // Get available services based on category
   const getAvailableServices = (): string[] => {

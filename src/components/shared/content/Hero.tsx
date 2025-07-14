@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapPin, Star } from 'lucide-react';
 import { SearchWithLiveResults } from '@/components/shared/ui';
 import { Business } from '@/types';
-import stats from '@/data/stats.json';
 
 interface HeroProps {
   category: string;
@@ -10,9 +9,46 @@ interface HeroProps {
   state: string;
   businesses: Business[];
   onSearch: (query: string) => void;
+  dbStats?: {
+    totalBusinesses: number;
+    totalCategories: number;
+    totalCities: number;
+    premiumBusinesses: number;
+    averageRating: string;
+  };
 }
 
-const Hero: React.FC<HeroProps> = ({ category, city, state, businesses, onSearch }) => {
+const Hero: React.FC<HeroProps> = ({ category, city, state, businesses, onSearch, dbStats }) => {
+  const [stats, setStats] = useState([
+    { id: "local-businesses", label: "Local Businesses", value: "Loading..." },
+    { id: "average-rating", label: "Average Rating", value: "Loading...", icon: "star" },
+    { id: "total-cities", label: "Cities Served", value: "Loading..." }
+  ]);
+
+  useEffect(() => {
+    // Use injected dbStats if available, otherwise show loading
+    if (dbStats) {
+      setStats([
+        { 
+          id: "local-businesses", 
+          label: "Local Businesses", 
+          value: `${dbStats.totalBusinesses}+` 
+        },
+        { 
+          id: "average-rating", 
+          label: "Average Rating", 
+          value: dbStats.averageRating,
+          icon: "star" 
+        },
+        { 
+          id: "total-cities", 
+          label: "Cities Served", 
+          value: `${dbStats.totalCities}+` 
+        }
+      ]);
+    }
+  }, [businesses, dbStats]); // React to both businesses and dbStats changes
+
   return (
     <div className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white">
       <div className="absolute inset-0 bg-black/20"></div>

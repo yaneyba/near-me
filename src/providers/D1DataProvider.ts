@@ -422,6 +422,7 @@ export class D1DataProvider implements IDataProvider {
     totalCategories: number;
     totalCities: number;
     premiumBusinesses: number;
+    averageRating: string;
   }> {
     try {
       // Try to get real statistics from API
@@ -430,7 +431,8 @@ export class D1DataProvider implements IDataProvider {
         totalBusinesses: stats.totalBusinesses || 0,
         totalCategories: stats.totalCategories || 12,
         totalCities: stats.totalCities || 15,
-        premiumBusinesses: stats.premiumBusinesses || 0
+        premiumBusinesses: stats.premiumBusinesses || 0,
+        averageRating: stats.averageRating || '4.8'
       };
     } catch (error) {
       console.warn('Failed to get statistics, using fallback:', error);
@@ -439,7 +441,8 @@ export class D1DataProvider implements IDataProvider {
         totalBusinesses: 0,
         totalCategories: 12,
         totalCities: 15,
-        premiumBusinesses: 0
+        premiumBusinesses: 0,
+        averageRating: '4.8'
       };
     }
   }

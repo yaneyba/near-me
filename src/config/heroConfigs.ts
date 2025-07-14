@@ -1,5 +1,4 @@
 // Hero configurations for different page types
-import stats from '@/data/stats.json';
 
 interface HeroConfig {
   title: string | ((category: string, city: string) => string);
@@ -22,8 +21,7 @@ export const heroConfigs: Record<string, HeroConfig> = {
     searchTip: "💡 Try searching by business name, service, or neighborhood",
     gradient: "bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800",
     showStats: true,
-    showLocation: true,
-    stats: stats
+    showLocation: true
   },
 
   // Water refill station configuration

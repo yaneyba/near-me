@@ -6,11 +6,14 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
   // TODO: Add admin authentication check here
   
   try {
-    const [submissions, messages, businesses, profiles] = await Promise.all([
+    const [submissions, messages, businesses, profiles, categories, cities, avgRating] = await Promise.all([
       env.DB.prepare(`SELECT COUNT(*) as count FROM business_submissions WHERE status = 'pending'`).first(),
       env.DB.prepare(`SELECT COUNT(*) as count FROM contact_messages WHERE status = 'new'`).first(),
       env.DB.prepare(`SELECT COUNT(*) as count FROM businesses`).first(),
-      env.DB.prepare(`SELECT COUNT(*) as count FROM business_profiles`).first()
+      env.DB.prepare(`SELECT COUNT(*) as count FROM business_profiles`).first(),
+      env.DB.prepare(`SELECT COUNT(DISTINCT category) as count FROM businesses WHERE category IS NOT NULL AND category != ''`).first(),
+      env.DB.prepare(`SELECT COUNT(DISTINCT city) as count FROM businesses WHERE city IS NOT NULL AND city != ''`).first(),
+      env.DB.prepare(`SELECT AVG(rating) as avg FROM businesses WHERE rating IS NOT NULL AND rating > 0`).first()
     ]);
 
     const stats = {
@@ -18,7 +21,10 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
       totalBusinesses: businesses?.count || 0,
       newMessages: messages?.count || 0,
       totalUsers: profiles?.count || 0,
-      premiumBusinesses: 0 // TODO: Implement premium count
+      premiumBusinesses: 0, // TODO: Implement premium count
+      totalCategories: categories?.count || 0,
+      totalCities: cities?.count || 0,
+      averageRating: avgRating?.avg ? Number(avgRating.avg).toFixed(1) : '4.8'
     };
 
     return new Response(JSON.stringify(stats), {
