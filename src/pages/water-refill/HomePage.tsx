@@ -17,6 +17,13 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
 
   const dataProvider = DataProviderFactory.getProvider();
 
+  // Debug logging
+  console.log('🚧 Water Refill HomePage - Debug Info:');
+  console.log('subdomainInfo:', subdomainInfo);
+  console.log('subdomainInfo?.isWaterRefill:', subdomainInfo?.isWaterRefill);
+  console.log('subdomainInfo?.category:', subdomainInfo?.category);
+  console.log('subdomainInfo?.city:', subdomainInfo?.city);
+
   // Helper function to sort stations by rating
   const sortStationsByRating = (stations: WaterStation[]) => 
     stations.sort((a, b) => (b.rating || 0) - (a.rating || 0));
@@ -30,18 +37,27 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
   useEffect(() => {
     const loadFeaturedStations = async () => {
       try {
+        console.log('🚧 Loading water stations...');
+        console.log('subdomainInfo?.city:', subdomainInfo?.city);
+        
         // Use city from subdomainInfo, fallback to 'All Cities' if not available
         const cityToUse = subdomainInfo?.city || 'All Cities';
+        console.log('cityToUse:', cityToUse);
         
         let allBusinesses: any[] = [];
         
         if (cityToUse === 'All Cities' || !subdomainInfo?.city) {
           // Single efficient query: SELECT * WHERE category = 'water-refill'
+          console.log('🚧 Calling getBusinessesByCategory("water-refill")');
           allBusinesses = await dataProvider.getBusinessesByCategory('water-refill');
         } else {
           // Get water-refill businesses from specific city
+          console.log(`🚧 Calling getBusinesses("water-refill", "${cityToUse}")`);
           allBusinesses = await dataProvider.getBusinesses('water-refill', cityToUse);
         }
+        
+        console.log('🚧 Raw businesses loaded:', allBusinesses.length);
+        console.log('🚧 First business:', allBusinesses[0]);
         
         // Transform all businesses to stations and store them
         const allTransformed = allBusinesses.map(transformBusinessToWaterStation);

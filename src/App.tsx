@@ -9,6 +9,8 @@ import { useAuth } from '@/lib/auth';
 import { SmartDoor } from '@/components/routing';
 
 function App() {
+  console.log('🏠 App component starting...');
+  
   // Configure the data provider factory
   useEffect(() => {
     // Always use D1 data provider
@@ -20,7 +22,10 @@ function App() {
   }, []);
 
   // Parse subdomain info once at app level
+  console.log('🔍 Parsing subdomain info...');
   const subdomainInfo: SubdomainInfo = parseSubdomain();
+  console.log('📋 Subdomain info:', subdomainInfo);
+  
   const { user } = useAuth();
 
   // Redirect admin users to admin dashboard
@@ -30,6 +35,8 @@ function App() {
     }
   }, [user]);
 
+  console.log('🚪 Rendering SmartDoor with subdomainInfo:', subdomainInfo);
+  
   return (
     <Router>
       {/* 🚪 The Smart Door decides which world to show */}
