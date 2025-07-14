@@ -20,7 +20,7 @@
     "migration:run": "wrangler d1 execute nearme-db --remote",
     "import:businesses": "node scripts/business-importer.js",
     "subdomain:add": "node scripts/manage-subdomains.js add",
-    "subdomain:remove": "node scripts/manage-subdomains.js remove", 
+    "subdomain:remove": "node scripts/manage-subdomains.js remove",
     "subdomain:list": "node scripts/manage-subdomains.js list",
     "subdomain:cloudflare": "node scripts/manage-subdomains.js cloudflare",
     "deploy:category": "node scripts/deploy-category.js",
@@ -30,6 +30,8 @@
     "db:query": "wrangler d1 execute nearme-db --remote --command"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.83.0",
+    "@tanstack/react-query-devtools": "^5.83.0",
     "dotenv": "^16.6.1",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",
