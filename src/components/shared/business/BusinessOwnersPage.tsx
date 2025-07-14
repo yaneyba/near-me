@@ -25,7 +25,6 @@ import { SITE_INFO } from '@/config/siteInfo';
 import { DataProviderFactory } from '@/providers';
 
 const BusinessOwnersPage: React.FC = () => {
-  const [businesses, setBusinesses] = useState<any[]>([]);
   const [stats, setStats] = useState({
     totalBusinesses: 0,
     totalCategories: 0,
@@ -53,8 +52,6 @@ const BusinessOwnersPage: React.FC = () => {
           premiumBusinesses: 0 // Can be calculated later when needed
         });
         
-        // Set empty businesses array since we're using this for stats only
-        setBusinesses([]);
       } catch (error) {
         console.error('Failed to load business data:', error);
         // Fallback stats
