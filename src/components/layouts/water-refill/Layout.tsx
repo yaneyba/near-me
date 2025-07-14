@@ -3,8 +3,9 @@ import { SubdomainInfo } from '@/types';
 import Footer from '@/components/Footer';
 import DevPanel from '@/components/DevPanel';
 import { Link } from 'react-router-dom';
-import { Search, MapPin, Filter, X } from 'lucide-react';
+import { MapPin, Filter, Search as SearchIcon, X } from 'lucide-react';
 import { Logo } from '@/components/water-refill';
+import Search from '@/components/shared/Search';
 
 interface WaterRefillLayoutProps {
   children: React.ReactNode;
@@ -143,6 +144,20 @@ const WaterRefillLayout: React.FC<WaterRefillLayoutProps> = ({
 
   // Hero section like AquaFinder
   const renderHeroSection = () => {
+    const handleSearchSelect = (result: string) => {
+      if (onSearch) {
+        onSearch(result);
+      }
+    };
+
+    const popularSuggestions = [
+      "Walmart Supercenter",
+      "CVS Pharmacy", 
+      "Kroger",
+      "Target",
+      "Whole Foods Market"
+    ];
+
     return (
       <section className="bg-gradient-to-br from-blue-500 to-blue-700 text-white py-12 sm:py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -153,35 +168,21 @@ const WaterRefillLayout: React.FC<WaterRefillLayoutProps> = ({
             Discover clean, affordable water refill locations in your area. Save money and reduce plastic waste with our comprehensive directory.
           </p>
           
-          {/* Responsive search section */}
-          <div className="mb-6 sm:mb-8">
-            <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center max-w-2xl mx-auto">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-3.5 w-5 h-5 text-gray-400 pointer-events-none" />
-                <input
-                  type="text"
-                  value={currentSearchQuery}
-                  onChange={handleSearchInputChange}
-                  placeholder="Search by city, zip code, or station name..."
-                  className="w-full pl-10 pr-10 py-3.5 text-gray-900 rounded-lg border-0 focus:ring-2 focus:ring-blue-300 transition-all text-base placeholder:text-gray-500"
-                />
-                {currentSearchQuery && (
-                  <button
-                    type="button"
-                    onClick={handleClearSearch}
-                    className="absolute right-3 top-3.5 w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                )}
-              </div>
-              <button 
-                type="submit"
-                className="bg-green-500 hover:bg-green-600 active:bg-green-700 text-white px-6 sm:px-8 py-3.5 rounded-lg font-medium transition-colors whitespace-nowrap min-h-[52px] touch-manipulation"
-              >
-                Search Stations
-              </button>
-            </form>
+          {/* Search section */}
+          <div className="mb-6 sm:mb-8 max-w-2xl mx-auto">
+            <Search
+              value={currentSearchQuery}
+              onChange={onSearch || (() => {})}
+              onSelect={handleSearchSelect}
+              onSubmit={handleSearchSelect}
+              placeholder="Search by city, zip code, or station name..."
+              variant="hero"
+              className="w-full"
+              showRecentSearches={true}
+              showPopularSuggestions={true}
+              popularSuggestions={popularSuggestions}
+              city={subdomainInfo.city}
+            />
           </div>
           
           <button className="inline-flex items-center bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-6 py-3 rounded-lg border border-blue-400 transition-colors font-medium gap-2 touch-manipulation">
@@ -230,7 +231,7 @@ const WaterRefillLayout: React.FC<WaterRefillLayoutProps> = ({
           <form onSubmit={handleSearchSubmit} className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center sm:space-x-4">
             {/* Search input - full width on mobile, flexible on desktop */}
             <div className="flex-1 relative min-w-0">
-              <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400 pointer-events-none" />
+              <SearchIcon className="absolute left-3 top-3 w-4 h-4 text-gray-400 pointer-events-none" />
               <input
                 type="text"
                 value={currentSearchQuery}

@@ -17,6 +17,10 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
 
   const dataProvider = DataProviderFactory.getProvider();
 
+  // Helper function to sort stations by rating
+  const sortStationsByRating = (stations: WaterStation[]) => 
+    stations.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+
   // Use search hook to filter stations
   const { handleSearch, getEffectiveSearchQuery, clearSearch, searchQuery } = useSearch({
     enableUrlParams: false,
@@ -33,7 +37,6 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
         
         if (cityToUse === 'All Cities' || !subdomainInfo?.city) {
           // Single efficient query: SELECT * WHERE category = 'water-refill'
-          console.log('Loading featured stations from all cities with single query...');
           allBusinesses = await dataProvider.getBusinessesByCategory('water-refill');
         } else {
           // Get water-refill businesses from specific city
@@ -45,9 +48,7 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
         setAllStations(allTransformed);
         
         // Set initial featured stations (top 3)
-        const featured = allTransformed
-          .sort((a, b) => (b.rating || 0) - (a.rating || 0))
-          .slice(0, 3);
+        const featured = sortStationsByRating(allTransformed).slice(0, 3);
         setFeaturedStations(featured);
       } catch (error) {
         console.error('Error loading featured stations:', error);
@@ -65,9 +66,7 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
     const searchQuery = getEffectiveSearchQuery();
     if (!searchQuery) {
       // No search - show top 3 featured stations
-      const topFeatured = allStations
-        .sort((a, b) => (b.rating || 0) - (a.rating || 0))
-        .slice(0, 3);
+      const topFeatured = sortStationsByRating(allStations).slice(0, 3);
       setFeaturedStations(topFeatured);
     } else {
       // Filter stations based on search query
@@ -130,11 +129,7 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
             }
           </p>
           
-          {loading ? (
-            <div className="flex justify-center">
-              <div className="text-lg">Loading featured stations...</div>
-            </div>
-          ) : featuredStations.length > 0 ? (
+          {featuredStations.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               {featuredStations.map(station => (
                 <WaterStationCard
