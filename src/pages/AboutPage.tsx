@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { SubdomainInfo } from '@/types';
 import { generateTitle } from '@/utils/subdomainParser';
-import { AboutSection } from '@/components/shared/content';
+import { SmartAboutSection } from '@/components/shared/content';
 
 interface AboutPageProps {
   subdomainInfo: SubdomainInfo;
@@ -15,7 +15,7 @@ const AboutPage: React.FC<AboutPageProps> = ({ subdomainInfo }) => {
 
   return (
     <div className="pt-8">
-      <AboutSection
+      <SmartAboutSection
         category={subdomainInfo.category}
         city={subdomainInfo.city}
         state={subdomainInfo.state}

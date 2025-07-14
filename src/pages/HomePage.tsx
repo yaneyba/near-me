@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { DataProviderFactory } from '@/providers';
 import { Business, SubdomainInfo } from '@/types';
 import { generateTitle } from '@/utils/subdomainParser';
-import { Hero, ServicesSection } from '@/components/shared/content';
+import { SmartHero, ServicesSection } from '@/components/shared/content';
 import { PremiumListings, BusinessListings } from '@/components/shared/business';
 
 interface HomePageProps {
@@ -93,7 +93,7 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
 
   return (
     <>
-      <Hero
+      <SmartHero
         category={subdomainInfo.category}
         city={subdomainInfo.city}
         state={subdomainInfo.state}

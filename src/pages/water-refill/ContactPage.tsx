@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { SubdomainInfo } from '@/types';
 import { Layout as WaterRefillLayout } from '@/components/layouts/water-refill';
-import { ContactSection } from '@/components/shared/content';
+import { SmartContactSection } from '@/components/shared/content';
 
 interface ContactPageProps {
   subdomainInfo: SubdomainInfo;
@@ -15,7 +15,7 @@ const ContactPage: React.FC<ContactPageProps> = ({ subdomainInfo }) => {
 
   return (
     <WaterRefillLayout subdomainInfo={subdomainInfo}>
-      <ContactSection
+      <SmartContactSection
         category={subdomainInfo.category}
         city={subdomainInfo.city}
         state={subdomainInfo.state}

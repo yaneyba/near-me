@@ -10,16 +10,29 @@ interface WaterRefillLayoutProps {
   children: React.ReactNode;
   subdomainInfo: SubdomainInfo;
   showSearchBar?: boolean;
+  onSearch?: (query: string) => void;
 }
 
-const WaterRefillLayout: React.FC<WaterRefillLayoutProps> = ({ children, subdomainInfo, showSearchBar = false }) => {
+const WaterRefillLayout: React.FC<WaterRefillLayoutProps> = ({ children, subdomainInfo, showSearchBar = false, onSearch }) => {
   const [devPanelVisible, setDevPanelVisible] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleDevSubdomainChange = (_category: string, city: string) => {
     const newUrl = `water-refill.near-me.us/${city.toLowerCase().replace(/\s+/g, '-')}`;
     console.log('Would navigate to:', newUrl);
     window.location.reload();
+  };
+
+  const handleSearchSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (searchQuery.trim() && onSearch) {
+      onSearch(searchQuery.trim());
+    }
+  };
+
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
   };
 
   // Custom header for water refill stations (like AquaFinder)
@@ -131,19 +144,24 @@ const WaterRefillLayout: React.FC<WaterRefillLayoutProps> = ({ children, subdoma
           
           {/* Responsive search section */}
           <div className="mb-6 sm:mb-8">
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center max-w-2xl mx-auto">
+            <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center max-w-2xl mx-auto">
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-3.5 w-5 h-5 text-gray-400 pointer-events-none" />
                 <input
                   type="text"
+                  value={searchQuery}
+                  onChange={handleSearchInputChange}
                   placeholder="Search by city, zip code, or station name..."
                   className="w-full pl-10 pr-4 py-3.5 text-gray-900 rounded-lg border-0 focus:ring-2 focus:ring-blue-300 transition-all text-base placeholder:text-gray-500"
                 />
               </div>
-              <button className="bg-green-500 hover:bg-green-600 active:bg-green-700 text-white px-6 sm:px-8 py-3.5 rounded-lg font-medium transition-colors whitespace-nowrap min-h-[52px] touch-manipulation">
+              <button 
+                type="submit"
+                className="bg-green-500 hover:bg-green-600 active:bg-green-700 text-white px-6 sm:px-8 py-3.5 rounded-lg font-medium transition-colors whitespace-nowrap min-h-[52px] touch-manipulation"
+              >
                 Search Stations
               </button>
-            </div>
+            </form>
           </div>
           
           <button className="inline-flex items-center bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-6 py-3 rounded-lg border border-blue-400 transition-colors font-medium gap-2 touch-manipulation">
@@ -189,12 +207,14 @@ const WaterRefillLayout: React.FC<WaterRefillLayoutProps> = ({ children, subdoma
       <div className="bg-white border-b border-gray-200 py-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Mobile-first responsive layout */}
-          <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center sm:space-x-4">
+          <form onSubmit={handleSearchSubmit} className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center sm:space-x-4">
             {/* Search input - full width on mobile, flexible on desktop */}
             <div className="flex-1 relative min-w-0">
               <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400 pointer-events-none" />
               <input
                 type="text"
+                value={searchQuery}
+                onChange={handleSearchInputChange}
                 placeholder="Search by location, station name, or zip code..."
                 className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-sm sm:text-base"
               />
@@ -202,7 +222,10 @@ const WaterRefillLayout: React.FC<WaterRefillLayoutProps> = ({ children, subdoma
             
             {/* Button group - stacked on mobile, inline on desktop */}
             <div className="flex flex-col xs:flex-row gap-2 sm:gap-3 sm:flex-shrink-0">
-              <button className="bg-blue-600 text-white px-4 sm:px-6 py-2.5 rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors font-medium text-sm sm:text-base min-h-[44px] touch-manipulation">
+              <button 
+                type="submit"
+                className="bg-blue-600 text-white px-4 sm:px-6 py-2.5 rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors font-medium text-sm sm:text-base min-h-[44px] touch-manipulation"
+              >
                 Search
               </button>
               
@@ -224,7 +247,7 @@ const WaterRefillLayout: React.FC<WaterRefillLayoutProps> = ({ children, subdoma
             <button className="hidden lg:block text-blue-600 hover:text-blue-800 transition-colors font-medium text-sm whitespace-nowrap">
               List View
             </button>
-          </div>
+          </form>
         </div>
       </div>
     );

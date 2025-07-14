@@ -25,8 +25,9 @@ export class D1DataProvider implements IDataProvider {
   private readonly defaultHeaders: HeadersInit;
 
   constructor() {
-    // Validate environment variables upfront
-    this.apiBaseUrl = this.getRequiredEnvVar('VITE_API_BASE_URL');
+    // In development, use empty string to make relative requests (proxy will handle routing)
+    // In production, use the full API base URL
+    this.apiBaseUrl = import.meta.env.DEV ? '' : this.getRequiredEnvVar('VITE_API_BASE_URL');
     this.apiKey = this.getRequiredEnvVar('VITE_D1_API_KEY');
     
     // Pre-configure headers
@@ -61,10 +62,11 @@ export class D1DataProvider implements IDataProvider {
       const hostname = window.location.hostname;
       const isSubdomain = hostname.includes('.near-me.us') && !hostname.startsWith('near-me.us');
       
-      const url = isSubdomain ? endpoint : `${this.apiBaseUrl}${endpoint}`;
+      // In development mode or on subdomain, use relative URLs (proxy/middleware will handle routing)
+      const url = (isSubdomain || import.meta.env.DEV) ? endpoint : `${this.apiBaseUrl}${endpoint}`;
       
       // Debug logging
-      console.log(`D1DataProvider: hostname=${hostname}, isSubdomain=${isSubdomain}, url=${url}`);
+      console.log(`D1DataProvider: hostname=${hostname}, isSubdomain=${isSubdomain}, isDev=${import.meta.env.DEV}, url=${url}`);
       
       const response = await fetch(url, {
         headers: this.defaultHeaders,

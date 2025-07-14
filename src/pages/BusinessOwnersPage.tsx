@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 // Removed: import businessesData from '@/data/businesses.json'; - now using database
 import { SITE_INFO } from '@/siteInfo';
-import { PricingSection } from '@/components/shared/content';
+import { SmartPricingSection } from '@/components/shared/content';
 import { DataProviderFactory } from '@/providers';
 
 const BusinessOwnersPage: React.FC = () => {
@@ -355,7 +355,7 @@ const BusinessOwnersPage: React.FC = () => {
 
       {/* Premium Features Section */}
       <div id="premium" className="py-16">
-        <PricingSection />
+        <SmartPricingSection category="business" />
       </div>
 
       {/* Testimonials Section */}

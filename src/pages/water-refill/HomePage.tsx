@@ -50,6 +50,13 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
     loadFeaturedStations();
   }, [dataProvider, subdomainInfo?.city]);
 
+  // Handle search from layout (keep the search fix)
+  const handleSearch = (query: string) => {
+    // For now, just scroll to stations section or navigate to stations page
+    console.log('Search query:', query);
+    // Could implement search functionality here later
+  };
+
   // Fallback if subdomainInfo is not available
   if (!subdomainInfo) {
     return (
@@ -62,8 +69,21 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
     );
   }
 
+  if (loading) {
+    return (
+      <WaterRefillLayout subdomainInfo={subdomainInfo} onSearch={handleSearch}>
+        <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading {subdomainInfo.category} in {subdomainInfo.city}...</p>
+          </div>
+        </div>
+      </WaterRefillLayout>
+    );
+  }
+
   return (
-    <WaterRefillLayout subdomainInfo={subdomainInfo}>
+    <WaterRefillLayout subdomainInfo={subdomainInfo} onSearch={handleSearch}>
       {/* Featured Stations Section */}
       <section className="bg-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
