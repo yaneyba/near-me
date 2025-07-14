@@ -47,34 +47,34 @@ const Footer: React.FC = () => {
             <h4 className="font-semibold text-white">Popular Services</h4>
             <ul className="space-y-2">
               <li>
-                <Link to="/nail-salons" className="text-gray-400 hover:text-white transition-colors">
+                <a href="https://nail-salons.near-me.us" className="text-gray-400 hover:text-white transition-colors">
                   Nail Salons
-                </Link>
+                </a>
               </li>
               <li>
-                <Link to="/barbershops" className="text-gray-400 hover:text-white transition-colors">
+                <a href="https://barbershops.near-me.us" className="text-gray-400 hover:text-white transition-colors">
                   Barbershops
-                </Link>
+                </a>
               </li>
               <li>
-                <Link to="/auto-repair" className="text-gray-400 hover:text-white transition-colors">
+                <a href="https://auto-repair.near-me.us" className="text-gray-400 hover:text-white transition-colors">
                   Auto Repair
-                </Link>
+                </a>
               </li>
               <li>
-                <Link to="/restaurants" className="text-gray-400 hover:text-white transition-colors">
+                <a href="https://restaurants.near-me.us" className="text-gray-400 hover:text-white transition-colors">
                   Restaurants
-                </Link>
+                </a>
               </li>
               <li>
-                <Link to="/hair-salons" className="text-gray-400 hover:text-white transition-colors">
+                <a href="https://hair-salons.near-me.us" className="text-gray-400 hover:text-white transition-colors">
                   Hair Salons
-                </Link>
+                </a>
               </li>
               <li>
-                <Link to="/dentists" className="text-gray-400 hover:text-white transition-colors">
+                <a href="https://dentists.near-me.us" className="text-gray-400 hover:text-white transition-colors">
                   Dentists
-                </Link>
+                </a>
               </li>
             </ul>
           </div>
@@ -84,34 +84,34 @@ const Footer: React.FC = () => {
             <h4 className="font-semibold text-white">Popular Cities</h4>
             <ul className="space-y-2">
               <li>
-                <Link to="/san-francisco" className="text-gray-400 hover:text-white transition-colors">
+                <a href="https://nail-salons.san-francisco.near-me.us" className="text-gray-400 hover:text-white transition-colors">
                   San Francisco
-                </Link>
+                </a>
               </li>
               <li>
-                <Link to="/los-angeles" className="text-gray-400 hover:text-white transition-colors">
+                <a href="https://nail-salons.los-angeles.near-me.us" className="text-gray-400 hover:text-white transition-colors">
                   Los Angeles
-                </Link>
+                </a>
               </li>
               <li>
-                <Link to="/chicago" className="text-gray-400 hover:text-white transition-colors">
+                <a href="https://nail-salons.chicago.near-me.us" className="text-gray-400 hover:text-white transition-colors">
                   Chicago
-                </Link>
+                </a>
               </li>
               <li>
-                <Link to="/dallas" className="text-gray-400 hover:text-white transition-colors">
+                <a href="https://nail-salons.dallas.near-me.us" className="text-gray-400 hover:text-white transition-colors">
                   Dallas
-                </Link>
+                </a>
               </li>
               <li>
-                <Link to="/miami" className="text-gray-400 hover:text-white transition-colors">
+                <a href="https://nail-salons.miami.near-me.us" className="text-gray-400 hover:text-white transition-colors">
                   Miami
-                </Link>
+                </a>
               </li>
               <li>
-                <Link to="/seattle" className="text-gray-400 hover:text-white transition-colors">
+                <a href="https://nail-salons.seattle.near-me.us" className="text-gray-400 hover:text-white transition-colors">
                   Seattle
-                </Link>
+                </a>
               </li>
             </ul>
           </div>

@@ -106,10 +106,36 @@ export const WaterRefillWorld: React.FC<WaterRefillWorldProps> = ({ subdomainInf
         element={<LoginPage />} 
       />
       
-      {/* City-specific water refill pages */}
+      {/* Specific city routes for water refill - only allow known cities */}
       <Route 
-        path={`${basePath}/:city`} 
+        path={`${basePath}/san-francisco`} 
         element={<WaterRefillHomePage subdomainInfo={subdomainInfo} />} 
+      />
+      <Route 
+        path={`${basePath}/los-angeles`} 
+        element={<WaterRefillHomePage subdomainInfo={subdomainInfo} />} 
+      />
+      <Route 
+        path={`${basePath}/chicago`} 
+        element={<WaterRefillHomePage subdomainInfo={subdomainInfo} />} 
+      />
+      <Route 
+        path={`${basePath}/dallas`} 
+        element={<WaterRefillHomePage subdomainInfo={subdomainInfo} />} 
+      />
+      
+      {/* 404 handler for invalid paths */}
+      <Route 
+        path="*" 
+        element={
+          <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-gray-900 mb-4">Page Not Found</h1>
+              <p className="text-gray-600 mb-6">This water refill page doesn't exist.</p>
+              <a href="/" className="text-blue-600 hover:text-blue-800">← Back to Water Refill Directory</a>
+            </div>
+          </div>
+        } 
       />
     </Routes>
   );
