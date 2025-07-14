@@ -18,7 +18,7 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
   const dataProvider = DataProviderFactory.getProvider();
 
   // Use search hook to filter stations
-  const { handleSearch, getEffectiveSearchQuery, clearSearch } = useSearch({
+  const { handleSearch, getEffectiveSearchQuery, clearSearch, searchQuery } = useSearch({
     enableUrlParams: false,
     scrollTargetId: 'featured-stations'
   });
@@ -98,7 +98,7 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
         subdomainInfo={subdomainInfo} 
         onSearch={handleSearch}
         onClearSearch={clearSearch}
-        currentSearchQuery={getEffectiveSearchQuery()}
+        currentSearchQuery={searchQuery}
       >
         <div className="min-h-screen bg-gray-100 flex items-center justify-center">
           <div className="text-center">
@@ -115,7 +115,7 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
       subdomainInfo={subdomainInfo} 
       onSearch={handleSearch}
       onClearSearch={clearSearch}
-      currentSearchQuery={getEffectiveSearchQuery()}
+      currentSearchQuery={searchQuery}
     >
       {/* Featured Stations Section */}
       <section className="bg-white py-12" id="featured-stations">
