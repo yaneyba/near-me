@@ -25,6 +25,7 @@ import {
   CheckoutSuccessPage, 
   CheckoutCancelPage 
 } from '@/pages/payment';
+import { ArchitecturePage } from '@/pages/architecture';
 
 // Import layout
 import { SubdomainLayout } from '@/components/layouts';
@@ -57,6 +58,7 @@ export const ServicesWorld: React.FC<ServicesWorldProps> = ({ subdomainInfo }) =
         <Route path="/contact" element={<ContactPage subdomainInfo={subdomainInfo} />} />
         <Route path="/sitemap" element={<SitemapPage subdomainInfo={subdomainInfo} />} />
         <Route path="/sitemap-generator" element={<SitemapPage subdomainInfo={subdomainInfo} />} />
+        <Route path="/architecture" element={<ArchitecturePage subdomainInfo={subdomainInfo} />} />
         <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
         <Route path="/terms-of-service" element={<TermsOfServicePage />} />
         
