@@ -36,11 +36,7 @@ const Layout: React.FC<LayoutProps> = ({ children, subdomainInfo }) => {
         </main>
       </div>
 
-      <Footer
-        category={subdomainInfo.category}
-        city={subdomainInfo.city}
-        state={subdomainInfo.state}
-      />
+      <Footer />
 
       {/* Development Panel - Only visible in development */}
       {(process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost' || window.location.hostname.includes('stackblitz')) && (

@@ -300,11 +300,7 @@ const WaterRefillLayout: React.FC<WaterRefillLayoutProps> = ({
         {children}
       </div>
 
-      <Footer
-        category="water-refill"
-        city={subdomainInfo.city}
-        state={subdomainInfo.state}
-      />
+      <Footer />
 
       {/* Development Panel - Only visible in development */}
       {(process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost' || window.location.hostname.includes('stackblitz')) && (

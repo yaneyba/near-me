@@ -1,125 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { MapPin, Phone, Mail, Clock, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { DataProviderFactory } from '@/providers';
 
-interface FooterProps {
-  category: string;
-  city: string;
-  state: string;
-}
-
-const Footer: React.FC<FooterProps> = ({ category, city, state }) => {
-  const [categories, setCategories] = useState<string[]>([]);
-  const [cities, setCities] = useState<string[]>([]);
-  const [businessCount, setBusinessCount] = useState<number>(0);
+/**
+ * Simple, Static Footer Component - ZERO API calls, instant rendering
+ * 
+ * PHILOSOPHY: Footer should be the same on every page
+ * - Static links that don't change based on current route
+ * - No data fetching or complex business logic
+ * - Instant rendering, fully cacheable
+ * - SEO-friendly with consistent internal linking
+ */
+const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
-
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const dataProvider = DataProviderFactory.getProvider();
-        const [categoriesData, citiesData] = await Promise.all([
-          dataProvider.getCategories(),
-          dataProvider.getCities()
-        ]);
-        setCategories(categoriesData);
-        setCities(citiesData);
-        
-        // Get business count for current category and city
-        try {
-          let businesses;
-          if (city === 'All Cities' || !city) {
-            // Use category-wide search for all cities
-            businesses = await dataProvider.getBusinessesByCategory(category);
-          } else {
-            // Use specific city search
-            businesses = await dataProvider.getBusinesses(category, city);
-          }
-          setBusinessCount(businesses.length);
-        } catch (error) {
-          console.warn('Failed to load business count, using fallback:', error);
-          // Get fallback from data provider statistics
-          try {
-            const stats = await dataProvider.getStatistics();
-            setBusinessCount(stats.general?.defaultBusinessCount);
-          } catch (statsError) {
-            console.warn('Failed to load statistics, using configuration fallback:', statsError);
-            // This will use the fallback defined in the data provider's getStatistics method
-            const fallbackStats = await dataProvider.getStatistics();
-            setBusinessCount(fallbackStats.general?.defaultBusinessCount);
-          }
-        }
-      } catch (error) {
-        console.error('Failed to load footer data:', error);
-        // Fallback to centralized static data
-        try {
-          const dataProvider = DataProviderFactory.getProvider();
-          const [fallbackCategories, fallbackCities, stats] = await Promise.all([
-            dataProvider.getFallbackCategories(),
-            dataProvider.getFallbackCities(),
-            dataProvider.getStatistics()
-          ]);
-          setCategories(fallbackCategories);
-          setCities(fallbackCities);
-          setBusinessCount(stats.general?.defaultBusinessCount);
-        } catch (statsError) {
-          console.error('Critical: Failed to load any fallback data, contact system admin:', statsError);
-          setBusinessCount(0); // Explicit failure state
-        }
-      }
-    };
-
-    loadData();
-  }, [category, city]);
-
-  // Get categories that exist (using DataProvider)
-  const getExistingCategoriesInCurrentCity = (): string[] => {
-    return categories;
-  };
-
-  // Get cities that actually exist for the CURRENT CATEGORY
-  const getExistingCitiesForCurrentCategory = (): string[] => {
-    return cities;
-  };
-
-  const existingCategoriesInCity = getExistingCategoriesInCurrentCity();
-  const existingCitiesForCategory = getExistingCitiesForCurrentCategory();
-
-  const formatForUrl = (text: string) => {
-    return text.toLowerCase().replace(/\s+/g, '-');
-  };
-
-  const formatCityForDisplay = (citySlug: string) => {
-    if (!citySlug || citySlug === 'All Cities') return 'All Cities';
-    return citySlug
-      .split('-')
-      .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-  };
-
-  const formatCategoryForDisplay = (categorySlug: string) => {
-    if (!categorySlug) return 'Services';
-    return categorySlug
-      .split('-')
-      .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-  };
-
-  const cityDisplayName = formatCityForDisplay(city || 'All Cities');
-  const categoryDisplayName = formatCategoryForDisplay(category || 'services');
-  const stateDisplayName = state || 'Nationwide';
 
   return (
     <footer className="bg-gray-900 text-white py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          
           {/* Company Info */}
           <div className="space-y-4">
             <h3 className="text-xl font-bold text-white">Near Me Directory</h3>
             <p className="text-gray-400">
-              Find trusted local businesses in {cityDisplayName}, {stateDisplayName}. 
-              Connecting you with {businessCount}+ verified {categoryDisplayName.toLowerCase()} and other services.
+              Find trusted local businesses across the United States. 
+              Connecting you with verified services in your area.
             </p>
             <div className="flex space-x-4">
               <a href="#" className="text-gray-400 hover:text-blue-500 transition-colors">
@@ -137,53 +42,81 @@ const Footer: React.FC<FooterProps> = ({ category, city, state }) => {
             </div>
           </div>
 
-          {/* Business Categories */}
+          {/* Popular Services */}
           <div className="space-y-4">
-            <h4 className="font-semibold text-white">Services in {cityDisplayName}</h4>
+            <h4 className="font-semibold text-white">Popular Services</h4>
             <ul className="space-y-2">
-              {existingCategoriesInCity.slice(0, 8).map((cat) => {
-                const linkPath = city === 'All Cities' 
-                  ? `/${formatForUrl(cat)}` 
-                  : `/${formatForUrl(cat)}-${city}`;
-                
-                return (
-                  <li key={cat}>
-                    <Link 
-                      to={linkPath}
-                      className="text-gray-400 hover:text-white transition-colors"
-                    >
-                      {formatCategoryForDisplay(cat)} in {cityDisplayName}
-                    </Link>
-                  </li>
-                );
-              })}
+              <li>
+                <Link to="/nail-salons" className="text-gray-400 hover:text-white transition-colors">
+                  Nail Salons
+                </Link>
+              </li>
+              <li>
+                <Link to="/barbershops" className="text-gray-400 hover:text-white transition-colors">
+                  Barbershops
+                </Link>
+              </li>
+              <li>
+                <Link to="/auto-repair" className="text-gray-400 hover:text-white transition-colors">
+                  Auto Repair
+                </Link>
+              </li>
+              <li>
+                <Link to="/restaurants" className="text-gray-400 hover:text-white transition-colors">
+                  Restaurants
+                </Link>
+              </li>
+              <li>
+                <Link to="/hair-salons" className="text-gray-400 hover:text-white transition-colors">
+                  Hair Salons
+                </Link>
+              </li>
+              <li>
+                <Link to="/dentists" className="text-gray-400 hover:text-white transition-colors">
+                  Dentists
+                </Link>
+              </li>
             </ul>
           </div>
 
           {/* Popular Cities */}
           <div className="space-y-4">
-            <h4 className="font-semibold text-white">{categoryDisplayName} in Other Cities</h4>
+            <h4 className="font-semibold text-white">Popular Cities</h4>
             <ul className="space-y-2">
-              {existingCitiesForCategory.slice(0, 8).map((citySlug) => {
-                const linkPath = citySlug === 'All Cities' 
-                  ? `/${category}` 
-                  : `/${category}-${citySlug}`;
-                
-                return (
-                  <li key={citySlug}>
-                    <Link 
-                      to={linkPath}
-                      className="text-gray-400 hover:text-white transition-colors"
-                    >
-                      {formatCityForDisplay(citySlug)}
-                    </Link>
-                  </li>
-                );
-              })}
+              <li>
+                <Link to="/san-francisco" className="text-gray-400 hover:text-white transition-colors">
+                  San Francisco
+                </Link>
+              </li>
+              <li>
+                <Link to="/los-angeles" className="text-gray-400 hover:text-white transition-colors">
+                  Los Angeles
+                </Link>
+              </li>
+              <li>
+                <Link to="/chicago" className="text-gray-400 hover:text-white transition-colors">
+                  Chicago
+                </Link>
+              </li>
+              <li>
+                <Link to="/dallas" className="text-gray-400 hover:text-white transition-colors">
+                  Dallas
+                </Link>
+              </li>
+              <li>
+                <Link to="/miami" className="text-gray-400 hover:text-white transition-colors">
+                  Miami
+                </Link>
+              </li>
+              <li>
+                <Link to="/seattle" className="text-gray-400 hover:text-white transition-colors">
+                  Seattle
+                </Link>
+              </li>
             </ul>
           </div>
 
-          {/* Contact & Resources */}
+          {/* Resources */}
           <div className="space-y-4">
             <h4 className="font-semibold text-white">Resources</h4>
             <ul className="space-y-2">
@@ -218,7 +151,7 @@ const Footer: React.FC<FooterProps> = ({ category, city, state }) => {
                 Business Hours Vary by Location
               </p>
               <p className="text-sm text-gray-400">
-                Contact businesses directly for current hours and availability.
+                Contact businesses directly for current information.
               </p>
             </div>
           </div>
