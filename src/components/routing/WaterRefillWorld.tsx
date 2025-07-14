@@ -31,8 +31,14 @@ interface WaterRefillWorldProps {
  * - Business registration for water stations
  */
 export const WaterRefillWorld: React.FC<WaterRefillWorldProps> = ({ subdomainInfo }) => {
+  console.log('💧 WaterRefillWorld starting with subdomainInfo:', subdomainInfo);
+  
   // Determine the base path for routes
-  const basePath = subdomainInfo.isPathBased ? '/water-refill' : '';
+  // For subdomain-based routing (water-refill.near-me.us), basePath should be empty
+  // For path-based routing (near-me.us/water-refill), basePath should be '/water-refill'
+  const isSubdomainBased = window.location.hostname.startsWith('water-refill.');
+  const basePath = isSubdomainBased ? '' : '/water-refill';
+  console.log('🛤️ WaterRefillWorld basePath:', basePath, '(subdomain-based:', isSubdomainBased, ')');
   
   return (
     <Routes>

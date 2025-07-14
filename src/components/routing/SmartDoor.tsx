@@ -22,18 +22,22 @@ interface SmartDoorProps {
  * 3. Sends you to the right "world"
  */
 export const SmartDoor: React.FC<SmartDoorProps> = ({ subdomainInfo }) => {
+  console.log('🚪 SmartDoor received subdomainInfo:', subdomainInfo);
   
   // 🚪 DECISION 1: Is this water refill?
   if (subdomainInfo.isWaterRefill) {
+    console.log('✅ Routing to WaterRefillWorld');
     return <WaterRefillWorld subdomainInfo={subdomainInfo} />;
   }
   
   // 🚪 DECISION 2: Is this the general services page?
   if (subdomainInfo.isServices) {
+    console.log('✅ Routing to ServicesWorld');
     return <ServicesWorld subdomainInfo={subdomainInfo} />;
   }
   
   // 🚪 DECISION 3: Default - Regular business directory
+  console.log('✅ Routing to BusinessWorld (default)');
   return <BusinessWorld subdomainInfo={subdomainInfo} />;
 };
 

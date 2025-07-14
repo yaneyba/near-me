@@ -11,6 +11,9 @@ interface HomePageProps {
 }
 
 const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
+  console.log('🏠💧 WaterRefillHomePage starting...');
+  console.log('WaterRefillHomePage received subdomainInfo:', subdomainInfo);
+  
   const [featuredStations, setFeaturedStations] = useState<WaterStation[]>([]);
   const [allStations, setAllStations] = useState<WaterStation[]>([]);
   const [loading, setLoading] = useState(true);
