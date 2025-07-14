@@ -6,11 +6,11 @@ import { SmartHero, ServicesSection } from '@/components/shared/content';
 import { PremiumListings, BusinessListings } from '@/components/shared/business';
 import { useSearch } from '@/hooks/useSearch';
 
-interface CategoryHomePageProps {
+interface CategoryPageProps {
   subdomainInfo: SubdomainInfo;
 }
 
-const CategoryHomePage: React.FC<CategoryHomePageProps> = ({ subdomainInfo }) => {
+const CategoryPage: React.FC<CategoryPageProps> = ({ subdomainInfo }) => {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [services, setServices] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -119,4 +119,4 @@ const CategoryHomePage: React.FC<CategoryHomePageProps> = ({ subdomainInfo }) =>
   );
 };
 
-export default CategoryHomePage;
+export default CategoryPage;
