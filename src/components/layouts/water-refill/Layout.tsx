@@ -3,7 +3,7 @@ import { SubdomainInfo } from '@/types';
 import Footer from '@/components/Footer';
 import DevPanel from '@/components/DevPanel';
 import { Link } from 'react-router-dom';
-import { Search, MapPin, Filter } from 'lucide-react';
+import { Search, MapPin, Filter, X } from 'lucide-react';
 import { Logo } from '@/components/water-refill';
 
 interface WaterRefillLayoutProps {
@@ -12,12 +12,21 @@ interface WaterRefillLayoutProps {
   showSearchBar?: boolean;
   hideAllBelowHeader?: boolean;
   onSearch?: (query: string) => void;
+  onClearSearch?: () => void;
+  currentSearchQuery?: string;
 }
 
-const WaterRefillLayout: React.FC<WaterRefillLayoutProps> = ({ children, subdomainInfo, showSearchBar = false, hideAllBelowHeader = false, onSearch }) => {
+const WaterRefillLayout: React.FC<WaterRefillLayoutProps> = ({ 
+  children, 
+  subdomainInfo, 
+  showSearchBar = false, 
+  hideAllBelowHeader = false, 
+  onSearch,
+  onClearSearch,
+  currentSearchQuery = ''
+}) => {
   const [devPanelVisible, setDevPanelVisible] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
 
   const handleDevSubdomainChange = (_category: string, city: string) => {
     const newUrl = `water-refill.near-me.us/${city.toLowerCase().replace(/\s+/g, '-')}`;
@@ -27,13 +36,22 @@ const WaterRefillLayout: React.FC<WaterRefillLayoutProps> = ({ children, subdoma
 
   const handleSearchSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (searchQuery.trim() && onSearch) {
-      onSearch(searchQuery.trim());
+    if (currentSearchQuery.trim() && onSearch) {
+      onSearch(currentSearchQuery.trim());
     }
   };
 
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
+    const value = e.target.value;
+    if (onSearch) {
+      onSearch(value);
+    }
+  };
+
+  const handleClearSearch = () => {
+    if (onClearSearch) {
+      onClearSearch();
+    }
   };
 
   // Custom header for water refill stations (like AquaFinder)
@@ -142,11 +160,20 @@ const WaterRefillLayout: React.FC<WaterRefillLayoutProps> = ({ children, subdoma
                 <Search className="absolute left-3 top-3.5 w-5 h-5 text-gray-400 pointer-events-none" />
                 <input
                   type="text"
-                  value={searchQuery}
+                  value={currentSearchQuery}
                   onChange={handleSearchInputChange}
                   placeholder="Search by city, zip code, or station name..."
-                  className="w-full pl-10 pr-4 py-3.5 text-gray-900 rounded-lg border-0 focus:ring-2 focus:ring-blue-300 transition-all text-base placeholder:text-gray-500"
+                  className="w-full pl-10 pr-10 py-3.5 text-gray-900 rounded-lg border-0 focus:ring-2 focus:ring-blue-300 transition-all text-base placeholder:text-gray-500"
                 />
+                {currentSearchQuery && (
+                  <button
+                    type="button"
+                    onClick={handleClearSearch}
+                    className="absolute right-3 top-3.5 w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                )}
               </div>
               <button 
                 type="submit"
@@ -206,11 +233,20 @@ const WaterRefillLayout: React.FC<WaterRefillLayoutProps> = ({ children, subdoma
               <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400 pointer-events-none" />
               <input
                 type="text"
-                value={searchQuery}
+                value={currentSearchQuery}
                 onChange={handleSearchInputChange}
                 placeholder="Search by location, station name, or zip code..."
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-sm sm:text-base"
+                className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-sm sm:text-base"
               />
+              {currentSearchQuery && (
+                <button
+                  type="button"
+                  onClick={handleClearSearch}
+                  className="absolute right-3 top-3 w-4 h-4 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
             
             {/* Button group - stacked on mobile, inline on desktop */}

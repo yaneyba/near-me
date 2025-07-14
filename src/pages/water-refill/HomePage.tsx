@@ -4,6 +4,7 @@ import { Layout as WaterRefillLayout } from '@/components/layouts/water-refill';
 import { Link } from 'react-router-dom';
 import { DataProviderFactory } from '@/providers/DataProviderFactory';
 import { WaterStationCard, transformBusinessToWaterStation, WaterStation } from '@/components/water-refill';
+import { useSearch } from '@/hooks/useSearch';
 
 interface HomePageProps {
   subdomainInfo: SubdomainInfo;
@@ -11,9 +12,16 @@ interface HomePageProps {
 
 const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
   const [featuredStations, setFeaturedStations] = useState<WaterStation[]>([]);
+  const [allStations, setAllStations] = useState<WaterStation[]>([]);
   const [loading, setLoading] = useState(true);
 
   const dataProvider = DataProviderFactory.getProvider();
+
+  // Use search hook to filter stations
+  const { handleSearch, getEffectiveSearchQuery, clearSearch } = useSearch({
+    enableUrlParams: false,
+    scrollTargetId: 'featured-stations'
+  });
 
   useEffect(() => {
     const loadFeaturedStations = async () => {
@@ -32,12 +40,14 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
           allBusinesses = await dataProvider.getBusinesses('water-refill', cityToUse);
         }
         
-        // Take the top 3 highest-rated stations as featured and transform them
-        const featured = allBusinesses
-          .sort((a, b) => (b.rating || 0) - (a.rating || 0))
-          .slice(0, 3)
-          .map(transformBusinessToWaterStation);
+        // Transform all businesses to stations and store them
+        const allTransformed = allBusinesses.map(transformBusinessToWaterStation);
+        setAllStations(allTransformed);
         
+        // Set initial featured stations (top 3)
+        const featured = allTransformed
+          .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+          .slice(0, 3);
         setFeaturedStations(featured);
       } catch (error) {
         console.error('Error loading featured stations:', error);
@@ -50,12 +60,25 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
     loadFeaturedStations();
   }, [dataProvider, subdomainInfo?.city]);
 
-  // Handle search from layout (keep the search fix)
-  const handleSearch = (query: string) => {
-    // For now, just scroll to stations section or navigate to stations page
-    console.log('Search query:', query);
-    // Could implement search functionality here later
-  };
+  // Filter stations based on search query
+  useEffect(() => {
+    const searchQuery = getEffectiveSearchQuery();
+    if (!searchQuery) {
+      // No search - show top 3 featured stations
+      const topFeatured = allStations
+        .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+        .slice(0, 3);
+      setFeaturedStations(topFeatured);
+    } else {
+      // Filter stations based on search query
+      const filtered = allStations.filter(station =>
+        station.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        station.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        station.city.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFeaturedStations(filtered);
+    }
+  }, [allStations, getEffectiveSearchQuery]);
 
   // Fallback if subdomainInfo is not available
   if (!subdomainInfo) {
@@ -71,7 +94,12 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
 
   if (loading) {
     return (
-      <WaterRefillLayout subdomainInfo={subdomainInfo} onSearch={handleSearch}>
+      <WaterRefillLayout 
+        subdomainInfo={subdomainInfo} 
+        onSearch={handleSearch}
+        onClearSearch={clearSearch}
+        currentSearchQuery={getEffectiveSearchQuery()}
+      >
         <div className="min-h-screen bg-gray-100 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -83,18 +111,30 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
   }
 
   return (
-    <WaterRefillLayout subdomainInfo={subdomainInfo} onSearch={handleSearch}>
+    <WaterRefillLayout 
+      subdomainInfo={subdomainInfo} 
+      onSearch={handleSearch}
+      onClearSearch={clearSearch}
+      currentSearchQuery={getEffectiveSearchQuery()}
+    >
       {/* Featured Stations Section */}
-      <section className="bg-white py-12">
+      <section className="bg-white py-12" id="featured-stations">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Featured Water Stations</h2>
-          <p className="text-lg text-gray-600 mb-8">Top-rated water refill stations trusted by thousands of customers</p>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            {getEffectiveSearchQuery() ? 'Search Results' : 'Featured Water Stations'}
+          </h2>
+          <p className="text-lg text-gray-600 mb-8">
+            {getEffectiveSearchQuery() 
+              ? `Found ${featuredStations.length} station${featuredStations.length !== 1 ? 's' : ''} matching "${getEffectiveSearchQuery()}"`
+              : 'Top-rated water refill stations trusted by thousands of customers'
+            }
+          </p>
           
           {loading ? (
             <div className="flex justify-center">
               <div className="text-lg">Loading featured stations...</div>
             </div>
-          ) : (
+          ) : featuredStations.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               {featuredStations.map(station => (
                 <WaterStationCard
@@ -104,14 +144,28 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
                 />
               ))}
             </div>
+          ) : getEffectiveSearchQuery() ? (
+            <div className="text-center py-8">
+              <div className="text-6xl mb-4">🔍</div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">No stations found</h3>
+              <p className="text-gray-600 mb-4">No water stations match your search for "{getEffectiveSearchQuery()}"</p>
+              <p className="text-sm text-gray-500">Try a different search term or check the spelling</p>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <div className="text-6xl mb-4">💧</div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">No stations available</h3>
+              <p className="text-gray-600">Check back soon for new water refill stations</p>
+            </div>
           )}
-          
-          <Link 
-            to="/stations" 
-            className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            View All Stations →
-          </Link>
+           {!getEffectiveSearchQuery() && featuredStations.length > 0 && (
+            <Link 
+              to="/stations" 
+              className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              View All Stations →
+            </Link>
+          )}
         </div>
       </section>
 

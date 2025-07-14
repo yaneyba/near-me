@@ -1,24 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { DataProviderFactory } from '@/providers';
 import { Business, SubdomainInfo } from '@/types';
 import { generateTitle } from '@/utils/subdomainParser';
 import { SmartHero, ServicesSection } from '@/components/shared/content';
 import { PremiumListings, BusinessListings } from '@/components/shared/business';
+import { useSearch } from '@/hooks/useSearch';
 
 interface HomePageProps {
   subdomainInfo: SubdomainInfo;
 }
 
 const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
-  const [searchParams] = useSearchParams();
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [services, setServices] = useState<string[]>([]);
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
-  const [serviceFilter, setServiceFilter] = useState<string>('');
   const [loading, setLoading] = useState(true);
   
   const dataProvider = DataProviderFactory.getProvider();
+
+  // Use the search hook with URL params enabled for main homepage
+  const {
+    handleSearch,
+    handleServiceFilter, 
+    getEffectiveSearchQuery
+  } = useSearch({
+    enableUrlParams: true,
+    scrollTargetId: 'businesses'
+  });
 
   // Update document title
   useEffect(() => {
@@ -53,27 +60,6 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    setServiceFilter(''); // Clear service filter when searching
-    // Smooth scroll to business listings section
-    const businessSection = document.getElementById('businesses');
-    if (businessSection && query) {
-      businessSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
-
-  const handleServiceFilter = (service: string) => {
-    setServiceFilter(service);
-    setSearchQuery(''); // Clear search query when filtering by service
-  };
-
-  // Combine search and service filter for business listings
-  const getEffectiveSearchQuery = () => {
-    if (serviceFilter) return serviceFilter;
-    return searchQuery;
   };
 
   if (loading) {
