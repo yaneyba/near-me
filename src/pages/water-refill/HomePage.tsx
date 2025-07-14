@@ -144,20 +144,20 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
                 />
               ))}
             </div>
-          ) : getEffectiveSearchQuery() ? (
+          ) : featuredStations.length === 0 && getEffectiveSearchQuery() ? (
             <div className="text-center py-8">
               <div className="text-6xl mb-4">🔍</div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">No stations found</h3>
               <p className="text-gray-600 mb-4">No water stations match your search for "{getEffectiveSearchQuery()}"</p>
               <p className="text-sm text-gray-500">Try a different search term or check the spelling</p>
             </div>
-          ) : (
+          ) : featuredStations.length === 0 ? (
             <div className="text-center py-8">
               <div className="text-6xl mb-4">💧</div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">No stations available</h3>
               <p className="text-gray-600">Check back soon for new water refill stations</p>
             </div>
-          )}
+          ) : null}
            {!getEffectiveSearchQuery() && featuredStations.length > 0 && (
             <Link 
               to="/stations" 
