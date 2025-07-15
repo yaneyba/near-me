@@ -10,11 +10,11 @@ This comprehensive guide walks you through creating and deploying new sites for 
 - **Features**: City-specific pages, business listings, contact details, hours
 - **Layout**: `services` in subdomain-generation.json
 
-### 2. **💧 Water Refill Stations** (Special Layout)
-- **Example**: `water-refill` 
-- **Focus**: Location-based water refill stations with AquaFinder branding
-- **Features**: Map integration, station finder, eco-friendly messaging
-- **Layout**: `water` in subdomain-generation.json
+### 2. **💧 Custom Layout** (Specialized Branding)
+- **Examples**: `water-refill`, `ev-charging`, `public-wifi`
+- **Focus**: Location-based services with custom branding and specialized UI
+- **Features**: Map integration, custom branding, specialized messaging, unique layouts
+- **Layout**: `water` (or other custom layouts) in subdomain-generation.json
 
 ### 3. **🍕 Food Delivery** (Future Layout)
 - **Example**: `food-delivery`
@@ -134,9 +134,9 @@ node scripts/manage-subdomains.js list
 
 ---
 
-## 💧 **TYPE 2: Water Refill Stations**
+## 💧 **TYPE 2: Custom Layout Sites**
 
-### **Step 1: Prepare Water Station Data**
+### **Step 1: Prepare Custom Layout Data**
 
 **CSV Format** (`data/water-stations-dallas.csv`):
 ```csv
@@ -145,26 +145,29 @@ name,description,phone,website,address,city,state,zip_code,latitude,longitude,ra
 "City Hall Fountain","Public water fountain with refill","","","1500 Marilla St","Dallas","Texas","75201","32.7767","-96.8003","4.2","23","true","false","active","2019","{""monday"":""6:00 AM - 10:00 PM""}","water refill"
 ```
 
-### **Step 2: Deploy Water Refill Site**
+### **Step 2: Deploy Custom Layout Site**
 
 ```bash
-# Deploy water refill stations
+# Deploy water refill stations (uses custom layout)
 node scripts/deploy-category.js water-refill dallas ./data/water-stations-dallas.csv
+
+# Deploy EV charging stations (would use custom layout)
+node scripts/deploy-category.js ev-charging austin ./data/ev-charging-austin.csv
 ```
 
-**Special Features for Water Sites**:
-- Uses AquaFinder branding
+**Special Features for Custom Layout Sites**:
+- Uses specialized branding (e.g., AquaFinder for water-refill)
 - Map-focused interface
-- Eco-friendly messaging
-- 24/7 availability indicators
+- Custom messaging and UI elements
+- Specialized availability indicators
 
-### **Step 3: Verify Water Station Deployment**
+### **Step 3: Verify Custom Layout Deployment**
 
 ```bash
-# Test water station API
+# Test custom layout API
 curl "https://near-me.us/api/businesses?category=water-refill&city=dallas"
 
-# Check the water refill subdomain
+# Check the custom layout subdomain
 open https://water-refill-dallas.near-me.us
 ```
 
@@ -316,7 +319,7 @@ node scripts/deploy-category.js auto-repair plano ./data/auto-repair-plano.csv
 open https://auto-repair-plano.near-me.us
 ```
 
-### **Example 3: Water Stations in Dallas**
+### **Example 3: Water Stations in Dallas (Custom Layout)**
 ```bash
 # 1. Deploy
 node scripts/deploy-category.js water-refill dallas ./data/water-stations-dallas.csv
