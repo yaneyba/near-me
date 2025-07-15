@@ -209,28 +209,33 @@ class CategoryDeployer {
 async function main() {
   const args = process.argv.slice(2);
   
-  if (args.length < 2) {
+  if (args.length === 0) {
     console.error('Usage: node scripts/deploy-category.js <category> <city> [data-source]');
+    console.error('       node scripts/deploy-category.js rollback <category> <city>');
     console.error('');
     console.error('Examples:');
     console.error('  node scripts/deploy-category.js nail-salons frisco ./data/nail-salons.csv');
     console.error('  node scripts/deploy-category.js restaurants downtown ./data/restaurants.json');
     console.error('  node scripts/deploy-category.js auto-repair oakland "auto repair shops"');
-    console.error('');
-    console.error('Actions:');
-    console.error('  deploy <category> <city> [data-source] - Deploy new category');
-    console.error('  rollback <category> <city>            - Rollback deployment');
+    console.error('  node scripts/deploy-category.js rollback nail-salons frisco');
     process.exit(1);
   }
   
-  const [action, category, city, dataSource] = args;
   const deployer = new CategoryDeployer();
   
   try {
-    if (action === 'rollback') {
-      await deployer.rollback(category, city);
+    if (args[0] === 'rollback') {
+      if (args.length < 3) {
+        console.error('Usage: node scripts/deploy-category.js rollback <category> <city>');
+        process.exit(1);
+      }
+      await deployer.rollback(args[1], args[2]);
     } else {
-      await deployer.deployCategory(action, category, city); // action is actually category
+      if (args.length < 2) {
+        console.error('Usage: node scripts/deploy-category.js <category> <city> [data-source]');
+        process.exit(1);
+      }
+      await deployer.deployCategory(args[0], args[1], args[2]);
     }
     
   } catch (error) {
