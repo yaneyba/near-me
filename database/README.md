@@ -1,5 +1,19 @@
 # Database Management Guide
 
+## ⚠️ **CRITICAL: Always Use --remote Flag**
+
+**This project uses REMOTE production database only. Local database will cause confusion and data loss.**
+
+```bash
+# ✅ CORRECT - Always use --remote
+wrangler d1 execute near-me-db --remote --command "SELECT * FROM businesses;"
+
+# ❌ WRONG - Creates/uses local database instead of production
+wrangler d1 execute near-me-db --command "SELECT * FROM businesses;"
+```
+
+---
+
 ## Overview
 This project uses **Cloudflare D1** (SQLite-based) as the primary database for the Near Me directory application.
 
@@ -18,14 +32,16 @@ This project uses **Cloudflare D1** (SQLite-based) as the primary database for t
 
 #### 2. Using Wrangler CLI
 ```bash
-# Connect to the database
-wrangler d1 execute near-me-db --command "SELECT name FROM sqlite_master WHERE type='table';"
+# Connect to the REMOTE database (ALWAYS use --remote for this project)
+wrangler d1 execute near-me-db --remote --command "SELECT name FROM sqlite_master WHERE type='table';"
 
-# Run queries from file
-wrangler d1 execute near-me-db --file=./database/queries/sample.sql
+# Run queries from file on REMOTE database
+wrangler d1 execute near-me-db --remote --file=./database/queries/sample.sql
 
-# Get database info
+# Get database info (remote)
 wrangler d1 info near-me-db
+
+# ⚠️ IMPORTANT: Always use --remote flag to avoid local database confusion
 ```
 
 #### 3. Using VS Code Extension
@@ -92,11 +108,11 @@ PRAGMA table_info(businesses);
 
 ### Data Export/Import
 ```bash
-# Export data
-wrangler d1 execute near-me-db --command ".dump" > backup.sql
+# Export data (ALWAYS use --remote)
+wrangler d1 execute near-me-db --remote --command ".dump" > backup.sql
 
-# Import data (be careful!)
-wrangler d1 execute near-me-db --file=backup.sql
+# Import data (be careful! ALWAYS use --remote)
+wrangler d1 execute near-me-db --remote --file=backup.sql
 ```
 
 ## API Integration
@@ -119,12 +135,25 @@ wrangler d1 execute near-me-db --file=backup.sql
    - Check Cloudflare D1 service status
    - Verify database ID in wrangler.toml
 
-2. **Schema Changes Not Reflected**
-   - Run migrations using wrangler
+2. **Local vs Remote Database Confusion** ⚠️ **CRITICAL**
+   - **Problem**: Wrangler tries to create/use local database instead of remote production database
+   - **Symptoms**: Commands work but data doesn't appear in production, or "database not found" errors
+   - **Solution**: Always use `--remote` flag with wrangler commands:
+     ```bash
+     # WRONG (creates/uses local DB)
+     wrangler d1 execute near-me-db --command "SELECT * FROM businesses;"
+     
+     # CORRECT (uses remote production DB)
+     wrangler d1 execute near-me-db --remote --command "SELECT * FROM businesses;"
+     ```
+   - **Rule**: For this project, ALWAYS use `--remote` flag unless explicitly testing locally
+
+3. **Schema Changes Not Reflected**
+   - Run migrations using wrangler with `--remote` flag
    - Clear application cache
    - Restart development server
 
-3. **API 500 Errors**
+4. **API 500 Errors**
    - Check function logs in Cloudflare dashboard
    - Verify SQL syntax in API functions
    - Check database binding configuration
@@ -167,8 +196,8 @@ wrangler d1 execute near-me-db --file=backup.sql
 
 ### Regular Backups
 ```bash
-# Weekly backup
-wrangler d1 execute near-me-db --command ".dump" > "backup-$(date +%Y%m%d).sql"
+# Weekly backup (ALWAYS use --remote)
+wrangler d1 execute near-me-db --remote --command ".dump" > "backup-$(date +%Y%m%d).sql"
 ```
 
 ### Recovery Process
@@ -210,17 +239,19 @@ wrangler d1 execute near-me-db --command ".dump" > "backup-$(date +%Y%m%d).sql"
 
 ### Database Access Commands
 ```bash
-# Connect to database
-wrangler d1 execute near-me-db
+# Connect to database (REMOTE - production data)
+wrangler d1 execute near-me-db --remote
 
-# List tables
-wrangler d1 execute near-me-db --command "SELECT name FROM sqlite_master WHERE type='table';"
+# List tables (REMOTE)
+wrangler d1 execute near-me-db --remote --command "SELECT name FROM sqlite_master WHERE type='table';"
 
-# Get business count
-wrangler d1 execute near-me-db --command "SELECT COUNT(*) as total FROM businesses;"
+# Get business count (REMOTE)
+wrangler d1 execute near-me-db --remote --command "SELECT COUNT(*) as total FROM businesses;"
 
-# Check water refill stations
-wrangler d1 execute near-me-db --command "SELECT COUNT(*) as count FROM businesses WHERE category='water-refill';"
+# Check water refill stations (REMOTE)
+wrangler d1 execute near-me-db --remote --command "SELECT COUNT(*) as count FROM businesses WHERE category='water-refill';"
+
+# ⚠️ CRITICAL: Always use --remote flag for this project to access production data
 ```
 
 ### Important File Locations
