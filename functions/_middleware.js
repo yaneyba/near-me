@@ -56,7 +56,7 @@ export async function onRequest(context) {
   const parts = hostname.split('.');
   
   // Category-only subdomains: nail-salons.near-me.us, auto-repair.near-me.us, water-refill.near-me.us
-  if (parts.length === 4 && parts[1] === 'near-me' && parts[2] === 'us') {
+  if (parts.length === 3 && parts[1] === 'near-me' && parts[2] === 'us') {
     const category = parts[0];
     
     // Known category-only subdomains
