@@ -28,6 +28,8 @@ export enum ApiEndpoints {
   ADMIN_BUSINESSES = '/api/admin/businesses',
   ADMIN_STATS = '/api/admin/stats',
   ADMIN_ENGAGEMENT = '/api/admin/engagement',
+  ADMIN_ANALYTICS_BUSINESS = '/api/admin/analytics/business',
+  ADMIN_ANALYTICS_OVERALL = '/api/admin/analytics/overall',
 
   // Legacy/Direct query endpoint (for migration)
   QUERY = '/api/query'
@@ -86,7 +88,39 @@ export const EndpointBuilder = {
    * Build admin businesses endpoint with type param
    */
   adminBusinessesWithType: (type: string = 'all') => 
-    `${ApiEndpoints.ADMIN_BUSINESSES}?type=${type}`
+    `${ApiEndpoints.ADMIN_BUSINESSES}?type=${type}`,
+
+  /**
+   * Build business analytics endpoint
+   */
+  businessAnalytics: (
+    businessId: string, 
+    period: 'day' | 'week' | 'month' | 'year', 
+    startDate?: Date, 
+    endDate?: Date
+  ) => {
+    const params = new URLSearchParams({ 
+      business_id: businessId, 
+      period 
+    });
+    if (startDate) params.append('start_date', startDate.toISOString());
+    if (endDate) params.append('end_date', endDate.toISOString());
+    return `${ApiEndpoints.ADMIN_ANALYTICS_BUSINESS}?${params}`;
+  },
+
+  /**
+   * Build overall analytics endpoint
+   */
+  overallAnalytics: (
+    period: 'day' | 'week' | 'month' | 'year' = 'week',
+    startDate?: Date,
+    endDate?: Date
+  ) => {
+    const params = new URLSearchParams({ period });
+    if (startDate) params.append('start_date', startDate.toISOString());
+    if (endDate) params.append('end_date', endDate.toISOString());
+    return `${ApiEndpoints.ADMIN_ANALYTICS_OVERALL}?${params}`;
+  }
 } as const;
 
 /**

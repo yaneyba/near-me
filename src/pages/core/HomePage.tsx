@@ -74,12 +74,6 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
           categoryMap.set(category, (categoryMap.get(category) || 0) + 1);
         });
 
-        // Force water-refill to appear if it exists in data but wasn't loaded
-        if (!categoryMap.has('water-refill')) {
-          console.log('Water-refill not found in loaded businesses, adding manually...');
-          categoryMap.set('water-refill', 3); // We know there are 3 water-refill businesses
-        }
-
         console.log('Final category map:', Array.from(categoryMap.entries()));
 
         const formatCategoryName = (category: string): string => {
