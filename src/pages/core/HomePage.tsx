@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { SubdomainInfo } from '@/types';
 import { DataProviderFactory } from '@/providers/DataProviderFactory';
-import { MapPin, Star, ExternalLink, Search } from 'lucide-react';
+import { MapPin, ExternalLink, Search } from 'lucide-react';
 
 interface HomePageProps {
   subdomainInfo: SubdomainInfo;
@@ -68,17 +68,17 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
           const serviceCategories: ServiceCategory[] = categories.map((category) => ({
             name: formatCategoryName(category),
             slug: category,
-            count: Math.floor(Math.random() * 50) + 10, // Placeholder count
+            count: 0, // Remove fake counts
             description: `Find the best ${formatCategoryName(category).toLowerCase()} near you`,
             icon: getServiceIcon(category)
           }));
 
-          // Create city data with real state information
+          // Create city data with real state information (no fake counts)
           const cityData: CityData[] = cities.map((city) => ({
             name: city,
             slug: city.toLowerCase().replace(/\s+/g, '-'),
-            state: cityStateMap[city] || 'Unknown', // Use real state from database
-            count: Math.floor(Math.random() * 100) + 20 // Placeholder count
+            state: cityStateMap[city] || 'Unknown',
+            count: 0 // Remove fake counts
           }));
 
           setServices(serviceCategories.sort((a, b) => b.count - a.count));
@@ -184,9 +184,7 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
                       </div>
                     </div>
                     <div className="flex items-center space-x-2 text-sm text-gray-500">
-                      <Star className="w-4 h-4" />
-                      <span>{service.count} businesses</span>
-                      <ExternalLink className="w-4 h-4 ml-2" />
+                      <ExternalLink className="w-4 h-4" />
                     </div>
                   </div>
                 </a>
@@ -222,9 +220,7 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
                       </div>
                     </div>
                     <div className="flex items-center space-x-2 text-sm text-gray-500">
-                      <Star className="w-4 h-4" />
-                      <span>{city.count} businesses</span>
-                      <ExternalLink className="w-4 h-4 ml-2" />
+                      <ExternalLink className="w-4 h-4" />
                     </div>
                   </div>
                 </a>
@@ -249,12 +245,6 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
                 {cities.length}
               </div>
               <div className="text-gray-600">Cities Covered</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-blue-600 mb-2">
-                {services.reduce((sum, s) => sum + s.count, 0)}
-              </div>
-              <div className="text-gray-600">Total Businesses</div>
             </div>
           </div>
         </div>

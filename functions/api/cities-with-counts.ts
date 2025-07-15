@@ -2,28 +2,18 @@ import type { Env } from '../types';
 
 export async function onRequestGet({ env, request }: { env: Env; request: Request }) {
   try {
-    const url = new URL(request.url);
-    const includeState = url.searchParams.has('include_state');
-
-    let query: string;
-    if (includeState) {
-      // Return cities that have businesses, with their states
-      query = `
-        SELECT DISTINCT b.city as name, b.state 
-        FROM businesses b 
-        WHERE b.city IS NOT NULL AND b.city != '' 
-          AND b.state IS NOT NULL AND b.state != ''
-        ORDER BY b.city ASC
-      `;
-    } else {
-      // Return cities that have businesses
-      query = `
-        SELECT DISTINCT b.city as name 
-        FROM businesses b 
-        WHERE b.city IS NOT NULL AND b.city != '' 
-        ORDER BY b.city ASC
-      `;
-    }
+    // Get cities with their business counts
+    const query = `
+      SELECT 
+        b.city as name, 
+        b.state,
+        COUNT(*) as business_count
+      FROM businesses b 
+      WHERE b.city IS NOT NULL AND b.city != '' 
+        AND b.state IS NOT NULL AND b.state != ''
+      GROUP BY b.city, b.state
+      ORDER BY business_count DESC, b.city ASC
+    `;
 
     const result = await env.DB.prepare(query).all();
 
@@ -37,8 +27,8 @@ export async function onRequestGet({ env, request }: { env: Env; request: Reques
       },
     });
   } catch (error) {
-    console.error('Failed to get cities:', error);
-    return new Response(JSON.stringify({ error: 'Failed to fetch cities' }), {
+    console.error('Failed to get cities with counts:', error);
+    return new Response(JSON.stringify({ error: 'Failed to fetch cities with counts' }), {
       status: 500,
       headers: {
         'Content-Type': 'application/json',
