@@ -41,49 +41,10 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
         
         const dataProvider = DataProviderFactory.getProvider();
         
-        try {
-          // Try to get aggregated homepage data first
-          const homePageData = await dataProvider.getHomePageData();
-          setServices(homePageData.services);
-          setCities(homePageData.cities);
-        } catch (apiError) {
-          console.warn('Homepage API not available, using fallback data:', apiError);
-          
-          // Fallback: Generate basic data from categories and cities
-          const [categories, cities, cityStateMap] = await Promise.all([
-            dataProvider.getCategories(),
-            dataProvider.getCities(),
-            dataProvider.getCityStateMap()
-          ]);
-
-          // Create service categories with placeholder data
-          const formatCategoryName = (category: string): string =>
-            category
-              .split('-')
-              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-              .join(' ');
-
-          const getServiceIcon = (_category: string): string => '🏪';
-
-          const serviceCategories: ServiceCategory[] = categories.map((category) => ({
-            name: formatCategoryName(category),
-            slug: category,
-            count: 0, // Remove fake counts
-            description: `Find the best ${formatCategoryName(category).toLowerCase()} near you`,
-            icon: getServiceIcon(category)
-          }));
-
-          // Create city data with real state information (no fake counts)
-          const cityData: CityData[] = cities.map((city) => ({
-            name: city,
-            slug: city.toLowerCase().replace(/\s+/g, '-'),
-            state: cityStateMap[city] || 'Unknown',
-            count: 0 // Remove fake counts
-          }));
-
-          setServices(serviceCategories.sort((a, b) => b.count - a.count));
-          setCities(cityData.sort((a, b) => b.count - a.count));
-        }
+        // Get aggregated homepage data from single API endpoint
+        const homePageData = await dataProvider.getHomePageData();
+        setServices(homePageData.services);
+        setCities(homePageData.cities);
       } catch (error) {
         console.error('Failed to load homepage data:', error);
         setError('Failed to load data');

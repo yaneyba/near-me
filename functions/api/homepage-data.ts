@@ -12,14 +12,14 @@ export const onRequest = async (context: any): Promise<Response> => {
     // Get all services with counts
     const servicesQuery = `
       SELECT 
-        s.name,
-        s.slug,
-        s.description,
+        s.service as name,
+        s.category as slug,
+        s.service as description,
         COUNT(DISTINCT b.id) as count
       FROM services s
-      LEFT JOIN businesses b ON b.category = s.slug
-      GROUP BY s.name, s.slug, s.description
-      ORDER BY count DESC, s.name ASC
+      LEFT JOIN businesses b ON b.category = s.category
+      GROUP BY s.service, s.category
+      ORDER BY count DESC, s.service ASC
     `;
 
     // Get all cities with business counts  
