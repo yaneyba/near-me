@@ -132,11 +132,20 @@ function generateHTML(page) {
   const assets = getAssetFilenames();
   const { serviceLinks, waterLinks } = generateFooterLinks();
 
-  const title = page.title;
-  const description = page.description;
-  const keywords = page.categoryUrl ? 
-    `${page.categoryUrl.replace('-', ' ')}, ${page.categoryUrl.replace('-', ' ')} near me, local ${page.categoryUrl.replace('-', ' ')}` :
-    'local business directory, near me';
+  // OPTIMIZED FOR WATER REFILL
+  const title = page.categoryUrl === 'water-refill' ? 
+    'Water Refill Near Me | Find Local Stations | AquaFinder' : 
+    page.title;
+
+  const description = page.categoryUrl === 'water-refill' ? 
+    'Find clean, affordable water refill stations near you. 486+ verified locations nationwide. Save money ($0.25/gallon vs $3+ bottles) and reduce plastic waste with AquaFinder\'s verified directory.' : 
+    page.description;
+
+  const keywords = page.categoryUrl === 'water-refill' ? 
+    'water refill near me, water refill stations, water filling stations, refill water near me, clean water refill, affordable water refill, water station locations' :
+    (page.categoryUrl ? 
+      `${page.categoryUrl.replace('-', ' ')}, ${page.categoryUrl.replace('-', ' ')} near me, local ${page.categoryUrl.replace('-', ' ')}` :
+      'local business directory, near me');
 
   // Google Analytics & Tag Manager IDs from env
   const GA_ID = process.env.VITE_GOOGLE_ANALYTICS_ID || '';
@@ -153,9 +162,11 @@ function generateHTML(page) {
     }
   }
 
-  const canonicalUrl = page.categoryUrl ? 
-    `https://${page.categoryUrl}.near-me.us/` : 
-    'https://near-me.us/';
+  const canonicalUrl = page.categoryUrl === 'water-refill' ? 
+    'https://water-refill.near-me.us/' : 
+    (page.categoryUrl ? 
+      `https://${page.categoryUrl}.near-me.us/` : 
+      'https://near-me.us/');
 
   // Generate hardcoded footer for SEO
   const seoFooter = `
@@ -166,18 +177,30 @@ function generateHTML(page) {
           
           <!-- Company Info -->
           <div class="space-y-4">
-            <h3 class="text-xl font-bold text-white">Near Me Directory</h3>
+            <h3 class="text-xl font-bold text-white">${page.categoryUrl === 'water-refill' ? 'AquaFinder' : 'Near Me Directory'}</h3>
             <p class="text-gray-400">
-              Find trusted local businesses across the United States. 
-              Connecting you with verified services in your area.
+              ${page.categoryUrl === 'water-refill' ? 
+                'Find clean, affordable water refill stations near you. Save money and reduce plastic waste with our comprehensive directory of verified locations.' :
+                'Find trusted local businesses across the United States. Connecting you with verified services in your area.'
+              }
             </p>
+            ${page.categoryUrl === 'water-refill' ? 
+              '<div class="text-sm text-gray-400"><div>486+ verified locations</div><div>Average $0.25/gallon</div></div>' : 
+              ''
+            }
           </div>
 
           <!-- Popular Services -->
           <div class="space-y-4">
-            <h4 class="font-semibold text-white">Popular Services</h4>
+            <h4 class="font-semibold text-white">${page.categoryUrl === 'water-refill' ? 'Popular Searches' : 'Popular Services'}</h4>
             <ul class="space-y-2">
-              ${serviceLinks.map(link => `
+              ${page.categoryUrl === 'water-refill' ? `
+              <li><a href="/" class="text-gray-400 hover:text-white transition-colors">Water Refill Near Me</a></li>
+              <li><a href="/water-stations" class="text-gray-400 hover:text-white transition-colors">Water Stations</a></li>
+              <li><a href="/refill-locations" class="text-gray-400 hover:text-white transition-colors">Refill Locations</a></li>
+              <li><a href="/clean-water" class="text-gray-400 hover:text-white transition-colors">Clean Water Refill</a></li>
+              <li><a href="/affordable-water" class="text-gray-400 hover:text-white transition-colors">Affordable Water</a></li>
+              ` : serviceLinks.map(link => `
               <li>
                 <a href="${link.url}" class="text-gray-400 hover:text-white transition-colors">
                   ${link.label}
@@ -186,11 +209,17 @@ function generateHTML(page) {
             </ul>
           </div>
 
-          <!-- Water Refill Stations -->
+          <!-- Water Refill Stations / Cities -->
           <div class="space-y-4">
-            <h4 class="font-semibold text-white">Water Refill Stations</h4>
+            <h4 class="font-semibold text-white">${page.categoryUrl === 'water-refill' ? 'Top Cities' : 'Water Refill Stations'}</h4>
             <ul class="space-y-2">
-              ${waterLinks.map(link => `
+              ${page.categoryUrl === 'water-refill' ? `
+              <li><a href="/san-francisco" class="text-gray-400 hover:text-white transition-colors">San Francisco Water Refill</a></li>
+              <li><a href="/los-angeles" class="text-gray-400 hover:text-white transition-colors">Los Angeles Water Refill</a></li>
+              <li><a href="/new-york" class="text-gray-400 hover:text-white transition-colors">New York Water Refill</a></li>
+              <li><a href="/chicago" class="text-gray-400 hover:text-white transition-colors">Chicago Water Refill</a></li>
+              <li><a href="/houston" class="text-gray-400 hover:text-white transition-colors">Houston Water Refill</a></li>
+              ` : waterLinks.map(link => `
               <li>
                 <a href="${link.url}" class="text-gray-400 hover:text-white transition-colors">
                   ${link.label}
@@ -205,17 +234,19 @@ function generateHTML(page) {
             <ul class="space-y-2">
               <li>
                 <a href="/business-owners" class="text-gray-400 hover:text-white transition-colors">
-                  For Business Owners
+                  ${page.categoryUrl === 'water-refill' ? 'List Your Station' : 'For Business Owners'}
                 </a>
               </li>
+              ${page.categoryUrl === 'water-refill' ? `
+              <li><a href="/water-quality" class="text-gray-400 hover:text-white transition-colors">Water Quality Guide</a></li>
+              <li><a href="/cost-savings" class="text-gray-400 hover:text-white transition-colors">Cost Savings Calculator</a></li>
+              <li><a href="/environmental-impact" class="text-gray-400 hover:text-white transition-colors">Environmental Impact</a></li>
+              ` : `
+              <li><a href="/sitemap" class="text-gray-400 hover:text-white transition-colors">Sitemap</a></li>
+              `}
               <li>
                 <a href="/contact" class="text-gray-400 hover:text-white transition-colors">
                   Contact Us
-                </a>
-              </li>
-              <li>
-                <a href="/sitemap" class="text-gray-400 hover:text-white transition-colors">
-                  Sitemap
                 </a>
               </li>
             </ul>
@@ -226,7 +257,7 @@ function generateHTML(page) {
         <div class="mt-12 pt-8 border-t border-gray-700">
           <div class="flex flex-col md:flex-row items-center justify-between">
             <div class="text-gray-400 text-sm mb-4 md:mb-0">
-              © ${new Date().getFullYear()} Near Me Directory. All rights reserved.
+              © ${new Date().getFullYear()} ${page.categoryUrl === 'water-refill' ? 'AquaFinder. Find water refill stations near you.' : 'Near Me Directory. All rights reserved.'}
             </div>
             <div class="flex flex-wrap items-center space-x-6 text-sm">
               <a href="/privacy-policy" class="text-gray-400 hover:text-white transition-colors">
@@ -239,7 +270,7 @@ function generateHTML(page) {
                 Sitemap
               </a>
               <a href="/business-owners" class="text-gray-400 hover:text-white transition-colors">
-                For Business Owners
+                ${page.categoryUrl === 'water-refill' ? 'List Your Station' : 'For Business Owners'}
               </a>
             </div>
           </div>
@@ -268,25 +299,40 @@ function generateHTML(page) {
     <meta name="keywords" content="${keywords}" />
     <link rel="canonical" href="${canonicalUrl}" />
     
+    ${page.categoryUrl === 'water-refill' ? `
+    <!-- Water Refill Specific Meta -->
+    <meta name="geo.region" content="US" />
+    <meta name="business.type" content="Water Refill Station Directory" />
+    <meta name="service.type" content="Water Refill Locations" />
+    ` : ''}
+    
     <!-- Open Graph Tags -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="${title}" />
     <meta property="og:description" content="${description}" />
     <meta property="og:url" content="${canonicalUrl}" />
     <meta property="og:image" content="${ogImage}" />
+    ${page.categoryUrl === 'water-refill' ? `
+    <meta property="og:site_name" content="AquaFinder" />
+    <meta property="og:locale" content="en_US" />
+    ` : ''}
     
     <!-- Twitter Card Tags -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${title}" />
     <meta name="twitter:description" content="${description}" />
     <meta name="twitter:image" content="${ogImage}" />
+    ${page.categoryUrl === 'water-refill' ? `
+    <meta name="twitter:site" content="@AquaFinder" />
+    <meta name="twitter:creator" content="@AquaFinder" />
+    ` : ''}
     
     <!-- Structured Data -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "WebSite",
-      "name": "${page.category || 'Near Me Directory'}",
+      "name": "${page.categoryUrl === 'water-refill' ? 'AquaFinder - Water Refill Station Directory' : (page.category || 'Near Me Directory')}",
       "url": "${canonicalUrl}",
       "description": "${description}",
       "potentialAction": {
@@ -296,6 +342,35 @@ function generateHTML(page) {
       }
     }
     </script>
+
+    ${page.categoryUrl === 'water-refill' ? `
+    <!-- Enhanced Structured Data for Water Refill -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      "name": "AquaFinder",
+      "description": "Water refill station directory helping you find clean, affordable water near you",
+      "url": "${canonicalUrl}",
+      "serviceType": "Water Refill Station Directory",
+      "areaServed": "United States",
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Water Refill Stations",
+        "itemListElement": [
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Water Refill Service",
+              "description": "Clean, filtered water refill at affordable prices"
+            }
+          }
+        ]
+      }
+    }
+    </script>
+    ` : ''}
 
     <!-- Google Tag Manager -->
     ${GTM_ID ? `<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
