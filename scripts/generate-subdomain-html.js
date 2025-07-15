@@ -424,17 +424,167 @@ function generateHTML(page) {
 </html>`;
 }
 
+// Generate static homepage for the main site (near-me.us)
+function generateMainHomepage(assets, serviceLinks, waterLinks) {
+  const buildTime = new Date().toISOString();
+  const version = process.env.npm_package_version || '1.0.0';
+  
+  const html = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- SEO Meta Tags -->
+    <title>Near Me Directory | Find Local Businesses & Services Nationwide</title>
+    <meta name="description" content="Find trusted local businesses and services near you. Browse nail salons, auto repair, water refill stations, senior care, and more. 80+ verified businesses across multiple cities." />
+    <meta name="keywords" content="local business directory, services near me, nail salons, auto repair, water refill, senior care" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://near-me.us/" />
+    <meta property="og:title" content="Near Me Directory | Find Local Businesses & Services" />
+    <meta property="og:description" content="Find trusted local businesses and services near you. Browse nail salons, auto repair, water refill stations, senior care, and more." />
+    <meta property="og:image" content="https://near-me.us/near-me.us.png" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://near-me.us/" />
+    <meta property="twitter:title" content="Near Me Directory | Find Local Businesses & Services" />
+    <meta property="twitter:description" content="Find trusted local businesses and services near you. Browse nail salons, auto repair, water refill stations, senior care, and more." />
+    <meta property="twitter:image" content="https://near-me.us/near-me.us.png" />
+
+    <!-- Schema.org structured data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Near Me Directory",
+      "description": "Find trusted local businesses and services near you",
+      "url": "https://near-me.us",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://near-me.us/?search={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
+    <!-- Preload critical resources -->
+    <link rel="preload" href="${assets.css}" as="style" />
+    <link rel="preload" href="${assets.js}" as="script" />
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="${assets.css}" />
+    
+    <!-- Cache Control -->
+    <meta http-equiv="Cache-Control" content="public, max-age=3600" />
+    
+    <!-- Build Info -->
+    <meta name="build-time" content="${buildTime}" />
+    <meta name="version" content="${version}" />
+    
+    <!-- Google Tag Manager -->
+    <script>
+      if (typeof window !== 'undefined') {
+        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','GTM-XXXXXXX');
+      }
+    </script>
+  </head>
+  <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-XXXXXXX" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    
+    <div id="root"></div>
+    
+    <script type="module" src="${assets.js}"></script>
+    
+    <!-- Static Footer for SEO -->
+    <footer style="display: none;" id="seo-footer">
+      <div class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            
+            <!-- Popular Services -->
+            <div class="space-y-4">
+              <h4 class="font-semibold text-white">Popular Services</h4>
+              <ul class="space-y-2">
+                ${serviceLinks.map(link => `
+                <li>
+                  <a href="${link.url}" class="text-gray-400 hover:text-white transition-colors">
+                    ${link.label}
+                  </a>
+                </li>`).join('')}
+              </ul>
+            </div>
+
+            <!-- Water Refill Stations -->
+            <div class="space-y-4">
+              <h4 class="font-semibold text-white">Water Refill Stations</h4>
+              <ul class="space-y-2">
+                ${waterLinks.map(link => `
+                <li>
+                  <a href="${link.url}" class="text-gray-400 hover:text-white transition-colors">
+                    ${link.label}
+                  </a>
+                </li>`).join('')}
+              </ul>
+            </div>
+
+            <!-- Resources -->
+            <div class="space-y-4">
+              <h4 class="font-semibold text-white">Resources</h4>
+              <ul class="space-y-2">
+                <li><a href="/business-owners" class="text-gray-400 hover:text-white transition-colors">For Business Owners</a></li>
+                <li><a href="/contact" class="text-gray-400 hover:text-white transition-colors">Contact Us</a></li>
+                <li><a href="/sitemap" class="text-gray-400 hover:text-white transition-colors">Sitemap</a></li>
+                <li><a href="/admin" class="text-gray-400 hover:text-white transition-colors">Admin Portal</a></li>
+              </ul>
+            </div>
+            
+          </div>
+          
+          <div class="mt-8 pt-8 border-t border-gray-800 text-center text-gray-400">
+            <p>&copy; 2025 Near Me Directory. All rights reserved. | Generated: ${buildTime} | v${version}</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>`;
+
+  const filepath = path.join(__dirname, '../dist/index.html');
+  fs.writeFileSync(filepath, html);
+  console.log('✓ Generated: index.html - "Near Me Directory | Find Local Businesses & Services"');
+}
+
 // Main function to generate all HTML files
 function generateSubdomainHTML() {
   const pages = getPagesToGenerate();
   const distDir = path.join(__dirname, '../dist');
+  const assets = getAssetFilenames();
+  const { serviceLinks, waterLinks } = generateFooterLinks();
   
   // Create dist directory if it doesn't exist
   if (!fs.existsSync(distDir)) {
     fs.mkdirSync(distDir, { recursive: true });
   }
 
-  console.log(`🚀 Generating HTML files for ${pages.length} pages based on configuration...`);
+  console.log('🚀 Generating HTML files for subdomains and main site...');
+  
+  // Generate main homepage first
+  generateMainHomepage(assets, serviceLinks, waterLinks);
+  
+  // Then generate subdomain pages
+  const totalPages = pages.length;
+  console.log(`🚀 Generating HTML files for ${totalPages} pages based on configuration...`);
   console.log(`📋 Configuration: categoryOnly=${config.generationRules.categoryOnly.enabled}, categoryWithCity=${config.generationRules.categoryWithCity.enabled}`);
 
   pages.forEach(page => {
@@ -472,7 +622,6 @@ function generateSubdomainHTML() {
   });
 
   console.log('\n🔗 Footer links included in all pages:');
-  const { serviceLinks, waterLinks } = generateFooterLinks();
   serviceLinks.forEach(link => console.log(`   • ${link.label}: ${link.url}`));
   waterLinks.forEach(link => console.log(`   • ${link.label}: ${link.url}`));
 }
