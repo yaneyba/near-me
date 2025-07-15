@@ -111,11 +111,22 @@ export class D1DataProvider implements IDataProvider {
   }
 
   async getCategories(): Promise<string[]> {
-    // Consider making this an API call if categories become dynamic
-    return [
-      'nail-salons',
-      'auto-repair'
-    ];
+    try {
+      // Try to get dynamic categories from the database via API
+      const categoriesResponse = await this.apiRequest<Array<{ category: string; count: number }>>(
+        '/api/admin/stats/categories'
+      );
+      return categoriesResponse.map(cat => cat.category);
+    } catch (error) {
+      console.warn('Failed to get dynamic categories, using hardcoded list:', error);
+      // Fallback to include all known categories
+      return [
+        'nail-salons',
+        'auto-repair',
+        'water-refill',
+        'senior-care'
+      ];
+    }
   }
 
   async getCities(): Promise<string[]> {
