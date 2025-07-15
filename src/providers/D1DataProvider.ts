@@ -111,32 +111,16 @@ export class D1DataProvider implements IDataProvider {
   }
 
   async getCategories(): Promise<string[]> {
-    try {
-      // Try to get dynamic categories from the database via API
-      const categoriesResponse = await this.apiRequest<Array<{ category: string; count: number }>>(
-        '/api/admin/stats/categories'
-      );
-      return categoriesResponse.map(cat => cat.category);
-    } catch (error) {
-      console.warn('Failed to get dynamic categories, using hardcoded list:', error);
-      // Fallback to include all known categories
-      return [
-        'nail-salons',
-        'auto-repair',
-        'water-refill',
-        'senior-care'
-      ];
-    }
+    // Try to get dynamic categories from the database via API
+    const categoriesResponse = await this.apiRequest<Array<{ category: string; count: number }>>(
+      '/api/admin/stats/categories'
+    );
+    return categoriesResponse.map(cat => cat.category);
   }
 
   async getCities(): Promise<string[]> {
-    try {
-      const cities = await this.apiRequest<Array<{ name: string }>>(ApiEndpoints.CITIES);
-      return cities.map(city => city.name);
-    } catch (error) {
-      console.error('Failed to get cities:', error);
-      return [];
-    }
+    const cities = await this.apiRequest<Array<{ name: string }>>(ApiEndpoints.CITIES);
+    return cities.map(city => city.name);
   }
 
   async getCityStateMap(): Promise<Record<string, string>> {
@@ -178,9 +162,11 @@ export class D1DataProvider implements IDataProvider {
   }
 
   async getKnownCombinations(): Promise<Array<{ category: string; city: string }>> {
-    // This could be an API call if combinations become dynamic
-    const categories = ['nail-salons', 'auto-repair'];
-    const cities = ['san-francisco', 'los-angeles', 'chicago', 'dallas', 'miami'];
+    // Get dynamic categories and cities from the database
+    const [categories, cities] = await Promise.all([
+      this.getCategories(),
+      this.getCities()
+    ]);
     
     const combinations: Array<{ category: string; city: string }> = [];
     categories.forEach(category => {
@@ -376,39 +362,6 @@ export class D1DataProvider implements IDataProvider {
     });
   }
 
-  // ==========================================
-  // FALLBACK AND STATISTICS METHODS
-  // ==========================================
-
-  async getFallbackCategories(): Promise<string[]> {
-    // Return static fallback categories if API fails
-    return [
-      'nail-salons',
-      'auto-repair'
-    ];
-  }
-
-  async getFallbackCities(): Promise<string[]> {
-    // Return static fallback cities if API fails
-    return [
-      'san-francisco',
-      'los-angeles',
-      'san-diego',
-      'san-jose',
-      'sacramento',
-      'phoenix',
-      'las-vegas',
-      'denver',
-      'seattle',
-      'chicago',
-      'dallas',
-      'austin',
-      'miami',
-      'atlanta',
-      'boston'
-    ];
-  }
-
   async getStatistics(): Promise<{
     totalBusinesses: number;
     totalCategories: number;
@@ -416,27 +369,15 @@ export class D1DataProvider implements IDataProvider {
     premiumBusinesses: number;
     averageRating: string;
   }> {
-    try {
-      // Try to get real statistics from API
-      const stats = await this.apiRequest<any>(ApiEndpoints.ADMIN_STATS);
-      return {
-        totalBusinesses: stats.totalBusinesses || 0,
-        totalCategories: stats.totalCategories || 12,
-        totalCities: stats.totalCities || 15,
-        premiumBusinesses: stats.premiumBusinesses || 0,
-        averageRating: stats.averageRating || '4.8'
-      };
-    } catch (error) {
-      console.warn('Failed to get statistics, using fallback:', error);
-      // Return fallback statistics
-      return {
-        totalBusinesses: 0,
-        totalCategories: 12,
-        totalCities: 15,
-        premiumBusinesses: 0,
-        averageRating: '4.8'
-      };
-    }
+    // Get real statistics from API
+    const stats = await this.apiRequest<any>(ApiEndpoints.ADMIN_STATS);
+    return {
+      totalBusinesses: stats.totalBusinesses || 0,
+      totalCategories: stats.totalCategories || 12,
+      totalCities: stats.totalCities || 15,
+      premiumBusinesses: stats.premiumBusinesses || 0,
+      averageRating: stats.averageRating || '4.8'
+    };
   }
 
   // ==========================================

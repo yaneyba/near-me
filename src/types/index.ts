@@ -366,10 +366,6 @@ export interface IDataProvider {
   getCityStateMap(): Promise<Record<string, string>>;
   getKnownCombinations(): Promise<Array<{ category: string; city: string }>>;
   
-  // Fallback data methods
-  getFallbackCategories(): Promise<string[]>;
-  getFallbackCities(): Promise<string[]>;
-  
   // Statistics configuration
   getStatistics(): Promise<any>;
   
