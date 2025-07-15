@@ -15,6 +15,11 @@
       "description": "Water refill stations layout", 
       "categories": ["water-refill"],
       "generateHTML": true
+    },
+    "care": {
+      "description": "Senior care services layout",
+      "categories": ["senior-care"],
+      "generateHTML": true
     }
   },
   "generationRules": {

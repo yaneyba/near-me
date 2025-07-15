@@ -62,6 +62,16 @@ export const parseSubdomain = (hostname: string = window.location.hostname, path
       };
     }
     
+    if (devSubdomain === 'senior-care') {
+      return {
+        category: 'Senior Care Services',
+        city: 'All Cities',
+        state: 'Nationwide',
+        isSeniorCare: true,
+        isPathBased: true
+      };
+    }
+    
     // Check for path-based water-refill routing on localhost
     if (pathname.startsWith('/water-refill')) {
       return {
@@ -69,6 +79,17 @@ export const parseSubdomain = (hostname: string = window.location.hostname, path
         city: 'All Cities',
         state: 'Nationwide',
         isWaterRefill: true,
+        isPathBased: true
+      };
+    }
+    
+    // Check for path-based senior-care routing on localhost
+    if (pathname.startsWith('/senior-care')) {
+      return {
+        category: 'Senior Care Services',
+        city: 'All Cities',
+        state: 'Nationwide',
+        isSeniorCare: true,
         isPathBased: true
       };
     }
@@ -118,6 +139,34 @@ export const parseSubdomain = (hostname: string = window.location.hostname, path
         city: 'All Cities',
         state: 'Nationwide',
         isWaterRefill: true,
+        isPathBased: true
+      };
+    }
+    
+    if (specialService.isSeniorCare) {
+      // Handle senior care path-based routing
+      const pathParts = pathname.split('/').filter(part => part.length > 0);
+      
+      if (pathParts.length > 0) {
+        const rawCity = pathParts[0];
+        const city = formatCity(rawCity);
+        const state = cityStateMap[rawCity.toLowerCase()] || 'Unknown State';
+        
+        return {
+          category: specialService.category,
+          city,
+          state,
+          isSeniorCare: true,
+          isPathBased: true
+        };
+      }
+      
+      // Default senior care page (no city specified)
+      return {
+        category: specialService.category,
+        city: 'All Cities',
+        state: 'Nationwide',
+        isSeniorCare: true,
         isPathBased: true
       };
     }

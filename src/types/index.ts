@@ -561,6 +561,7 @@ export interface SubdomainInfo {
   rawCity?: string;                     // Raw city from URL (kebab-case)
   isServices?: boolean;                 // Is this the services homepage
   isWaterRefill?: boolean;              // Is this a water refill subdomain
+  isSeniorCare?: boolean;               // Is this a senior care subdomain
   isPathBased?: boolean;                // Uses path-based routing instead of subdomain
   isCategoryOnly?: boolean;             // Is this a category-only subdomain (no city specified)
 }

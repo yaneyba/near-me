@@ -1,0 +1,24 @@
+<svg width="400" height="300" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="400" height="300" fill="#f0f9ff"/>
+  
+  <!-- Main icon - Heart with cross -->
+  <g transform="translate(200, 150)">
+    <!-- Heart shape -->
+    <path d="M0,-20 C-20,-40 -50,-40 -50,-10 C-50,20 0,50 0,50 C0,50 50,20 50,-10 C50,-40 20,-40 0,-20Z" fill="#3b82f6"/>
+    
+    <!-- Cross inside -->
+    <rect x="-2" y="-10" width="4" height="20" fill="white"/>
+    <rect x="-10" y="-2" width="20" height="4" fill="white"/>
+  </g>
+  
+  <!-- Decorative elements -->
+  <circle cx="100" cy="80" r="4" fill="#93c5fd" opacity="0.6"/>
+  <circle cx="320" cy="100" r="6" fill="#93c5fd" opacity="0.4"/>
+  <circle cx="80" cy="220" r="5" fill="#93c5fd" opacity="0.5"/>
+  <circle cx="340" cy="240" r="4" fill="#93c5fd" opacity="0.6"/>
+  
+  <!-- Text -->
+  <text x="200" y="220" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#1e40af">Senior Care Services</text>
+  <text x="200" y="245" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#64748b">Trusted Care for Your Loved Ones</text>
+</svg>

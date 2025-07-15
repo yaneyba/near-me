@@ -5,6 +5,7 @@ export interface SpecialService {
   category: string;
   isPathBased?: boolean;
   isWaterRefill?: boolean;
+  isSeniorCare?: boolean;
   isServices?: boolean;
   description: string;
 }
@@ -29,6 +30,13 @@ export const specialServices: SpecialService[] = [
     isPathBased: true,
     isWaterRefill: true,
     description: 'Water refill stations service (new service type)'
+  },
+  {
+    subdomain: 'senior-care.near-me.us',
+    category: 'Senior Care Services',
+    isPathBased: true,
+    isSeniorCare: true,
+    description: 'Senior care services directory with CareFinder branding'
   }
 ];
 

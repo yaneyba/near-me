@@ -28,3 +28,8 @@ export {
   TermsOfServicePage as WaterRefillTermsOfServicePage,
   SitemapPage as WaterRefillSitemapPage
 } from './water-refill';
+
+// Senior Care Pages
+export {
+  HomePage as SeniorCareHomePage
+} from './senior-care';

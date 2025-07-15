@@ -6,6 +6,7 @@ import { SubdomainInfo } from '@/types';
 
 // Import the different "worlds"
 import WaterRefillWorld from './WaterRefillWorld.tsx';
+import SeniorCareWorld from './SeniorCareWorld.tsx';
 import BusinessWorld from './BusinessWorld.tsx';
 import ServicesWorld from './ServicesWorld.tsx';
 
@@ -30,13 +31,19 @@ export const SmartDoor: React.FC<SmartDoorProps> = ({ subdomainInfo }) => {
     return <WaterRefillWorld subdomainInfo={subdomainInfo} />;
   }
   
-  // 🚪 DECISION 2: Is this the general services page?
+  // 🚪 DECISION 2: Is this senior care?
+  if (subdomainInfo.isSeniorCare) {
+    console.log('✅ Routing to SeniorCareWorld');
+    return <SeniorCareWorld subdomainInfo={subdomainInfo} />;
+  }
+  
+  // 🚪 DECISION 3: Is this the general services page?
   if (subdomainInfo.isServices) {
     console.log('✅ Routing to ServicesWorld');
     return <ServicesWorld subdomainInfo={subdomainInfo} />;
   }
   
-  // 🚪 DECISION 3: Default - Regular business directory
+  // 🚪 DECISION 4: Default - Regular business directory
   console.log('✅ Routing to BusinessWorld (default)');
   return <BusinessWorld subdomainInfo={subdomainInfo} />;
 };
