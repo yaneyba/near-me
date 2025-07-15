@@ -9,17 +9,17 @@ export const onRequest = async (context: any): Promise<Response> => {
       });
     }
 
-    // Get all services with counts
+    // Get all service categories with business counts
     const servicesQuery = `
       SELECT 
-        s.service as name,
         s.category as slug,
-        s.service as description,
+        s.category as name,
+        s.category as description,
         COUNT(DISTINCT b.id) as count
       FROM services s
       LEFT JOIN businesses b ON b.category = s.category
-      GROUP BY s.service, s.category
-      ORDER BY count DESC, s.service ASC
+      GROUP BY s.category
+      ORDER BY count DESC, s.category ASC
     `;
 
     // Get all cities with business counts  
@@ -41,12 +41,18 @@ export const onRequest = async (context: any): Promise<Response> => {
       env.DB.prepare(citiesQuery).all()
     ]);
 
-    // Format services data
+    // Format services data with proper category names
+    const formatCategoryName = (category: string): string =>
+      category
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+
     const services = servicesResult.results?.map((row: any) => ({
-      name: row.name,
+      name: formatCategoryName(row.name),
       slug: row.slug,
       count: row.count || 0,
-      description: row.description || `Find the best ${row.name.toLowerCase()} near you`,
+      description: `Find the best ${formatCategoryName(row.name).toLowerCase()} near you`,
       icon: '🏪' // Default icon
     })) || [];
 
