@@ -437,6 +437,23 @@ export interface IDataProvider {
 
   // Direct lookup methods
   getWaterStationById(stationId: string): Promise<Business | null>;
+  
+  // Homepage aggregated data
+  getHomePageData(): Promise<{
+    services: Array<{
+      name: string;
+      slug: string;
+      count: number;
+      description: string;
+      icon: string;
+    }>;
+    cities: Array<{
+      name: string;
+      slug: string;
+      state: string;
+      count: number;
+    }>;
+  }>;
 }
 
 /**

@@ -207,4 +207,22 @@ export class D1DataProvider implements IDataProvider {
   }> {
     return this.apiRequest(ApiEndpoints.ADMIN_STATS);
   }
+
+  async getHomePageData(): Promise<{
+    services: Array<{
+      name: string;
+      slug: string;
+      count: number;
+      description: string;
+      icon: string;
+    }>;
+    cities: Array<{
+      name: string;
+      slug: string;
+      state: string;
+      count: number;
+    }>;
+  }> {
+    return this.apiRequest('/api/homepage-data');
+  }
 }
