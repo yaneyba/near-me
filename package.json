@@ -1,5 +1,6 @@
 {
-  "name": "vite-react-typescript-starter",
+  "name": "near-me-directory",
+  "description": "Local business directory with category-specific subdomains and water refill station finder",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -8,7 +9,6 @@
     "dev:wrangler": "wrangler pages dev dist --compatibility-date=2024-01-01",
     "dev:full": "npm run build && npm run dev:wrangler",
     "build": "vite build && node scripts/generate-subdomain-html.js",
-    "build:with-seo": "vite build && node scripts/generate-subdomain-html.js",
     "build:seo": "node scripts/generate-subdomain-html.js",
     "build:production": "npm run build && npm run optimize:production",
     "optimize:production": "node scripts/optimize-production.js",
