@@ -104,6 +104,52 @@ node scripts/business-importer.js <source-type> <file-or-query> <category> <city
 - Handles Google Places API integration
 - Generates structured data for database insertion
 
+**Data Format Specifications**:
+
+**CSV Format** - Expected headers (flexible field names):
+```csv
+name,description,phone,website,address,city,state,zip_code,latitude,longitude,rating,review_count,verified,premium,status,established,hours,services
+"Nail Palace","Full service nail salon","(415) 555-0123","https://nailpalace.com","123 Main St","Frisco","California","75034","33.1507","-96.8236","4.5","127","true","false","active","2018","{""monday"":""9:00 AM - 7:00 PM""}","manicure,pedicure,gel nails"
+```
+
+**JSON Format** - Array of business objects:
+```json
+[
+  {
+    "name": "Nail Palace",
+    "description": "Full service nail salon",
+    "phone": "(415) 555-0123",
+    "website": "https://nailpalace.com",
+    "address": "123 Main St",
+    "city": "Frisco",
+    "state": "California",
+    "zip_code": "75034",
+    "latitude": 33.1507,
+    "longitude": -96.8236,
+    "rating": 4.5,
+    "review_count": 127,
+    "verified": true,
+    "premium": false,
+    "status": "active",
+    "established": 2018,
+    "hours": {
+      "monday": "9:00 AM - 7:00 PM",
+      "tuesday": "9:00 AM - 7:00 PM",
+      "wednesday": "9:00 AM - 7:00 PM",
+      "thursday": "9:00 AM - 7:00 PM",
+      "friday": "9:00 AM - 7:00 PM",
+      "saturday": "10:00 AM - 6:00 PM",
+      "sunday": "Closed"
+    },
+    "services": ["manicure", "pedicure", "gel nails"]
+  }
+]
+```
+
+**Required Fields**: `name`, `address`, `city`
+**Optional Fields**: All others (smart defaults applied)
+**Alternative Field Names**: `business_name`→`name`, `phone_number`→`phone`, `url`→`website`, etc.
+
 ```
 ╭─────────────────────────────────────────────────────────────────────────────────╮
 │                           generate-migration.js                                 │
