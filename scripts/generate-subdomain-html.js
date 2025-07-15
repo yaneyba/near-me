@@ -160,8 +160,8 @@ function generateHTML(page) {
   const GA_ID = process.env.VITE_GOOGLE_ANALYTICS_ID || '';
   const GTM_ID = process.env.VITE_GOOGLE_TAG_MANAGER_ID || '';
 
-  // Try to use /og-{categoryUrl}.png if it exists, otherwise fall back to /og-image.png
-  let ogImage = '/og-image.png';
+  // Try to use /og-{categoryUrl}.png if it exists, otherwise fall back to /og-near-me.png
+  let ogImage = '/og-near-me.png';
   if (page.categoryUrl) {
     const categoryOgImage = `/og-${page.categoryUrl}.png`;
     const publicDir = path.join(__dirname, '../public');
@@ -448,14 +448,14 @@ function generateMainHomepage(assets, serviceLinks, waterLinks) {
     <meta property="og:url" content="https://near-me.us/" />
     <meta property="og:title" content="Near Me Directory | Find Local Businesses & Services" />
     <meta property="og:description" content="Find trusted local businesses and services near you. Browse nail salons, auto repair, water refill stations, senior care, and more." />
-    <meta property="og:image" content="https://near-me.us/near-me.us.png" />
+    <meta property="og:image" content="https://near-me.us/og-near-me.png" />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="https://near-me.us/" />
     <meta property="twitter:title" content="Near Me Directory | Find Local Businesses & Services" />
     <meta property="twitter:description" content="Find trusted local businesses and services near you. Browse nail salons, auto repair, water refill stations, senior care, and more." />
-    <meta property="twitter:image" content="https://near-me.us/near-me.us.png" />
+    <meta property="twitter:image" content="https://near-me.us/og-near-me.png" />
 
     <!-- Schema.org structured data -->
     <script type="application/ld+json">
