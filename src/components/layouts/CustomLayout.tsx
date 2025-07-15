@@ -112,23 +112,62 @@ const CustomLayout: React.FC<CustomLayoutProps> = ({
     }
   };
 
-  // Dynamic CSS classes based on config
-  const getColorClasses = () => ({
-    headerBg: `bg-${config.primaryColor}`,
-    headerHover: `hover:text-${config.accentColor}`,
-    mobileBg: `bg-${config.primaryColor.replace('-600', '-700')}`,
-    mobileHover: `hover:bg-${config.primaryColor.replace('-600', '-800')}`,
-    gradientFrom: `from-${config.gradientFrom}`,
-    gradientTo: `to-${config.gradientTo}`,
-    buttonBg: `bg-${config.primaryColor}`,
-    buttonHover: `hover:bg-${config.primaryColor.replace('-600', '-700')}`,
-    buttonActive: `active:bg-${config.primaryColor.replace('-600', '-800')}`,
-    accentBg: `bg-${config.accentColor}`,
-    accentHover: `hover:bg-${config.accentColor.replace('-100', '-200')}`,
-    accentActive: `active:bg-${config.accentColor.replace('-100', '-300')}`,
-    textPrimary: `text-${config.primaryColor}`,
-    borderAccent: `border-${config.primaryColor.replace('-600', '-400')}`
-  });
+  // Dynamic CSS classes based on config - using safe class generation
+  const getColorClasses = () => {
+    // Safe class mapping for Tailwind CSS purging
+    const colorMapping = {
+      'blue-600': {
+        headerBg: 'bg-blue-600',
+        headerHover: 'hover:text-blue-100',
+        mobileBg: 'bg-blue-700',
+        mobileHover: 'hover:bg-blue-800',
+        gradientFrom: 'from-blue-500',
+        gradientTo: 'to-blue-700',
+        buttonBg: 'bg-blue-600',
+        buttonHover: 'hover:bg-blue-700',
+        buttonActive: 'active:bg-blue-800',
+        accentBg: 'bg-blue-100',
+        accentHover: 'hover:bg-blue-200',
+        accentActive: 'active:bg-blue-300',
+        textPrimary: 'text-blue-600',
+        borderAccent: 'border-blue-400'
+      },
+      'green-600': {
+        headerBg: 'bg-green-600',
+        headerHover: 'hover:text-green-100',
+        mobileBg: 'bg-green-700',
+        mobileHover: 'hover:bg-green-800',
+        gradientFrom: 'from-green-500',
+        gradientTo: 'to-green-700',
+        buttonBg: 'bg-green-600',
+        buttonHover: 'hover:bg-green-700',
+        buttonActive: 'active:bg-green-800',
+        accentBg: 'bg-green-100',
+        accentHover: 'hover:bg-green-200',
+        accentActive: 'active:bg-green-300',
+        textPrimary: 'text-green-600',
+        borderAccent: 'border-green-400'
+      },
+      'orange-600': {
+        headerBg: 'bg-orange-600',
+        headerHover: 'hover:text-orange-100',
+        mobileBg: 'bg-orange-700',
+        mobileHover: 'hover:bg-orange-800',
+        gradientFrom: 'from-orange-500',
+        gradientTo: 'to-red-600',
+        buttonBg: 'bg-orange-600',
+        buttonHover: 'hover:bg-orange-700',
+        buttonActive: 'active:bg-orange-800',
+        accentBg: 'bg-orange-100',
+        accentHover: 'hover:bg-orange-200',
+        accentActive: 'active:bg-orange-300',
+        textPrimary: 'text-orange-600',
+        borderAccent: 'border-orange-400'
+      }
+    };
+
+    return colorMapping[config.primaryColor as keyof typeof colorMapping] || colorMapping['blue-600'];
+  };
 
   const colorClasses = getColorClasses();
 
