@@ -16,7 +16,6 @@
     "preview": "vite preview",
     "deploy:staging": "npm run build && echo 'Deploy to staging'",
     "deploy:production": "npm run build:production && echo 'Deploy to production'",
-    "toggle-auth": "node scripts/toggle-auth-features.js",
     "migration:generate": "node scripts/generate-migration.js",
     "migration:run": "wrangler d1 execute nearme-db --remote",
     "import:businesses": "node scripts/business-importer.js",
