@@ -18,7 +18,7 @@ export async function onRequest(context) {
   // Handle API requests from subdomains - proxy to main domain
   if (pathname.startsWith('/api/')) {
     const parts = hostname.split('.');
-    if (parts.length >= 4 && parts[2] === 'near-me' && parts[3] === 'us') {
+    if (parts.length >= 3 && parts[parts.length-2] === 'near-me' && parts[parts.length-1] === 'us') {
       // This is a subdomain API request - proxy to main domain
       const targetUrl = `https://near-me-32q.pages.dev${pathname}${url.search}`;
       const newRequest = new Request(targetUrl, {
