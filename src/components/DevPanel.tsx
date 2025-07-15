@@ -21,9 +21,7 @@ const DevPanel: React.FC<DevPanelProps> = ({
 
   const categories = [
     'Nail Salons',
-    'Auto Repair',
-    'Hair Salons',
-    'Restaurants'
+    'Auto Repair'
   ];
 
   const cities = [

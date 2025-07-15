@@ -41,7 +41,11 @@ const CategoryPage: React.FC<CategoryPageProps> = ({ subdomainInfo }) => {
 
   // Load data when subdomain info changes
   useEffect(() => {
-    if (subdomainInfo.rawCategory && subdomainInfo.rawCity) {
+    if (subdomainInfo.isCategoryOnly && subdomainInfo.rawCategory) {
+      // Category-only subdomain: load all businesses in this category across all cities
+      loadDataForCategory(subdomainInfo.rawCategory);
+    } else if (subdomainInfo.rawCategory && subdomainInfo.rawCity) {
+      // Category + City subdomain: load businesses for specific category and city
       loadData(subdomainInfo.rawCategory, subdomainInfo.rawCity);
     } else if (subdomainInfo.category && subdomainInfo.city) {
       // Fallback to display format if raw values not available
@@ -66,6 +70,25 @@ const CategoryPage: React.FC<CategoryPageProps> = ({ subdomainInfo }) => {
       setDbStats(statsData);
     } catch (error) {
       console.error('Error loading data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadDataForCategory = async (category: string) => {
+    setLoading(true);
+    try {
+      const [businessData, serviceData, statsData] = await Promise.all([
+        dataProvider.getBusinessesByCategory(category), // Load all businesses in this category
+        dataProvider.getServices(category),
+        dataProvider.getStatistics()
+      ]);
+      
+      setBusinesses(businessData);
+      setServices(serviceData);
+      setDbStats(statsData);
+    } catch (error) {
+      console.error('Error loading category data:', error);
     } finally {
       setLoading(false);
     }

@@ -52,28 +52,8 @@ const Footer: React.FC = () => {
                 </a>
               </li>
               <li>
-                <a href="https://barbershops.near-me.us" className="text-gray-400 hover:text-white transition-colors">
-                  Barbershops
-                </a>
-              </li>
-              <li>
                 <a href="https://auto-repair.near-me.us" className="text-gray-400 hover:text-white transition-colors">
                   Auto Repair
-                </a>
-              </li>
-              <li>
-                <a href="https://restaurants.near-me.us" className="text-gray-400 hover:text-white transition-colors">
-                  Restaurants
-                </a>
-              </li>
-              <li>
-                <a href="https://hair-salons.near-me.us" className="text-gray-400 hover:text-white transition-colors">
-                  Hair Salons
-                </a>
-              </li>
-              <li>
-                <a href="https://dentists.near-me.us" className="text-gray-400 hover:text-white transition-colors">
-                  Dentists
                 </a>
               </li>
             </ul>
@@ -89,7 +69,7 @@ const Footer: React.FC = () => {
                 </a>
               </li>
               <li>
-                <a href="https://nail-salons.los-angeles.near-me.us" className="text-gray-400 hover:text-white transition-colors">
+                <a href="https://auto-repair.los-angeles.near-me.us" className="text-gray-400 hover:text-white transition-colors">
                   Los Angeles
                 </a>
               </li>
@@ -99,7 +79,7 @@ const Footer: React.FC = () => {
                 </a>
               </li>
               <li>
-                <a href="https://nail-salons.dallas.near-me.us" className="text-gray-400 hover:text-white transition-colors">
+                <a href="https://auto-repair.dallas.near-me.us" className="text-gray-400 hover:text-white transition-colors">
                   Dallas
                 </a>
               </li>
@@ -109,7 +89,7 @@ const Footer: React.FC = () => {
                 </a>
               </li>
               <li>
-                <a href="https://nail-salons.seattle.near-me.us" className="text-gray-400 hover:text-white transition-colors">
+                <a href="https://auto-repair.seattle.near-me.us" className="text-gray-400 hover:text-white transition-colors">
                   Seattle
                 </a>
               </li>

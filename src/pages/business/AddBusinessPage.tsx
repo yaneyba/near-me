@@ -228,9 +228,7 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
   const getAvailableServices = (): string[] => {
     const serviceMap: Record<string, string[]> = {
       'nail-salons': ['Manicures', 'Pedicures', 'Nail Art', 'Gel Polish', 'Acrylic Nails', 'Dip Powder', 'Nail Extensions', 'Cuticle Care', 'Hand Treatments', 'Spa Pedicures'],
-      'auto-repair': ['Oil Changes', 'Brake Repair', 'Engine Diagnostics', 'Transmission Service', 'Tire Service', 'AC Repair', 'Electrical Work', 'Battery Replacement', 'Tune-ups', 'Exhaust Repair'],
-      'restaurants': ['Fine Dining', 'Casual Dining', 'Takeout', 'Delivery', 'Catering', 'Private Events', 'Brunch', 'Happy Hour', 'Outdoor Seating', 'Live Music'],
-      'hair-salons': ['Haircuts', 'Hair Coloring', 'Highlights', 'Perms', 'Hair Styling', 'Blowouts', 'Hair Treatments', 'Extensions', 'Beard Trimming', 'Wedding Hair']
+      'auto-repair': ['Oil Changes', 'Brake Repair', 'Engine Diagnostics', 'Transmission Service', 'Tire Service', 'AC Repair', 'Electrical Work', 'Battery Replacement', 'Tune-ups', 'Exhaust Repair']
     };
     
     return serviceMap[formData.category] || [];
@@ -273,34 +271,6 @@ const AddBusinessPage: React.FC<AddBusinessPageProps> = ({ subdomainInfo }) => {
           businessName: 'e.g., Quick Fix Auto, Precision Auto Repair',
           description: 'Describe your auto repair services, certifications, equipment, and commitment to quality...',
           specialOffers: 'e.g., Free diagnostic with repair, 10% off first service'
-        }
-      },
-      'restaurants': {
-        title: 'Add Your Restaurant',
-        subtitle: 'Connect with diners looking for great food experiences',
-        benefits: [
-          'Attract hungry customers in your area',
-          'Showcase your cuisine, atmosphere, and specialties',
-          'Increase reservations and takeout orders'
-        ],
-        placeholders: {
-          businessName: 'e.g., Bella Vista Italian, The Local Bistro',
-          description: 'Describe your restaurant, cuisine type, atmosphere, signature dishes, and dining experience...',
-          specialOffers: 'e.g., Happy hour 4-6 PM, 15% off lunch specials'
-        }
-      },
-      'hair-salons': {
-        title: 'Add Your Hair Salon',
-        subtitle: 'Connect with clients seeking professional hair care services',
-        benefits: [
-          'Attract clients looking for cuts, color, and styling',
-          'Showcase your stylists\' skills and creativity',
-          'Highlight your salon\'s products and atmosphere'
-        ],
-        placeholders: {
-          businessName: 'e.g., Style Studio, The Hair Lounge',
-          description: 'Describe your hair salon, services, stylists\' expertise, and what makes your salon special...',
-          specialOffers: 'e.g., 25% off first color service, Free consultation'
         }
       }
     };

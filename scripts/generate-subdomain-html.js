@@ -6,20 +6,15 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Static data for subdomain generation (matches DataProvider data)
-const categories = ['nail-salons', 'barbershops', 'auto-repair', 'restaurants', 'water-refill'];
+const categories = ['nail-salons', 'auto-repair'];
 const cities = ['san-francisco', 'los-angeles', 'san-diego', 'san-jose', 'sacramento', 'phoenix', 'las-vegas', 'denver', 'seattle'];
 
 // Known combinations from DataProvider
 const knownCombinations = [
   { category: 'nail-salons', city: 'san-francisco' },
   { category: 'nail-salons', city: 'los-angeles' },
-  { category: 'barbershops', city: 'san-francisco' },
-  { category: 'barbershops', city: 'los-angeles' },
   { category: 'auto-repair', city: 'san-francisco' },
-  { category: 'auto-repair', city: 'los-angeles' },
-  { category: 'restaurants', city: 'san-francisco' },
-  { category: 'restaurants', city: 'los-angeles' },
-  { category: 'water-refill', city: 'san-francisco' }
+  { category: 'auto-repair', city: 'los-angeles' }
 ];
 
 // City-state mapping (matches DataProvider)

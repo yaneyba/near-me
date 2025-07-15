@@ -8,7 +8,7 @@ const getValidCombinations = (): Set<string> => {
   const combinations = new Set<string>();
   
   // Known categories and cities from our database
-  const categories = ['plumbers', 'electricians', 'contractors', 'restaurants', 'dentists', 'lawyers', 'nail-salons', 'water-refill'];
+  const categories = ['nail-salons', 'auto-repair'];
   const cities = ['frisco', 'garland', 'austin', 'chicago', 'denver', 'milwaukee', 'phoenix', 'san-francisco', 'seattle'];
   
   categories.forEach(category => {
@@ -132,9 +132,10 @@ export const parseSubdomain = (hostname: string = window.location.hostname, path
     };
   }
 
-  // Parse subdomain: category.city.near-me.us
+  // Parse subdomain patterns
   const parts = hostname.split('.');
   
+  // Pattern 1: category.city.near-me.us (4+ parts)
   if (parts.length >= 4 && parts[2] === 'near-me' && parts[3] === 'us') {
     const rawCategory = parts[0];
     const rawCity = parts[1];
@@ -164,6 +165,32 @@ export const parseSubdomain = (hostname: string = window.location.hostname, path
       isServices: true
     };
   }
+  
+  // Pattern 2: category.near-me.us (3 parts - category only, no city)
+  if (parts.length === 3 && parts[1] === 'near-me' && parts[2] === 'us') {
+    const rawCategory = parts[0];
+    const validCategories = ['nail-salons', 'auto-repair'];
+    
+    if (validCategories.includes(rawCategory)) {
+      const category = formatCategory(rawCategory);
+      
+      return {
+        category,
+        city: 'All Cities',
+        state: 'Nationwide',
+        rawCategory,
+        isCategoryOnly: true
+      };
+    }
+    
+    // Invalid category - redirect to services page
+    return {
+      category: 'All Services',
+      city: 'All Cities',
+      state: 'Nationwide',
+      isServices: true
+    };
+  }
 
   // Fallback for any other hostname - redirect to services homepage
   return {
@@ -175,5 +202,8 @@ export const parseSubdomain = (hostname: string = window.location.hostname, path
 };
 
 export const generateTitle = (category: string, city: string, state: string): string => {
+  if (city === 'All Cities' && state === 'Nationwide') {
+    return `Best ${category} | Find Local ${category} Near You`;
+  }
   return `Best ${category} in ${city}, ${state}`;
 };

@@ -114,17 +114,7 @@ export class D1DataProvider implements IDataProvider {
     // Consider making this an API call if categories become dynamic
     return [
       'nail-salons',
-      'barbershops', 
-      'auto-repair',
-      'restaurants',
-      'water-refill',
-      'hair-salons',
-      'coffee-shops',
-      'dentists',
-      'lawyers',
-      'plumbers',
-      'electricians',
-      'gyms'
+      'auto-repair'
     ];
   }
 
@@ -178,7 +168,7 @@ export class D1DataProvider implements IDataProvider {
 
   async getKnownCombinations(): Promise<Array<{ category: string; city: string }>> {
     // This could be an API call if combinations become dynamic
-    const categories = ['nail-salons', 'barbershops', 'auto-repair', 'restaurants'];
+    const categories = ['nail-salons', 'auto-repair'];
     const cities = ['san-francisco', 'los-angeles', 'chicago', 'dallas', 'miami'];
     
     const combinations: Array<{ category: string; city: string }> = [];
@@ -383,17 +373,7 @@ export class D1DataProvider implements IDataProvider {
     // Return static fallback categories if API fails
     return [
       'nail-salons',
-      'barbershops', 
-      'auto-repair',
-      'restaurants',
-      'water-refill',
-      'hair-salons',
-      'coffee-shops',
-      'dentists',
-      'lawyers',
-      'plumbers',
-      'electricians',
-      'gyms'
+      'auto-repair'
     ];
   }
 

@@ -562,6 +562,7 @@ export interface SubdomainInfo {
   isServices?: boolean;                 // Is this the services homepage
   isWaterRefill?: boolean;              // Is this a water refill subdomain
   isPathBased?: boolean;                // Uses path-based routing instead of subdomain
+  isCategoryOnly?: boolean;             // Is this a category-only subdomain (no city specified)
 }
 
 // Configuration Types - For scaling system and subdomain management

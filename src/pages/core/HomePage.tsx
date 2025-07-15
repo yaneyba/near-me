@@ -87,8 +87,7 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
           const specialNames: Record<string, string> = {
             'water-refill': 'Water Refill Stations',
             'nail-salons': 'Nail Salons',
-            'auto-repair': 'Auto Repair',
-            'hair-salons': 'Hair Salons'
+            'auto-repair': 'Auto Repair'
           };
           
           return specialNames[category] || category
@@ -101,9 +100,7 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
           const icons: Record<string, string> = {
             'water-refill': '💧',
             'nail-salons': '💅',
-            'auto-repair': '🔧',
-            'hair-salons': '✂️',
-            'restaurants': '🍽️'
+            'auto-repair': '🔧'
           };
           
           return icons[category] || '🏪';
