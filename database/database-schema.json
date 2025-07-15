@@ -1,55 +1,878 @@
-[
-  {
-    "results": [
-      {
-        "sql": "CREATE TABLE business_submissions (\n    id TEXT PRIMARY KEY,\n    business_name TEXT NOT NULL,\n    owner_name TEXT NOT NULL,\n    email TEXT NOT NULL,\n    phone TEXT NOT NULL,\n    address TEXT NOT NULL,\n    city TEXT NOT NULL,\n    state TEXT NOT NULL,\n    zip_code TEXT NOT NULL,\n    category TEXT NOT NULL,\n    website TEXT,\n    description TEXT,\n    services TEXT, -- JSON array as TEXT\n    hours TEXT, -- JSON object as TEXT\n    status TEXT DEFAULT 'pending', -- 'pending', 'approved', 'rejected'\n    submitted_at TEXT DEFAULT (datetime('now')),\n    reviewed_at TEXT,\n    reviewer_notes TEXT,\n    site_id TEXT NOT NULL,\n    created_at TEXT DEFAULT (datetime('now')),\n    updated_at TEXT DEFAULT (datetime('now'))\n)"
+{
+  "database": {
+    "name": "nearme-db",
+    "id": "86879c31-0686-4532-a66c-f310b89d7a27",
+    "type": "Cloudflare D1 (SQLite)",
+    "last_updated": "2025-07-15",
+    "description": "Near Me directory application database containing business listings, user data, and system configurations"
+  },
+  "tables": {
+    "businesses": {
+      "description": "Main business directory data - core table for all business listings",
+      "row_count": 76,
+      "primary_key": "id",
+      "columns": {
+        "id": {
+          "type": "TEXT",
+          "nullable": false,
+          "primary_key": true,
+          "default": "UUID v4 generated",
+          "description": "Unique identifier for the business"
+        },
+        "business_id": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "External business identifier (legacy field)"
+        },
+        "name": {
+          "type": "TEXT",
+          "nullable": false,
+          "description": "Business name"
+        },
+        "description": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Business description or summary"
+        },
+        "address": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Street address"
+        },
+        "city": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "City name"
+        },
+        "state": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "State abbreviation"
+        },
+        "zip_code": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "ZIP/postal code"
+        },
+        "phone": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Phone number"
+        },
+        "email": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Contact email"
+        },
+        "website": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Website URL"
+        },
+        "category": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Business category",
+          "current_values": ["nail-salons", "water-refill", "auto-repair"]
+        },
+        "services": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "JSON array of services offered"
+        },
+        "hours": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Business hours (JSON format)"
+        },
+        "rating": {
+          "type": "REAL",
+          "nullable": true,
+          "default": "0.0",
+          "description": "Average rating (0.0-5.0)"
+        },
+        "review_count": {
+          "type": "INTEGER",
+          "nullable": true,
+          "default": "0",
+          "description": "Number of reviews"
+        },
+        "image_url": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Main business image URL"
+        },
+        "logo_url": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Business logo URL"
+        },
+        "established": {
+          "type": "INTEGER",
+          "nullable": true,
+          "description": "Year established"
+        },
+        "verified": {
+          "type": "INTEGER",
+          "nullable": true,
+          "default": "0",
+          "description": "Verification status (0/1 boolean)"
+        },
+        "premium": {
+          "type": "INTEGER",
+          "nullable": true,
+          "default": "0",
+          "description": "Premium listing status (0/1 boolean)"
+        },
+        "status": {
+          "type": "TEXT",
+          "nullable": true,
+          "default": "active",
+          "description": "Business status",
+          "values": ["active", "inactive", "pending"]
+        },
+        "site_id": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "External site identifier"
+        },
+        "created_at": {
+          "type": "TEXT",
+          "nullable": true,
+          "default": "datetime('now')",
+          "description": "Creation timestamp"
+        },
+        "updated_at": {
+          "type": "TEXT",
+          "nullable": true,
+          "default": "datetime('now')",
+          "description": "Last update timestamp"
+        },
+        "latitude": {
+          "type": "REAL",
+          "nullable": true,
+          "description": "GPS latitude coordinate"
+        },
+        "longitude": {
+          "type": "REAL",
+          "nullable": true,
+          "description": "GPS longitude coordinate"
+        }
       },
-      {
-        "sql": "CREATE TABLE contact_messages (\n    id TEXT PRIMARY KEY,\n    name TEXT NOT NULL,\n    email TEXT NOT NULL,\n    subject TEXT NOT NULL,\n    message TEXT NOT NULL,\n    category TEXT,\n    city TEXT,\n    status TEXT DEFAULT 'new',\n    admin_notes TEXT,\n    resolved_at TEXT,\n    resolved_by TEXT,\n    created_at TEXT DEFAULT (datetime('now')),\n    updated_at TEXT DEFAULT (datetime('now'))\n)"
-      },
-      {
-        "sql": "CREATE TABLE business_profiles (\n    id TEXT PRIMARY KEY,\n    user_id TEXT,\n    business_id TEXT,\n    business_name TEXT NOT NULL,\n    email TEXT NOT NULL,\n    phone TEXT,\n    address TEXT,\n    city TEXT,\n    state TEXT,\n    zip_code TEXT,\n    category TEXT,\n    website TEXT,\n    description TEXT,\n    services TEXT, -- JSON array as TEXT\n    hours TEXT, -- JSON object as TEXT\n    role TEXT DEFAULT 'owner',\n    subscription_status TEXT DEFAULT 'not_started',\n    stripe_customer_id TEXT,\n    stripe_subscription_id TEXT,\n    stripe_price_id TEXT,\n    premium INTEGER DEFAULT 0, -- 0 = false, 1 = true\n    subscription_start_date TEXT,\n    subscription_end_date TEXT,\n    trial_end_date TEXT,\n    site_id TEXT,\n    created_at TEXT DEFAULT (datetime('now')),\n    updated_at TEXT DEFAULT (datetime('now'))\n)"
-      },
-      {
-        "sql": "CREATE TABLE user_engagement_events (\n    id TEXT PRIMARY KEY,\n    business_id TEXT,\n    event_type TEXT NOT NULL,\n    event_data TEXT, -- JSON object as TEXT\n    timestamp TEXT DEFAULT (datetime('now')),\n    user_agent TEXT,\n    ip_address TEXT,\n    session_id TEXT\n)"
-      },
-      {
-        "sql": "CREATE TABLE admin_settings (\n    id TEXT PRIMARY KEY,\n    setting_key TEXT UNIQUE NOT NULL,\n    setting_value TEXT NOT NULL, -- JSON as TEXT\n    description TEXT,\n    created_at TEXT DEFAULT (datetime('now')),\n    updated_at TEXT DEFAULT (datetime('now'))\n)"
-      },
-      {
-        "sql": "CREATE TABLE stripe_orders (\n    id TEXT PRIMARY KEY,\n    business_profile_id TEXT,\n    stripe_session_id TEXT UNIQUE NOT NULL,\n    stripe_payment_intent_id TEXT,\n    amount INTEGER NOT NULL,\n    currency TEXT DEFAULT 'usd',\n    status TEXT DEFAULT 'pending',\n    metadata TEXT, -- JSON as TEXT\n    created_at TEXT DEFAULT (datetime('now')),\n    updated_at TEXT DEFAULT (datetime('now'))\n)"
-      },
-      {
-        "sql": "CREATE TABLE neighborhoods (\n      id TEXT PRIMARY KEY,\n      city TEXT NOT NULL,\n      neighborhood_name TEXT NOT NULL,\n      created_at TEXT DEFAULT (datetime('now')),\n      updated_at TEXT DEFAULT (datetime('now'))\n    )"
-      },
-      {
-        "sql": "CREATE TABLE services (\n      id TEXT PRIMARY KEY,\n      category TEXT NOT NULL,\n      service TEXT NOT NULL,\n      created_at TEXT DEFAULT (datetime('now')),\n      updated_at TEXT DEFAULT (datetime('now'))\n    )"
-      },
-      {
-        "sql": "CREATE TABLE d1_migrations(\n\t\tid         INTEGER PRIMARY KEY AUTOINCREMENT,\n\t\tname       TEXT UNIQUE,\n\t\tapplied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL\n)"
-      },
-      {
-        "sql": "CREATE TABLE cities (\n  id TEXT PRIMARY KEY,\n  name TEXT NOT NULL UNIQUE,\n  state TEXT,\n  display_name TEXT,\n  created_at TEXT DEFAULT (datetime('now')),\n  updated_at TEXT DEFAULT (datetime('now'))\n)"
-      },
-      {
-        "sql": "CREATE TABLE \"businesses\" (\n      id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('89ab',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6)))),\n      business_id TEXT,\n      name TEXT NOT NULL,\n      description TEXT,\n      address TEXT,\n      city TEXT,\n      state TEXT,\n      zip_code TEXT,\n      phone TEXT,\n      email TEXT,\n      website TEXT,\n      category TEXT,\n      services TEXT,\n      hours TEXT,\n      rating REAL DEFAULT 0.0,\n      review_count INTEGER DEFAULT 0,\n      image_url TEXT,\n      logo_url TEXT,\n      established INTEGER,\n      verified INTEGER DEFAULT 0,\n      premium INTEGER DEFAULT 0,\n      status TEXT DEFAULT 'active',\n      site_id TEXT,\n      created_at TEXT DEFAULT (datetime('now')),\n      updated_at TEXT DEFAULT (datetime('now')),\n      latitude REAL,\n      longitude REAL\n    )"
+      "indexes": [
+        "PRIMARY KEY (id)",
+        "INDEX on category for filtering",
+        "INDEX on city for location filtering",
+        "COMPOSITE INDEX on (category, city) for combined searches"
+      ]
+    },
+    "cities": {
+      "description": "City reference data for location filtering",
+      "primary_key": "id",
+      "columns": {
+        "id": {
+          "type": "TEXT",
+          "nullable": false,
+          "primary_key": true,
+          "description": "Unique city identifier"
+        },
+        "name": {
+          "type": "TEXT",
+          "nullable": false,
+          "unique": true,
+          "description": "City name"
+        },
+        "state": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "State abbreviation"
+        },
+        "display_name": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Formatted display name"
+        },
+        "created_at": {
+          "type": "TEXT",
+          "nullable": true,
+          "default": "datetime('now')",
+          "description": "Creation timestamp"
+        },
+        "updated_at": {
+          "type": "TEXT",
+          "nullable": true,
+          "default": "datetime('now')",
+          "description": "Last update timestamp"
+        }
       }
-    ],
-    "success": true,
-    "meta": {
-      "served_by": "v3-prod",
-      "served_by_region": "WNAM",
-      "served_by_primary": true,
-      "timings": {
-        "sql_duration_ms": 0.2268
+    },
+    "neighborhoods": {
+      "description": "Neighborhood data for granular location filtering",
+      "primary_key": "id",
+      "columns": {
+        "id": {
+          "type": "TEXT",
+          "nullable": false,
+          "primary_key": true,
+          "description": "Unique neighborhood identifier"
+        },
+        "city": {
+          "type": "TEXT",
+          "nullable": false,
+          "description": "City name (denormalized for performance)"
+        },
+        "neighborhood_name": {
+          "type": "TEXT",
+          "nullable": false,
+          "description": "Neighborhood name"
+        },
+        "created_at": {
+          "type": "TEXT",
+          "nullable": true,
+          "default": "datetime('now')",
+          "description": "Creation timestamp"
+        },
+        "updated_at": {
+          "type": "TEXT",
+          "nullable": true,
+          "default": "datetime('now')",
+          "description": "Last update timestamp"
+        }
+      }
+    },
+    "services": {
+      "description": "Service categories and types offered by businesses",
+      "primary_key": "id",
+      "columns": {
+        "id": {
+          "type": "TEXT",
+          "nullable": false,
+          "primary_key": true,
+          "description": "Unique service identifier"
+        },
+        "category": {
+          "type": "TEXT",
+          "nullable": false,
+          "description": "Service category"
+        },
+        "service": {
+          "type": "TEXT",
+          "nullable": false,
+          "description": "Service name"
+        },
+        "created_at": {
+          "type": "TEXT",
+          "nullable": true,
+          "default": "datetime('now')",
+          "description": "Creation timestamp"
+        },
+        "updated_at": {
+          "type": "TEXT",
+          "nullable": true,
+          "default": "datetime('now')",
+          "description": "Last update timestamp"
+        }
+      }
+    },
+    "business_submissions": {
+      "description": "New business applications and submissions from users",
+      "primary_key": "id",
+      "columns": {
+        "id": {
+          "type": "TEXT",
+          "nullable": false,
+          "primary_key": true,
+          "description": "Unique submission identifier"
+        },
+        "business_name": {
+          "type": "TEXT",
+          "nullable": false,
+          "description": "Submitted business name"
+        },
+        "owner_name": {
+          "type": "TEXT",
+          "nullable": false,
+          "description": "Business owner name"
+        },
+        "email": {
+          "type": "TEXT",
+          "nullable": false,
+          "description": "Contact email"
+        },
+        "phone": {
+          "type": "TEXT",
+          "nullable": false,
+          "description": "Business phone number"
+        },
+        "website": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Business website"
+        },
+        "address": {
+          "type": "TEXT",
+          "nullable": false,
+          "description": "Business address"
+        },
+        "city": {
+          "type": "TEXT",
+          "nullable": false,
+          "description": "Business city"
+        },
+        "state": {
+          "type": "TEXT",
+          "nullable": false,
+          "description": "Business state"
+        },
+        "zip_code": {
+          "type": "TEXT",
+          "nullable": false,
+          "description": "Business ZIP code"
+        },
+        "category": {
+          "type": "TEXT",
+          "nullable": false,
+          "description": "Business category"
+        },
+        "description": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Business description"
+        },
+        "services": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Services offered (JSON array as TEXT)"
+        },
+        "hours": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Business hours (JSON object as TEXT)"
+        },
+        "status": {
+          "type": "TEXT",
+          "nullable": true,
+          "default": "pending",
+          "description": "Submission status",
+          "values": ["pending", "approved", "rejected"]
+        },
+        "submitted_at": {
+          "type": "TEXT",
+          "nullable": true,
+          "default": "datetime('now')",
+          "description": "Submission timestamp"
+        },
+        "reviewed_at": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Review timestamp"
+        },
+        "reviewer_notes": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Reviewer comments"
+        },
+        "site_id": {
+          "type": "TEXT",
+          "nullable": false,
+          "description": "Site identifier"
+        },
+        "created_at": {
+          "type": "TEXT",
+          "nullable": true,
+          "default": "datetime('now')",
+          "description": "Creation timestamp"
+        },
+        "updated_at": {
+          "type": "TEXT",
+          "nullable": true,
+          "default": "datetime('now')",
+          "description": "Last update timestamp"
+        }
+      }
+    },
+    "business_profiles": {
+      "description": "Business owner profiles for account management and subscriptions",
+      "primary_key": "id",
+      "columns": {
+        "id": {
+          "type": "TEXT",
+          "nullable": false,
+          "primary_key": true,
+          "description": "Unique profile identifier"
+        },
+        "user_id": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "User identifier"
+        },
+        "business_id": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Reference to businesses table"
+        },
+        "business_name": {
+          "type": "TEXT",
+          "nullable": false,
+          "description": "Business name"
+        },
+        "email": {
+          "type": "TEXT",
+          "nullable": false,
+          "description": "Owner email address"
+        },
+        "phone": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Phone number"
+        },
+        "address": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Business address"
+        },
+        "city": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "City"
+        },
+        "state": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "State"
+        },
+        "zip_code": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "ZIP code"
+        },
+        "category": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Business category"
+        },
+        "website": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Website URL"
+        },
+        "description": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Business description"
+        },
+        "services": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Services (JSON array as TEXT)"
+        },
+        "hours": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Hours (JSON object as TEXT)"
+        },
+        "role": {
+          "type": "TEXT",
+          "nullable": true,
+          "default": "owner",
+          "description": "User role"
+        },
+        "subscription_status": {
+          "type": "TEXT",
+          "nullable": true,
+          "default": "not_started",
+          "description": "Subscription status"
+        },
+        "stripe_customer_id": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Stripe customer ID"
+        },
+        "stripe_subscription_id": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Stripe subscription ID"
+        },
+        "stripe_price_id": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Stripe price ID"
+        },
+        "premium": {
+          "type": "INTEGER",
+          "nullable": true,
+          "default": "0",
+          "description": "Premium status (0/1 boolean)"
+        },
+        "subscription_start_date": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Subscription start date"
+        },
+        "subscription_end_date": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Subscription end date"
+        },
+        "trial_end_date": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Trial end date"
+        },
+        "site_id": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Site identifier"
+        },
+        "created_at": {
+          "type": "TEXT",
+          "nullable": true,
+          "default": "datetime('now')",
+          "description": "Creation timestamp"
+        },
+        "updated_at": {
+          "type": "TEXT",
+          "nullable": true,
+          "default": "datetime('now')",
+          "description": "Last update timestamp"
+        }
       },
-      "duration": 0.2268,
-      "changes": 0,
-      "last_row_id": 0,
-      "changed_db": false,
-      "size_after": 262144,
-      "rows_read": 39,
-      "rows_written": 0
+      "foreign_keys": [
+        {
+          "column": "business_id",
+          "references": "businesses(id)"
+        }
+      ]
+    },
+    "contact_messages": {
+      "description": "Customer inquiries and contact form submissions",
+      "primary_key": "id",
+      "columns": {
+        "id": {
+          "type": "TEXT",
+          "nullable": false,
+          "primary_key": true,
+          "description": "Unique message identifier"
+        },
+        "name": {
+          "type": "TEXT",
+          "nullable": false,
+          "description": "Contact name"
+        },
+        "email": {
+          "type": "TEXT",
+          "nullable": false,
+          "description": "Contact email"
+        },
+        "subject": {
+          "type": "TEXT",
+          "nullable": false,
+          "description": "Message subject"
+        },
+        "message": {
+          "type": "TEXT",
+          "nullable": false,
+          "description": "Message content"
+        },
+        "category": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Related category"
+        },
+        "city": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Related city"
+        },
+        "status": {
+          "type": "TEXT",
+          "nullable": true,
+          "default": "new",
+          "description": "Message status",
+          "values": ["new", "read", "replied", "closed"]
+        },
+        "admin_notes": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Administrative notes"
+        },
+        "resolved_at": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Resolution timestamp"
+        },
+        "resolved_by": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Resolver identifier"
+        },
+        "created_at": {
+          "type": "TEXT",
+          "nullable": true,
+          "default": "datetime('now')",
+          "description": "Creation timestamp"
+        },
+        "updated_at": {
+          "type": "TEXT",
+          "nullable": true,
+          "default": "datetime('now')",
+          "description": "Last update timestamp"
+        }
+      }
+    },
+    "admin_settings": {
+      "description": "Application configuration and system settings",
+      "primary_key": "id",
+      "columns": {
+        "id": {
+          "type": "TEXT",
+          "nullable": false,
+          "primary_key": true,
+          "description": "Unique setting identifier"
+        },
+        "setting_key": {
+          "type": "TEXT",
+          "nullable": false,
+          "unique": true,
+          "description": "Setting key/name"
+        },
+        "setting_value": {
+          "type": "TEXT",
+          "nullable": false,
+          "description": "Setting value (JSON as TEXT)"
+        },
+        "description": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Setting description"
+        },
+        "created_at": {
+          "type": "TEXT",
+          "nullable": true,
+          "default": "datetime('now')",
+          "description": "Creation timestamp"
+        },
+        "updated_at": {
+          "type": "TEXT",
+          "nullable": true,
+          "default": "datetime('now')",
+          "description": "Last update timestamp"
+        }
+      }
+    },
+    "user_engagement_events": {
+      "description": "Analytics and user interaction tracking",
+      "primary_key": "id",
+      "columns": {
+        "id": {
+          "type": "TEXT",
+          "nullable": false,
+          "primary_key": true,
+          "description": "Unique event identifier"
+        },
+        "business_id": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Reference to businesses table (if applicable)"
+        },
+        "event_type": {
+          "type": "TEXT",
+          "nullable": false,
+          "description": "Type of event tracked"
+        },
+        "event_data": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Additional event data (JSON object as TEXT)"
+        },
+        "timestamp": {
+          "type": "TEXT",
+          "nullable": true,
+          "default": "datetime('now')",
+          "description": "Event timestamp"
+        },
+        "user_agent": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Browser user agent"
+        },
+        "ip_address": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "User IP address"
+        },
+        "session_id": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Session identifier"
+        }
+      },
+      "foreign_keys": [
+        {
+          "column": "business_id",
+          "references": "businesses(id)"
+        }
+      ]
+    },
+    "stripe_orders": {
+      "description": "Payment processing and subscription orders",
+      "primary_key": "id",
+      "columns": {
+        "id": {
+          "type": "TEXT",
+          "nullable": false,
+          "primary_key": true,
+          "description": "Unique order identifier"
+        },
+        "business_profile_id": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Reference to business_profiles table"
+        },
+        "stripe_session_id": {
+          "type": "TEXT",
+          "nullable": false,
+          "unique": true,
+          "description": "Stripe session ID"
+        },
+        "stripe_payment_intent_id": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Stripe payment intent ID"
+        },
+        "amount": {
+          "type": "INTEGER",
+          "nullable": false,
+          "description": "Amount in cents"
+        },
+        "currency": {
+          "type": "TEXT",
+          "nullable": true,
+          "default": "usd",
+          "description": "Payment currency"
+        },
+        "status": {
+          "type": "TEXT",
+          "nullable": true,
+          "default": "pending",
+          "description": "Payment status",
+          "values": ["pending", "succeeded", "failed", "canceled"]
+        },
+        "metadata": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "Additional order data (JSON as TEXT)"
+        },
+        "created_at": {
+          "type": "TEXT",
+          "nullable": true,
+          "default": "datetime('now')",
+          "description": "Order creation timestamp"
+        },
+        "updated_at": {
+          "type": "TEXT",
+          "nullable": true,
+          "default": "datetime('now')",
+          "description": "Last update timestamp"
+        }
+      },
+      "foreign_keys": [
+        {
+          "column": "business_profile_id",
+          "references": "business_profiles(id)"
+        }
+      ]
+    },
+    "d1_migrations": {
+      "description": "Database version control and migration history",
+      "primary_key": "id",
+      "columns": {
+        "id": {
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "auto_increment": true,
+          "description": "Migration sequence number"
+        },
+        "name": {
+          "type": "TEXT",
+          "nullable": false,
+          "unique": true,
+          "description": "Migration name/filename"
+        },
+        "applied_at": {
+          "type": "TIMESTAMP",
+          "nullable": false,
+          "default": "CURRENT_TIMESTAMP",
+          "description": "Migration application timestamp"
+        }
+      }
+    },
+    "_cf_KV": {
+      "description": "Cloudflare internal table for KV storage integration",
+      "system_table": true
+    },
+    "sqlite_sequence": {
+      "description": "SQLite internal table for auto-increment sequences",
+      "system_table": true
     }
+  },
+  "data_summary": {
+    "total_businesses": 76,
+    "categories": {
+      "nail-salons": 53,
+      "water-refill": 20,
+      "auto-repair": 3
+    },
+    "business_distribution": "Primary focus on nail salons (69.7%), significant water refill stations (26.3%), limited auto repair (3.9%)",
+    "geographic_coverage": "Multi-city directory with focus on US markets"
+  },
+  "performance_optimizations": {
+    "indexes": [
+      "businesses.category - for category filtering (most common query)",
+      "businesses.city - for location filtering", 
+      "businesses.(category, city) - for combined filtering (primary use case)",
+      "Primary keys on all tables use UUID TEXT format for global uniqueness"
+    ],
+    "query_patterns": [
+      "Category-based filtering is most common access pattern",
+      "City-based location filtering for geographic searches",
+      "Combined category + city searches for subdomain routing",
+      "Business detail lookups by ID for individual pages"
+    ],
+    "caching_strategy": [
+      "API responses cached at CDN level",
+      "Static HTML generation for SEO pages",
+      "Database queries optimized for read-heavy workload"
+    ]
+  },
+  "security_notes": [
+    "Database access only through Cloudflare Functions - no direct client access",
+    "All API functions validate and sanitize inputs before database queries",
+    "Stripe data handled through secure webhooks with verification",
+    "User emails and sensitive data encrypted where applicable",
+    "Rate limiting implemented at API gateway level",
+    "CORS policies restrict cross-origin access"
+  ],
+  "maintenance_notes": [
+    "CRITICAL: Always use --remote flag with wrangler commands to access production database",
+    "Regular backups recommended (weekly minimum) using wrangler dump",
+    "Schema changes require migration files in sql/migrations/ directory",
+    "Monitor d1_migrations table for version control and rollback capability",
+    "Business submissions require manual review/approval workflow",
+    "Performance monitoring via Cloudflare Analytics and D1 metrics",
+    "Database size limits: D1 has 10GB storage limit per database"
+  ],
+  "api_integration": {
+    "primary_provider": "D1DataProvider (src/providers/D1DataProvider.ts)",
+    "connection_method": "HTTP API calls to Cloudflare Functions",
+    "key_endpoints": [
+      "functions/api/businesses.ts - Business CRUD operations",
+      "functions/api/cities.ts - City reference data",
+      "functions/api/water-stations/ - Water refill specific endpoints",
+      "functions/api/services.ts - Service category data"
+    ],
+    "error_handling": "Graceful degradation with fallback responses",
+    "caching": "Implements response caching and stale-while-revalidate patterns"
   }
-]
+}
