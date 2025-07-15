@@ -1,18 +1,20 @@
 import React from 'react';
 import { MapPin, Phone, Mail, Clock, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useFooterConfig } from '../hooks/useFooterConfig';
 
 /**
- * Simple, Static Footer Component - ZERO API calls, instant rendering
+ * Configuration-Driven Footer Component
  * 
- * PHILOSOPHY: Footer should be the same on every page
- * - Static links that don't change based on current route
- * - No data fetching or complex business logic
- * - Instant rendering, fully cacheable
+ * PHILOSOPHY: Footer links are generated from subdomain-generation.json
+ * - Dynamic links based on actual configuration
+ * - No hardcoded category or subdomain links
+ * - Stays in sync with generated HTML pages
  * - SEO-friendly with consistent internal linking
  */
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
+  const { serviceLinks, waterLinks } = useFooterConfig();
 
   return (
     <footer className="bg-gray-900 text-white py-16">
@@ -46,33 +48,27 @@ const Footer: React.FC = () => {
           <div className="space-y-4">
             <h4 className="font-semibold text-white">Popular Services</h4>
             <ul className="space-y-2">
-              <li>
-                <a href="https://nail-salons.near-me.us" className="text-gray-400 hover:text-white transition-colors">
-                  Nail Salons
-                </a>
-              </li>
-              <li>
-                <a href="https://auto-repair.near-me.us" className="text-gray-400 hover:text-white transition-colors">
-                  Auto Repair
-                </a>
-              </li>
+              {serviceLinks.map((link) => (
+                <li key={link.category}>
+                  <a href={link.url} className="text-gray-400 hover:text-white transition-colors">
+                    {link.label}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Popular Cities */}
+          {/* Water Refill Stations */}
           <div className="space-y-4">
-            <h4 className="font-semibold text-white">Popular Cities</h4>
+            <h4 className="font-semibold text-white">Water Refill Stations</h4>
             <ul className="space-y-2">
-              <li>
-                <a href="https://nail-salons.san-francisco.near-me.us" className="text-gray-400 hover:text-white transition-colors">
-                  San Francisco
-                </a>
-              </li>
-              <li>
-                <a href="https://auto-repair.los-angeles.near-me.us" className="text-gray-400 hover:text-white transition-colors">
-                  Los Angeles
-                </a>
-              </li>
+              {waterLinks.map((link) => (
+                <li key={link.category}>
+                  <a href={link.url} className="text-gray-400 hover:text-white transition-colors">
+                    {link.label}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
 

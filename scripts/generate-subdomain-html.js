@@ -5,57 +5,85 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Static data for subdomain generation (matches DataProvider data)
-const categories = ['nail-salons', 'auto-repair'];
-const cities = ['san-francisco', 'los-angeles', 'san-diego', 'san-jose', 'sacramento', 'phoenix', 'las-vegas', 'denver', 'seattle'];
+// Load configuration from subdomain-generation.json
+const configPath = path.join(__dirname, '../config/subdomain-generation.json');
+const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
 
-// Known combinations from DataProvider
-const knownCombinations = [
-  { category: 'nail-salons', city: 'san-francisco' },
-  { category: 'nail-salons', city: 'los-angeles' },
-  { category: 'auto-repair', city: 'san-francisco' },
-  { category: 'auto-repair', city: 'los-angeles' }
-];
+console.log('🔧 Loaded configuration:', JSON.stringify(config, null, 2));
 
-// City-state mapping (matches DataProvider)
-const cityStateMap = {
-  'san-francisco': 'California',
-  'los-angeles': 'California',
-  'san-diego': 'California',
-  'san-jose': 'California',
-  'sacramento': 'California',
-  'phoenix': 'Arizona',
-  'las-vegas': 'Nevada',
-  'denver': 'Colorado',
-  'seattle': 'Washington'
-};
-
-// Get unique combinations from static data
-function getUniqueCombinations() {
-  const result = [];
-
-  knownCombinations.forEach(combo => {
-    const categoryDisplay = combo.category
-      .split('-')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-    
-    const cityDisplay = combo.city
-      .split('-')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-
-    result.push({
-      category: categoryDisplay,
-      city: cityDisplay,
-      state: cityStateMap[combo.city] || 'Unknown',
-      categoryUrl: combo.category,
-      cityUrl: combo.city,
-      businessCount: 50 // Static count since we don't have dynamic business data
-    });
+// Extract categories from configuration
+function getCategoriesFromConfig() {
+  const allCategories = [];
+  
+  // Get categories from each layout
+  Object.values(config.layouts).forEach(layout => {
+    if (layout.generateHTML) {
+      allCategories.push(...layout.categories);
+    }
   });
+  
+  return allCategories;
+}
 
-  return result;
+// Generate footer links from configuration
+function generateFooterLinks() {
+  const serviceLinks = [];
+  const waterLinks = [];
+  
+  // Services layout
+  if (config.layouts.services?.generateHTML) {
+    config.layouts.services.categories.forEach(category => {
+      serviceLinks.push({
+        label: formatCategoryLabel(category),
+        url: `https://${category}.near-me.us`,
+        category
+      });
+    });
+  }
+  
+  // Water layout
+  if (config.layouts.water?.generateHTML) {
+    config.layouts.water.categories.forEach(category => {
+      waterLinks.push({
+        label: formatCategoryLabel(category),
+        url: `https://${category}.near-me.us`,
+        category
+      });
+    });
+  }
+  
+  return { serviceLinks, waterLinks };
+}
+
+function formatCategoryLabel(category) {
+  return category
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+// Determine which pages to generate based on configuration
+function getPagesToGenerate() {
+  const pages = [];
+  
+  if (config.generationRules.categoryOnly.enabled) {
+    // Generate category-only pages
+    const allCategories = getCategoriesFromConfig();
+    allCategories.forEach(category => {
+      pages.push({
+        type: 'category',
+        category: formatCategoryLabel(category),
+        categoryUrl: category,
+        title: `Best ${formatCategoryLabel(category)} Near You`,
+        description: `Find top-rated ${formatCategoryLabel(category).toLowerCase()} businesses. Compare local providers, read reviews, and book services online.`,
+        businessCount: 100 // Static count for category pages
+      });
+    });
+  }
+  
+  // Note: categoryWithCity is disabled in config, so no city-specific pages
+  
+  return pages;
 }
 
 // Get asset filenames from manifest
@@ -96,36 +124,128 @@ function getAssetFilenames() {
   };
 }
 
-// Generate HTML template with proper meta tags and cache busting
-function generateHTML(combo) {
-  const { category, city, state, businessCount } = combo;
+// Generate HTML template with proper meta tags, cache busting, and SEO footer
+function generateHTML(page) {
   const buildTime = new Date().toISOString();
   const version = process.env.npm_package_version || '1.0.0';
   const cacheKey = Date.now();
   const assets = getAssetFilenames();
+  const { serviceLinks, waterLinks } = generateFooterLinks();
 
-  const title = `Best ${category} in ${city}, ${state} (${businessCount}+ Options)`;
-  const description = `Find top-rated ${category.toLowerCase()} in ${city}, ${state}. Compare ${businessCount}+ local businesses, read reviews, get contact info, and book services online.`;
-  const keywords = [
-    `${category.toLowerCase()} ${city.toLowerCase()}`,
-    `${city.toLowerCase()} ${category.toLowerCase()}`,
-    `best ${category.toLowerCase()} ${city.toLowerCase()}`,
-    `${category.toLowerCase()} near me`,
-    `${city.toLowerCase()} ${state.toLowerCase()} ${category.toLowerCase()}`
-  ].join(', ');
+  const title = page.title;
+  const description = page.description;
+  const keywords = page.categoryUrl ? 
+    `${page.categoryUrl.replace('-', ' ')}, ${page.categoryUrl.replace('-', ' ')} near me, local ${page.categoryUrl.replace('-', ' ')}` :
+    'local business directory, near me';
 
   // Google Analytics & Tag Manager IDs from env
   const GA_ID = process.env.VITE_GOOGLE_ANALYTICS_ID || '';
   const GTM_ID = process.env.VITE_GOOGLE_TAG_MANAGER_ID || '';
 
   // Try to use /og-{categoryUrl}.png if it exists, otherwise fall back to /og-image.png
-  const categoryOgImage = `/og-${combo.categoryUrl}.png`;
-  const publicDir = path.join(__dirname, '../public');
-  const categoryOgImagePath = path.join(publicDir, `og-${combo.categoryUrl}.png`);
   let ogImage = '/og-image.png';
-  if (fs.existsSync(categoryOgImagePath)) {
-    ogImage = categoryOgImage;
+  if (page.categoryUrl) {
+    const categoryOgImage = `/og-${page.categoryUrl}.png`;
+    const publicDir = path.join(__dirname, '../public');
+    const categoryOgImagePath = path.join(publicDir, `og-${page.categoryUrl}.png`);
+    if (fs.existsSync(categoryOgImagePath)) {
+      ogImage = categoryOgImage;
+    }
   }
+
+  const canonicalUrl = page.categoryUrl ? 
+    `https://${page.categoryUrl}.near-me.us/` : 
+    'https://near-me.us/';
+
+  // Generate hardcoded footer for SEO
+  const seoFooter = `
+    <!-- SEO Footer - Hardcoded for static HTML -->
+    <footer class="bg-gray-900 text-white py-16" style="display: none;" id="seo-footer">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          
+          <!-- Company Info -->
+          <div class="space-y-4">
+            <h3 class="text-xl font-bold text-white">Near Me Directory</h3>
+            <p class="text-gray-400">
+              Find trusted local businesses across the United States. 
+              Connecting you with verified services in your area.
+            </p>
+          </div>
+
+          <!-- Popular Services -->
+          <div class="space-y-4">
+            <h4 class="font-semibold text-white">Popular Services</h4>
+            <ul class="space-y-2">
+              ${serviceLinks.map(link => `
+              <li>
+                <a href="${link.url}" class="text-gray-400 hover:text-white transition-colors">
+                  ${link.label}
+                </a>
+              </li>`).join('')}
+            </ul>
+          </div>
+
+          <!-- Water Refill Stations -->
+          <div class="space-y-4">
+            <h4 class="font-semibold text-white">Water Refill Stations</h4>
+            <ul class="space-y-2">
+              ${waterLinks.map(link => `
+              <li>
+                <a href="${link.url}" class="text-gray-400 hover:text-white transition-colors">
+                  ${link.label}
+                </a>
+              </li>`).join('')}
+            </ul>
+          </div>
+
+          <!-- Resources -->
+          <div class="space-y-4">
+            <h4 class="font-semibold text-white">Resources</h4>
+            <ul class="space-y-2">
+              <li>
+                <a href="/business-owners" class="text-gray-400 hover:text-white transition-colors">
+                  For Business Owners
+                </a>
+              </li>
+              <li>
+                <a href="/contact" class="text-gray-400 hover:text-white transition-colors">
+                  Contact Us
+                </a>
+              </li>
+              <li>
+                <a href="/sitemap" class="text-gray-400 hover:text-white transition-colors">
+                  Sitemap
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Bottom Bar -->
+        <div class="mt-12 pt-8 border-t border-gray-700">
+          <div class="flex flex-col md:flex-row items-center justify-between">
+            <div class="text-gray-400 text-sm mb-4 md:mb-0">
+              © ${new Date().getFullYear()} Near Me Directory. All rights reserved.
+            </div>
+            <div class="flex flex-wrap items-center space-x-6 text-sm">
+              <a href="/privacy-policy" class="text-gray-400 hover:text-white transition-colors">
+                Privacy Policy
+              </a>
+              <a href="/terms-of-service" class="text-gray-400 hover:text-white transition-colors">
+                Terms of Service
+              </a>
+              <a href="/sitemap" class="text-gray-400 hover:text-white transition-colors">
+                Sitemap
+              </a>
+              <a href="/business-owners" class="text-gray-400 hover:text-white transition-colors">
+                For Business Owners
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>`;
 
   return `<!doctype html>
 <!-- Generated: ${buildTime} | Version: ${version} | Cache: ${cacheKey} -->
@@ -146,13 +266,13 @@ function generateHTML(combo) {
     <title>${title}</title>
     <meta name="description" content="${description}" />
     <meta name="keywords" content="${keywords}" />
-    <link rel="canonical" href="https://${combo.categoryUrl}.${combo.cityUrl}.near-me.us/" />
+    <link rel="canonical" href="${canonicalUrl}" />
     
     <!-- Open Graph Tags -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="${title}" />
     <meta property="og:description" content="${description}" />
-    <meta property="og:url" content="https://${combo.categoryUrl}.${combo.cityUrl}.near-me.us/" />
+    <meta property="og:url" content="${canonicalUrl}" />
     <meta property="og:image" content="${ogImage}" />
     
     <!-- Twitter Card Tags -->
@@ -166,12 +286,12 @@ function generateHTML(combo) {
     {
       "@context": "https://schema.org",
       "@type": "WebSite",
-      "name": "${category} in ${city}, ${state}",
-      "url": "https://${combo.categoryUrl}.${combo.cityUrl}.near-me.us/",
+      "name": "${page.category || 'Near Me Directory'}",
+      "url": "${canonicalUrl}",
       "description": "${description}",
       "potentialAction": {
         "@type": "SearchAction",
-        "target": "https://${combo.categoryUrl}.${combo.cityUrl}.near-me.us/?search={search_term_string}",
+        "target": "${canonicalUrl}?search={search_term_string}",
         "query-input": "required name=search_term_string"
       }
     }
@@ -203,7 +323,11 @@ function generateHTML(combo) {
     <!-- Google Tag Manager (noscript) -->
     ${GTM_ID ? `<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=${GTM_ID}" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>` : ''}
     <!-- End Google Tag Manager (noscript) -->
+    
     <div id="root"></div>
+    
+    ${seoFooter}
+    
     <!-- Build Info -->
     <script>
       window.__BUILD_INFO__ = {
@@ -218,7 +342,7 @@ function generateHTML(combo) {
 
 // Main function to generate all HTML files
 function generateSubdomainHTML() {
-  const combinations = getUniqueCombinations();
+  const pages = getPagesToGenerate();
   const distDir = path.join(__dirname, '../dist');
   
   // Create dist directory if it doesn't exist
@@ -226,25 +350,27 @@ function generateSubdomainHTML() {
     fs.mkdirSync(distDir, { recursive: true });
   }
 
-  console.log(`Generating HTML files for ${combinations.length} subdomain combinations...`);
+  console.log(`🚀 Generating HTML files for ${pages.length} pages based on configuration...`);
+  console.log(`📋 Configuration: categoryOnly=${config.generationRules.categoryOnly.enabled}, categoryWithCity=${config.generationRules.categoryWithCity.enabled}`);
 
-  combinations.forEach(combo => {
-    const html = generateHTML(combo);
-    const filename = `${combo.categoryUrl}.${combo.cityUrl}.html`;
+  pages.forEach(page => {
+    const html = generateHTML(page);
+    const filename = `${page.categoryUrl}.html`;
     const filepath = path.join(distDir, filename);
     
     fs.writeFileSync(filepath, html);
-    console.log(`✓ Generated: ${filename} - "${combo.category} in ${combo.city}, ${combo.state}"`);
+    console.log(`✓ Generated: ${filename} - "${page.title}"`);
   });
 
   // Generate a mapping file for deployment
-  const mapping = combinations.map(combo => ({
-    subdomain: `${combo.categoryUrl}.${combo.cityUrl}.near-me.us`,
-    file: `${combo.categoryUrl}.${combo.cityUrl}.html`,
-    title: `Best ${combo.category} in ${combo.city}, ${combo.state}`,
-    description: `Find top-rated ${combo.category.toLowerCase()} in ${combo.city}, ${combo.state}. Compare ${combo.businessCount}+ local businesses.`,
+  const mapping = pages.map(page => ({
+    subdomain: `${page.categoryUrl}.near-me.us`,
+    file: `${page.categoryUrl}.html`,
+    title: page.title,
+    description: page.description,
     buildTime: new Date().toISOString(),
-    version: process.env.npm_package_version || '1.0.0'
+    version: process.env.npm_package_version || '1.0.0',
+    type: page.type
   }));
 
   fs.writeFileSync(
@@ -252,14 +378,19 @@ function generateSubdomainHTML() {
     JSON.stringify(mapping, null, 2)
   );
 
-  console.log(`\n✅ Generated ${combinations.length} HTML files with production cache busting`);
+  console.log(`\n✅ Generated ${pages.length} HTML files with configuration-driven SEO footer`);
   console.log('📄 Created subdomain-mapping.json for deployment configuration');
   
   // Show what was generated
   console.log('\n📋 Generated files:');
-  combinations.forEach(combo => {
-    console.log(`   • ${combo.categoryUrl}.${combo.cityUrl}.html → "${combo.category} in ${combo.city}, ${combo.state}"`);
+  pages.forEach(page => {
+    console.log(`   • ${page.categoryUrl}.html → "${page.title}"`);
   });
+
+  console.log('\n🔗 Footer links included in all pages:');
+  const { serviceLinks, waterLinks } = generateFooterLinks();
+  serviceLinks.forEach(link => console.log(`   • ${link.label}: ${link.url}`));
+  waterLinks.forEach(link => console.log(`   • ${link.label}: ${link.url}`));
 }
 
 // Run the generator

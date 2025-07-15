@@ -1,0 +1,35 @@
+{
+  "description": "Configuration for subdomain HTML generation",
+  "version": "1.0.0",
+  "settings": {
+    "enableGeneration": true,
+    "outputDirectory": "dist"
+  },
+  "layouts": {
+    "services": {
+      "description": "Business directory layout",
+      "categories": ["nail-salons", "auto-repair"],
+      "generateHTML": true
+    },
+    "water": {
+      "description": "Water refill stations layout", 
+      "categories": ["water-refill"],
+      "generateHTML": true
+    }
+  },
+  "generationRules": {
+    "categoryOnly": {
+      "enabled": true,
+      "note": "Generate category-only pages: nail-salons.near-me.us, auto-repair.near-me.us, water-refill.near-me.us"
+    },
+    "categoryWithCity": {
+      "enabled": false,
+      "note": "NO city-specific pages for now"
+    }
+  },
+  "seoSettings": {
+    "includeMetaTags": true,
+    "includeOpenGraph": true,
+    "cacheControl": "public, max-age=3600"
+  }
+}
