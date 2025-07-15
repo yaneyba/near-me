@@ -52,32 +52,18 @@ export async function onRequest(context) {
     }
   }
   
-  // Handle subdomain routing
+  // Handle subdomain routing for category-only subdomains
   const parts = hostname.split('.');
   
-  // Special case: water-refill.near-me.us (3 parts only)
-  if (parts.length === 3 && parts[0] === 'water-refill' && parts[1] === 'near-me' && parts[2] === 'us') {
-    // This is water-refill.near-me.us - serve the main React app
-    return context.next();
-  }
-  
-  if (parts.length >= 4 && parts[2] === 'near-me' && parts[3] === 'us') {
+  // Category-only subdomains: nail-salons.near-me.us, auto-repair.near-me.us, water-refill.near-me.us
+  if (parts.length === 4 && parts[1] === 'near-me' && parts[2] === 'us') {
     const category = parts[0];
-    const city = parts[1];
     
-    // Known subdomains - check if HTML file exists
-    const knownCombinations = [
-      'nail-salons.dallas',
-      'auto-repair.denver',
-      'nail-salons.austin',
-      'nail-salons.frisco',
-      'nail-salons.garland'
-    ];
+    // Known category-only subdomains
+    const knownCategories = ['nail-salons', 'auto-repair', 'water-refill'];
     
-    const combination = `${category}.${city}`;
-    
-    if (knownCombinations.includes(combination)) {
-      const htmlFileName = `${combination}.html`;
+    if (knownCategories.includes(category)) {
+      const htmlFileName = `${category}.html`;
       
       try {
         const response = await context.env.ASSETS.fetch(
@@ -91,15 +77,26 @@ export async function onRequest(context) {
         console.error('Asset fetch error:', error);
       }
     }
-    
-    // For unknown subdomains, redirect to services.near-me.us
-    const targetUrl = `https://services.near-me.us${pathname}${url.search}`;
-    return Response.redirect(targetUrl, 301);
   }
   
-  // Special handling for services subdomain
-  if (hostname === 'services.near-me.us') {
-    return context.next();
+  // Legacy: Handle old city-specific subdomains (if any still exist)
+  if (parts.length >= 5 && parts[2] === 'near-me' && parts[3] === 'us') {
+    const category = parts[0];
+    const city = parts[1];
+    
+    // Known old combinations - redirect to category-only
+    const categoryRedirects = {
+      'nail-salons': 'https://nail-salons.near-me.us',
+      'auto-repair': 'https://auto-repair.near-me.us',
+      'water-refill': 'https://water-refill.near-me.us'
+    };
+    
+    if (categoryRedirects[category]) {
+      return Response.redirect(categoryRedirects[category] + pathname + url.search, 301);
+    }
+    
+    // For unknown subdomains, redirect to main domain
+    return Response.redirect(`https://near-me.us${pathname}${url.search}`, 301);
   }
   
   return context.next();
