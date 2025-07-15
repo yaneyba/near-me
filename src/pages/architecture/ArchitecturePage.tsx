@@ -180,7 +180,7 @@ const ArchitecturePage: React.FC<ArchitecturePageProps> = ({ subdomainInfo }) =>
               <div className="space-y-4">
                 <div className="border-l-4 border-blue-500 pl-4">
                   <code className="text-sm bg-gray-100 px-2 py-1 rounded">water-refill.near-me.us</code>
-                  <p className="text-gray-600 mt-1">→ WaterRefillWorld (Special service with custom experience)</p>
+                  <p className="text-gray-600 mt-1">→ WaterRefillWorld (Custom layout with specialized branding)</p>
                 </div>
                 <div className="border-l-4 border-green-500 pl-4">
                   <code className="text-sm bg-gray-100 px-2 py-1 rounded">nail-salons.chicago.near-me.us</code>

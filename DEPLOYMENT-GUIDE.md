@@ -1,6 +1,26 @@
 # 🚀 Master Deployment Guide: A to Z
 
-This comprehensive guide walks you through creating and deploying new sites for the Near Me directory platform. We support **3 types** of business category sites.
+This comprehensive guide walks you through creating and deploying new sites for the Near Me directory platform. We support **3 type### **Available Custom Layout Categories**:
+
+1. **Water Refill Stations** (`water-refill`) ✅ **LIVE**
+   - Brand: AquaFinder
+   - Theme: Blue water-focused design
+   - Features: Price per gallon, quality ratings
+   - Layout: `water` in subdomain-generation.json
+
+2. **EV Charging Stations** (`ev-charging`) 🚧 **EXAMPLE CONFIG READY**
+   - Brand: ChargeFinder  
+   - Theme: Green eco-friendly design
+   - Features: Charging speed, network compatibility
+   - Status: Configuration created, layout wrapper needed
+
+3. **Food Delivery** (`food-delivery`) 🚧 **EXAMPLE CONFIG READY**
+   - Brand: FoodFinder
+   - Theme: Orange/red food-themed design  
+   - Features: Cuisine types, delivery time
+   - Status: Configuration created, layout wrapper needed
+
+> **Note**: Only `water-refill` is fully implemented. EV charging and food delivery have configuration examples but need layout wrappers and subdomain configuration to be functional.category sites.
 
 ## 🎯 **The 3 Types of Sites**
 
@@ -11,16 +31,18 @@ This comprehensive guide walks you through creating and deploying new sites for 
 - **Layout**: `services` in subdomain-generation.json
 
 ### 2. **💧 Custom Layout** (Specialized Branding)
-- **Examples**: `water-refill`, `ev-charging`, `public-wifi`
+- **Examples**: `water-refill` (live), `ev-charging` (config ready), `food-delivery` (config ready)
 - **Focus**: Location-based services with custom branding and specialized UI
-- **Features**: Map integration, custom branding, specialized messaging, unique layouts
-- **Layout**: `water` (or other custom layouts) in subdomain-generation.json
+- **Features**: Map integration, configurable branding, specialized messaging, unique layouts
+- **Layout**: `water` (for water-refill) in subdomain-generation.json
+- **Architecture**: Uses the new **CustomLayout** system (see [docs/CUSTOM-LAYOUT-GUIDE.md](docs/CUSTOM-LAYOUT-GUIDE.md))
 
 ### 3. **🍕 Food Delivery** (Future Layout)
 - **Example**: `food-delivery`
 - **Focus**: Restaurant/cuisine directory with delivery focus
 - **Features**: Restaurant listings, cuisine types, delivery areas
-- **Layout**: `food` in subdomain-generation.json (not fully implemented)
+- **Layout**: Will use CustomLayout system when implemented
+- **Status**: Configuration ready, needs layout wrapper and subdomain setup
 
 ---
 
@@ -136,6 +158,9 @@ node scripts/manage-subdomains.js list
 
 ## 💧 **TYPE 2: Custom Layout Sites**
 
+> **🏗️ Architecture**: Uses the new **CustomLayout** system for specialized branding and UI. 
+> For detailed information about creating custom layouts, see: **[docs/CUSTOM-LAYOUT-GUIDE.md](docs/CUSTOM-LAYOUT-GUIDE.md)**
+
 ### **Step 1: Prepare Custom Layout Data**
 
 **CSV Format** (`data/water-stations-dallas.csv`):
@@ -151,15 +176,33 @@ name,description,phone,website,address,city,state,zip_code,latitude,longitude,ra
 # Deploy water refill stations (uses custom layout)
 node scripts/deploy-category.js water-refill dallas ./data/water-stations-dallas.csv
 
-# Deploy EV charging stations (would use custom layout)
-node scripts/deploy-category.js ev-charging austin ./data/ev-charging-austin.csv
+# Deploy EV charging stations (when implemented)
+# node scripts/deploy-category.js ev-charging austin ./data/ev-charging-austin.csv
 ```
 
 **Special Features for Custom Layout Sites**:
-- Uses specialized branding (e.g., AquaFinder for water-refill)
-- Map-focused interface
-- Custom messaging and UI elements
-- Specialized availability indicators
+- **Configurable Branding**: Each category can have unique brand names, colors, and logos
+- **Specialized UI Elements**: Custom hero sections, statistics, and messaging
+- **Map-Focused Interface**: Optimized for location-based services
+- **Flexible Theming**: Easy color scheme and messaging customization
+- **Reusable Architecture**: New categories can be added with simple configuration files
+
+### **Available Custom Layout Categories**:
+
+1. **Water Refill Stations** (`water-refill`)
+   - Brand: AquaFinder
+   - Theme: Blue water-focused design
+   - Features: Price per gallon, quality ratings
+
+2. **EV Charging Stations** (`ev-charging`) 
+   - Brand: ChargeFinder  
+   - Theme: Green eco-friendly design
+   - Features: Charging speed, network compatibility
+
+3. **Food Delivery** (`food-delivery`)
+   - Brand: FoodFinder
+   - Theme: Orange/red food-focused design  
+   - Features: Cuisine types, delivery time
 
 ### **Step 3: Verify Custom Layout Deployment**
 
@@ -321,11 +364,20 @@ open https://auto-repair-plano.near-me.us
 
 ### **Example 3: Water Stations in Dallas (Custom Layout)**
 ```bash
-# 1. Deploy
+# 1. Deploy (only fully implemented custom layout)
 node scripts/deploy-category.js water-refill dallas ./data/water-stations-dallas.csv
 
 # 2. Verify
 open https://water-refill-dallas.near-me.us
+```
+
+### **Future Examples (When Implemented)**
+```bash
+# EV Charging (configuration ready, needs implementation)
+# node scripts/deploy-category.js ev-charging austin ./data/ev-charging-austin.csv
+
+# Food Delivery (configuration ready, needs implementation) 
+# node scripts/deploy-category.js food-delivery miami ./data/restaurants-miami.csv
 ```
 
 ---
@@ -348,8 +400,44 @@ For a new business category site:
 ## 📚 **Additional Resources**
 
 - **Scripts Documentation**: [`scripts/README.md`](scripts/README.md)
+- **Custom Layout Guide**: [`docs/CUSTOM-LAYOUT-GUIDE.md`](docs/CUSTOM-LAYOUT-GUIDE.md)
 - **API Documentation**: [`docs/API-ENDPOINTS-REFERENCE.md`](docs/API-ENDPOINTS-REFERENCE.md)
 - **Architecture Overview**: [`docs/DATA-FLOW-ARCHITECTURE.md`](docs/DATA-FLOW-ARCHITECTURE.md)
+- **Documentation Index**: [`docs/README.md`](docs/README.md)
+
+## ✅ **Verification Commands**
+
+Before deploying, verify your environment:
+
+```bash
+# Check Node.js version (requires 18+)
+node --version
+
+# Verify Wrangler authentication
+wrangler auth whoami
+
+# Test database connection
+wrangler d1 execute nearme-db --command "SELECT COUNT(*) FROM businesses;" --remote
+
+# Verify scripts are executable
+node scripts/manage-subdomains.js list
+
+# Check current deployments
+ls dist/*.html
+```
+
+## 🎯 **Current System Status**
+
+**Live Categories**:
+- ✅ `nail-salons` (Business Services Layout)
+- ✅ `auto-repair` (Business Services Layout)  
+- ✅ `water-refill` (Custom Layout - AquaFinder)
+
+**Ready Configurations** (need implementation):
+- 🚧 `ev-charging` (Custom Layout config ready)
+- 🚧 `food-delivery` (Custom Layout config ready)
+
+**Generated Files**: 3 HTML files with SEO optimization
 
 ---
 

@@ -1,3 +1,12 @@
+/**
+ * Generate static HTML files for subdomains with SEO optimization
+ * 
+ * This script supports 3 types of layouts:
+ * 1. Services Layout (default) - Standard business directories
+ * 2. Custom Layout (water, etc.) - Specialized branding and UI
+ * 3. Food Layout (future) - Restaurant/delivery focused
+ */
+
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -41,7 +50,7 @@ function generateFooterLinks() {
     });
   }
   
-  // Water layout
+  // Custom layout (water is the first example, others like ev-charging, public-wifi would follow)
   if (config.layouts.water?.generateHTML) {
     config.layouts.water.categories.forEach(category => {
       waterLinks.push({
