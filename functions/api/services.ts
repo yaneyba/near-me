@@ -9,10 +9,10 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     if (category) {
       // Get services for a specific category
       const query = `
-        SELECT display_name as service
+        SELECT service
         FROM services
         WHERE LOWER(category) = LOWER(?)
-        ORDER BY display_name ASC
+        ORDER BY service ASC
       `;
 
       const result = await env.DB.prepare(query)
@@ -36,7 +36,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
       const categories = await env.DB.prepare(`
         SELECT 
           category,
-          GROUP_CONCAT(display_name) as services
+          GROUP_CONCAT(service) as services
         FROM services
         GROUP BY category
         ORDER BY category

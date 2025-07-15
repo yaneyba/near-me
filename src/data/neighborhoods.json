@@ -1,0 +1,30 @@
+{
+  "chicago": [
+    "Downtown",
+    "Loop",
+    "River North",
+    "Lincoln Park",
+    "Wicker Park"
+  ],
+  "dallas": [
+    "Downtown",
+    "Deep Ellum",
+    "Bishop Arts",
+    "Uptown",
+    "Frisco"
+  ],
+  "san-francisco": [
+    "Financial District",
+    "Mission",
+    "Castro",
+    "Chinatown",
+    "SOMA"
+  ],
+  "los-angeles": [
+    "Downtown",
+    "Hollywood",
+    "Beverly Hills",
+    "Santa Monica",
+    "Venice"
+  ]
+}

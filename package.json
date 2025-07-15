@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:wrangler": "wrangler pages dev dist --compatibility-date=2024-01-01 --d1=DB",
+    "dev:wrangler": "wrangler pages dev dist --compatibility-date=2024-01-01",
     "dev:full": "npm run build && npm run dev:wrangler",
     "build": "vite build && node scripts/generate-subdomain-html.js",
     "build:seo": "node scripts/generate-subdomain-html.js",

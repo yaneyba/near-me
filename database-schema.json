@@ -1,0 +1,55 @@
+[
+  {
+    "results": [
+      {
+        "sql": "CREATE TABLE business_submissions (\n    id TEXT PRIMARY KEY,\n    business_name TEXT NOT NULL,\n    owner_name TEXT NOT NULL,\n    email TEXT NOT NULL,\n    phone TEXT NOT NULL,\n    address TEXT NOT NULL,\n    city TEXT NOT NULL,\n    state TEXT NOT NULL,\n    zip_code TEXT NOT NULL,\n    category TEXT NOT NULL,\n    website TEXT,\n    description TEXT,\n    services TEXT, -- JSON array as TEXT\n    hours TEXT, -- JSON object as TEXT\n    status TEXT DEFAULT 'pending', -- 'pending', 'approved', 'rejected'\n    submitted_at TEXT DEFAULT (datetime('now')),\n    reviewed_at TEXT,\n    reviewer_notes TEXT,\n    site_id TEXT NOT NULL,\n    created_at TEXT DEFAULT (datetime('now')),\n    updated_at TEXT DEFAULT (datetime('now'))\n)"
+      },
+      {
+        "sql": "CREATE TABLE contact_messages (\n    id TEXT PRIMARY KEY,\n    name TEXT NOT NULL,\n    email TEXT NOT NULL,\n    subject TEXT NOT NULL,\n    message TEXT NOT NULL,\n    category TEXT,\n    city TEXT,\n    status TEXT DEFAULT 'new',\n    admin_notes TEXT,\n    resolved_at TEXT,\n    resolved_by TEXT,\n    created_at TEXT DEFAULT (datetime('now')),\n    updated_at TEXT DEFAULT (datetime('now'))\n)"
+      },
+      {
+        "sql": "CREATE TABLE business_profiles (\n    id TEXT PRIMARY KEY,\n    user_id TEXT,\n    business_id TEXT,\n    business_name TEXT NOT NULL,\n    email TEXT NOT NULL,\n    phone TEXT,\n    address TEXT,\n    city TEXT,\n    state TEXT,\n    zip_code TEXT,\n    category TEXT,\n    website TEXT,\n    description TEXT,\n    services TEXT, -- JSON array as TEXT\n    hours TEXT, -- JSON object as TEXT\n    role TEXT DEFAULT 'owner',\n    subscription_status TEXT DEFAULT 'not_started',\n    stripe_customer_id TEXT,\n    stripe_subscription_id TEXT,\n    stripe_price_id TEXT,\n    premium INTEGER DEFAULT 0, -- 0 = false, 1 = true\n    subscription_start_date TEXT,\n    subscription_end_date TEXT,\n    trial_end_date TEXT,\n    site_id TEXT,\n    created_at TEXT DEFAULT (datetime('now')),\n    updated_at TEXT DEFAULT (datetime('now'))\n)"
+      },
+      {
+        "sql": "CREATE TABLE user_engagement_events (\n    id TEXT PRIMARY KEY,\n    business_id TEXT,\n    event_type TEXT NOT NULL,\n    event_data TEXT, -- JSON object as TEXT\n    timestamp TEXT DEFAULT (datetime('now')),\n    user_agent TEXT,\n    ip_address TEXT,\n    session_id TEXT\n)"
+      },
+      {
+        "sql": "CREATE TABLE admin_settings (\n    id TEXT PRIMARY KEY,\n    setting_key TEXT UNIQUE NOT NULL,\n    setting_value TEXT NOT NULL, -- JSON as TEXT\n    description TEXT,\n    created_at TEXT DEFAULT (datetime('now')),\n    updated_at TEXT DEFAULT (datetime('now'))\n)"
+      },
+      {
+        "sql": "CREATE TABLE stripe_orders (\n    id TEXT PRIMARY KEY,\n    business_profile_id TEXT,\n    stripe_session_id TEXT UNIQUE NOT NULL,\n    stripe_payment_intent_id TEXT,\n    amount INTEGER NOT NULL,\n    currency TEXT DEFAULT 'usd',\n    status TEXT DEFAULT 'pending',\n    metadata TEXT, -- JSON as TEXT\n    created_at TEXT DEFAULT (datetime('now')),\n    updated_at TEXT DEFAULT (datetime('now'))\n)"
+      },
+      {
+        "sql": "CREATE TABLE neighborhoods (\n      id TEXT PRIMARY KEY,\n      city TEXT NOT NULL,\n      neighborhood_name TEXT NOT NULL,\n      created_at TEXT DEFAULT (datetime('now')),\n      updated_at TEXT DEFAULT (datetime('now'))\n    )"
+      },
+      {
+        "sql": "CREATE TABLE services (\n      id TEXT PRIMARY KEY,\n      category TEXT NOT NULL,\n      service TEXT NOT NULL,\n      created_at TEXT DEFAULT (datetime('now')),\n      updated_at TEXT DEFAULT (datetime('now'))\n    )"
+      },
+      {
+        "sql": "CREATE TABLE d1_migrations(\n\t\tid         INTEGER PRIMARY KEY AUTOINCREMENT,\n\t\tname       TEXT UNIQUE,\n\t\tapplied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL\n)"
+      },
+      {
+        "sql": "CREATE TABLE cities (\n  id TEXT PRIMARY KEY,\n  name TEXT NOT NULL UNIQUE,\n  state TEXT,\n  display_name TEXT,\n  created_at TEXT DEFAULT (datetime('now')),\n  updated_at TEXT DEFAULT (datetime('now'))\n)"
+      },
+      {
+        "sql": "CREATE TABLE \"businesses\" (\n      id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('89ab',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6)))),\n      business_id TEXT,\n      name TEXT NOT NULL,\n      description TEXT,\n      address TEXT,\n      city TEXT,\n      state TEXT,\n      zip_code TEXT,\n      phone TEXT,\n      email TEXT,\n      website TEXT,\n      category TEXT,\n      services TEXT,\n      hours TEXT,\n      rating REAL DEFAULT 0.0,\n      review_count INTEGER DEFAULT 0,\n      image_url TEXT,\n      logo_url TEXT,\n      established INTEGER,\n      verified INTEGER DEFAULT 0,\n      premium INTEGER DEFAULT 0,\n      status TEXT DEFAULT 'active',\n      site_id TEXT,\n      created_at TEXT DEFAULT (datetime('now')),\n      updated_at TEXT DEFAULT (datetime('now')),\n      latitude REAL,\n      longitude REAL\n    )"
+      }
+    ],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "WNAM",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.2268
+      },
+      "duration": 0.2268,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 262144,
+      "rows_read": 39,
+      "rows_written": 0
+    }
+  }
+]

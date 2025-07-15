@@ -73,26 +73,6 @@ const Footer: React.FC = () => {
                   Los Angeles
                 </a>
               </li>
-              <li>
-                <a href="https://nail-salons.chicago.near-me.us" className="text-gray-400 hover:text-white transition-colors">
-                  Chicago
-                </a>
-              </li>
-              <li>
-                <a href="https://auto-repair.dallas.near-me.us" className="text-gray-400 hover:text-white transition-colors">
-                  Dallas
-                </a>
-              </li>
-              <li>
-                <a href="https://nail-salons.miami.near-me.us" className="text-gray-400 hover:text-white transition-colors">
-                  Miami
-                </a>
-              </li>
-              <li>
-                <a href="https://auto-repair.seattle.near-me.us" className="text-gray-400 hover:text-white transition-colors">
-                  Seattle
-                </a>
-              </li>
             </ul>
           </div>
 
