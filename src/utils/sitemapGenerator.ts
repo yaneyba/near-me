@@ -163,7 +163,6 @@ ${sitemaps.map(sitemap => `  <sitemap>
     // Add main pages for each combination
     combinations.forEach(combo => {
       const categoryUrl = this.formatForUrl(combo.category);
-      const cityUrl = this.formatForUrl(combo.city);
       const baseUrl = `https://${categoryUrl}.near-me.us`;
 
       urls.push(
@@ -218,8 +217,8 @@ ${sitemaps.map(sitemap => `  <sitemap>
     // Get businesses for this subdomain
     const subdomainBusinesses = this.businesses.filter(
       business => 
-        business.category === this.formatForUrl(category) && 
-        business.city === this.formatForUrl(city)
+        business.category === categoryUrl && 
+        business.city === cityUrl
     );
 
     const urls: SitemapUrl[] = [
