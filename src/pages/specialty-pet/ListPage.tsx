@@ -5,6 +5,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { SpecialtyPetLayout, SpecialtyPetBreadcrumb } from '@/components/layouts/specialty-pet';
 import { SubdomainInfo, Product } from '@/types';
 
@@ -13,15 +14,40 @@ interface SpecialtyPetListPageProps {
 }
 
 const SpecialtyPetListPage: React.FC<SpecialtyPetListPageProps> = ({ subdomainInfo }) => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
 
+  // Initialize category from URL params
+  useEffect(() => {
+    const categoryParam = searchParams.get('category');
+    if (categoryParam) {
+      setSelectedCategory(categoryParam);
+    }
+  }, [searchParams]);
+
   useEffect(() => {
     loadProducts();
   }, [selectedCategory]);
+
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+    
+    // Update URL to reflect the filter
+    const newSearchParams = new URLSearchParams(searchParams);
+    if (category) {
+      newSearchParams.set('category', category);
+    } else {
+      newSearchParams.delete('category');
+    }
+    
+    // Navigate to the new URL with updated search params
+    navigate(`?${newSearchParams.toString()}`, { replace: true });
+  };
 
   const loadProducts = async () => {
     try {
@@ -72,13 +98,19 @@ const SpecialtyPetListPage: React.FC<SpecialtyPetListPageProps> = ({ subdomainIn
     // TODO: Reset search results
   };
 
-  // Filter products based on search query
-  const filteredProducts = products.filter(product =>
-    searchQuery === '' || 
-    product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.vendor?.name?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter products based on search query and selected category
+  const filteredProducts = products.filter(product => {
+    // Search query filter
+    const matchesSearch = searchQuery === '' || 
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.vendor?.name?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // Category filter
+    const matchesCategory = selectedCategory === '' || product.category === selectedCategory;
+    
+    return matchesSearch && matchesCategory;
+  });
 
   // Get unique product categories for filtering
   const productCategories = Array.from(new Set(products.map(p => p.category).filter(Boolean)));
@@ -144,7 +176,7 @@ const SpecialtyPetListPage: React.FC<SpecialtyPetListPageProps> = ({ subdomainIn
           <div className="mb-6">
             <div className="flex flex-wrap gap-2">
               <button
-                onClick={() => setSelectedCategory('')}
+                onClick={() => handleCategoryChange('')}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                   selectedCategory === '' 
                     ? 'bg-emerald-600 text-white' 
@@ -156,7 +188,7 @@ const SpecialtyPetListPage: React.FC<SpecialtyPetListPageProps> = ({ subdomainIn
               {productCategories.map((category) => (
                 <button
                   key={category}
-                  onClick={() => setSelectedCategory(category || '')}
+                  onClick={() => handleCategoryChange(category || '')}
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-colors capitalize ${
                     selectedCategory === category 
                       ? 'bg-emerald-600 text-white' 
