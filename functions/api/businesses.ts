@@ -14,8 +14,11 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     let query: string;
     let bindParams: string[];
 
-    if (city) {
-      // City provided: filter by both category and city
+    // Simple logic: only filter by city if a specific city is provided
+    const shouldFilterByCity = city && city.trim() !== '';
+
+    if (shouldFilterByCity) {
+      // Specific city provided: filter by both category and city
       query = `
         SELECT 
           id, business_id, name, category,
@@ -38,7 +41,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
       `;
       bindParams = [category, city];
     } else {
-      // No city: show ALL businesses in that category
+      // No city filter: show ALL businesses in category
       query = `
         SELECT 
           id, business_id, name, category,

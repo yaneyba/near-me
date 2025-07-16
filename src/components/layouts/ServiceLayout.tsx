@@ -37,7 +37,7 @@ const ServiceLayout: React.FC<ServiceLayoutProps> = ({ children, subdomainInfo, 
               <ServiceIcon className="w-4 h-4 mr-1" />
               {serviceConfig.name}
             </Link>
-            {subdomainInfo.city !== 'All Cities' && (
+            {subdomainInfo.city && !subdomainInfo.city.includes('All') && (
               <>
                 <span className="text-gray-400">/</span>
                 <span className="text-gray-600 flex items-center">
@@ -64,12 +64,12 @@ const ServiceLayout: React.FC<ServiceLayoutProps> = ({ children, subdomainInfo, 
               <ServiceIcon className="w-8 h-8 mr-3" />
               <div>
                 <h1 className="text-xl font-bold">
-                  {subdomainInfo.city === 'All Cities' 
-                    ? serviceConfig.name 
-                    : `${serviceConfig.name} in ${subdomainInfo.city}`
+                  {subdomainInfo.city && !subdomainInfo.city.includes('All')
+                    ? `${serviceConfig.name} in ${subdomainInfo.city}`
+                    : serviceConfig.name
                   }
                 </h1>
-                {subdomainInfo.city !== 'All Cities' && (
+                {subdomainInfo.city && !subdomainInfo.city.includes('All') && (
                   <p className="text-blue-100 text-sm">{subdomainInfo.state}</p>
                 )}
               </div>

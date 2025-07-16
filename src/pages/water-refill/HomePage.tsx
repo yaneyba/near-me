@@ -43,21 +43,11 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
         console.log('🚧 Loading water stations...');
         console.log('subdomainInfo?.city:', subdomainInfo?.city);
         
-        // Use city from subdomainInfo, fallback to 'All Cities' if not available
-        const cityToUse = subdomainInfo?.city || 'All Cities';
-        console.log('cityToUse:', cityToUse);
+        // Load water-refill businesses using the category and city from subdomain
+        // The API will automatically show all businesses if city is "All Cities" or similar
+        console.log('🚧 Loading water-refill businesses for:', subdomainInfo?.city || 'all cities');
         
-        let allBusinesses: any[] = [];
-        
-        if (cityToUse === 'All Cities' || !subdomainInfo?.city) {
-          // Single efficient query: SELECT * WHERE category = 'water-refill'
-          console.log('🚧 Calling getBusinessesByCategory("water-refill")');
-          allBusinesses = await dataProvider.getBusinessesByCategory('water-refill');
-        } else {
-          // Get water-refill businesses from specific city
-          console.log(`🚧 Calling getBusinesses("water-refill", "${cityToUse}")`);
-          allBusinesses = await dataProvider.getBusinesses('water-refill', cityToUse);
-        }
+        const allBusinesses = await dataProvider.getBusinesses('water-refill', subdomainInfo?.city || '');
         
         console.log('🚧 Raw businesses loaded:', allBusinesses.length);
         console.log('🚧 First business:', allBusinesses[0]);

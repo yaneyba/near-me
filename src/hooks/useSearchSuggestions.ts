@@ -66,7 +66,7 @@ export const useSearchSuggestions = (city?: string): UseSearchSuggestionsReturn 
       '24 hours'
     ];
 
-    if (city && city !== 'All Cities') {
+    if (city && !city.includes('All')) {
       return [
         `Popular in ${city}`,
         ...basePopular

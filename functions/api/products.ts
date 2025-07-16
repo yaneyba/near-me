@@ -44,8 +44,10 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
       bindParams.push(category);
     }
 
-    // Add city filter
-    if (city && city.toLowerCase() !== 'all cities') {
+    // Add city filter - simple logic: only filter if a specific city is provided
+    const shouldFilterByCity = city && city.trim() !== '';
+      
+    if (shouldFilterByCity) {
       baseQuery += ` AND LOWER(b.city) = LOWER(?)`;
       bindParams.push(city);
     }

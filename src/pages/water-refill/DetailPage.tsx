@@ -28,28 +28,13 @@ const DetailPage: React.FC<DetailPageProps> = ({ subdomainInfo }) => {
         // Try to get station directly by ID first
         let businessData: Business | null = await dataProvider.getWaterStationById(stationId);
         
-        // If direct lookup fails, fall back to searching through cities
+        // If direct lookup fails, fall back to searching through all businesses
         if (!businessData) {
-          console.log('Direct lookup failed, searching through cities...');
+          console.log('Direct lookup failed, searching through businesses...');
           
-          if (subdomainInfo.city === 'All Cities') {
-            // If no specific city, search across all cities
-            const cities = await dataProvider.getCities();
-            
-            for (const city of cities) {
-              try {
-                const businesses = await dataProvider.getBusinesses('water-refill', city);
-                businessData = businesses.find(b => b.id === stationId) || null;
-                if (businessData) break;
-              } catch (error) {
-                console.warn(`Failed to search in city ${city}:`, error);
-              }
-            }
-          } else {
-            // Get all water-refill businesses for the current city
-            const businesses = await dataProvider.getBusinesses('water-refill', subdomainInfo.city);
-            businessData = businesses.find(b => b.id === stationId) || null;
-          }
+          // Get all water-refill businesses (API handles city filtering automatically)
+          const businesses = await dataProvider.getBusinesses('water-refill', subdomainInfo.city);
+          businessData = businesses.find(b => b.id === stationId) || null;
         }
         
         if (businessData) {

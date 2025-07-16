@@ -27,7 +27,10 @@ const SeniorCareHomePage: React.FC<SeniorCareHomePageProps> = ({ subdomainInfo }
     try {
       setLoading(true);
       const dataProvider = DataProviderFactory.getProvider();
-      const response = await dataProvider.getBusinesses('senior-care', subdomainInfo.city);
+      
+      // Pass empty string if city is "All Cities" to get all businesses
+      const cityFilter = subdomainInfo.city?.includes('All') ? '' : subdomainInfo.city;
+      const response = await dataProvider.getBusinesses('senior-care', cityFilter || '');
       setBusinesses(response);
     } catch (err) {
       setError('Failed to load senior care providers');

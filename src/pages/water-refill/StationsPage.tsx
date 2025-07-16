@@ -40,62 +40,22 @@ const StationsPage: React.FC<StationsPageProps> = ({ subdomainInfo }) => {
       try {
         console.log(`Loading water-refill businesses for city: ${subdomainInfo.city}`);
         
-        // Handle "All Cities" case by loading nationwide
-        if (subdomainInfo.city === 'All Cities') {
-          console.log('Loading nationwide water-refill businesses...');
-          const cities = await dataProvider.getCities();
-          const allBusinesses: any[] = [];
-          
-          // Get businesses from ALL cities
-          for (const city of cities) {
-            try {
-              const cityBusinesses = await dataProvider.getBusinesses('water-refill', city);
-              allBusinesses.push(...cityBusinesses);
-            } catch (error) {
-              console.warn(`Failed to load businesses for ${city}:`, error);
-            }
-          }
-          
-          console.log(`Loaded ${allBusinesses.length} nationwide businesses:`, allBusinesses);
+        // Load water stations - API will handle "All Cities" automatically
+        console.log('Loading water stations for:', subdomainInfo.city);
+        
+        const businesses = await dataProvider.getBusinesses('water-refill', subdomainInfo.city);
+        console.log(`Found ${businesses.length} water-refill businesses:`, businesses);
+        
+        if (businesses.length === 0) {
+          console.log('No stations found for this configuration');
+          setStations([]);
+          setAllStations([]);
+        } else {
           // Transform business data to station format
-          const transformedStations: WaterStationType[] = allBusinesses.map(transformBusinessToWaterStation);
+          const transformedStations: WaterStationType[] = businesses.map(transformBusinessToWaterStation);
           console.log(`Transformed to ${transformedStations.length} stations:`, transformedStations);
           setAllStations(transformedStations);
           setStations(transformedStations);
-        } else {
-          // Get water-refill businesses from data provider for specific city
-          const businesses = await dataProvider.getBusinesses('water-refill', subdomainInfo.city);
-          console.log(`Found ${businesses.length} water-refill businesses:`, businesses);
-          
-          // If no businesses found for specific city, try to load nationwide as fallback
-          if (businesses.length === 0) {
-            console.log('No stations found for city, loading nationwide as fallback...');
-            const cities = await dataProvider.getCities();
-            const allBusinesses: any[] = [];
-            
-            // Get businesses from ALL cities
-            for (const city of cities) {
-              try {
-                const cityBusinesses = await dataProvider.getBusinesses('water-refill', city);
-                allBusinesses.push(...cityBusinesses);
-              } catch (error) {
-                console.warn(`Failed to load businesses for ${city}:`, error);
-              }
-            }
-            
-            console.log(`Loaded ${allBusinesses.length} nationwide businesses as fallback:`, allBusinesses);
-            // Transform business data to station format
-            const transformedStations: WaterStationType[] = allBusinesses.map(transformBusinessToWaterStation);
-            console.log(`Transformed to ${transformedStations.length} stations:`, transformedStations);
-            setAllStations(transformedStations);
-            setStations(transformedStations);
-          } else {
-            // Transform business data to station format - ONLY use real data
-            const transformedStations: WaterStationType[] = businesses.map(transformBusinessToWaterStation);
-            console.log(`Transformed to ${transformedStations.length} stations:`, transformedStations);
-            setAllStations(transformedStations);
-            setStations(transformedStations);
-          }
         }
       } catch (error) {
         console.error('Error loading water refill stations:', error);

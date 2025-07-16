@@ -45,22 +45,8 @@ const SpecialtyPetListPage: React.FC<SpecialtyPetListPageProps> = ({ subdomainIn
       
       let data = await response.json();
       
-      // If no products found with city filter, try without city filter
-      if ((!data.products || data.products.length === 0) && subdomainInfo.city !== 'All Cities') {
-        const allParams = new URLSearchParams({
-          category: 'specialty-pet'
-        });
-        
-        if (selectedCategory) {
-          allParams.append('product_category', selectedCategory);
-        }
-        
-        response = await fetch(`/api/products?${allParams.toString()}`);
-        
-        if (response.ok) {
-          data = await response.json();
-        }
-      }
+      // Note: API now handles city filtering automatically
+      // If city is "All Cities" or similar, it will show all products
       
       setProducts(data.products || []);
     } catch (err) {
@@ -179,9 +165,9 @@ const SpecialtyPetListPage: React.FC<SpecialtyPetListPageProps> = ({ subdomainIn
         {/* Results Summary */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            {subdomainInfo.city === 'All Cities' 
-              ? 'Specialty Pet Products Nationwide' 
-              : `Specialty Pet Products in ${subdomainInfo.city}, ${subdomainInfo.state}`
+            {subdomainInfo.city && !subdomainInfo.city.includes('All')
+              ? `Specialty Pet Products in ${subdomainInfo.city}, ${subdomainInfo.state}`
+              : 'Specialty Pet Products'
             }
           </h2>
           <p className="text-gray-600">
