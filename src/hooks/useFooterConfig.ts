@@ -23,29 +23,31 @@ export const useFooterConfig = (): FooterConfig => {
     const waterLinks: FooterLink[] = [];
     const allCategories: string[] = [];
 
-    // Process services layout
-    if (subdomainConfig.layouts.services?.generateHTML) {
-      subdomainConfig.layouts.services.categories.forEach(category => {
+    // Helper function to process categories
+    const processCategories = (categories: string[], isWaterCategory = false) => {
+      categories.forEach(category => {
         allCategories.push(category);
-        serviceLinks.push({
+        const link: FooterLink = {
           label: formatCategoryLabel(category),
           url: `https://${category}.near-me.us`,
           category
-        });
+        };
+        
+        if (isWaterCategory) {
+          waterLinks.push(link);
+        } else {
+          serviceLinks.push(link);
+        }
       });
-    }
+    };
 
-    // Process water layout
-    if (subdomainConfig.layouts.water?.generateHTML) {
-      subdomainConfig.layouts.water.categories.forEach(category => {
-        allCategories.push(category);
-        waterLinks.push({
-          label: formatCategoryLabel(category),
-          url: `https://${category}.near-me.us`,
-          category
-        });
-      });
-    }
+    // Process all layouts dynamically
+    Object.entries(subdomainConfig.layouts).forEach(([layoutKey, layout]) => {
+      if (layout?.generateHTML && layout.categories) {
+        const isWaterCategory = layoutKey === 'water';
+        processCategories(layout.categories, isWaterCategory);
+      }
+    });
 
     return {
       serviceLinks,
