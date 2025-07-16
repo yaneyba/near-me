@@ -10,6 +10,10 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+
+// Load environment variables from .env file
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -441,7 +445,7 @@ function generateHTML(page) {
 }
 
 // Generate static homepage for the main site (near-me.us)
-function generateMainHomepage(assets, serviceLinks, waterLinks) {
+function generateMainHomepage(assets, serviceLinks, waterLinks, GTM_ID) {
   const buildTime = new Date().toISOString();
   const version = process.env.npm_package_version || '1.0.0';
   
@@ -504,19 +508,15 @@ function generateMainHomepage(assets, serviceLinks, waterLinks) {
     <meta name="version" content="${version}" />
     
     <!-- Google Tag Manager -->
-    <script>
-      if (typeof window !== 'undefined') {
-        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-        })(window,document,'script','dataLayer','GTM-XXXXXXX');
-      }
-    </script>
+    ${GTM_ID ? `<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+      new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+      j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+      'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+      })(window,document,'script','dataLayer','${GTM_ID}');</script>` : ''}
   </head>
   <body>
     <!-- Google Tag Manager (noscript) -->
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-XXXXXXX" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    ${GTM_ID ? `<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=${GTM_ID}" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>` : ''}
     
     <div id="root"></div>
     
@@ -588,6 +588,9 @@ function generateSubdomainHTML() {
   const assets = getAssetFilenames();
   const { serviceLinks, waterLinks } = generateFooterLinks();
   
+  // Google Tag Manager ID from env
+  const GTM_ID = process.env.VITE_GOOGLE_TAG_MANAGER_ID || '';
+  
   // Create dist directory if it doesn't exist
   if (!fs.existsSync(distDir)) {
     fs.mkdirSync(distDir, { recursive: true });
@@ -596,7 +599,7 @@ function generateSubdomainHTML() {
   console.log('🚀 Generating HTML files for subdomains and main site...');
   
   // Generate main homepage first
-  generateMainHomepage(assets, serviceLinks, waterLinks);
+  generateMainHomepage(assets, serviceLinks, waterLinks, GTM_ID);
   
   // Then generate subdomain pages
   const totalPages = pages.length;
