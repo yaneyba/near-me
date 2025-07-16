@@ -14,6 +14,15 @@ A modern React application that creates SEO-optimized business directory pages w
 - **Mobile Responsive**: Optimized for all devices
 - **Production Ready**: Built for scalable deployment
 
+## 🚨 Adding New Subdomains
+
+**IMPORTANT**: When creating new category subdomains, follow the complete checklist:
+
+- 📋 **Full Guide**: [docs/NEW-SUBDOMAIN-CHECKLIST.md](docs/NEW-SUBDOMAIN-CHECKLIST.md)
+- ⚡ **Quick Ref**: [SUBDOMAIN-QUICK-REF.md](SUBDOMAIN-QUICK-REF.md)
+
+**Critical**: Must update middleware (`functions/_middleware.js`) or SEO will fail!
+
 ## 🚀 Quick Start
 
 ### 1. Install Dependencies
