@@ -33,7 +33,7 @@ export const onRequest = async (context: any): Promise<Response> => {
       WHERE b.city IS NOT NULL AND b.city != ''
       GROUP BY b.city, b.state
       HAVING count > 0
-      ORDER BY count DESC, b.city ASC
+      ORDER BY b.city ASC, b.state ASC
     `;
 
     const [servicesResult, citiesResult] = await Promise.all([
