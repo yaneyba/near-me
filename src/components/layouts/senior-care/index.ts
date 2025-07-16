@@ -6,3 +6,4 @@
 
 export { default as Layout } from './Layout';
 export { default as SeniorCareLayout } from './Layout';
+export { default as SeniorCareBreadcrumb } from './Breadcrumb';
