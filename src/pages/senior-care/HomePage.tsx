@@ -5,9 +5,11 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Layout as SeniorCareLayout } from '@/components/layouts/senior-care';
 import { SubdomainInfo, Business } from '@/types';
 import { DataProviderFactory } from '@/providers/DataProviderFactory';
+import { Home, ChevronRight, Heart } from 'lucide-react';
 
 interface SeniorCareHomePageProps {
   subdomainInfo: SubdomainInfo;
@@ -56,6 +58,23 @@ const SeniorCareHomePage: React.FC<SeniorCareHomePageProps> = ({ subdomainInfo }
         onClearSearch={handleClearSearch}
         currentSearchQuery={searchQuery}
       >
+        {/* Breadcrumb */}
+        <div className="bg-white border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <nav className="flex flex-wrap items-center text-sm text-gray-500 gap-1">
+              <Link to="/" className="flex items-center hover:text-blue-600 transition-colors">
+                <Home className="w-4 h-4 mr-1" />
+                Home
+              </Link>
+              <ChevronRight className="w-4 h-4 text-gray-400 mx-1" />
+              <span className="flex items-center text-gray-900">
+                <Heart className="w-4 h-4 mr-1" />
+                Senior Care Services
+              </span>
+            </nav>
+          </div>
+        </div>
+
         <div className="flex justify-center items-center min-h-96">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
@@ -72,6 +91,23 @@ const SeniorCareHomePage: React.FC<SeniorCareHomePageProps> = ({ subdomainInfo }
         onClearSearch={handleClearSearch}
         currentSearchQuery={searchQuery}
       >
+        {/* Breadcrumb */}
+        <div className="bg-white border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <nav className="flex flex-wrap items-center text-sm text-gray-500 gap-1">
+              <Link to="/" className="flex items-center hover:text-blue-600 transition-colors">
+                <Home className="w-4 h-4 mr-1" />
+                Home
+              </Link>
+              <ChevronRight className="w-4 h-4 text-gray-400 mx-1" />
+              <span className="flex items-center text-gray-900">
+                <Heart className="w-4 h-4 mr-1" />
+                Senior Care Services
+              </span>
+            </nav>
+          </div>
+        </div>
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
             <p className="text-red-600 mb-4">{error}</p>
@@ -95,6 +131,23 @@ const SeniorCareHomePage: React.FC<SeniorCareHomePageProps> = ({ subdomainInfo }
       onClearSearch={handleClearSearch}
       currentSearchQuery={searchQuery}
     >
+      {/* Breadcrumb */}
+      <div className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <nav className="flex flex-wrap items-center text-sm text-gray-500 gap-1">
+            <Link to="/" className="flex items-center hover:text-blue-600 transition-colors">
+              <Home className="w-4 h-4 mr-1" />
+              Home
+            </Link>
+            <ChevronRight className="w-4 h-4 text-gray-400 mx-1" />
+            <span className="flex items-center text-gray-900">
+              <Heart className="w-4 h-4 mr-1" />
+              Senior Care Services
+            </span>
+          </nav>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {businesses.length === 0 ? (
           <div className="text-center py-16">
