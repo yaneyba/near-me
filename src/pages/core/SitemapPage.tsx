@@ -237,7 +237,7 @@ const SitemapPage: React.FC<SitemapPageProps> = ({ subdomainInfo }) => {
             citySlug: business.city,
             state,
             businessCount: 1,
-            url: `https://${business.category}.${business.city}.near-me.us`
+            url: `https://${business.category}.near-me.us/${business.city}`
           });
         }
       }

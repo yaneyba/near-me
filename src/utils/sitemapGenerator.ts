@@ -153,7 +153,7 @@ ${sitemaps.map(sitemap => `  <sitemap>
       const cityUrl = this.formatForUrl(combo.city);
       
       return {
-        loc: `https://${categoryUrl}.${cityUrl}.near-me.us/`,
+        loc: `https://${categoryUrl}.near-me.us/${cityUrl}`,
         lastmod: this.getCurrentDate(),
         changefreq: 'daily',
         priority: 0.9
@@ -164,7 +164,7 @@ ${sitemaps.map(sitemap => `  <sitemap>
     combinations.forEach(combo => {
       const categoryUrl = this.formatForUrl(combo.category);
       const cityUrl = this.formatForUrl(combo.city);
-      const baseUrl = `https://${categoryUrl}.${cityUrl}.near-me.us`;
+      const baseUrl = `https://${categoryUrl}.near-me.us`;
 
       urls.push(
         {
@@ -197,7 +197,7 @@ ${sitemaps.map(sitemap => `  <sitemap>
         const businessUrl = this.formatForUrl(business.name);
         
         return {
-          loc: `https://${categoryUrl}.${cityUrl}.near-me.us/business/${businessUrl}-${business.id}`,
+          loc: `https://${categoryUrl}.near-me.us/${cityUrl}/business/${businessUrl}-${business.id}`,
           lastmod: this.getCurrentDate(),
           changefreq: 'weekly',
           priority: 0.7
@@ -213,7 +213,7 @@ ${sitemaps.map(sitemap => `  <sitemap>
   generateSubdomainSitemap(category: string, city: string): string {
     const categoryUrl = this.formatForUrl(category);
     const cityUrl = this.formatForUrl(city);
-    const baseUrl = `https://${categoryUrl}.${cityUrl}.near-me.us`;
+    const baseUrl = `https://${categoryUrl}.near-me.us`;
 
     // Get businesses for this subdomain
     const subdomainBusinesses = this.businesses.filter(
@@ -314,8 +314,7 @@ Sitemap: ${this.baseUrl}/sitemap.xml
 
     combinations.forEach(combo => {
       const categoryUrl = this.formatForUrl(combo.category);
-      const cityUrl = this.formatForUrl(combo.city);
-      robotsTxt += `Sitemap: https://${categoryUrl}.${cityUrl}.near-me.us/sitemap.xml\n`;
+      robotsTxt += `Sitemap: https://${categoryUrl}.near-me.us/sitemap.xml\n`;
     });
 
     robotsTxt += `

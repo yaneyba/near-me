@@ -131,7 +131,7 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
               {filteredServices.map((service) => (
                 <a
                   key={service.slug}
-                  href={`https://${service.slug}.near-me.us`}
+                  href={`https://${service.slug}.near-me.us/`}
                   className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6 border border-gray-200 hover:border-blue-300"
                 >
                   <div className="flex items-center justify-between">
@@ -170,8 +170,8 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
                   // For main services page, link to main site with city parameter
                   cityUrl = `https://near-me.us/?city=${encodeURIComponent(city.slug)}`;
                 } else {
-                  // For category-specific pages, use the rawCategory slug
-                  cityUrl = `https://${subdomainInfo.rawCategory}.${city.slug}.near-me.us`;
+                  // For category-specific pages, use the path-based pattern: category.near-me.us/city
+                  cityUrl = `https://${subdomainInfo.rawCategory}.near-me.us/${city.slug}`;
                 }
                 
                 return (
