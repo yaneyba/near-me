@@ -27,11 +27,19 @@ const SpecialtyPetListPage: React.FC<SpecialtyPetListPageProps> = ({ subdomainIn
     try {
       setLoading(true);
       
-      // Build API URL - first try with city filter
+      // Apply simplified city filtering pattern
+      // Use empty string for non-city paths like "Products", "All Cities", etc.
+      const cityToUse = (subdomainInfo.city === 'All Cities' || subdomainInfo.city === 'Products') ? '' : subdomainInfo.city;
+      
+      // Build API URL
       const params = new URLSearchParams({
-        category: 'specialty-pet',
-        city: subdomainInfo.city
+        category: 'specialty-pet'
       });
+      
+      // Only add city parameter if we have a specific city
+      if (cityToUse && cityToUse.trim() !== '') {
+        params.append('city', cityToUse);
+      }
       
       if (selectedCategory) {
         params.append('product_category', selectedCategory);
@@ -44,9 +52,6 @@ const SpecialtyPetListPage: React.FC<SpecialtyPetListPageProps> = ({ subdomainIn
       }
       
       let data = await response.json();
-      
-      // Note: API now handles city filtering automatically
-      // If city is "All Cities" or similar, it will show all products
       
       setProducts(data.products || []);
     } catch (err) {
