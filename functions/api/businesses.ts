@@ -14,8 +14,8 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     let query: string;
     let bindParams: string[];
 
-    if (city && city !== 'All Cities') {
-      // Specific city provided: filter by both category and city
+    if (city) {
+      // City provided: filter by both category and city
       query = `
         SELECT 
           id, business_id, name, category,

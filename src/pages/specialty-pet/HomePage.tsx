@@ -1,37 +1,71 @@
 /**
  * Specialty Pet Home Page
  * 
- * Main landing page for specialty pet services directory
+ * Main landing page for specialty pet products marketplace
  */
 
 import React, { useEffect, useState } from 'react';
 import { SpecialtyPetLayout } from '@/components/layouts/specialty-pet';
-import { SubdomainInfo, Business } from '@/types';
-import { DataProviderFactory } from '@/providers/DataProviderFactory';
+import { SubdomainInfo, Product } from '@/types';
 
 interface SpecialtyPetHomePageProps {
   subdomainInfo: SubdomainInfo;
 }
 
 const SpecialtyPetHomePage: React.FC<SpecialtyPetHomePageProps> = ({ subdomainInfo }) => {
-  const [businesses, setBusinesses] = useState<Business[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
 
   useEffect(() => {
-    loadBusinesses();
-  }, []);
+    loadProducts();
+  }, [selectedCategory]);
 
-  const loadBusinesses = async () => {
+  const loadProducts = async () => {
     try {
       setLoading(true);
-      const dataProvider = DataProviderFactory.getProvider();
-      const response = await dataProvider.getBusinesses('specialty-pet', subdomainInfo.city);
-      setBusinesses(response);
+      
+      // Build API URL - first try with city filter
+      const params = new URLSearchParams({
+        category: 'specialty-pet',
+        city: subdomainInfo.city
+      });
+      
+      if (selectedCategory) {
+        params.append('product_category', selectedCategory);
+      }
+      
+      let response = await fetch(`/api/products?${params.toString()}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch products');
+      }
+      
+      let data = await response.json();
+      
+      // If no products found with city filter, try without city filter
+      if ((!data.products || data.products.length === 0) && subdomainInfo.city !== 'All Cities') {
+        const allParams = new URLSearchParams({
+          category: 'specialty-pet'
+        });
+        
+        if (selectedCategory) {
+          allParams.append('product_category', selectedCategory);
+        }
+        
+        response = await fetch(`/api/products?${allParams.toString()}`);
+        
+        if (response.ok) {
+          data = await response.json();
+        }
+      }
+      
+      setProducts(data.products || []);
     } catch (err) {
-      setError('Failed to load specialty pet providers');
-      console.error('Error loading businesses:', err);
+      setError('Failed to load specialty pet products');
+      console.error('Error loading products:', err);
     } finally {
       setLoading(false);
     }
@@ -47,6 +81,17 @@ const SpecialtyPetHomePage: React.FC<SpecialtyPetHomePageProps> = ({ subdomainIn
     // TODO: Reset search results
   };
 
+  // Filter products based on search query
+  const filteredProducts = products.filter(product =>
+    searchQuery === '' || 
+    product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    product.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    product.vendor?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Get unique product categories for filtering
+  const productCategories = Array.from(new Set(products.map(p => p.category).filter(Boolean)));
+
   if (loading) {
     return (
       <SpecialtyPetLayout 
@@ -59,7 +104,7 @@ const SpecialtyPetHomePage: React.FC<SpecialtyPetHomePageProps> = ({ subdomainIn
         <div className="flex justify-center items-center min-h-96">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading specialty pet services...</p>
+            <p className="text-gray-600">Loading specialty pet products...</p>
           </div>
         </div>
       </SpecialtyPetLayout>
@@ -80,7 +125,7 @@ const SpecialtyPetHomePage: React.FC<SpecialtyPetHomePageProps> = ({ subdomainIn
             <div className="text-red-600 text-xl mb-4">⚠️</div>
             <p className="text-gray-600">{error}</p>
             <button 
-              onClick={loadBusinesses}
+              onClick={loadProducts}
               className="mt-4 bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700"
             >
               Try Again
@@ -100,70 +145,134 @@ const SpecialtyPetHomePage: React.FC<SpecialtyPetHomePageProps> = ({ subdomainIn
       currentSearchQuery={searchQuery}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Category Filter */}
+        {productCategories.length > 0 && (
+          <div className="mb-6">
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setSelectedCategory('')}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                  selectedCategory === '' 
+                    ? 'bg-emerald-600 text-white' 
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                All Products
+              </button>
+              {productCategories.map((category) => (
+                <button
+                  key={category}
+                  onClick={() => setSelectedCategory(category || '')}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors capitalize ${
+                    selectedCategory === category 
+                      ? 'bg-emerald-600 text-white' 
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Results Summary */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
             {subdomainInfo.city === 'All Cities' 
-              ? 'Specialty Pet Services Nationwide' 
-              : `Specialty Pet Services in ${subdomainInfo.city}, ${subdomainInfo.state}`
+              ? 'Specialty Pet Products Nationwide' 
+              : `Specialty Pet Products in ${subdomainInfo.city}, ${subdomainInfo.state}`
             }
           </h2>
           <p className="text-gray-600">
-            Found {businesses.length} specialist{businesses.length !== 1 ? 's' : ''} 
+            Found {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''} 
             {searchQuery && ` matching "${searchQuery}"`}
+            {selectedCategory && ` in ${selectedCategory}`}
           </p>
         </div>
 
-        {/* Business Listings */}
-        {businesses.length === 0 ? (
+        {/* Product Listings */}
+        {filteredProducts.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-gray-400 text-6xl mb-4">🐾</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No services found</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">No products found</h3>
             <p className="text-gray-600 mb-4">
               {searchQuery 
-                ? `No specialty pet services match "${searchQuery}" in this area.`
-                : 'No specialty pet services are currently listed in this area.'
+                ? `No specialty pet products match "${searchQuery}" in this area.`
+                : 'No specialty pet products are currently listed in this area.'
               }
             </p>
-            {searchQuery && (
+            {(searchQuery || selectedCategory) && (
               <button 
-                onClick={handleClearSearch}
+                onClick={() => {
+                  handleClearSearch();
+                  setSelectedCategory('');
+                }}
                 className="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700"
               >
-                Clear Search
+                Clear Filters
               </button>
             )}
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {businesses.map((business) => (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {filteredProducts.map((product) => (
               <div 
-                key={business.id} 
+                key={product.id} 
                 className="bg-white rounded-lg shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow"
               >
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  {business.name}
-                </h3>
-                {business.address && (
-                  <p className="text-gray-600 text-sm mb-2">
-                    📍 {business.address}
-                  </p>
+                {product.images && (
+                  <div className="w-full h-48 mb-4 bg-gray-100 rounded-lg overflow-hidden">
+                    <img 
+                      src={product.images} 
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                 )}
-                {business.phone && (
-                  <p className="text-gray-600 text-sm mb-2">
-                    📞 {business.phone}
-                  </p>
-                )}
-                {business.website && (
-                  <a 
-                    href={business.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-emerald-600 hover:text-emerald-700 text-sm"
-                  >
-                    🌐 Visit Website
-                  </a>
-                )}
+                
+                <div className="space-y-2">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {product.name}
+                  </h3>
+                  
+                  {product.category && (
+                    <span className="inline-block bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded-full capitalize">
+                      {product.category}
+                    </span>
+                  )}
+                  
+                  {product.description && (
+                    <p className="text-gray-600 text-sm">
+                      {product.description}
+                    </p>
+                  )}
+                  
+                  {product.price && (
+                    <p className="text-xl font-bold text-emerald-600">
+                      ${product.price}
+                    </p>
+                  )}
+                  
+                  {product.vendor && (
+                    <div className="border-t pt-3 mt-3">
+                      <p className="text-sm text-gray-500">Sold by:</p>
+                      <p className="text-sm font-medium text-gray-900">
+                        {product.vendor.name}
+                      </p>
+                      {product.vendor.website && (
+                        <a 
+                          href={product.vendor.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-emerald-600 hover:text-emerald-700 text-sm inline-block mt-1"
+                        >
+                          Visit Store →
+                        </a>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>

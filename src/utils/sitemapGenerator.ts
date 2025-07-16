@@ -211,14 +211,13 @@ ${sitemaps.map(sitemap => `  <sitemap>
    */
   generateSubdomainSitemap(category: string, city: string): string {
     const categoryUrl = this.formatForUrl(category);
-    const cityUrl = this.formatForUrl(city);
     const baseUrl = `https://${categoryUrl}.near-me.us`;
 
     // Get businesses for this subdomain
     const subdomainBusinesses = this.businesses.filter(
       business => 
-        business.category === categoryUrl && 
-        business.city === cityUrl
+        business.category === this.formatForUrl(category) && 
+        business.city === this.formatForUrl(city)
     );
 
     const urls: SitemapUrl[] = [

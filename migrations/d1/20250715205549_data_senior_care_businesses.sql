@@ -1,12 +1,12 @@
 -- Migration: Add senior-care businesses for plano
 -- Generated: 2025-07-15T20:55:49.996Z
+-- Updated: 2025-07-16 - Using auto-generated UUIDs
 
 INSERT INTO businesses (
-  id, business_id, name, category, description, phone, website, address,
+  business_id, name, category, description, phone, website, address,
   city, state, zip_code, image_url, hours, services, rating, review_count,
   verified, premium, status, established, latitude, longitude
 ) VALUES (
-  'senior-care-plano-001',
   'senior-care-plano-01',
   'Home Instead Plano',
   'senior-care',
@@ -31,11 +31,10 @@ INSERT INTO businesses (
 );
 
 INSERT INTO businesses (
-  id, business_id, name, category, description, phone, website, address,
+  business_id, name, category, description, phone, website, address,
   city, state, zip_code, image_url, hours, services, rating, review_count,
   verified, premium, status, established, latitude, longitude
 ) VALUES (
-  'senior-care-plano-002',
   'senior-care-plano-02',
   'Amada Senior Care Dallas',
   'senior-care',
@@ -60,11 +59,10 @@ INSERT INTO businesses (
 );
 
 INSERT INTO businesses (
-  id, business_id, name, category, description, phone, website, address,
+  business_id, name, category, description, phone, website, address,
   city, state, zip_code, image_url, hours, services, rating, review_count,
   verified, premium, status, established, latitude, longitude
 ) VALUES (
-  'senior-care-plano-003',
   'senior-care-plano-03',
   'Comfort Keepers Plano',
   'senior-care',
@@ -89,11 +87,10 @@ INSERT INTO businesses (
 );
 
 INSERT INTO businesses (
-  id, business_id, name, category, description, phone, website, address,
+  business_id, name, category, description, phone, website, address,
   city, state, zip_code, image_url, hours, services, rating, review_count,
   verified, premium, status, established, latitude, longitude
 ) VALUES (
-  'senior-care-plano-004',
   'senior-care-plano-04',
   'Granny Nannies Plano',
   'senior-care',

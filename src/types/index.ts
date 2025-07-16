@@ -154,6 +154,20 @@ export interface ContactMessage {
   updated_at?: string;                  // Last update timestamp
 }
 
+// Product Entity (matches products table) 
+export interface Product {
+  id: string;                           // Primary key
+  name: string;                         // Product name
+  description?: string | null;          // Product description
+  price?: number | null;                // Product price
+  category?: string | null;             // Product category (e.g., "treats", "toys")
+  images?: string | null;               // Product images (JSON array or URL)
+  vendor_id: string;                    // Foreign key to businesses table
+  vendor?: Business;                    // Associated vendor/business (for joined queries)
+  created_at?: string;                  // Creation timestamp
+  updated_at?: string;                  // Last update timestamp
+}
+
 // User Engagement Event Entity (matches user_engagement_events table)
 export interface UserEngagementEventDB {
   id: string;                           // Primary key
