@@ -1,96 +1,29 @@
 /**
  * Senior Care Home Page
  * 
- * Main landing page for senior care services directory
+ * Feature-focused landing page for senior care services directory
  */
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Layout as SeniorCareLayout, SeniorCareBreadcrumb } from '@/components/layouts/senior-care';
-import { SubdomainInfo, Business } from '@/types';
-import { DataProviderFactory } from '@/providers/DataProviderFactory';
+import { SubdomainInfo } from '@/types';
+import { Link } from 'react-router-dom';
+import { ArrowRight, Heart, Shield, Clock, Phone } from 'lucide-react';
 
 interface SeniorCareHomePageProps {
   subdomainInfo: SubdomainInfo;
 }
 
 const SeniorCareHomePage: React.FC<SeniorCareHomePageProps> = ({ subdomainInfo }) => {
-  const [businesses, setBusinesses] = useState<Business[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  useEffect(() => {
-    loadBusinesses();
-  }, []);
-
-  const loadBusinesses = async () => {
-    try {
-      setLoading(true);
-      const dataProvider = DataProviderFactory.getProvider();
-      
-      // Pass empty string if city is "All Cities" to get all businesses
-      const cityFilter = subdomainInfo.city?.includes('All') ? '' : subdomainInfo.city;
-      const response = await dataProvider.getBusinesses('senior-care', cityFilter || '');
-      setBusinesses(response);
-    } catch (err) {
-      setError('Failed to load senior care providers');
-      console.error('Error loading businesses:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    // TODO: Implement search functionality
+    // Navigate to list page with search
+    const searchParams = new URLSearchParams({ q: query });
+    window.location.href = `/services?${searchParams.toString()}`;
   };
 
   const handleClearSearch = () => {
-    setSearchQuery('');
-    // TODO: Reset search results
+    // Not used on homepage but required for layout
   };
-
-  if (loading) {
-    return (
-      <SeniorCareLayout 
-        subdomainInfo={subdomainInfo}
-        showSearchBar={false}
-        onSearch={handleSearch}
-        onClearSearch={handleClearSearch}
-        currentSearchQuery={searchQuery}
-      >
-        <SeniorCareBreadcrumb />
-        <div className="flex justify-center items-center min-h-96">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
-      </SeniorCareLayout>
-    );
-  }
-
-  if (error) {
-    return (
-      <SeniorCareLayout 
-        subdomainInfo={subdomainInfo}
-        showSearchBar={false}
-        onSearch={handleSearch}
-        onClearSearch={handleClearSearch}
-        currentSearchQuery={searchQuery}
-      >
-        <SeniorCareBreadcrumb />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center">
-            <p className="text-red-600 mb-4">{error}</p>
-            <button 
-              onClick={loadBusinesses}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Try Again
-            </button>
-          </div>
-        </div>
-      </SeniorCareLayout>
-    );
-  }
 
   return (
     <SeniorCareLayout 
@@ -98,51 +31,177 @@ const SeniorCareHomePage: React.FC<SeniorCareHomePageProps> = ({ subdomainInfo }
       showSearchBar={false}
       onSearch={handleSearch}
       onClearSearch={handleClearSearch}
-      currentSearchQuery={searchQuery}
+      currentSearchQuery=""
     >
       <SeniorCareBreadcrumb />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {businesses.length === 0 ? (
-          <div className="text-center py-16">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              No senior care providers found in {subdomainInfo.city}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Features Section */}
+        <section className="py-16">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Why Choose CareFinder?
             </h2>
-            <p className="text-gray-600 mb-8">
-              We're continuously adding new providers to our directory. Check back soon!
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Your trusted directory for compassionate senior care services
             </p>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {businesses.map((business) => (
-              <div key={business.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  {business.name}
-                </h3>
-                <p className="text-gray-600 mb-3">{business.description}</p>
-                <div className="space-y-2 text-sm text-gray-500">
-                  <p>{business.address}</p>
-                  {business.phone && <p>{business.phone}</p>}
-                  {business.rating && (
-                    <div className="flex items-center">
-                      <span className="text-yellow-500">★</span>
-                      <span className="ml-1">{business.rating} ({business.review_count} reviews)</span>
-                    </div>
-                  )}
-                </div>
-                {business.website && (
-                  <a 
-                    href={business.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block mt-4 text-blue-600 hover:text-blue-800 transition-colors"
-                  >
-                    Visit Website →
-                  </a>
-                )}
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="text-center p-6 bg-white rounded-lg shadow-sm border border-gray-100">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Heart className="w-6 h-6 text-blue-600" />
               </div>
-            ))}
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Compassionate Care
+              </h3>
+              <p className="text-gray-600 text-sm">
+                All our providers are vetted for quality and compassionate care
+              </p>
+            </div>
+
+            <div className="text-center p-6 bg-white rounded-lg shadow-sm border border-gray-100">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Shield className="w-6 h-6 text-blue-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Licensed & Insured
+              </h3>
+              <p className="text-gray-600 text-sm">
+                All providers are properly licensed and carry full insurance
+              </p>
+            </div>
+
+            <div className="text-center p-6 bg-white rounded-lg shadow-sm border border-gray-100">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Clock className="w-6 h-6 text-blue-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                24/7 Availability
+              </h3>
+              <p className="text-gray-600 text-sm">
+                Many providers offer round-the-clock care and emergency services
+              </p>
+            </div>
+
+            <div className="text-center p-6 bg-white rounded-lg shadow-sm border border-gray-100">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Phone className="w-6 h-6 text-blue-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Easy Contact
+              </h3>
+              <p className="text-gray-600 text-sm">
+                Direct contact information for quick consultations and bookings
+              </p>
+            </div>
           </div>
-        )}
+        </section>
+
+        {/* Call to Action */}
+        <section className="py-16 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Find Senior Care Services Near You
+            </h2>
+            <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+              Browse our comprehensive directory of trusted senior care providers in your area.
+            </p>
+            <Link
+              to="/services"
+              className="inline-flex items-center bg-blue-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
+            >
+              Browse All Services
+              <ArrowRight className="ml-2 w-5 h-5" />
+            </Link>
+          </div>
+        </section>
+
+        {/* Service Categories */}
+        <section className="py-16">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Our Service Categories
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Comprehensive care services for every need
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                In-Home Care
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Personal care assistance in the comfort of your own home
+              </p>
+              <Link to="/services" className="text-blue-600 hover:text-blue-800 font-medium">
+                Learn More →
+              </Link>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Memory Care
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Specialized care for those with Alzheimer's and dementia
+              </p>
+              <Link to="/services" className="text-blue-600 hover:text-blue-800 font-medium">
+                Learn More →
+              </Link>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Assisted Living
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Community living with personalized care and support
+              </p>
+              <Link to="/services" className="text-blue-600 hover:text-blue-800 font-medium">
+                Learn More →
+              </Link>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Respite Care
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Temporary care to give family caregivers a break
+              </p>
+              <Link to="/services" className="text-blue-600 hover:text-blue-800 font-medium">
+                Learn More →
+              </Link>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Medical Services
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Nursing care and medical assistance at home
+              </p>
+              <Link to="/services" className="text-blue-600 hover:text-blue-800 font-medium">
+                Learn More →
+              </Link>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Transportation
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Safe transportation to appointments and activities
+              </p>
+              <Link to="/services" className="text-blue-600 hover:text-blue-800 font-medium">
+                Learn More →
+              </Link>
+            </div>
+          </div>
+        </section>
       </div>
     </SeniorCareLayout>
   );
