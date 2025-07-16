@@ -22,7 +22,7 @@ export const onRequest = async (context: any): Promise<Response> => {
       ORDER BY b.category ASC
     `;
 
-    // Get all cities with business counts  
+    // Get top cities with business counts (limit to top 10 for homepage)
     const citiesQuery = `
       SELECT 
         b.city as name,
@@ -33,7 +33,8 @@ export const onRequest = async (context: any): Promise<Response> => {
       WHERE b.city IS NOT NULL AND b.city != ''
       GROUP BY b.city, b.state
       HAVING count > 0
-      ORDER BY b.city ASC, b.state ASC
+      ORDER BY count DESC, b.city ASC
+      LIMIT 10
     `;
 
     const [servicesResult, citiesResult] = await Promise.all([
