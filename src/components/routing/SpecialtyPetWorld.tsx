@@ -4,7 +4,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { SubdomainInfo } from '@/types';
 
 // Import specialty pet pages
-import { HomePage as SpecialtyPetHomePage } from '@/pages/specialty-pet';
+import { HomePage as SpecialtyPetHomePage, ListPage as SpecialtyPetListPage } from '@/pages/specialty-pet';
 import { LoginPage } from '@/pages/auth';
 
 interface SpecialtyPetWorldProps {
@@ -36,6 +36,12 @@ const SpecialtyPetWorld: React.FC<SpecialtyPetWorldProps> = ({ subdomainInfo }) 
       <Route 
         path="/home" 
         element={<SpecialtyPetHomePage subdomainInfo={subdomainInfo} />} 
+      />
+      
+      {/* Products Routes */}
+      <Route 
+        path="/products" 
+        element={<SpecialtyPetListPage subdomainInfo={subdomainInfo} />} 
       />
       
       {/* Auth Routes */}

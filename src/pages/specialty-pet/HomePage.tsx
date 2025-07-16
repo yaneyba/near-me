@@ -1,140 +1,29 @@
 /**
  * Specialty Pet Home Page
  * 
- * Main landing page for specialty pet products marketplace
+ * Feature-focused landing page for specialty pet products marketplace
  */
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { SpecialtyPetLayout } from '@/components/layouts/specialty-pet';
-import { SubdomainInfo, Product } from '@/types';
+import { SubdomainInfo } from '@/types';
+import { Link } from 'react-router-dom';
+import { ArrowRight, Star, Shield, Truck, Heart } from 'lucide-react';
 
 interface SpecialtyPetHomePageProps {
   subdomainInfo: SubdomainInfo;
 }
 
 const SpecialtyPetHomePage: React.FC<SpecialtyPetHomePageProps> = ({ subdomainInfo }) => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
-
-  useEffect(() => {
-    loadProducts();
-  }, [selectedCategory]);
-
-  const loadProducts = async () => {
-    try {
-      setLoading(true);
-      
-      // Build API URL - first try with city filter
-      const params = new URLSearchParams({
-        category: 'specialty-pet',
-        city: subdomainInfo.city
-      });
-      
-      if (selectedCategory) {
-        params.append('product_category', selectedCategory);
-      }
-      
-      let response = await fetch(`/api/products?${params.toString()}`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch products');
-      }
-      
-      let data = await response.json();
-      
-      // If no products found with city filter, try without city filter
-      if ((!data.products || data.products.length === 0) && subdomainInfo.city !== 'All Cities') {
-        const allParams = new URLSearchParams({
-          category: 'specialty-pet'
-        });
-        
-        if (selectedCategory) {
-          allParams.append('product_category', selectedCategory);
-        }
-        
-        response = await fetch(`/api/products?${allParams.toString()}`);
-        
-        if (response.ok) {
-          data = await response.json();
-        }
-      }
-      
-      setProducts(data.products || []);
-    } catch (err) {
-      setError('Failed to load specialty pet products');
-      console.error('Error loading products:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    // TODO: Implement search functionality
+    // Navigate to list page with search
+    const searchParams = new URLSearchParams({ q: query });
+    window.location.href = `/products?${searchParams.toString()}`;
   };
 
   const handleClearSearch = () => {
-    setSearchQuery('');
-    // TODO: Reset search results
+    // Not used on homepage but required for layout
   };
-
-  // Filter products based on search query
-  const filteredProducts = products.filter(product =>
-    searchQuery === '' || 
-    product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.vendor?.name?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  // Get unique product categories for filtering
-  const productCategories = Array.from(new Set(products.map(p => p.category).filter(Boolean)));
-
-  if (loading) {
-    return (
-      <SpecialtyPetLayout 
-        subdomainInfo={subdomainInfo}
-        showSearchBar={false}
-        onSearch={handleSearch}
-        onClearSearch={handleClearSearch}
-        currentSearchQuery={searchQuery}
-      >
-        <div className="flex justify-center items-center min-h-96">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading specialty pet products...</p>
-          </div>
-        </div>
-      </SpecialtyPetLayout>
-    );
-  }
-
-  if (error) {
-    return (
-      <SpecialtyPetLayout 
-        subdomainInfo={subdomainInfo}
-        showSearchBar={false}
-        onSearch={handleSearch}
-        onClearSearch={handleClearSearch}
-        currentSearchQuery={searchQuery}
-      >
-        <div className="flex justify-center items-center min-h-96">
-          <div className="text-center">
-            <div className="text-red-600 text-xl mb-4">⚠️</div>
-            <p className="text-gray-600">{error}</p>
-            <button 
-              onClick={loadProducts}
-              className="mt-4 bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700"
-            >
-              Try Again
-            </button>
-          </div>
-        </div>
-      </SpecialtyPetLayout>
-    );
-  }
 
   return (
     <SpecialtyPetLayout 
@@ -142,141 +31,192 @@ const SpecialtyPetHomePage: React.FC<SpecialtyPetHomePageProps> = ({ subdomainIn
       showSearchBar={false}
       onSearch={handleSearch}
       onClearSearch={handleClearSearch}
-      currentSearchQuery={searchQuery}
+      currentSearchQuery=""
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Category Filter */}
-        {productCategories.length > 0 && (
-          <div className="mb-6">
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setSelectedCategory('')}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  selectedCategory === '' 
-                    ? 'bg-emerald-600 text-white' 
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                All Products
-              </button>
-              {productCategories.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category || '')}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors capitalize ${
-                    selectedCategory === category 
-                      ? 'bg-emerald-600 text-white' 
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Features Section */}
+        <section className="py-16">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Why Choose PetCare Pro?
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Your trusted marketplace for premium specialty pet products and services
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="text-center p-6 bg-white rounded-lg shadow-sm border border-gray-100">
+              <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Star className="w-6 h-6 text-emerald-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Verified Vendors
+              </h3>
+              <p className="text-gray-600 text-sm">
+                All our pet service providers are thoroughly vetted and highly rated
+              </p>
+            </div>
+
+            <div className="text-center p-6 bg-white rounded-lg shadow-sm border border-gray-100">
+              <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Shield className="w-6 h-6 text-emerald-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Quality Guaranteed
+              </h3>
+              <p className="text-gray-600 text-sm">
+                Premium products and services with satisfaction guarantee
+              </p>
+            </div>
+
+            <div className="text-center p-6 bg-white rounded-lg shadow-sm border border-gray-100">
+              <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Truck className="w-6 h-6 text-emerald-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Fast Delivery
+              </h3>
+              <p className="text-gray-600 text-sm">
+                Quick and reliable delivery for all your pet care needs
+              </p>
+            </div>
+
+            <div className="text-center p-6 bg-white rounded-lg shadow-sm border border-gray-100">
+              <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Heart className="w-6 h-6 text-emerald-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Pet-Focused Care
+              </h3>
+              <p className="text-gray-600 text-sm">
+                Specialized in exotic and unique pet care requirements
+              </p>
             </div>
           </div>
-        )}
+        </section>
 
-        {/* Results Summary */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            {subdomainInfo.city === 'All Cities' 
-              ? 'Specialty Pet Products Nationwide' 
-              : `Specialty Pet Products in ${subdomainInfo.city}, ${subdomainInfo.state}`
-            }
-          </h2>
-          <p className="text-gray-600">
-            Found {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''} 
-            {searchQuery && ` matching "${searchQuery}"`}
-            {selectedCategory && ` in ${selectedCategory}`}
-          </p>
-        </div>
-
-        {/* Product Listings */}
-        {filteredProducts.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-gray-400 text-6xl mb-4">🐾</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No products found</h3>
-            <p className="text-gray-600 mb-4">
-              {searchQuery 
-                ? `No specialty pet products match "${searchQuery}" in this area.`
-                : 'No specialty pet products are currently listed in this area.'
-              }
+        {/* Product Categories Preview */}
+        <section className="py-16 bg-gray-50 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Popular Categories
+            </h2>
+            <p className="text-lg text-gray-600">
+              Discover products and services for every type of pet
             </p>
-            {(searchQuery || selectedCategory) && (
-              <button 
-                onClick={() => {
-                  handleClearSearch();
-                  setSelectedCategory('');
-                }}
-                className="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700"
-              >
-                Clear Filters
-              </button>
-            )}
           </div>
-        ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredProducts.map((product) => (
-              <div 
-                key={product.id} 
-                className="bg-white rounded-lg shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow"
-              >
-                {product.images && (
-                  <div className="w-full h-48 mb-4 bg-gray-100 rounded-lg overflow-hidden">
-                    <img 
-                      src={product.images} 
-                      alt={product.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                )}
-                
-                <div className="space-y-2">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    {product.name}
-                  </h3>
-                  
-                  {product.category && (
-                    <span className="inline-block bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded-full capitalize">
-                      {product.category}
-                    </span>
-                  )}
-                  
-                  {product.description && (
-                    <p className="text-gray-600 text-sm">
-                      {product.description}
-                    </p>
-                  )}
-                  
-                  {product.price && (
-                    <p className="text-xl font-bold text-emerald-600">
-                      ${product.price}
-                    </p>
-                  )}
-                  
-                  {product.vendor && (
-                    <div className="border-t pt-3 mt-3">
-                      <p className="text-sm text-gray-500">Sold by:</p>
-                      <p className="text-sm font-medium text-gray-900">
-                        {product.vendor.name}
-                      </p>
-                      {product.vendor.website && (
-                        <a 
-                          href={product.vendor.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-emerald-600 hover:text-emerald-700 text-sm inline-block mt-1"
-                        >
-                          Visit Store →
-                        </a>
-                      )}
-                    </div>
-                  )}
-                </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+              <div className="text-4xl mb-4">🐾</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Exotic Veterinary</h3>
+              <p className="text-gray-600 mb-4">Specialized care for reptiles, birds, and exotic pets</p>
+              <div className="text-emerald-600 font-medium">15+ Providers</div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+              <div className="text-4xl mb-4">✂️</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Professional Grooming</h3>
+              <p className="text-gray-600 mb-4">Expert grooming services for all pet types</p>
+              <div className="text-emerald-600 font-medium">25+ Providers</div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+              <div className="text-4xl mb-4">🎓</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Training & Behavior</h3>
+              <p className="text-gray-600 mb-4">Professional training for pets with special needs</p>
+              <div className="text-emerald-600 font-medium">10+ Specialists</div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+              <div className="text-4xl mb-4">🏠</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Boarding & Sitting</h3>
+              <p className="text-gray-600 mb-4">Trusted care when you're away from home</p>
+              <div className="text-emerald-600 font-medium">20+ Facilities</div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+              <div className="text-4xl mb-4">📸</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Pet Photography</h3>
+              <p className="text-gray-600 mb-4">Capture precious moments with your beloved pets</p>
+              <div className="text-emerald-600 font-medium">8+ Photographers</div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+              <div className="text-4xl mb-4">🛍️</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Specialty Products</h3>
+              <p className="text-gray-600 mb-4">Unique products for exotic and special needs pets</p>
+              <div className="text-emerald-600 font-medium">50+ Products</div>
+            </div>
+          </div>
+
+          {/* Call to Action */}
+          <div className="text-center">
+            <Link 
+              to="/products"
+              className="inline-flex items-center bg-emerald-600 text-white px-8 py-4 rounded-lg hover:bg-emerald-700 transition-colors font-semibold text-lg gap-2"
+            >
+              View All Categories
+              <ArrowRight className="w-5 h-5" />
+            </Link>
+          </div>
+        </section>
+
+        {/* Testimonials */}
+        <section className="py-16">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              What Pet Parents Say
+            </h2>
+            <p className="text-lg text-gray-600">
+              Trusted by thousands of pet families
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+              <div className="flex text-yellow-400 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-5 h-5 fill-current" />
+                ))}
               </div>
-            ))}
+              <p className="text-gray-600 mb-4">
+                "Finally found a vet who understands my iguana's needs. The exotic animal care here is exceptional!"
+              </p>
+              <div className="font-semibold text-gray-900">Sarah M.</div>
+              <div className="text-gray-500 text-sm">Iguana Owner</div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+              <div className="flex text-yellow-400 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-5 h-5 fill-current" />
+                ))}
+              </div>
+              <p className="text-gray-600 mb-4">
+                "The grooming service for my Persian cat was amazing. They really know how to handle long-haired breeds."
+              </p>
+              <div className="font-semibold text-gray-900">Michael R.</div>
+              <div className="text-gray-500 text-sm">Cat Parent</div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+              <div className="flex text-yellow-400 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-5 h-5 fill-current" />
+                ))}
+              </div>
+              <p className="text-gray-600 mb-4">
+                "Great selection of specialty products for my bird. The staff is knowledgeable and helpful."
+              </p>
+              <div className="font-semibold text-gray-900">Lisa K.</div>
+              <div className="text-gray-500 text-sm">Bird Enthusiast</div>
+            </div>
           </div>
-        )}
+        </section>
+
       </div>
     </SpecialtyPetLayout>
   );
