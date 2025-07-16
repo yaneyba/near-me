@@ -19,7 +19,7 @@ export const onRequest = async (context: any): Promise<Response> => {
       FROM businesses b
       WHERE b.category IS NOT NULL AND b.category != ''
       GROUP BY b.category
-      ORDER BY count DESC, b.category ASC
+      ORDER BY b.category ASC
     `;
 
     // Get all cities with business counts  
