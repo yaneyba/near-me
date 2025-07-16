@@ -54,15 +54,22 @@ const SeniorCareListPage: React.FC<SeniorCareListPageProps> = ({ subdomainInfo }
     // TODO: Reset search results
   };
 
-  // Filter businesses based on search query
-  const filteredBusinesses = businesses.filter(business =>
-    searchQuery === '' || 
-    business.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    business.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    business.services?.some(service => 
-      service.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  );
+  // Filter businesses based on search query and service type
+  const filteredBusinesses = businesses.filter(business => {
+    // Search query filter
+    const matchesSearch = searchQuery === '' || 
+      business.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      business.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      business.services?.some(service => 
+        service.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    
+    // Service type filter
+    const matchesServiceType = selectedServiceType === '' ||
+      business.services?.some(service => service === selectedServiceType);
+    
+    return matchesSearch && matchesServiceType;
+  });
 
   // Get unique service types for filtering
   const serviceTypes = Array.from(new Set(
