@@ -26,7 +26,10 @@ const SpecialtyPetListPage: React.FC<SpecialtyPetListPageProps> = ({ subdomainIn
   useEffect(() => {
     const categoryParam = searchParams.get('category');
     if (categoryParam) {
-      setSelectedCategory(categoryParam);
+      // Map URL category parameter to internal selectedCategory
+      // Convert hyphenated URL format to match database format
+      const mappedCategory = categoryParam.replace('-', ' ');
+      setSelectedCategory(mappedCategory);
     }
   }, [searchParams]);
 
@@ -40,7 +43,9 @@ const SpecialtyPetListPage: React.FC<SpecialtyPetListPageProps> = ({ subdomainIn
     // Update URL to reflect the filter
     const newSearchParams = new URLSearchParams(searchParams);
     if (category) {
-      newSearchParams.set('category', category);
+      // Convert internal category format back to URL format (spaces to hyphens)
+      const urlCategory = category.replace(' ', '-').toLowerCase();
+      newSearchParams.set('category', urlCategory);
     } else {
       newSearchParams.delete('category');
     }
