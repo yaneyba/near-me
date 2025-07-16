@@ -162,30 +162,43 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
               </span>
             </h2>
             <div className="grid gap-4">
-              {filteredCities.map((city) => (
-                <a
-                  key={city.slug}
-                  href={`https://${subdomainInfo.category}.${city.slug}.near-me.us`}
-                  className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6 border border-gray-200 hover:border-blue-300"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <MapPin className="w-6 h-6 text-blue-600" />
-                      <div>
-                        <h3 className="text-xl font-semibold text-gray-900">
-                          {city.name}, {city.state}
-                        </h3>
-                        <p className="text-gray-600">
-                          Discover local services in {city.name}
-                        </p>
+              {filteredCities.map((city) => {
+                // Handle URL generation based on subdomain type
+                let cityUrl: string;
+                
+                if (subdomainInfo.isServices || !subdomainInfo.rawCategory) {
+                  // For main services page, link to main site with city parameter
+                  cityUrl = `https://near-me.us/?city=${encodeURIComponent(city.slug)}`;
+                } else {
+                  // For category-specific pages, use the rawCategory slug
+                  cityUrl = `https://${subdomainInfo.rawCategory}.${city.slug}.near-me.us`;
+                }
+                
+                return (
+                  <a
+                    key={city.slug}
+                    href={cityUrl}
+                    className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6 border border-gray-200 hover:border-blue-300"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <MapPin className="w-6 h-6 text-blue-600" />
+                        <div>
+                          <h3 className="text-xl font-semibold text-gray-900">
+                            {city.name}, {city.state}
+                          </h3>
+                          <p className="text-gray-600">
+                            Discover local services in {city.name}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2 text-sm text-gray-500">
+                        <ExternalLink className="w-4 h-4" />
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2 text-sm text-gray-500">
-                      <ExternalLink className="w-4 h-4" />
-                    </div>
-                  </div>
-                </a>
-              ))}
+                  </a>
+                );
+              })}
             </div>
           </div>
         </div>
