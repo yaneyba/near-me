@@ -233,45 +233,34 @@ export const parseSubdomain = (hostname: string = window.location.hostname, path
   // Parse subdomain patterns
   const parts = hostname.split('.');
   
-  // Pattern 1: category.city.near-me.us (4+ parts)
-  if (parts.length >= 4 && parts[2] === 'near-me' && parts[3] === 'us') {
-    const rawCategory = parts[0];
-    const rawCity = parts[1];
-    
-    // Check if this is a valid combination with actual business data
-    const isValid = isValidCombination(rawCategory, rawCity);
-    
-    if (isValid) {
-      const category = formatCategory(rawCategory);
-      const city = formatCity(rawCity);
-      const state = cityStateMap[rawCity.toLowerCase()] || 'Unknown State';
-      
-      return { 
-        category, 
-        city, 
-        state, 
-        rawCategory, 
-        rawCity 
-      };
-    }
-    
-    // Invalid combination - redirect to services page
-    return {
-      category: 'All Services',
-      city: 'All Cities',
-      state: 'Nationwide',
-      isServices: true
-    };
-  }
-  
-  // Pattern 2: category.near-me.us (3 parts - category only, no city)
+  // Pattern: category.near-me.us with optional /city path
   if (parts.length === 3 && parts[1] === 'near-me' && parts[2] === 'us') {
     const rawCategory = parts[0];
-    const validCategories = ['nail-salons', 'auto-repair'];
     
-    if (validCategories.includes(rawCategory)) {
-      const category = formatCategory(rawCategory);
+    // Extract city from path
+    const pathParts = pathname.split('/').filter(part => part.length > 0);
+    const rawCity = pathParts.length > 0 ? pathParts[0] : null;
+    
+    if (rawCity) {
+      // Category + City path: nail-salons.near-me.us/dallas
+      const isValid = isValidCombination(rawCategory, rawCity);
       
+      if (isValid) {
+        const category = formatCategory(rawCategory);
+        const city = formatCity(rawCity);
+        const state = cityStateMap[rawCity.toLowerCase()] || 'Unknown State';
+        
+        return { 
+          category, 
+          city, 
+          state, 
+          rawCategory, 
+          rawCity
+        };
+      }
+      
+      // Invalid city for this category - redirect to category page
+      const category = formatCategory(rawCategory);
       return {
         category,
         city: 'All Cities',
@@ -279,15 +268,30 @@ export const parseSubdomain = (hostname: string = window.location.hostname, path
         rawCategory,
         isCategoryOnly: true
       };
+    } else {
+      // Category only: nail-salons.near-me.us (no city in path)
+      const validCategories = ['nail-salons', 'auto-repair'];
+      
+      if (validCategories.includes(rawCategory)) {
+        const category = formatCategory(rawCategory);
+        
+        return {
+          category,
+          city: 'All Cities',
+          state: 'Nationwide',
+          rawCategory,
+          isCategoryOnly: true
+        };
+      }
+      
+      // Invalid category - redirect to services page
+      return {
+        category: 'All Services',
+        city: 'All Cities',
+        state: 'Nationwide',
+        isServices: true
+      };
     }
-    
-    // Invalid category - redirect to services page
-    return {
-      category: 'All Services',
-      city: 'All Cities',
-      state: 'Nationwide',
-      isServices: true
-    };
   }
 
   // Fallback for any other hostname - redirect to services homepage
