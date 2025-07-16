@@ -7,6 +7,9 @@ Sitemap: https://near-me.us/sitemap.xml
 # Category-specific sitemaps
 Sitemap: https://nail-salons.near-me.us/sitemap.xml
 Sitemap: https://auto-repair.near-me.us/sitemap.xml
+Sitemap: https://water-refill.near-me.us/sitemap.xml
+Sitemap: https://senior-care.near-me.us/sitemap.xml
+Sitemap: https://specialty-pet.near-me.us/sitemap.xml
 
 # Block development and admin resources
 Disallow: /dev/
