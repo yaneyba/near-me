@@ -9,17 +9,17 @@ export const onRequest = async (context: any): Promise<Response> => {
       });
     }
 
-    // Get all service categories with business counts
+    // Get all service categories with business counts (from businesses table directly)
     const servicesQuery = `
       SELECT 
-        s.category as slug,
-        s.category as name,
-        s.category as description,
+        b.category as slug,
+        b.category as name,
+        b.category as description,
         COUNT(DISTINCT b.id) as count
-      FROM services s
-      LEFT JOIN businesses b ON b.category = s.category
-      GROUP BY s.category
-      ORDER BY count DESC, s.category ASC
+      FROM businesses b
+      WHERE b.category IS NOT NULL AND b.category != ''
+      GROUP BY b.category
+      ORDER BY count DESC, b.category ASC
     `;
 
     // Get all cities with business counts  
