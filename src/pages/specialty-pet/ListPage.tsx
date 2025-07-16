@@ -5,7 +5,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { SpecialtyPetLayout } from '@/components/layouts/specialty-pet';
+import { SpecialtyPetLayout, SpecialtyPetBreadcrumb } from '@/components/layouts/specialty-pet';
 import { SubdomainInfo, Product } from '@/types';
 
 interface SpecialtyPetListPageProps {
@@ -92,6 +92,7 @@ const SpecialtyPetListPage: React.FC<SpecialtyPetListPageProps> = ({ subdomainIn
         onClearSearch={handleClearSearch}
         currentSearchQuery={searchQuery}
       >
+        <SpecialtyPetBreadcrumb pageTitle="All Products" />
         <div className="flex justify-center items-center min-h-96">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
@@ -111,6 +112,7 @@ const SpecialtyPetListPage: React.FC<SpecialtyPetListPageProps> = ({ subdomainIn
         onClearSearch={handleClearSearch}
         currentSearchQuery={searchQuery}
       >
+        <SpecialtyPetBreadcrumb pageTitle="All Products" />
         <div className="flex justify-center items-center min-h-96">
           <div className="text-center">
             <div className="text-red-600 text-xl mb-4">⚠️</div>
@@ -135,6 +137,7 @@ const SpecialtyPetListPage: React.FC<SpecialtyPetListPageProps> = ({ subdomainIn
       onClearSearch={handleClearSearch}
       currentSearchQuery={searchQuery}
     >
+      <SpecialtyPetBreadcrumb pageTitle="All Products" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Category Filter */}
         {productCategories.length > 0 && (

@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { SpecialtyPetLayout } from '@/components/layouts/specialty-pet';
+import { SpecialtyPetLayout, SpecialtyPetBreadcrumb } from '@/components/layouts/specialty-pet';
 import { SubdomainInfo } from '@/types';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Star, Shield, Truck, Heart } from 'lucide-react';
@@ -33,6 +33,7 @@ const SpecialtyPetHomePage: React.FC<SpecialtyPetHomePageProps> = ({ subdomainIn
       onClearSearch={handleClearSearch}
       currentSearchQuery=""
     >
+      <SpecialtyPetBreadcrumb />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Features Section */}

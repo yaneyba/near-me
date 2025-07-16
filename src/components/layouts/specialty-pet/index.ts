@@ -5,3 +5,4 @@
  */
 
 export { default as SpecialtyPetLayout } from './Layout';
+export { default as SpecialtyPetBreadcrumb } from './Breadcrumb';
