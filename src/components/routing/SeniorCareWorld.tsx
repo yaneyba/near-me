@@ -4,9 +4,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { SubdomainInfo } from '@/types';
 
 // Import senior care pages
-import { 
-  HomePage as SeniorCareHomePage
-} from '@/pages/senior-care';
+import { HomePage as SeniorCareHomePage } from '@/pages/senior-care';
 import { LoginPage } from '@/pages/auth';
 
 interface SeniorCareWorldProps {

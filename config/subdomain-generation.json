@@ -20,6 +20,11 @@
       "description": "Senior care services layout",
       "categories": ["senior-care"],
       "generateHTML": true
+    },
+    "pet": {
+      "description": "Specialty pet services layout",
+      "categories": ["specialty-pet"],
+      "generateHTML": true
     }
   },
   "generationRules": {

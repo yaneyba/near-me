@@ -72,6 +72,16 @@ export const parseSubdomain = (hostname: string = window.location.hostname, path
       };
     }
     
+    if (devSubdomain === 'specialty-pet') {
+      return {
+        category: 'Specialty Pet Services',
+        city: 'All Cities',
+        state: 'Nationwide',
+        isSpecialtyPet: true,
+        isPathBased: true
+      };
+    }
+    
     // Check for path-based water-refill routing on localhost
     if (pathname.startsWith('/water-refill')) {
       return {
@@ -90,6 +100,17 @@ export const parseSubdomain = (hostname: string = window.location.hostname, path
         city: 'All Cities',
         state: 'Nationwide',
         isSeniorCare: true,
+        isPathBased: true
+      };
+    }
+    
+    // Check for path-based specialty-pet routing on localhost
+    if (pathname.startsWith('/specialty-pet')) {
+      return {
+        category: 'Specialty Pet Services',
+        city: 'All Cities',
+        state: 'Nationwide',
+        isSpecialtyPet: true,
         isPathBased: true
       };
     }
@@ -167,6 +188,34 @@ export const parseSubdomain = (hostname: string = window.location.hostname, path
         city: 'All Cities',
         state: 'Nationwide',
         isSeniorCare: true,
+        isPathBased: true
+      };
+    }
+    
+    if (specialService.isSpecialtyPet) {
+      // Handle specialty pet path-based routing
+      const pathParts = pathname.split('/').filter(part => part.length > 0);
+      
+      if (pathParts.length > 0) {
+        const rawCity = pathParts[0];
+        const city = formatCity(rawCity);
+        const state = cityStateMap[rawCity.toLowerCase()] || 'Unknown State';
+        
+        return {
+          category: specialService.category,
+          city,
+          state,
+          isSpecialtyPet: true,
+          isPathBased: true
+        };
+      }
+      
+      // Default specialty pet page (no city specified)
+      return {
+        category: specialService.category,
+        city: 'All Cities',
+        state: 'Nationwide',
+        isSpecialtyPet: true,
         isPathBased: true
       };
     }

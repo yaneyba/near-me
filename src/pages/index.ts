@@ -33,3 +33,8 @@ export {
 export {
   HomePage as SeniorCareHomePage
 } from './senior-care';
+
+// Specialty Pet Pages
+export {
+  HomePage as SpecialtyPetHomePage
+} from './specialty-pet';

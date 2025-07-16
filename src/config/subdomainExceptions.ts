@@ -6,6 +6,7 @@ export interface SpecialService {
   isPathBased?: boolean;
   isWaterRefill?: boolean;
   isSeniorCare?: boolean;
+  isSpecialtyPet?: boolean;
   isServices?: boolean;
   description: string;
 }
@@ -37,6 +38,20 @@ export const specialServices: SpecialService[] = [
     isPathBased: true,
     isSeniorCare: true,
     description: 'Senior care services directory with CareFinder branding'
+  },
+  {
+    subdomain: 'specialty-pet.near-me.us',
+    category: 'Specialty Pet Services',
+    isPathBased: true,
+    isSpecialtyPet: true,
+    description: 'Specialty pet services directory with PetCare Pro branding'
+  },
+  {
+    subdomain: 'specialty-pet.near-me.us',
+    category: 'Specialty Pet Services',
+    isPathBased: true,
+    isSpecialtyPet: true,
+    description: 'Specialty pet services directory with PetCare Pro branding'
   }
 ];
 

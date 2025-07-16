@@ -133,6 +133,30 @@ function getAssetFilenames() {
   };
 }
 
+// Get custom branding information for different categories
+function getCustomBranding(categoryUrl) {
+  const customBranding = {
+    'water-refill': {
+      brandName: 'AquaFinder',
+      title: 'Water Refill Near Me | Find Local Stations | AquaFinder',
+      description: 'Find clean, affordable water refill stations near you. 486+ verified locations nationwide. Save money ($0.25/gallon vs $3+ bottles) and reduce plastic waste with AquaFinder\'s verified directory.',
+      keywords: 'water refill near me, water refill stations, water filling stations, refill water near me, clean water refill, affordable water refill, water station locations',
+      canonicalUrl: 'https://water-refill.near-me.us/',
+      businessOwnerText: 'List Your Station'
+    },
+    'specialty-pet': {
+      brandName: 'PetCare Pro',
+      title: 'Specialty Pet Services Near Me | Find Expert Pet Care | PetCare Pro',
+      description: 'Find professional specialty pet services near you. Expert veterinarians, groomers, trainers, and pet care specialists. Trusted providers for all your pet\'s unique needs.',
+      keywords: 'specialty pet services, exotic veterinarian, pet grooming, dog training, pet boarding, animal behaviorist, pet care near me',
+      canonicalUrl: 'https://specialty-pet.near-me.us/',
+      businessOwnerText: 'List Your Service'
+    }
+  };
+  
+  return customBranding[categoryUrl] || null;
+}
+
 // Generate HTML template with proper meta tags, cache busting, and SEO footer
 function generateHTML(page) {
   const buildTime = new Date().toISOString();
@@ -140,18 +164,12 @@ function generateHTML(page) {
   const cacheKey = Date.now();
   const assets = getAssetFilenames();
   const { serviceLinks, waterLinks } = generateFooterLinks();
+  const customBranding = getCustomBranding(page.categoryUrl);
 
-  // OPTIMIZED FOR WATER REFILL
-  const title = page.categoryUrl === 'water-refill' ? 
-    'Water Refill Near Me | Find Local Stations | AquaFinder' : 
-    page.title;
-
-  const description = page.categoryUrl === 'water-refill' ? 
-    'Find clean, affordable water refill stations near you. 486+ verified locations nationwide. Save money ($0.25/gallon vs $3+ bottles) and reduce plastic waste with AquaFinder\'s verified directory.' : 
-    page.description;
-
-  const keywords = page.categoryUrl === 'water-refill' ? 
-    'water refill near me, water refill stations, water filling stations, refill water near me, clean water refill, affordable water refill, water station locations' :
+  // Use custom branding if available, otherwise use page defaults
+  const title = customBranding ? customBranding.title : page.title;
+  const description = customBranding ? customBranding.description : page.description;
+  const keywords = customBranding ? customBranding.keywords : 
     (page.categoryUrl ? 
       `${page.categoryUrl.replace('-', ' ')}, ${page.categoryUrl.replace('-', ' ')} near me, local ${page.categoryUrl.replace('-', ' ')}` :
       'local business directory, near me');
@@ -171,8 +189,7 @@ function generateHTML(page) {
     }
   }
 
-  const canonicalUrl = page.categoryUrl === 'water-refill' ? 
-    'https://water-refill.near-me.us/' : 
+  const canonicalUrl = customBranding ? customBranding.canonicalUrl : 
     (page.categoryUrl ? 
       `https://${page.categoryUrl}.near-me.us/` : 
       'https://near-me.us/');
@@ -186,10 +203,9 @@ function generateHTML(page) {
           
           <!-- Company Info -->
           <div class="space-y-4">
-            <h3 class="text-xl font-bold text-white">${page.categoryUrl === 'water-refill' ? 'AquaFinder' : 'Near Me Directory'}</h3>
+            <h3 class="text-xl font-bold text-white">${customBranding ? customBranding.brandName : 'Near Me Directory'}</h3>
             <p class="text-gray-400">
-              ${page.categoryUrl === 'water-refill' ? 
-                'Find clean, affordable water refill stations near you. Save money and reduce plastic waste with our comprehensive directory of verified locations.' :
+              ${customBranding ? customBranding.description :
                 'Find trusted local businesses across the United States. Connecting you with verified services in your area.'
               }
             </p>
@@ -243,7 +259,7 @@ function generateHTML(page) {
             <ul class="space-y-2">
               <li>
                 <a href="/business-owners" class="text-gray-400 hover:text-white transition-colors">
-                  ${page.categoryUrl === 'water-refill' ? 'List Your Station' : 'For Business Owners'}
+                  ${customBranding ? customBranding.businessOwnerText : 'For Business Owners'}
                 </a>
               </li>
               ${page.categoryUrl === 'water-refill' ? `
@@ -266,7 +282,7 @@ function generateHTML(page) {
         <div class="mt-12 pt-8 border-t border-gray-700">
           <div class="flex flex-col md:flex-row items-center justify-between">
             <div class="text-gray-400 text-sm mb-4 md:mb-0">
-              © ${new Date().getFullYear()} ${page.categoryUrl === 'water-refill' ? 'AquaFinder. Find water refill stations near you.' : 'Near Me Directory. All rights reserved.'}
+              © ${new Date().getFullYear()} ${customBranding ? `${customBranding.brandName}. ${customBranding.description.split('.')[0]}.` : 'Near Me Directory. All rights reserved.'}
             </div>
             <div class="flex flex-wrap items-center space-x-6 text-sm">
               <a href="/privacy-policy" class="text-gray-400 hover:text-white transition-colors">
@@ -279,7 +295,7 @@ function generateHTML(page) {
                 Sitemap
               </a>
               <a href="/business-owners" class="text-gray-400 hover:text-white transition-colors">
-                ${page.categoryUrl === 'water-refill' ? 'List Your Station' : 'For Business Owners'}
+                ${customBranding ? customBranding.businessOwnerText : 'For Business Owners'}
               </a>
             </div>
           </div>
