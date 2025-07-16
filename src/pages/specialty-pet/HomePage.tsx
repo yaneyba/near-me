@@ -96,7 +96,7 @@ const SpecialtyPetHomePage: React.FC<SpecialtyPetHomePageProps> = ({ subdomainIn
     return (
       <SpecialtyPetLayout 
         subdomainInfo={subdomainInfo}
-        showSearchBar={true}
+        showSearchBar={false}
         onSearch={handleSearch}
         onClearSearch={handleClearSearch}
         currentSearchQuery={searchQuery}
@@ -115,7 +115,7 @@ const SpecialtyPetHomePage: React.FC<SpecialtyPetHomePageProps> = ({ subdomainIn
     return (
       <SpecialtyPetLayout 
         subdomainInfo={subdomainInfo}
-        showSearchBar={true}
+        showSearchBar={false}
         onSearch={handleSearch}
         onClearSearch={handleClearSearch}
         currentSearchQuery={searchQuery}
@@ -139,7 +139,7 @@ const SpecialtyPetHomePage: React.FC<SpecialtyPetHomePageProps> = ({ subdomainIn
   return (
     <SpecialtyPetLayout 
       subdomainInfo={subdomainInfo}
-      showSearchBar={true}
+      showSearchBar={false}
       onSearch={handleSearch}
       onClearSearch={handleClearSearch}
       currentSearchQuery={searchQuery}

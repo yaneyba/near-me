@@ -51,6 +51,7 @@ const SeniorCareHomePage: React.FC<SeniorCareHomePageProps> = ({ subdomainInfo }
     return (
       <SeniorCareLayout 
         subdomainInfo={subdomainInfo}
+        showSearchBar={false}
         onSearch={handleSearch}
         onClearSearch={handleClearSearch}
         currentSearchQuery={searchQuery}
@@ -66,6 +67,7 @@ const SeniorCareHomePage: React.FC<SeniorCareHomePageProps> = ({ subdomainInfo }
     return (
       <SeniorCareLayout 
         subdomainInfo={subdomainInfo}
+        showSearchBar={false}
         onSearch={handleSearch}
         onClearSearch={handleClearSearch}
         currentSearchQuery={searchQuery}
@@ -88,6 +90,7 @@ const SeniorCareHomePage: React.FC<SeniorCareHomePageProps> = ({ subdomainInfo }
   return (
     <SeniorCareLayout 
       subdomainInfo={subdomainInfo}
+      showSearchBar={false}
       onSearch={handleSearch}
       onClearSearch={handleClearSearch}
       currentSearchQuery={searchQuery}
