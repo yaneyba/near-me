@@ -3,6 +3,24 @@
 import { SubdomainInfo } from '@/types';
 import { isSpecialService, isBlockedSubdomain, cityStateMap } from '@/config/subdomainExceptions';
 
+// Define the two fundamental site architectures
+export type SiteType = 'CITY_BUSINESS' | 'CATEGORY_PRODUCT';
+
+// Site type configuration
+const SITE_TYPE_CONFIG = {
+  'water-refill': 'CITY_BUSINESS' as SiteType,     // Location-based water refill stations
+  'senior-care': 'CITY_BUSINESS' as SiteType,      // Location-based senior care services
+  'specialty-pet': 'CATEGORY_PRODUCT' as SiteType  // E-commerce pet products marketplace
+} as const;
+
+// Get site type for a service
+const getSiteType = (specialService: any): SiteType | null => {
+  if (specialService.isWaterRefill) return SITE_TYPE_CONFIG['water-refill'];
+  if (specialService.isSeniorCare) return SITE_TYPE_CONFIG['senior-care'];
+  if (specialService.isSpecialtyPet) return SITE_TYPE_CONFIG['specialty-pet'];
+  return null;
+};
+
 // Static valid combinations based on our database
 const getValidCombinations = (): Set<string> => {
   const combinations = new Set<string>();
@@ -43,6 +61,96 @@ const formatCity = (city: string): string => {
     .split('-')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
+};
+
+// Parse CITY_BUSINESS sites (water-refill, senior-care)
+// URL pattern: domain.com/city-name shows businesses in that city
+const parseCitiesBusinessesSite = (specialService: any, pathname: string): SubdomainInfo => {
+  const pathParts = pathname.split('/').filter(part => part.length > 0);
+  
+  // Ignore non-city paths like "api", "admin", etc.
+  const nonCityPaths = ['api', 'admin', 'auth', 'search', 'services', 'stations'];
+  
+  if (pathParts.length > 0) {
+    const rawCity = pathParts[0];
+    
+    // Check if this is a real city, not a route path
+    if (!nonCityPaths.includes(rawCity.toLowerCase()) && cityStateMap[rawCity.toLowerCase()]) {
+      const city = formatCity(rawCity);
+      const state = cityStateMap[rawCity.toLowerCase()];
+      
+      return {
+        category: specialService.category,
+        city,
+        state,
+        isWaterRefill: specialService.isWaterRefill,
+        isSeniorCare: specialService.isSeniorCare,
+        isPathBased: true
+      };
+    }
+  }
+  
+  // Default page (no city specified or non-city path)
+  return {
+    category: specialService.category,
+    city: 'All Cities',
+    state: 'Nationwide',
+    isWaterRefill: specialService.isWaterRefill,
+    isSeniorCare: specialService.isSeniorCare,
+    isPathBased: true
+  };
+};
+
+// Parse CATEGORY_PRODUCT sites (specialty-pet)
+// URL pattern: domain.com/products shows all products, domain.com/city-name shows products from vendors in that city
+const parseCategoriesProductsSite = (specialService: any, pathname: string): SubdomainInfo => {
+  // For e-commerce sites, we don't parse cities from paths by default
+  // /products = show all products from all vendors/cities
+  // /categories = browse by product categories
+  // Only actual city names in the path would filter by vendor location
+  
+  const pathParts = pathname.split('/').filter(part => part.length > 0);
+  
+  // E-commerce routes that should NOT be treated as cities
+  const ecommerceRoutes = ['products', 'categories', 'vendors', 'cart', 'checkout', 'api', 'admin', 'auth', 'search'];
+  
+  if (pathParts.length > 0) {
+    const firstPath = pathParts[0];
+    
+    // If it's an e-commerce route, show all products/vendors
+    if (ecommerceRoutes.includes(firstPath.toLowerCase())) {
+      return {
+        category: specialService.category,
+        city: 'All Cities',
+        state: 'Nationwide',
+        isSpecialtyPet: true,
+        isPathBased: true
+      };
+    }
+    
+    // If it's a real city name, filter by vendor location
+    if (cityStateMap[firstPath.toLowerCase()]) {
+      const city = formatCity(firstPath);
+      const state = cityStateMap[firstPath.toLowerCase()];
+      
+      return {
+        category: specialService.category,
+        city,
+        state,
+        isSpecialtyPet: true,
+        isPathBased: true
+      };
+    }
+  }
+  
+  // Default specialty pet page (no path or unrecognized path)
+  return {
+    category: specialService.category,
+    city: 'All Cities',
+    state: 'Nationwide',
+    isSpecialtyPet: true,
+    isPathBased: true
+  };
 };
 
 export const parseSubdomain = (hostname: string = window.location.hostname, pathname: string = window.location.pathname): SubdomainInfo => {
@@ -136,98 +244,28 @@ export const parseSubdomain = (hostname: string = window.location.hostname, path
   // Check for special services
   const specialService = isSpecialService(hostname);
   if (specialService) {
-    if (specialService.isWaterRefill) {
-      // Handle water refill path-based routing
-      const pathParts = pathname.split('/').filter(part => part.length > 0);
-      
-      if (pathParts.length > 0) {
-        const rawCity = pathParts[0];
-        const city = formatCity(rawCity);
-        const state = cityStateMap[rawCity.toLowerCase()] || 'Unknown State';
+    // Use site type to determine parsing strategy
+    const siteType = getSiteType(specialService);
+    
+    switch (siteType) {
+      case 'CITY_BUSINESS':
+        // Cities-businesses model: water-refill, senior-care
+        return parseCitiesBusinessesSite(specialService, pathname);
         
+      case 'CATEGORY_PRODUCT':
+        // Categories-products-vendors model: specialty-pet
+        return parseCategoriesProductsSite(specialService, pathname);
+        
+      default:
+        // Handle other special services
         return {
           category: specialService.category,
-          city,
-          state,
-          isWaterRefill: true,
-          isPathBased: true
+          city: 'All Cities',
+          state: 'Nationwide',
+          isServices: specialService.isServices || false,
+          isPathBased: specialService.isPathBased || false
         };
-      }
-      
-      // Default water refill page (no city specified)
-      return {
-        category: specialService.category,
-        city: 'All Cities',
-        state: 'Nationwide',
-        isWaterRefill: true,
-        isPathBased: true
-      };
     }
-    
-    if (specialService.isSeniorCare) {
-      // Handle senior care path-based routing
-      const pathParts = pathname.split('/').filter(part => part.length > 0);
-      
-      if (pathParts.length > 0) {
-        const rawCity = pathParts[0];
-        const city = formatCity(rawCity);
-        const state = cityStateMap[rawCity.toLowerCase()] || 'Unknown State';
-        
-        return {
-          category: specialService.category,
-          city,
-          state,
-          isSeniorCare: true,
-          isPathBased: true
-        };
-      }
-      
-      // Default senior care page (no city specified)
-      return {
-        category: specialService.category,
-        city: 'All Cities',
-        state: 'Nationwide',
-        isSeniorCare: true,
-        isPathBased: true
-      };
-    }
-    
-    if (specialService.isSpecialtyPet) {
-      // Handle specialty pet path-based routing
-      const pathParts = pathname.split('/').filter(part => part.length > 0);
-      
-      if (pathParts.length > 0) {
-        const rawCity = pathParts[0];
-        const city = formatCity(rawCity);
-        const state = cityStateMap[rawCity.toLowerCase()] || 'Unknown State';
-        
-        return {
-          category: specialService.category,
-          city,
-          state,
-          isSpecialtyPet: true,
-          isPathBased: true
-        };
-      }
-      
-      // Default specialty pet page (no city specified)
-      return {
-        category: specialService.category,
-        city: 'All Cities',
-        state: 'Nationwide',
-        isSpecialtyPet: true,
-        isPathBased: true
-      };
-    }
-    
-    // Handle other special services
-    return {
-      category: specialService.category,
-      city: 'All Cities',
-      state: 'Nationwide',
-      isServices: specialService.isServices || false,
-      isPathBased: specialService.isPathBased || false
-    };
   }
 
   // Parse subdomain patterns
