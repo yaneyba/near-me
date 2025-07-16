@@ -150,10 +150,18 @@ function getCustomBranding(categoryUrl) {
     },
     'specialty-pet': {
       brandName: 'PetCare Pro',
-      title: 'Specialty Pet Services Near Me | Find Expert Pet Care | PetCare Pro',
-      description: 'Find professional specialty pet services near you. Expert veterinarians, groomers, trainers, and pet care specialists. Trusted providers for all your pet\'s unique needs.',
-      keywords: 'specialty pet services, exotic veterinarian, pet grooming, dog training, pet boarding, animal behaviorist, pet care near me',
+      title: 'Premium Specialty Pet Products & Services | Expert Pet Care | PetCare Pro',
+      description: 'Discover premium pet products, accessories, and professional services. From exotic food to health supplements, grooming to training - everything for your pet\'s special needs. Shop quality brands and find trusted local experts.',
+      keywords: 'specialty pet products, premium pet food, exotic pet supplies, pet accessories, pet health supplements, pet grooming products, professional pet services, pet training equipment, specialty veterinarian, pet care near me',
       canonicalUrl: 'https://specialty-pet.near-me.us/',
+      businessOwnerText: 'List Your Service'
+    },
+    'senior-care': {
+      brandName: 'SeniorCare Connect',
+      title: 'Senior Care Services Near Me | Trusted Elderly Care Providers | SeniorCare Connect',
+      description: 'Find compassionate senior care services and trusted providers near you. Home care, assisted living, memory care, physical therapy, and specialized elderly care services. Vetted professionals for your loved ones.',
+      keywords: 'senior care near me, elderly care services, home care providers, assisted living, memory care, senior home care, elder care, senior care services, nursing care, senior health services, elderly assistance',
+      canonicalUrl: 'https://senior-care.near-me.us/',
       businessOwnerText: 'List Your Service'
     }
   };

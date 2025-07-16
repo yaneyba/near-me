@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open Graph Image Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .canvas-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            background: white;
+            margin: 10px;
+        }
+        button {
+            background: #007cba;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin: 5px;
+            border-radius: 4px;
+        }
+        button:hover {
+            background: #005a87;
+        }
+        .info {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Open Graph Image Generator</h1>
+    <div class="info">
+        <p><strong>Instructions:</strong> Click the buttons below to generate Open Graph images for each category. The images will be automatically downloaded as PNG files. Rename them and place them in the /public directory.</p>
+        <p><strong>Required size:</strong> 1200x630px (recommended Open Graph dimensions)</p>
+    </div>
+
+    <div class="canvas-container">
+        <h3>Senior Care Open Graph Image</h3>
+        <canvas id="seniorCareCanvas" width="1200" height="630"></canvas>
+        <br>
+        <button onclick="generateSeniorCareImage()">Generate Senior Care Image</button>
+        <button onclick="downloadCanvas('seniorCareCanvas', 'og-senior-care.png')">Download</button>
+    </div>
+
+    <div class="canvas-container">
+        <h3>Specialty Pet Open Graph Image</h3>
+        <canvas id="specialtyPetCanvas" width="1200" height="630"></canvas>
+        <br>
+        <button onclick="generateSpecialtyPetImage()">Generate Specialty Pet Image</button>
+        <button onclick="downloadCanvas('specialtyPetCanvas', 'og-specialty-pet.png')">Download</button>
+    </div>
+
+    <script>
+        function generateSeniorCareImage() {
+            const canvas = document.getElementById('seniorCareCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Gradient background
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, '#4f46e5'); // Indigo
+            gradient.addColorStop(1, '#7c3aed'); // Purple
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Add subtle pattern
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            for (let i = 0; i < canvas.width; i += 60) {
+                for (let j = 0; j < canvas.height; j += 60) {
+                    ctx.fillRect(i, j, 30, 30);
+                }
+            }
+            
+            // Main title
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 72px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('SeniorCare Connect', canvas.width / 2, 200);
+            
+            // Subtitle
+            ctx.font = '36px Arial';
+            ctx.fillText('Trusted Senior Care Services', canvas.width / 2, 280);
+            
+            // Description
+            ctx.font = '28px Arial';
+            ctx.fillStyle = '#e0e7ff';
+            ctx.fillText('Find compassionate care providers near you', canvas.width / 2, 340);
+            
+            // Features
+            ctx.font = '24px Arial';
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'left';
+            const features = [
+                '✓ Home Care Services',
+                '✓ Assisted Living',
+                '✓ Memory Care',
+                '✓ Vetted Professionals'
+            ];
+            
+            features.forEach((feature, index) => {
+                ctx.fillText(feature, 200, 420 + (index * 40));
+            });
+            
+            // Website URL
+            ctx.font = 'bold 32px Arial';
+            ctx.fillStyle = '#fbbf24';
+            ctx.textAlign = 'center';
+            ctx.fillText('senior-care.near-me.us', canvas.width / 2, 580);
+        }
+        
+        function generateSpecialtyPetImage() {
+            const canvas = document.getElementById('specialtyPetCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Gradient background
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, '#059669'); // Emerald
+            gradient.addColorStop(1, '#0d9488'); // Teal
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Add pet paw prints pattern
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            for (let i = 0; i < canvas.width; i += 120) {
+                for (let j = 0; j < canvas.height; j += 120) {
+                    // Simple paw print
+                    ctx.beginPath();
+                    ctx.arc(i + 20, j + 20, 8, 0, 2 * Math.PI);
+                    ctx.arc(i + 35, j + 15, 6, 0, 2 * Math.PI);
+                    ctx.arc(i + 50, j + 20, 8, 0, 2 * Math.PI);
+                    ctx.arc(i + 35, j + 35, 10, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
+            }
+            
+            // Main title
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 72px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('PetCare Pro', canvas.width / 2, 200);
+            
+            // Subtitle
+            ctx.font = '36px Arial';
+            ctx.fillText('Premium Pet Products & Services', canvas.width / 2, 280);
+            
+            // Description
+            ctx.font = '28px Arial';
+            ctx.fillStyle = '#d1fae5';
+            ctx.fillText('Everything for your pet\'s special needs', canvas.width / 2, 340);
+            
+            // Features
+            ctx.font = '24px Arial';
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'left';
+            const features = [
+                '🐾 Premium Pet Products',
+                '🏥 Professional Services', 
+                '🎯 Specialty Nutrition',
+                '💎 Quality Brands'
+            ];
+            
+            features.forEach((feature, index) => {
+                ctx.fillText(feature, 200, 420 + (index * 40));
+            });
+            
+            // Website URL
+            ctx.font = 'bold 32px Arial';
+            ctx.fillStyle = '#fbbf24';
+            ctx.textAlign = 'center';
+            ctx.fillText('specialty-pet.near-me.us', canvas.width / 2, 580);
+        }
+        
+        function downloadCanvas(canvasId, filename) {
+            const canvas = document.getElementById(canvasId);
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+        
+        // Generate images on page load
+        window.onload = function() {
+            generateSeniorCareImage();
+            generateSpecialtyPetImage();
+        };
+    </script>
+</body>
+</html>

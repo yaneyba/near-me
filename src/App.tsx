@@ -4,12 +4,21 @@ import { DataProviderFactory } from '@/providers/DataProviderFactory';
 import { parseSubdomain } from '@/utils/subdomainParser';
 import { SubdomainInfo } from '@/types';
 import { useAuth } from '@/lib/auth';
+import { useSEO } from '@/hooks/useSEO';
 
 // Import the Smart Door system
 import { SmartDoor } from '@/components/routing';
 
 function App() {
   console.log('🏠 App component starting...');
+  
+  // Parse subdomain info once at app level
+  console.log('🔍 Parsing subdomain info...');
+  const subdomainInfo: SubdomainInfo = parseSubdomain();
+  console.log('📋 Subdomain info:', subdomainInfo);
+  
+  // Apply SEO meta tags based on subdomain
+  useSEO(subdomainInfo);
   
   // Configure the data provider factory
   useEffect(() => {
@@ -20,11 +29,6 @@ function App() {
     
     console.log('Data provider configured: d1 (D1 Database)');
   }, []);
-
-  // Parse subdomain info once at app level
-  console.log('🔍 Parsing subdomain info...');
-  const subdomainInfo: SubdomainInfo = parseSubdomain();
-  console.log('📋 Subdomain info:', subdomainInfo);
   
   const { user } = useAuth();
 
