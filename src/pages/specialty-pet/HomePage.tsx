@@ -98,58 +98,103 @@ const SpecialtyPetHomePage: React.FC<SpecialtyPetHomePageProps> = ({ subdomainIn
           </div>
         </section>
 
-        {/* Product Categories Preview */}
+        {/* Shop Premium Pet Supplies By Category */}
         <section className="py-16 bg-gray-50 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Popular Categories
+              Shop Premium Pet Supplies By Category
             </h2>
-            <p className="text-lg text-gray-600">
-              Discover products and services for every type of pet
-            </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-              <div className="text-4xl mb-4">🐾</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Exotic Veterinary</h3>
-              <p className="text-gray-600 mb-4">Specialized care for reptiles, birds, and exotic pets</p>
-              <div className="text-emerald-600 font-medium">15+ Providers</div>
+            {/* Food & Treats */}
+            <div className="relative overflow-hidden rounded-xl h-48" style={{ background: 'linear-gradient(135deg, #FFA726 0%, #FF7043 100%)' }}>
+              <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+              <div className="relative h-full flex flex-col justify-center items-center text-center text-white p-6">
+                <h3 className="text-2xl font-bold mb-2">Food & Treats</h3>
+                <p className="text-sm mb-4 opacity-90">Premium pet food and delicious treats for all types of pets</p>
+                <Link 
+                  to="/products?category=food-treats"
+                  className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-6 py-2 rounded-lg transition-all duration-200 font-medium backdrop-blur-sm"
+                >
+                  Explore
+                </Link>
+              </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-              <div className="text-4xl mb-4">✂️</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Professional Grooming</h3>
-              <p className="text-gray-600 mb-4">Expert grooming services for all pet types</p>
-              <div className="text-emerald-600 font-medium">25+ Providers</div>
+            {/* Accessories */}
+            <div className="relative overflow-hidden rounded-xl h-48" style={{ background: 'linear-gradient(135deg, #5C6BC0 0%, #3F51B5 100%)' }}>
+              <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+              <div className="relative h-full flex flex-col justify-center items-center text-center text-white p-6">
+                <h3 className="text-2xl font-bold mb-2">Accessories</h3>
+                <p className="text-sm mb-4 opacity-90">Essential and unique pet accessories for your beloved companions</p>
+                <Link 
+                  to="/products?category=accessories"
+                  className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-6 py-2 rounded-lg transition-all duration-200 font-medium backdrop-blur-sm"
+                >
+                  Explore
+                </Link>
+              </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-              <div className="text-4xl mb-4">🎓</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Training & Behavior</h3>
-              <p className="text-gray-600 mb-4">Professional training for pets with special needs</p>
-              <div className="text-emerald-600 font-medium">10+ Specialists</div>
+            {/* Health & Wellness */}
+            <div className="relative overflow-hidden rounded-xl h-48" style={{ background: 'linear-gradient(135deg, #66BB6A 0%, #43A047 100%)' }}>
+              <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+              <div className="relative h-full flex flex-col justify-center items-center text-center text-white p-6">
+                <h3 className="text-2xl font-bold mb-2">Health & Wellness</h3>
+                <p className="text-sm mb-4 opacity-90">Natural pet supplements and wellness products to keep your pets healthy</p>
+                <Link 
+                  to="/products?category=health-wellness"
+                  className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-6 py-2 rounded-lg transition-all duration-200 font-medium backdrop-blur-sm"
+                >
+                  Explore
+                </Link>
+              </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-              <div className="text-4xl mb-4">🏠</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Boarding & Sitting</h3>
-              <p className="text-gray-600 mb-4">Trusted care when you're away from home</p>
-              <div className="text-emerald-600 font-medium">20+ Facilities</div>
+            {/* Grooming */}
+            <div className="relative overflow-hidden rounded-xl h-48" style={{ background: 'linear-gradient(135deg, #AB47BC 0%, #8E24AA 100%)' }}>
+              <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+              <div className="relative h-full flex flex-col justify-center items-center text-center text-white p-6">
+                <h3 className="text-2xl font-bold mb-2">Grooming</h3>
+                <p className="text-sm mb-4 opacity-90">Professional pet grooming products and premium supplies</p>
+                <Link 
+                  to="/products?category=grooming"
+                  className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-6 py-2 rounded-lg transition-all duration-200 font-medium backdrop-blur-sm"
+                >
+                  Explore
+                </Link>
+              </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-              <div className="text-4xl mb-4">📸</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Pet Photography</h3>
-              <p className="text-gray-600 mb-4">Capture precious moments with your beloved pets</p>
-              <div className="text-emerald-600 font-medium">8+ Photographers</div>
+            {/* Training */}
+            <div className="relative overflow-hidden rounded-xl h-48" style={{ background: 'linear-gradient(135deg, #FF7043 0%, #FF5722 100%)' }}>
+              <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+              <div className="relative h-full flex flex-col justify-center items-center text-center text-white p-6">
+                <h3 className="text-2xl font-bold mb-2">Training</h3>
+                <p className="text-sm mb-4 opacity-90">Advanced dog training equipment and educational resources</p>
+                <Link 
+                  to="/products?category=training"
+                  className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-6 py-2 rounded-lg transition-all duration-200 font-medium backdrop-blur-sm"
+                >
+                  Explore
+                </Link>
+              </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-              <div className="text-4xl mb-4">🛍️</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Specialty Products</h3>
-              <p className="text-gray-600 mb-4">Unique products for exotic and special needs pets</p>
-              <div className="text-emerald-600 font-medium">50+ Products</div>
+            {/* Travel */}
+            <div className="relative overflow-hidden rounded-xl h-48" style={{ background: 'linear-gradient(135deg, #26A69A 0%, #00897B 100%)' }}>
+              <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+              <div className="relative h-full flex flex-col justify-center items-center text-center text-white p-6">
+                <h3 className="text-2xl font-bold mb-2">Travel</h3>
+                <p className="text-sm mb-4 opacity-90">Luxury pet travel accessories and gear for pets on the go</p>
+                <Link 
+                  to="/products?category=travel"
+                  className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-6 py-2 rounded-lg transition-all duration-200 font-medium backdrop-blur-sm"
+                >
+                  Explore
+                </Link>
+              </div>
             </div>
           </div>
 
@@ -159,7 +204,7 @@ const SpecialtyPetHomePage: React.FC<SpecialtyPetHomePageProps> = ({ subdomainIn
               to="/products"
               className="inline-flex items-center bg-emerald-600 text-white px-8 py-4 rounded-lg hover:bg-emerald-700 transition-colors font-semibold text-lg gap-2"
             >
-              View All Categories
+              View All Products
               <ArrowRight className="w-5 h-5" />
             </Link>
           </div>
