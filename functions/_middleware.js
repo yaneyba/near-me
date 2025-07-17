@@ -60,7 +60,7 @@ export async function onRequest(context) {
     const category = parts[0];
     
     // Known category-only subdomains
-    const knownCategories = ['nail-salons', 'auto-repair', 'water-refill'];
+    const knownCategories = ['nail-salons', 'auto-repair', 'water-refill', 'specialty-pet', 'senior-care'];
     
     if (knownCategories.includes(category)) {
       const htmlFileName = `${category}.html`;
