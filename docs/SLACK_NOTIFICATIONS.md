@@ -8,7 +8,11 @@ The application now sends real-time notifications to Slack for all form submissi
 
 ## Slack Webhook Configuration
 
-**Webhook URL**: `https://hooks.slack.com/services/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`
+**Current Webhook URL**: `https://hooks.slack.com/services/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`
+
+**Previous Webhook URLs** (for reference):
+- `https://hooks.slack.com/services/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` (expired)
+- `https://hooks.slack.com/services/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` (expired)
 
 This webhook is configured in the following files:
 - `functions/api/contact.ts` - Contact form submissions
