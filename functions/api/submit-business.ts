@@ -115,22 +115,48 @@ async function handleBusinessSubmission(businessData: any, env: Env) {
     });
   }
 
-  // Let's be 100% explicit about the fields and values
+  const id = 'business_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+  // Clean up and sanitize input data first
+  const cleanZip = businessData.zip ? String(businessData.zip).replace(/[^\w\d]/g, '') : '00000';
+  
+  // Prepare data with defaults for NOT NULL fields
+  const business_name = businessData.name;
+  const owner_name = businessData.submitterName || businessData.owner || 'Unknown';
+  const email = businessData.submitterEmail || businessData.email || '';
+  const phone = businessData.phone || businessData.submitterPhone || 'Not provided';
+  const address = businessData.address || 'Not provided';
+  const city = businessData.city;
+  const state = businessData.state || 'Not provided';
+  const zip_code = cleanZip || '00000';
+  const category = businessData.category;
+  const website = businessData.website || null;
+  const description = businessData.description || null;
+  const site_id = 'water-refill';
+  
+  // Skip using placeholders - build a direct SQL statement instead
   const query = `
     INSERT INTO business_submissions (
       id, business_name, owner_name, email, phone, address, city, state, zip_code,
-      category, website, description, services, hours, site_id, status
+      category, website, description, site_id
     ) VALUES (
-      ?, ?, ?, ?, ?, ?, ?, ?, ?,
-      ?, ?, ?, ?, ?, ?, 'pending'
+      '${id}', 
+      '${business_name.replace(/'/g, "''")}', 
+      '${owner_name.replace(/'/g, "''")}', 
+      '${email.replace(/'/g, "''")}', 
+      '${phone.replace(/'/g, "''")}', 
+      '${address.replace(/'/g, "''")}', 
+      '${city.replace(/'/g, "''")}', 
+      '${state.replace(/'/g, "''")}', 
+      '${zip_code.replace(/'/g, "''")}',
+      '${category.replace(/'/g, "''")}', 
+      ${website ? `'${website.replace(/'/g, "''")}'` : 'NULL'}, 
+      ${description ? `'${description.replace(/'/g, "''")}'` : 'NULL'}, 
+      '${site_id.replace(/'/g, "''")}'
     )
   `;
   
-  // Count the number of parameters (question marks) in the query
-  const paramCount = (query.match(/\?/g) || []).length;
-  console.log(`SQL query has ${paramCount} parameters`);
-
-  const id = 'business_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  console.log('Using direct SQL query:', query);
 
   try {
     // Clean up and sanitize all input data
@@ -178,49 +204,11 @@ async function handleBusinessSubmission(businessData: any, env: Env) {
       zip: cleanZip
     });
     
-    // Insert into database
-    const stmt = env.DB.prepare(query);
+    // Execute the direct SQL query without parameters
+    console.log('Executing direct SQL query');
     
-    await stmt.bind(
-      id,
-      businessData.name,
-      businessData.submitterName || 'Unknown',
-      businessData.submitterEmail || businessData.email || '',
-      businessData.phone || businessData.submitterPhone || 'Not provided',
-      businessData.address || 'Not provided',
-      businessData.city,
-      businessData.state || 'Not provided',
-      cleanZip || '00000', // Use the cleaned ZIP code with default
-      businessData.category,
-      businessData.website || null,
-      businessData.description || null,
-      sanitizedServices,
-      sanitizedHours,
-      'water-refill' // site_id for tracking which subdomain this came from
-    );
-    
-    // Log the prepared query for debugging
-    console.log('Executing SQL query:', query);
-    console.log('With parameters:', [
-      id,
-      businessData.name,
-      businessData.submitterName || 'Unknown',
-      businessData.submitterEmail || businessData.email || '',
-      businessData.phone || businessData.submitterPhone || 'Not provided',
-      businessData.address || 'Not provided',
-      businessData.city,
-      businessData.state || 'Not provided',
-      cleanZip || '00000', 
-      businessData.category,
-      businessData.website || null,
-      businessData.description || null,
-      sanitizedServices,
-      sanitizedHours,
-      'water-refill'
-    ]);
-    
-    // Execute the query
-    await stmt.run();
+    // Execute the query with prepare() but without binding parameters
+    await env.DB.prepare(query).run();
 
     // Send Slack notification
     const slackData: BusinessNotificationData = {
@@ -287,25 +275,8 @@ async function handleBusinessSubmission(businessData: any, env: Env) {
         console.error('Database error cause:', error.cause);
       }
       
-      // Log SQL bind parameters for debugging
-      const zipForLog = businessData.zip ? String(businessData.zip).replace(/[^\w\d]/g, '') : '00000';
-      console.error('SQL bind parameters:', [
-        id,
-        businessData.name,
-        businessData.submitterName || 'Unknown',
-        businessData.submitterEmail || businessData.email || '',
-        businessData.phone || businessData.submitterPhone || 'Not provided',
-        businessData.address || 'Not provided',
-        businessData.city,
-        businessData.state || 'Not provided',
-        zipForLog,
-        businessData.category,
-        businessData.website || null,
-        businessData.description || null,
-        businessData.services ? JSON.stringify(businessData.services) : null,
-        businessData.businessHours ? JSON.stringify(businessData.businessHours) : null,
-        'water-refill'
-      ]);
+      // Log SQL query for debugging
+      console.error('Direct SQL query that failed:', query);
     } catch (logError) {
       console.error('Error while logging:', logError);
     }
