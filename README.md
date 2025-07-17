@@ -1,18 +1,19 @@
 # Near Me Business Directory - React Application
 
-A modern React application that creates SEO-optimized business directory pages with admin approval workflows and subscription management.
+A modern React application that creates SEO-optimized business directory pages with Cloudflare D1 database integration and real-time Slack notifications.
 
-**Latest Update:** Production deployment with D1 database integration - January 2025
+**Latest Update:** Slack notifications integration and documentation organization - July 2025
 
 ## ✨ Key Features
 
-- **Business Approval Workflow**: Admin review system for business submissions
-- **Stripe Subscription Integration**: Monthly subscriptions for business owners
-- **Role-Based Authentication**: Admin and business owner dashboards
+- **Cloudflare D1 Database**: High-performance SQLite database for business data
+- **Slack Notifications**: Real-time notifications for form submissions and admin actions
 - **SEO Optimized**: Dynamic subdomain structure with unique meta tags
 - **Real-time Search**: Live search with business suggestions
 - **Mobile Responsive**: Optimized for all devices
-- **Production Ready**: Built for scalable deployment
+- **Production Ready**: Built for scalable Cloudflare Pages deployment
+- **Admin Dashboard**: Business submission approval workflow
+- **Automated Subdomain Management**: Dynamic category-based subdomain generation
 
 ## 🚀 Quick Start
 
@@ -24,32 +25,36 @@ npm install
 
 ### 2. Environment Setup
 
-Create a `.env` file with your Supabase credentials:
+Create a `.env` file with your configuration:
 
 ```env
-# Supabase Configuration
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your_anon_key_here
-VITE_SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
+# Database Configuration (Cloudflare D1)
+DATABASE_NAME=nearme-db
+DATABASE_ID=your-database-id
+
+# Slack Notifications
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK/URL
+
+# Google Places API (optional)
+GOOGLE_PLACES_API_KEY=your_google_places_api_key
 
 # Site Configuration
 VITE_SITE_ID=near-me-us
-
-# Stripe Configuration (for subscriptions)
-VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key
-VITE_STRIPE_SECRET_KEY=sk_test_your_secret_key
 ```
 
 ### 3. Database Setup
 
-Apply the database migrations to set up the required tables:
+Set up your Cloudflare D1 database:
 
 ```bash
-# Option 1: Use Supabase CLI (if you have Docker)
-supabase db reset
+# Create a new D1 database
+wrangler d1 create nearme-db
 
-# Option 2: Manual SQL execution
-# Copy SQL from supabase/migrations/ and run in Supabase SQL Editor
+# Apply migrations to remote database
+wrangler d1 migrations apply nearme-db --remote
+
+# Test database connection
+wrangler d1 execute nearme-db --remote --command "SELECT name FROM sqlite_master WHERE type='table';"
 ```
 
 ### 4. Start Development
@@ -57,6 +62,34 @@ supabase db reset
 ```bash
 npm run dev
 ```
+
+## 🔔 Slack Notifications
+
+The application sends real-time notifications to Slack for:
+- New business submissions
+- Contact form messages  
+- Admin approval/rejection actions
+- Business profile updates
+
+Configure your Slack webhook URL in the environment variables. See `docs/SLACK_NOTIFICATIONS.md` for detailed setup instructions.
+
+## 👨‍💼 Admin Setup
+
+### Admin Dashboard Access
+
+The admin dashboard provides tools for:
+- Reviewing and approving business submissions
+- Managing contact form messages
+- Monitoring system performance
+- Configuring application settings
+
+### Business Approval Workflow
+
+1. Business submits registration form
+2. Slack notification sent to admin channel
+3. Admin reviews submission in dashboard
+4. Approval/rejection triggers additional Slack notifications
+5. Approved businesses appear in public directory
 
 ## 👨‍💼 Admin Setup
 
@@ -86,72 +119,100 @@ npm run toggle-auth
 
 ## 🏗️ Application Architecture
 
-### Business Approval Workflow
+### Business Workflow
 
-1. **Business Submission**: Businesses submit registration forms
-2. **Admin Review**: Admins review submissions in dashboard
-3. **Approval Process**: Approve/reject with notes
-4. **Business Profile Creation**: Approved businesses get user accounts
-5. **Subscription Management**: Business owners can manage Stripe subscriptions
+1. **Business Submission**: Businesses submit registration forms via API
+2. **Slack Notification**: Real-time notification sent to admin Slack channel
+3. **Admin Review**: Admins review submissions in dashboard
+4. **Approval Process**: Approve/reject with automated Slack notifications
+5. **SEO Generation**: Approved businesses trigger subdomain HTML generation
 
 ### Database Schema
 
-The application uses several key tables:
+The application uses Cloudflare D1 (SQLite) with these key tables:
 
-- **business_submissions**: Pending business registrations
-- **business_profiles**: Approved businesses with user accounts
-- **admin_settings**: System configuration (login enabled, etc.)
-- **contact_messages**: Contact form submissions
+- **businesses**: All business listings with location and category data
+- **business_submissions**: Pending business registrations awaiting approval
+- **contact_messages**: Contact form submissions from users
+- **cities**: City data for location-based filtering
+- **neighborhoods**: Neighborhood data for precise location targeting
+- **services**: Service categories and descriptions
+- **products**: Product catalog for specialty businesses
 
-### Role-Based Access
+### Technology Stack
 
-- **Admin Users**: Manage submissions, approve businesses, system settings
-- **Business Owners**: Access dashboard, manage subscriptions, update profiles
-- **Anonymous Users**: Submit businesses, contact forms
+- **Frontend**: React 18 + TypeScript + Vite
+- **Backend**: Cloudflare Functions (serverless)
+- **Database**: Cloudflare D1 (SQLite-based)
+- **Deployment**: Cloudflare Pages
+- **Notifications**: Slack webhooks
+- **SEO**: Static HTML generation for subdomains
 
-## 🔌 Supabase Integration
+## �️ Cloudflare D1 Integration
 
-### Authentication & Authorization
+### Database Operations
 
-- **Supabase Auth**: Email/password authentication
-- **Row Level Security**: Database-level access control
-- **Admin Detection**: Email-based admin identification
-- **Role Management**: Admin vs business owner permissions
+```bash
+# Connect to remote production database
+wrangler d1 execute nearme-db --remote --command "SELECT * FROM businesses LIMIT 5;"
 
-### Real-time Data
+# Apply migrations
+wrangler d1 migrations apply nearme-db --remote
 
-All form submissions and business data are stored in Supabase:
-- Business registration submissions
-- Contact form messages  
-- User profiles and authentication
-- Subscription status and billing
+# Backup database
+wrangler d1 execute nearme-db --remote --command ".dump" > backup.sql
 
-### Security Features
+# Import data
+node scripts/business-importer.js
+```
 
-- RLS policies protect user data
-- Admin-only access to sensitive operations
-- Secure API endpoints for Stripe integration
-- Environment-based configuration
+### API Endpoints
+
+All database operations go through Cloudflare Functions:
+- `functions/api/businesses.ts` - Business CRUD operations
+- `functions/api/cities.ts` - City data endpoints
+- `functions/api/contact.ts` - Contact form handling with Slack notifications
+- `functions/api/submit-business.ts` - Business submission with Slack notifications
+
+### Performance Features
+
+- **Edge Caching**: Cloudflare CDN for global performance
+- **D1 Database**: High-performance SQLite with automatic scaling
+- **Static Generation**: Pre-built HTML for SEO optimization
+- **Function Optimization**: Serverless functions with minimal cold starts
 
 ## 🛠️ Development
 
 ### Available Scripts
 
 ```bash
+# Development
 npm run dev                    # Start development server
 npm run build                  # Build for production with SEO
 npm run build:production       # Build with optimizations
 npm run preview               # Preview production build
 npm run lint                  # Run ESLint
 
-# Admin & Setup Scripts
-npm run create-admin          # Create admin user
-npm run create-business-owner # Create business owner
-npm run toggle-auth          # Toggle authentication
+# Database Management
+npm run db:migrate            # Apply D1 migrations to remote database
+npm run db:backup             # Backup remote database
+npm run db:query              # Execute custom SQL queries
 
-# Testing & Data Scripts
-npm run test:supabase        # Test Supabase connection
-npm run add:samples          # Add sample data
+# Subdomain Management
+npm run subdomain:add         # Add new subdomain
+npm run subdomain:remove      # Remove subdomain
+npm run subdomain:list        # List all subdomains
+npm run subdomain:cloudflare  # Generate Cloudflare configuration
+
+# Data Management
+npm run import:businesses     # Import business data
+npm run migration:generate    # Generate new migration file
+npm run migration:run         # Run migrations on remote database
+
+# Deployment
+npm run deploy:category       # Deploy category-specific changes
+npm run deploy:staging        # Deploy to staging environment
+npm run deploy:production     # Deploy to production with optimizations
 ```
 
 ### Project Structure
@@ -159,21 +220,40 @@ npm run add:samples          # Add sample data
 ```
 src/
 ├── components/           # Reusable UI components
-│   ├── auth/            # Authentication components
-│   └── ads/             # Advertisement components
+│   ├── routing/         # Smart routing components
+│   ├── shared/          # Shared UI components
+│   └── water-refill/    # Water refill specific components
 ├── pages/               # Page components
-├── lib/                 # Utility libraries (auth, supabase)
-├── providers/           # Data providers
+├── providers/           # Data providers (D1DataProvider)
 ├── types/               # TypeScript type definitions
 ├── utils/               # Helper utilities
+├── hooks/               # Custom React hooks
 └── data/                # Static business data (JSON)
 
-supabase/
-├── migrations/          # Database migrations
-└── functions/           # Edge functions (Stripe webhooks)
+functions/
+├── api/                 # Cloudflare Functions API endpoints
+│   ├── admin/          # Admin-specific endpoints
+│   ├── business/       # Business management endpoints
+│   └── water-stations/ # Water refill station endpoints
+├── utils/              # Utility functions (Slack notifications)
+└── types.ts            # TypeScript types for functions
 
-docs/                    # Documentation
-scripts/                 # Build and utility scripts
+database/
+├── migrations/         # D1 database migrations
+├── database-schema.json # Schema documentation
+└── local-schema.sql    # Local development schema
+
+docs/                   # Documentation
+├── SLACK_NOTIFICATIONS.md
+├── DEPLOYMENT-GUIDE.md
+├── DATABASE_README.md
+└── SUBDOMAIN_WORKFLOW.md
+
+scripts/                # Build and utility scripts
+├── generate-subdomain-html.js
+├── manage-subdomains.js
+├── business-importer.js
+└── optimize-production.js
 ```
 
 ## 🚀 Deployment
@@ -190,11 +270,17 @@ scripts/                 # Build and utility scripts
 ### Production Environment Variables
 
 ```env
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your_production_anon_key
-VITE_SUPABASE_SERVICE_ROLE_KEY=your_production_service_key
-VITE_STRIPE_PUBLISHABLE_KEY=pk_live_your_live_key
-VITE_STRIPE_SECRET_KEY=sk_live_your_live_key
+# Database Configuration
+DATABASE_NAME=nearme-db
+DATABASE_ID=your-production-database-id
+
+# Slack Notifications
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/PRODUCTION/WEBHOOK
+
+# Google Places API
+GOOGLE_PLACES_API_KEY=your_production_google_places_api_key
+
+# Site Configuration
 VITE_SITE_ID=near-me-us
 ```
 
@@ -202,31 +288,55 @@ VITE_SITE_ID=near-me-us
 
 Apply migrations to production database:
 
-1. Copy SQL from `supabase/migrations/`
-2. Execute in Supabase SQL Editor for production project
-3. Verify tables and RLS policies are created correctly
+```bash
+# Apply all pending migrations
+wrangler d1 migrations apply nearme-db --remote
+
+# Create a new migration
+npm run migration:generate
+
+# Check migration status
+wrangler d1 migrations list nearme-db --remote
+```
 
 ## 📊 Key Database Tables
 
+### businesses
+Main business directory with approved listings:
+- Business information (name, address, contact details)
+- Category and service classifications
+- Location data (city, neighborhood, coordinates)
+- Hours, pricing, and operational details
+
 ### business_submissions
-Stores pending business registration requests:
-- Business information (name, address, contact)
-- Services and hours
-- Approval status (pending/approved/rejected)
-- Admin review notes
+Pending business registration requests:
+- Submitted business information awaiting approval
+- Admin review notes and status tracking
+- Slack notification triggers for new submissions
 
-### business_profiles  
-Approved businesses with user accounts:
-- Links to Supabase Auth users
-- Subscription status and Stripe data
-- Business details and settings
-- Role management (owner/admin)
+### contact_messages
+Contact form submissions from users:
+- User inquiries and feedback
+- Admin resolution tracking
+- Slack notification integration
 
-### admin_settings
-System configuration:
-- Feature toggles (login enabled, ads enabled)
-- Global settings and preferences
-- Admin-controlled functionality
+### cities
+Location data for filtering and routing:
+- City names and state information
+- Business count statistics
+- SEO-optimized slugs for URL generation
+
+### neighborhoods
+Precise location targeting:
+- Neighborhood names within cities
+- Geographic boundaries and coordinates
+- Local business density data
+
+### services
+Service categories and descriptions:
+- Category definitions and hierarchies
+- SEO metadata for category pages
+- Service-specific configuration data
 
 ## 🎯 SEO Strategy
 
@@ -246,63 +356,88 @@ Each business category/city combination gets optimized HTML:
 ## 📋 Admin Features
 
 ### Business Management
-- Review and approve business submissions
-- Manage business profiles and subscriptions
-- View analytics and engagement data
+- Review and approve business submissions via dashboard
+- Receive real-time Slack notifications for new submissions
+- Manage business profiles and data quality
+- Monitor engagement and analytics
 
-### System Administration  
-- Toggle authentication on/off
-- Manage global settings
-- Monitor form submissions
-- Control feature availability
+### Subdomain Management
+- Add new category-city subdomain combinations
+- Generate SEO-optimized HTML for each subdomain
+- Manage Cloudflare configuration for routing
+- Monitor subdomain performance and traffic
 
-## 💰 Business Owner Features
+### System Administration
+- Configure Slack notification settings
+- Manage database migrations and backups
+- Monitor API endpoint performance
+- Control feature availability and settings
 
-### Dashboard Access
-- View subscription status
-- Manage billing and payments
-- Update business profile
-- Access engagement analytics
+## � Business Owner Features
 
-### Subscription Management
-- Stripe-powered monthly subscriptions
-- Automatic billing and renewals
-- Cancel or modify subscriptions
-- Usage tracking and limits
+### Business Listings
+- Submit business information for approval
+- Update business profiles and details
+- Manage business hours and contact information
+- Upload photos and business descriptions
+
+### Analytics Dashboard
+- View business listing performance
+- Monitor customer engagement metrics
+- Track search rankings and visibility
+- Access detailed analytics reports
 
 ## 🔍 Troubleshooting
 
 ### Common Issues
 
-1. **RLS Policy Errors**: Check Supabase RLS policies are applied
-2. **Environment Variables**: Verify all required vars are set
-3. **Migration Issues**: Ensure all migrations are applied in order
-4. **Stripe Webhooks**: Configure webhook endpoints for subscription events
+1. **Database Connection Errors**: 
+   - Always use `--remote` flag with wrangler commands
+   - Check Cloudflare D1 service status
+   - Verify database ID in wrangler.toml
+
+2. **Slack Notifications Not Working**:
+   - Verify SLACK_WEBHOOK_URL environment variable
+   - Check webhook URL format and permissions
+   - Test webhook using curl or Postman
+
+3. **Subdomain Generation Issues**:
+   - Check subdomain configuration in config/subdomain-generation.json
+   - Verify HTML generation script permissions
+   - Ensure Cloudflare DNS propagation time
+
+4. **API Function Errors**:
+   - Check function logs in Cloudflare dashboard
+   - Verify database binding configuration
+   - Test API endpoints directly
 
 ### Debug Tools
 
 - Use browser dev tools for React debugging
-- Check Supabase logs for database errors
-- Monitor Stripe dashboard for payment issues
-- Review Cloudflare logs for deployment problems
+- Check Cloudflare Function logs for backend errors
+- Monitor D1 database query performance
+- Review Cloudflare Pages deployment logs
+- Test API endpoints using curl or Postman
 
 ## 📚 Documentation
 
 Comprehensive guides are available in the `docs/` folder:
 
-- **ADMIN-GUIDE.md**: Complete admin functionality guide
-- **ARCHITECTURE.md**: System architecture overview  
+- **SLACK_NOTIFICATIONS.md**: Slack integration setup and configuration
 - **DEPLOYMENT-GUIDE.md**: Production deployment instructions
-- **ADS-HOW-TO-GUIDE.md**: Advertisement integration
-- **SEO-EXPLANATION.md**: SEO strategy and implementation
+- **DATABASE_README.md**: Database management and operations guide
+- **SUBDOMAIN_WORKFLOW.md**: Subdomain creation and management
+- **CUSTOM-SPECIALTY-SITE-GUIDE.md**: Creating specialty business sites
+- **SCRIPTS_README.md**: Build and utility script documentation
 
 ## 🤝 Support
 
 For questions or issues:
 1. Check documentation in `docs/` folder
-2. Review error logs in browser console
-3. Verify environment variables and database setup
-4. Test with sample data using `npm run add:samples`
+2. Review error logs in browser console and Cloudflare dashboard
+3. Verify environment variables and database connection
+4. Test API endpoints using the provided scripts
+5. Check Slack notifications setup and webhook configuration
 
 ## 📄 License
 

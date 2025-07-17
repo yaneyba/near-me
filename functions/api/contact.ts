@@ -1,4 +1,7 @@
 import { Env, PagesFunction } from '../types';
+import { sendSlackNotification, ContactNotificationData } from '../utils/slack';
+
+const SLACK_WEBHOOK_URL = 'https://hooks.slack.com/services/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';
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
@@ -32,6 +35,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     console.log('Contact API - Received data:', JSON.stringify(contactData, null, 2));
     console.log('Contact API - DB fields:', JSON.stringify(dbFields, null, 2));
 
+    // Insert into database
     await env.DB.prepare(query)
       .bind(
         id,
@@ -43,6 +47,29 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         dbFields.city
       )
       .run();
+
+    // Send Slack notification
+    const slackData: ContactNotificationData = {
+      name: contactData.name,
+      email: contactData.email,
+      phone: contactData.phone || undefined,
+      subject: contactData.subject || 'General Inquiry',
+      message: contactData.message,
+      inquiryType: contactData.inquiryType || undefined,
+      businessName: contactData.businessName || undefined,
+      category: contactData.category || undefined,
+      city: contactData.city || undefined,
+      state: contactData.state || undefined,
+      urgency: contactData.urgency || undefined,
+      preferredContact: contactData.preferredContact || undefined,
+    };
+
+    await sendSlackNotification(SLACK_WEBHOOK_URL, {
+      type: 'contact',
+      data: slackData,
+      submissionId: id,
+      timestamp: new Date().toISOString(),
+    });
 
     return new Response(JSON.stringify({
       success: true,

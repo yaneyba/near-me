@@ -1,4 +1,7 @@
 import { Env, PagesFunction } from '../types';
+import { sendSlackNotification, BusinessNotificationData } from '../utils/slack';
+
+const SLACK_WEBHOOK_URL = 'https://hooks.slack.com/services/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';
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
@@ -23,6 +26,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
     const id = 'business_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 
+    // Insert into database
     await env.DB.prepare(query)
       .bind(
         id,
@@ -47,6 +51,32 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         businessData.additionalInfo || null
       )
       .run();
+
+    // Send Slack notification
+    const slackData: BusinessNotificationData = {
+      businessName: businessData.name,
+      ownerName: businessData.ownerName || businessData.submitterName || 'Unknown',
+      email: businessData.email || businessData.submitterEmail || 'No email provided',
+      phone: businessData.phone || businessData.submitterPhone || undefined,
+      address: businessData.address || undefined,
+      city: businessData.city,
+      state: businessData.state || undefined,
+      zipCode: businessData.zip || undefined,
+      category: businessData.category,
+      website: businessData.website || undefined,
+      description: businessData.description || undefined,
+      services: businessData.services || undefined,
+      submitterName: businessData.submitterName || undefined,
+      submitterEmail: businessData.submitterEmail || undefined,
+      submitterPhone: businessData.submitterPhone || undefined,
+    };
+
+    await sendSlackNotification(SLACK_WEBHOOK_URL, {
+      type: 'business',
+      data: slackData,
+      submissionId: id,
+      timestamp: new Date().toISOString(),
+    });
 
     return new Response(JSON.stringify({
       success: true,
