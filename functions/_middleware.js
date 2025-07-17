@@ -60,7 +60,7 @@ export async function onRequest(context) {
     const category = parts[0];
     
     // Known category-only subdomains
-    const knownCategories = ['nail-salons', 'auto-repair', 'water-refill', 'senior-care', 'specialty-pet'];
+    const knownCategories = ['nail-salons', 'auto-repair', 'water-refill'];
     
     if (knownCategories.includes(category)) {
       const htmlFileName = `${category}.html`;
@@ -88,9 +88,7 @@ export async function onRequest(context) {
     const categoryRedirects = {
       'nail-salons': 'https://nail-salons.near-me.us',
       'auto-repair': 'https://auto-repair.near-me.us',
-      'water-refill': 'https://water-refill.near-me.us',
-      'senior-care': 'https://senior-care.near-me.us',
-      'specialty-pet': 'https://specialty-pet.near-me.us'
+      'water-refill': 'https://water-refill.near-me.us'
     };
     
     if (categoryRedirects[category]) {

@@ -2,24 +2,6 @@
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap>
     <loc>https://near-me.us/sitemap-categories.xml</loc>
-    <lastmod>2025-07-16</lastmod>
-  </sitemap>
-  <sitemap>
-    <loc>https://near-me.us/sitemap-cities.xml</loc>
-    <lastmod>2025-07-16</lastmod>
-  </sitemap>
-  <sitemap>
-    <loc>https://near-me.us/sitemap-combinations.xml</loc>
-    <lastmod>2025-07-16</lastmod>
-  </sitemap>
-  <sitemap>
-    <loc>https://near-me.us/sitemap-businesses.xml</loc>
-    <lastmod>2025-07-16</lastmod>
-  </sitemap>
-</sitemapindex> encoding="UTF-8"?>
-<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <sitemap>
-    <loc>https://near-me.us/sitemap-categories.xml</loc>
     <lastmod>2024-01-15</lastmod>
   </sitemap>
   <sitemap>
