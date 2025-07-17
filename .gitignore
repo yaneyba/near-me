@@ -28,3 +28,6 @@ scripts/create-admin-user.js
 
 # Wrangler/Cloudflare local state
 .wrangler/
+
+# Image originals/backups
+public/og/originals/
