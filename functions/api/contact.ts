@@ -64,12 +64,16 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       preferredContact: contactData.preferredContact || undefined,
     };
 
+    console.log('Attempting to send Slack notification with data:', JSON.stringify(slackData, null, 2));
+
     await sendSlackNotification(SLACK_WEBHOOK_URL, {
       type: 'contact',
       data: slackData,
       submissionId: id,
       timestamp: new Date().toISOString(),
     });
+
+    console.log('Contact form processing completed successfully');
 
     return new Response(JSON.stringify({
       success: true,

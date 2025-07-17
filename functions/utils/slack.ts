@@ -51,7 +51,14 @@ export async function sendSlackNotification(
   notification: SlackNotification
 ): Promise<void> {
   try {
+    console.log('Sending Slack notification:', {
+      type: notification.type,
+      submissionId: notification.submissionId,
+      webhookUrl: webhookUrl.substring(0, 50) + '...' // Log partial URL for debugging
+    });
+
     const payload = buildSlackPayload(notification);
+    console.log('Slack payload:', JSON.stringify(payload, null, 2));
     
     const response = await fetch(webhookUrl, {
       method: 'POST',
@@ -61,11 +68,22 @@ export async function sendSlackNotification(
       body: JSON.stringify(payload),
     });
 
+    console.log('Slack response status:', response.status);
+    const responseText = await response.text();
+    console.log('Slack response text:', responseText);
+
     if (!response.ok) {
-      throw new Error(`Slack webhook failed: ${response.status} ${response.statusText}`);
+      throw new Error(`Slack webhook failed: ${response.status} ${response.statusText} - ${responseText}`);
     }
+    
+    console.log('✅ Slack notification sent successfully');
   } catch (error) {
-    console.error('Failed to send Slack notification:', error);
+    console.error('❌ Failed to send Slack notification:', {
+      error: error.message,
+      stack: error.stack,
+      webhookUrl: webhookUrl.substring(0, 50) + '...',
+      notificationType: notification.type
+    });
     // Don't throw error to prevent blocking the main submission flow
   }
 }
