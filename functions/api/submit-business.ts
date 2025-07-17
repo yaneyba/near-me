@@ -115,12 +115,20 @@ async function handleBusinessSubmission(businessData: any, env: Env) {
     });
   }
 
+  // Let's be 100% explicit about the fields and values
   const query = `
     INSERT INTO business_submissions (
       id, business_name, owner_name, email, phone, address, city, state, zip_code,
       category, website, description, services, hours, site_id, status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+    ) VALUES (
+      ?, ?, ?, ?, ?, ?, ?, ?, ?,
+      ?, ?, ?, ?, ?, ?, 'pending'
+    )
   `;
+  
+  // Count the number of parameters (question marks) in the query
+  const paramCount = (query.match(/\?/g) || []).length;
+  console.log(`SQL query has ${paramCount} parameters`);
 
   const id = 'business_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 
