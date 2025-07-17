@@ -43,11 +43,13 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
         console.log('🚧 Loading water stations...');
         console.log('subdomainInfo?.city:', subdomainInfo?.city);
         
-        // Load water-refill businesses using the category and city from subdomain
-        // The API will automatically show all businesses if city is "All Cities" or similar
-        console.log('🚧 Loading water-refill businesses for:', subdomainInfo?.city || 'all cities');
-        
-        const allBusinesses = await dataProvider.getBusinesses('water-refill', subdomainInfo?.city || '');
+        // Use correct pattern: getBusinessesByCategory for "All Cities", getBusinesses for specific city
+        let allBusinesses;
+        if (subdomainInfo?.city === 'All Cities' || !subdomainInfo?.city) {
+          allBusinesses = await dataProvider.getBusinessesByCategory('water-refill');
+        } else {
+          allBusinesses = await dataProvider.getBusinesses('water-refill', subdomainInfo.city);
+        }
         
         console.log('🚧 Raw businesses loaded:', allBusinesses.length);
         console.log('🚧 First business:', allBusinesses[0]);
