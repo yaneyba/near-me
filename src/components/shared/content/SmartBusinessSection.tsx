@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { TrendingUp, Star, Shield, MapPin, Users, BarChart } from 'lucide-react';
 import { getPageConfig } from '@/config/pageConfigs';
 
@@ -42,9 +43,12 @@ const SmartBusinessSection: React.FC<SmartBusinessSectionProps> = ({ category, c
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
             {subtitle}
           </p>
-          <button className="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors">
+          <Link 
+            to="/submit-business"
+            className="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors inline-block"
+          >
             {businessConfig.ctaText || 'Get Started'}
-          </button>
+          </Link>
         </div>
 
         {/* Benefits Section */}
@@ -126,9 +130,12 @@ const SmartBusinessSection: React.FC<SmartBusinessSectionProps> = ({ category, c
           <p className="text-xl text-blue-100 mb-6">
             Join hundreds of businesses already growing with our platform.
           </p>
-          <button className="bg-white text-blue-600 px-8 py-3 rounded-lg text-lg font-semibold hover:bg-gray-100 transition-colors">
+          <Link 
+            to="/submit-business"
+            className="bg-white text-blue-600 px-8 py-3 rounded-lg text-lg font-semibold hover:bg-gray-100 transition-colors inline-block"
+          >
             {businessConfig.ctaText || 'Get Started Today'}
-          </button>
+          </Link>
         </div>
       </div>
     </div>

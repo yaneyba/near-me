@@ -154,8 +154,47 @@ const parseCategoriesProductsSite = (specialService: any, pathname: string): Sub
 };
 
 export const parseSubdomain = (hostname: string = window.location.hostname, pathname: string = window.location.pathname): SubdomainInfo => {
-  // Handle localhost and development
-  if (hostname === 'localhost' || hostname.startsWith('127.0.0.1') || hostname.includes('stackblitz')) {
+  // Handle localhost and development (including subdomain.localhost format)
+  if (hostname === 'localhost' || hostname.startsWith('127.0.0.1') || hostname.includes('stackblitz') || hostname.endsWith('.localhost')) {
+    
+    // Handle subdomain.localhost format (e.g., water-refill.localhost:5173)
+    if (hostname.endsWith('.localhost')) {
+      const parts = hostname.split('.');
+      if (parts.length >= 2) {
+        const subdomain = parts[0];
+        
+        if (subdomain === 'water-refill') {
+          return {
+            category: 'Water Refill Stations',
+            city: 'All Cities',
+            state: 'Nationwide',
+            isWaterRefill: true,
+            isPathBased: true
+          };
+        }
+        
+        if (subdomain === 'senior-care') {
+          return {
+            category: 'Senior Care Services',
+            city: 'All Cities',
+            state: 'Nationwide',
+            isSeniorCare: true,
+            isPathBased: true
+          };
+        }
+        
+        if (subdomain === 'specialty-pet') {
+          return {
+            category: 'Specialty Pet Services',
+            city: 'All Cities',
+            state: 'Nationwide',
+            isSpecialtyPet: true,
+            isPathBased: true
+          };
+        }
+      }
+    }
+    
     // Check for dev query parameter to simulate subdomains
     const urlParams = new URLSearchParams(window.location.search);
     const devSubdomain = urlParams.get('subdomain');

@@ -11,6 +11,7 @@ import {
   AboutPage as WaterRefillAboutPage,
   ContactPage as WaterRefillContactPage,
   ForBusinessPage as WaterRefillForBusinessPage,
+  BusinessSubmissionPage as WaterRefillBusinessSubmissionPage,
   PrivacyPolicyPage as WaterRefillPrivacyPolicyPage,
   TermsOfServicePage as WaterRefillTermsOfServicePage,
   SitemapPage as WaterRefillSitemapPage
@@ -34,9 +35,11 @@ export const WaterRefillWorld: React.FC<WaterRefillWorldProps> = ({ subdomainInf
   console.log('💧 WaterRefillWorld starting with subdomainInfo:', subdomainInfo);
   
   // Determine the base path for routes
-  // For subdomain-based routing (water-refill.near-me.us), basePath should be empty
+  // For subdomain-based routing (water-refill.near-me.us or ?subdomain=water-refill), basePath should be empty
   // For path-based routing (near-me.us/water-refill), basePath should be '/water-refill'
-  const isSubdomainBased = window.location.hostname.startsWith('water-refill.');
+  const isSubdomainBased = window.location.hostname.startsWith('water-refill.') || 
+                            window.location.hostname.endsWith('.localhost') || 
+                            new URLSearchParams(window.location.search).get('subdomain') === 'water-refill';
   const basePath = isSubdomainBased ? '' : '/water-refill';
   console.log('🛤️ WaterRefillWorld basePath:', basePath, '(subdomain-based:', isSubdomainBased, ')');
   
@@ -66,12 +69,16 @@ export const WaterRefillWorld: React.FC<WaterRefillWorldProps> = ({ subdomainInf
       
       {/* Business-related pages */}
       <Route 
-        path={`${basePath}/for-business`} 
+        path="/for-business" 
         element={<WaterRefillForBusinessPage subdomainInfo={subdomainInfo} />} 
       />
       <Route 
-        path={`${basePath}/business-owners`} 
-        element={<Navigate to={`${basePath}/for-business`} replace />} 
+        path="/submit-business" 
+        element={<WaterRefillBusinessSubmissionPage subdomainInfo={subdomainInfo} />} 
+      />
+      <Route 
+        path="/business-owners" 
+        element={<Navigate to="/for-business" replace />} 
       />
       
       {/* Information pages */}

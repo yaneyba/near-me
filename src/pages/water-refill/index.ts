@@ -4,6 +4,7 @@ export { default as DetailPage } from './DetailPage';
 export { default as AboutPage } from './AboutPage';
 export { default as ContactPage } from './ContactPage';
 export { default as ForBusinessPage } from './ForBusinessPage';
+export { default as BusinessSubmissionPage } from './BusinessSubmissionPage';
 export { default as PrivacyPolicyPage } from './PrivacyPolicyPage';
 export { default as TermsOfServicePage } from './TermsOfServicePage';
 export { default as SitemapPage } from './SitemapPage';
