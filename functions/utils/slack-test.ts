@@ -5,7 +5,7 @@
 
 import { sendSlackNotification, ContactNotificationData, BusinessNotificationData } from './slack';
 
-const SLACK_WEBHOOK_URL = 'https://hooks.slack.com/services/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';
+const SLACK_WEBHOOK_URL = 'https://hooks.slack.com/services/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';
 
 // Test contact form notification
 const testContactNotification = async () => {

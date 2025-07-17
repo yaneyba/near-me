@@ -8,17 +8,15 @@ The application now sends real-time notifications to Slack for all form submissi
 
 ## Slack Webhook Configuration
 
-**Current Webhook URL**: `https://hooks.slack.com/services/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`
+**Webhook URL**: Configured in each API function file (not exposed in documentation for security)
 
-**Previous Webhook URLs** (for reference):
-- `https://hooks.slack.com/services/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` (expired)
-- `https://hooks.slack.com/services/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` (expired)
-
-This webhook is configured in the following files:
+**Configuration Files**:
 - `functions/api/contact.ts` - Contact form submissions
 - `functions/api/submit-business.ts` - Business submissions
 - `functions/api/admin/business-submissions.ts` - Admin approval/rejection actions  
 - `functions/api/admin/contact-messages.ts` - Contact message resolution
+
+**Security Note**: The webhook URL is stored as a constant in each API function. For production, consider moving to environment variables.
 
 ## Notification Types
 
@@ -136,10 +134,13 @@ Each action should trigger a corresponding Slack notification with properly form
 
 ## Security Considerations
 
-- The webhook URL is hardcoded in the source code
-- Consider moving webhook URL to environment variables for better security
-- Monitor webhook usage for unauthorized access
+**⚠️ IMPORTANT: Webhook URL Security**
+- The webhook URL contains sensitive tokens and should NEVER be exposed publicly
+- Currently hardcoded in source files - should be moved to environment variables
+- Do not commit webhook URLs to version control
 - Regularly rotate webhook URLs if compromised
+- Monitor webhook usage for unauthorized access
+- Consider using Slack's IP whitelisting for additional security
 
 ## Future Enhancements
 

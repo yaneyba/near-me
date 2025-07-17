@@ -19,14 +19,14 @@ This project uses **Cloudflare D1** (SQLite-based) as the primary database for t
 
 ## Database Connection Details
 
-### Database ID
-- **Production Database**: `86879c31-0686-4532-a66c-f310b89d7a27`
-- **Name**: `nearme-db`
+### Database Configuration
+- **Database Name**: `nearme-db`
+- **Database ID**: Configured in `wrangler.toml` (not exposed in documentation for security)
 
 ### Connection Methods
 
 #### 1. Using Cloudflare Dashboard
-- Navigate to: [Cloudflare Dashboard > Workers & Pages > D1](https://dash.cloudflare.com/86879c31068645326af310b89d7a27/workers/d1)
+- Navigate to: Cloudflare Dashboard > Workers & Pages > D1
 - Select database: `nearme-db`
 - Use the built-in query console
 
@@ -55,8 +55,10 @@ wrangler d1 info nearme-db
 [[d1_databases]]
 binding = "DB"
 database_name = "nearme-db"
-database_id = "86879c31-0686-4532-a66c-f310b89d7a27"
+database_id = "your-database-id-here"
 ```
+
+**Security Note**: The actual database ID is configured in `wrangler.toml` and should not be exposed publicly.
 
 #### Environment Variables
 - `DATABASE_URL`: Set in Cloudflare Pages environment
@@ -227,11 +229,13 @@ wrangler d1 execute nearme-db --remote --command ".dump" > "backup-$(date +%Y%m%
 - Database binding only available to Cloudflare Functions
 - No direct database access from client-side code
 - API functions validate input and sanitize queries
+- **Database ID should never be exposed publicly**
 
 ### Data Protection
 - No sensitive data stored in plain text
-- Stripe data handled through secure webhooks
+- Database credentials stored securely in Cloudflare configuration
 - User emails encrypted where required
+- **⚠️ IMPORTANT**: Keep database IDs and connection strings private
 
 ---
 
