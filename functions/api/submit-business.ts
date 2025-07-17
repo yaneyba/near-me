@@ -191,6 +191,26 @@ async function handleBusinessSubmission(businessData: any, env: Env) {
       'water-refill' // site_id for tracking which subdomain this came from
     );
     
+    // Log the prepared query for debugging
+    console.log('Executing SQL query:', query);
+    console.log('With parameters:', [
+      id,
+      businessData.name,
+      businessData.submitterName || 'Unknown',
+      businessData.submitterEmail || businessData.email || '',
+      businessData.phone || businessData.submitterPhone || 'Not provided',
+      businessData.address || 'Not provided',
+      businessData.city,
+      businessData.state || 'Not provided',
+      cleanZip || '00000', 
+      businessData.category,
+      businessData.website || null,
+      businessData.description || null,
+      sanitizedServices,
+      sanitizedHours,
+      'water-refill'
+    ]);
+    
     // Execute the query
     await stmt.run();
 
