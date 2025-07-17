@@ -1,7 +1,7 @@
 import { Env, PagesFunction } from '../types';
 import { sendSlackNotification, BusinessNotificationData } from '../utils/slack';
 
-const SLACK_WEBHOOK_URL = 'https://hooks.slack.com/services/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';
+const SLACK_WEBHOOK_URL = 'https://hooks.slack.com/services/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';
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
