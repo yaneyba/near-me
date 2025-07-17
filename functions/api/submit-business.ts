@@ -125,26 +125,74 @@ async function handleBusinessSubmission(businessData: any, env: Env) {
   const id = 'business_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 
   try {
+    // Clean up and sanitize all input data
+    const cleanZip = businessData.zip ? String(businessData.zip).replace(/[^\w\d]/g, '') : '';
+    
+    // Sanitize the JSON data before storing
+    let sanitizedServices: string | null = null;
+    let sanitizedHours: string | null = null;
+    
+    try {
+      if (businessData.services) {
+        // Make sure services is an array
+        if (Array.isArray(businessData.services)) {
+          sanitizedServices = JSON.stringify(businessData.services);
+        } else {
+          // If it's not an array, convert to string and log warning
+          console.warn('Services not in expected array format:', businessData.services);
+          sanitizedServices = JSON.stringify([]);
+        }
+      }
+      
+      if (businessData.businessHours) {
+        // Make sure businessHours is an object
+        if (typeof businessData.businessHours === 'object' && businessData.businessHours !== null) {
+          sanitizedHours = JSON.stringify(businessData.businessHours);
+        } else {
+          // If it's not an object, convert to empty object and log warning
+          console.warn('Business hours not in expected format:', businessData.businessHours);
+          sanitizedHours = JSON.stringify({});
+        }
+      }
+    } catch (jsonError) {
+      console.error('JSON serialization error:', jsonError);
+      // Provide fallback values in case of errors
+      sanitizedServices = JSON.stringify([]);
+      sanitizedHours = JSON.stringify({});
+    }
+    
+    console.log('Preparing to insert business submission:', {
+      id, 
+      name: businessData.name,
+      email: businessData.submitterEmail || businessData.email || '',
+      city: businessData.city,
+      state: businessData.state || '',
+      zip: cleanZip
+    });
+    
     // Insert into database
-    await env.DB.prepare(query)
-      .bind(
-        id,
-        businessData.name,
-        businessData.submitterName || 'Unknown',
-        businessData.submitterEmail || businessData.email || '',
-        businessData.phone || businessData.submitterPhone || '',
-        businessData.address || '',
-        businessData.city,
-        businessData.state || '',
-        businessData.zip || '',
-        businessData.category,
-        businessData.website || null,
-        businessData.description || null,
-        businessData.services ? JSON.stringify(businessData.services) : null,
-        businessData.businessHours ? JSON.stringify(businessData.businessHours) : null,
-        'water-refill' // site_id for tracking which subdomain this came from
-      )
-      .run();
+    const stmt = env.DB.prepare(query);
+    
+    await stmt.bind(
+      id,
+      businessData.name,
+      businessData.submitterName || 'Unknown',
+      businessData.submitterEmail || businessData.email || '',
+      businessData.phone || businessData.submitterPhone || 'Not provided',
+      businessData.address || 'Not provided',
+      businessData.city,
+      businessData.state || 'Not provided',
+      cleanZip || '00000', // Use the cleaned ZIP code with default
+      businessData.category,
+      businessData.website || null,
+      businessData.description || null,
+      sanitizedServices,
+      sanitizedHours,
+      'water-refill' // site_id for tracking which subdomain this came from
+    );
+    
+    // Execute the query
+    await stmt.run();
 
     // Send Slack notification
     const slackData: BusinessNotificationData = {
@@ -185,10 +233,69 @@ async function handleBusinessSubmission(businessData: any, env: Env) {
       },
     });
   } catch (error) {
+    // Add detailed error logging with the specific error and payload
     console.error('Error submitting business:', error);
+    
+    // Log the detailed error info for debugging
+    try {
+      console.error('Business data causing error:', {
+        id,
+        name: businessData.name,
+        city: businessData.city,
+        state: businessData.state || 'Not provided',
+        zip: businessData.zip || '00000',
+        category: businessData.category,
+        email: businessData.submitterEmail || businessData.email || '',
+        owner: businessData.submitterName || 'Unknown',
+        phone: businessData.phone || businessData.submitterPhone || 'Not provided',
+        address: businessData.address || 'Not provided',
+        servicesType: typeof businessData.services,
+        servicesIsArray: Array.isArray(businessData.services),
+        businessHoursType: typeof businessData.businessHours
+      });
+      
+      // If we have D1 error details, log them
+      if (error && typeof error === 'object' && 'cause' in error) {
+        console.error('Database error cause:', error.cause);
+      }
+      
+      // Log SQL bind parameters for debugging
+      const zipForLog = businessData.zip ? String(businessData.zip).replace(/[^\w\d]/g, '') : '00000';
+      console.error('SQL bind parameters:', [
+        id,
+        businessData.name,
+        businessData.submitterName || 'Unknown',
+        businessData.submitterEmail || businessData.email || '',
+        businessData.phone || businessData.submitterPhone || 'Not provided',
+        businessData.address || 'Not provided',
+        businessData.city,
+        businessData.state || 'Not provided',
+        zipForLog,
+        businessData.category,
+        businessData.website || null,
+        businessData.description || null,
+        businessData.services ? JSON.stringify(businessData.services) : null,
+        businessData.businessHours ? JSON.stringify(businessData.businessHours) : null,
+        'water-refill'
+      ]);
+    } catch (logError) {
+      console.error('Error while logging:', logError);
+    }
+    
+    // Provide more helpful error message for debugging
+    let errorMessage = 'Failed to submit business';
+    if (error instanceof Error) {
+      errorMessage += `: ${error.message}`;
+      
+      // Add additional context for SQL errors
+      if ('cause' in error && error.cause && typeof error.cause === 'object' && 'message' in error.cause) {
+        errorMessage += ` (${error.cause.message})`;
+      }
+    }
+    
     return new Response(JSON.stringify({
       success: false,
-      message: 'Failed to submit business'
+      message: errorMessage
     }), {
       status: 500,
       headers: {
