@@ -1,6 +1,6 @@
 import { Env, PagesFunction } from '../../types';
 
-const SLACK_WEBHOOK_URL = 'https://hooks.slack.com/services/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';
+const SLACK_WEBHOOK_URL = 'https://hooks.slack.com/services/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';
 
 export const onRequestGet: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
