@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Phone, Mail, Clock, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
+import { MapPin, Phone, Clock, Facebook, Twitter, Instagram, Briefcase } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useFooterConfig } from '../hooks/useFooterConfig';
 
@@ -38,9 +38,6 @@ const Footer: React.FC = () => {
               <a href="#" className="text-gray-400 hover:text-pink-500 transition-colors">
                 <Instagram className="h-5 w-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-blue-600 transition-colors">
-                <Linkedin className="h-5 w-5" />
-              </a>
             </div>
           </div>
 
@@ -78,7 +75,7 @@ const Footer: React.FC = () => {
             <ul className="space-y-2">
               <li>
                 <Link to="/business-owners" className="text-gray-400 hover:text-white transition-colors flex items-center">
-                  <Mail className="h-4 w-4 mr-2" />
+                  <Briefcase className="h-4 w-4 mr-2" />
                   For Business Owners
                 </Link>
               </li>
