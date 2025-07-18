@@ -3,6 +3,7 @@
 interface ImportMetaEnv {
   readonly VITE_SITE_ID: string
   readonly VITE_SHOW_SEARCH_BAR_ON_HEADER: string
+  readonly VITE_SETTINGS_AUTH_LOGIN_ENABLED: string
   readonly VITE_GOOGLE_ANALYTICS_ID: string
   readonly VITE_GOOGLE_TAG_MANAGER_ID: string
   readonly VITE_SETTINGS_ENABLE_ADS: string

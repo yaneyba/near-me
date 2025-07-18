@@ -30,7 +30,7 @@ export const waterRefillConfig: CustomLayoutConfig = {
     { label: 'Find Stations', href: '/' },
     { label: 'About', href: '/about' },
     { label: 'Contact', href: '/contact' },
-    { label: 'Sign In', href: '/login' }
+    // { label: 'Sign In', href: '/login' }
   ],
   
   // Statistics to display

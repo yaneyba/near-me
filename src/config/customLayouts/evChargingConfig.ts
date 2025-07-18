@@ -30,7 +30,7 @@ export const evChargingConfig: CustomLayoutConfig = {
     { label: 'Route Planner', href: '/plan-route' },
     { label: 'Networks', href: '/networks' },
     { label: 'About', href: '/about' },
-    { label: 'Sign In', href: '/login' }
+    // { label: 'Sign In', href: '/login' }
   ],
   
   // Statistics to display

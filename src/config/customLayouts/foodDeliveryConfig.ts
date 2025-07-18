@@ -30,7 +30,7 @@ export const foodDeliveryConfig: CustomLayoutConfig = {
     { label: 'Cuisines', href: '/cuisines' },
     { label: 'Deals', href: '/deals' },
     { label: 'Track Order', href: '/track' },
-    { label: 'Sign In', href: '/login' }
+    // { label: 'Sign In', href: '/login' }
   ],
   
   // Statistics to display
