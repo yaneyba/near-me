@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { SubdomainInfo } from '@/types';
 import { DataProviderFactory } from '@/providers/DataProviderFactory';
 import { MapPin, ExternalLink, Search, ChevronDown, ChevronUp } from 'lucide-react';
+import { normalizeStateName } from '@/utils/stateUtils';
 
 interface HomePageProps {
   subdomainInfo: SubdomainInfo;
@@ -84,64 +85,6 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
   sortedStates.forEach(state => {
     citiesByState[state].sort((a, b) => a.name.localeCompare(b.name));
   });
-
-  // Helper function to normalize state names
-  function normalizeStateName(state: string): string {
-    const stateMap: Record<string, string> = {
-      'California': 'CA',
-      'Texas': 'TX',
-      'Florida': 'FL',
-      'New York': 'NY',
-      'Illinois': 'IL',
-      'Pennsylvania': 'PA',
-      'Ohio': 'OH',
-      'Georgia': 'GA',
-      'North Carolina': 'NC',
-      'Michigan': 'MI',
-      'New Jersey': 'NJ',
-      'Virginia': 'VA',
-      'Washington': 'WA',
-      'Arizona': 'AZ',
-      'Massachusetts': 'MA',
-      'Tennessee': 'TN',
-      'Indiana': 'IN',
-      'Missouri': 'MO',
-      'Maryland': 'MD',
-      'Wisconsin': 'WI',
-      'Colorado': 'CO',
-      'Minnesota': 'MN',
-      'South Carolina': 'SC',
-      'Alabama': 'AL',
-      'Louisiana': 'LA',
-      'Kentucky': 'KY',
-      'Oregon': 'OR',
-      'Oklahoma': 'OK',
-      'Connecticut': 'CT',
-      'Utah': 'UT',
-      'Iowa': 'IA',
-      'Nevada': 'NV',
-      'Arkansas': 'AR',
-      'Mississippi': 'MS',
-      'Kansas': 'KS',
-      'New Mexico': 'NM',
-      'Nebraska': 'NE',
-      'West Virginia': 'WV',
-      'Idaho': 'ID',
-      'Hawaii': 'HI',
-      'New Hampshire': 'NH',
-      'Maine': 'ME',
-      'Montana': 'MT',
-      'Rhode Island': 'RI',
-      'Delaware': 'DE',
-      'South Dakota': 'SD',
-      'North Dakota': 'ND',
-      'Alaska': 'AK',
-      'Vermont': 'VT',
-      'Wyoming': 'WY'
-    };
-    
-    return stateMap[state] || state;
-  }
 
   const toggleState = (state: string) => {
     const newExpanded = new Set(expandedStates);
