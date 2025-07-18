@@ -227,7 +227,45 @@ node scripts/deploy-category.js water-refill dallas ./data/water-stations-dallas
 
 ---
 
-## 📚 **Need More Help?**
+## � **Production Deployment**
+
+After making changes to your code (API updates, webhook fixes, etc.), deploy to production:
+
+```bash
+# Build and deploy changes to production
+npm run build
+wrangler pages deploy --project-name near-me
+```
+
+**When to use this:**
+- After updating webhook URLs
+- After fixing API endpoints
+- After making any code changes that need to go live
+- To ensure everything is properly synchronized in production
+
+**Example workflow:**
+```bash
+# 1. Make your changes (fix APIs, update webhooks, etc.)
+# 2. Test locally if needed
+npm run dev
+
+# 3. Commit your changes
+git add -A
+git commit -m "Fix: Description of your changes"
+
+# 4. Build the project (important!)
+npm run build
+
+# 5. Deploy to production
+wrangler pages deploy --project-name near-me
+
+# 6. Verify deployment worked
+curl "https://near-me.us/api/businesses?category=test"
+```
+
+---
+
+## �📚 **Need More Help?**
 
 - **Scripts Guide**: [`scripts/README.md`](scripts/README.md)
 - **Custom Layouts**: [`docs/CUSTOM-LAYOUT-GUIDE.md`](docs/CUSTOM-LAYOUT-GUIDE.md)
