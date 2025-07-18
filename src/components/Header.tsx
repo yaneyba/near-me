@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, MapPin, Mail, Plus, User, LogIn, LogOut } from 'lucide-react';
+import { Menu, X, MapPin, Mail, Plus, User, LogOut } from 'lucide-react';
 import { signOut, useAuth } from '@/lib/auth';
 // Force refresh
 
@@ -117,7 +117,7 @@ const Header: React.FC<HeaderProps> = ({ category, city, state }) => {
               </Link>
             )}
             
-            {/* Auth links */}
+            {/* Auth links - hide Sign In button since authentication is disabled */}
             {user ? (
               <div className="flex items-center space-x-3">
                 {isAdmin ? (
@@ -147,13 +147,8 @@ const Header: React.FC<HeaderProps> = ({ category, city, state }) => {
                 </button>
               </div>
             ) : (
-              <Link 
-                to="/login" 
-                className="flex items-center font-medium transition-colors px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
-              >
-                <LogIn className="w-4 h-4 mr-1" />
-                Sign In
-              </Link>
+              // Sign In button hidden since authentication is disabled
+              null
             )}
           </nav>
 
@@ -255,14 +250,8 @@ const Header: React.FC<HeaderProps> = ({ category, city, state }) => {
                 </div>
               </>
             ) : (
-              <Link
-                to="/login"
-                className="flex items-center px-3 py-2 font-medium text-gray-700 hover:text-blue-600"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <LogIn className="w-4 h-4 mr-2" />
-                Sign In
-              </Link>
+              // Sign In button hidden in mobile menu since authentication is disabled
+              null
             )}
           </div>
         </div>
