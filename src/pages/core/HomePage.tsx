@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { SubdomainInfo } from '@/types';
 import { DataProviderFactory } from '@/providers/DataProviderFactory';
-import { MapPin, ExternalLink, Search } from 'lucide-react';
+import { MapPin, ExternalLink, Search, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface HomePageProps {
   subdomainInfo: SubdomainInfo;
@@ -28,6 +28,7 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandedStates, setExpandedStates] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     document.title = `Find Local Services - ${subdomainInfo.category} Directory`;
@@ -66,6 +67,91 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
     city.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     city.state.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Group cities by state
+  const citiesByState = filteredCities.reduce((acc, city) => {
+    // Normalize state names to abbreviations
+    const normalizedState = normalizeStateName(city.state);
+    if (!acc[normalizedState]) {
+      acc[normalizedState] = [];
+    }
+    acc[normalizedState].push(city);
+    return acc;
+  }, {} as Record<string, CityData[]>);
+
+  // Sort states alphabetically and cities within each state
+  const sortedStates = Object.keys(citiesByState).sort();
+  sortedStates.forEach(state => {
+    citiesByState[state].sort((a, b) => a.name.localeCompare(b.name));
+  });
+
+  // Helper function to normalize state names
+  function normalizeStateName(state: string): string {
+    const stateMap: Record<string, string> = {
+      'California': 'CA',
+      'Texas': 'TX',
+      'Florida': 'FL',
+      'New York': 'NY',
+      'Illinois': 'IL',
+      'Pennsylvania': 'PA',
+      'Ohio': 'OH',
+      'Georgia': 'GA',
+      'North Carolina': 'NC',
+      'Michigan': 'MI',
+      'New Jersey': 'NJ',
+      'Virginia': 'VA',
+      'Washington': 'WA',
+      'Arizona': 'AZ',
+      'Massachusetts': 'MA',
+      'Tennessee': 'TN',
+      'Indiana': 'IN',
+      'Missouri': 'MO',
+      'Maryland': 'MD',
+      'Wisconsin': 'WI',
+      'Colorado': 'CO',
+      'Minnesota': 'MN',
+      'South Carolina': 'SC',
+      'Alabama': 'AL',
+      'Louisiana': 'LA',
+      'Kentucky': 'KY',
+      'Oregon': 'OR',
+      'Oklahoma': 'OK',
+      'Connecticut': 'CT',
+      'Utah': 'UT',
+      'Iowa': 'IA',
+      'Nevada': 'NV',
+      'Arkansas': 'AR',
+      'Mississippi': 'MS',
+      'Kansas': 'KS',
+      'New Mexico': 'NM',
+      'Nebraska': 'NE',
+      'West Virginia': 'WV',
+      'Idaho': 'ID',
+      'Hawaii': 'HI',
+      'New Hampshire': 'NH',
+      'Maine': 'ME',
+      'Montana': 'MT',
+      'Rhode Island': 'RI',
+      'Delaware': 'DE',
+      'South Dakota': 'SD',
+      'North Dakota': 'ND',
+      'Alaska': 'AK',
+      'Vermont': 'VT',
+      'Wyoming': 'WY'
+    };
+    
+    return stateMap[state] || state;
+  }
+
+  const toggleState = (state: string) => {
+    const newExpanded = new Set(expandedStates);
+    if (newExpanded.has(state)) {
+      newExpanded.delete(state);
+    } else {
+      newExpanded.add(state);
+    }
+    setExpandedStates(newExpanded);
+  };
 
   if (loading) {
     return (
@@ -158,47 +244,69 @@ const HomePage: React.FC<HomePageProps> = ({ subdomainInfo }) => {
             <h2 className="text-3xl font-bold text-gray-900 mb-8">
               Browse by City
               <span className="block text-lg font-normal text-gray-600 mt-2">
-                {filteredCities.length} cities available
+                {filteredCities.length} cities across {sortedStates.length} states
               </span>
             </h2>
-            <div className="grid gap-4">
-              {filteredCities.map((city) => {
-                // Handle URL generation based on subdomain type
-                let cityUrl: string;
-                
-                if (subdomainInfo.isServices || !subdomainInfo.rawCategory) {
-                  // For main services page, link to main site with city parameter
-                  cityUrl = `https://near-me.us/?city=${encodeURIComponent(city.slug)}`;
-                } else {
-                  // For category-specific pages, use the path-based pattern: category.near-me.us/city
-                  cityUrl = `https://${subdomainInfo.rawCategory}.near-me.us/${city.slug}`;
-                }
-                
-                return (
-                  <a
-                    key={city.slug}
-                    href={cityUrl}
-                    className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6 border border-gray-200 hover:border-blue-300"
+            <div className="space-y-6">
+              {sortedStates.map((state) => (
+                <div key={state} className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+                  <button
+                    onClick={() => toggleState(state)}
+                    className="w-full text-left flex items-center justify-between hover:bg-gray-50 -m-2 p-2 rounded-lg transition-colors"
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <MapPin className="w-6 h-6 text-blue-600" />
-                        <div>
-                          <h3 className="text-xl font-semibold text-gray-900">
-                            {city.name}, {city.state}
-                          </h3>
-                          <p className="text-gray-600">
-                            Discover local services in {city.name}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2 text-sm text-gray-500">
-                        <ExternalLink className="w-4 h-4" />
-                      </div>
+                    <h3 className="text-xl font-semibold text-gray-900 flex items-center">
+                      <MapPin className="w-5 h-5 text-blue-600 mr-2" />
+                      {state} ({citiesByState[state].length} cities)
+                    </h3>
+                    {expandedStates.has(state) ? (
+                      <ChevronUp className="w-5 h-5 text-gray-600" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-gray-600" />
+                    )}
+                  </button>
+                  
+                  {expandedStates.has(state) && (
+                    <div className="mt-4 grid gap-3">
+                      {citiesByState[state].map((city) => {
+                        // Handle URL generation based on subdomain type
+                        let cityUrl: string;
+                        
+                        if (subdomainInfo.isServices || !subdomainInfo.rawCategory) {
+                          // For main services page, link to main site with city parameter
+                          cityUrl = `https://near-me.us/?city=${encodeURIComponent(city.slug)}`;
+                        } else {
+                          // For category-specific pages, use the path-based pattern: category.near-me.us/city
+                          cityUrl = `https://${subdomainInfo.rawCategory}.near-me.us/${city.slug}`;
+                        }
+                        
+                        return (
+                          <a
+                            key={city.slug}
+                            href={cityUrl}
+                            className="bg-gray-50 rounded-lg hover:bg-blue-50 transition-colors p-4 border border-gray-100 hover:border-blue-200"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-3">
+                                <div>
+                                  <h4 className="font-medium text-gray-900">
+                                    {city.name}
+                                  </h4>
+                                  <p className="text-sm text-gray-600">
+                                    {city.count} local services
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-2 text-sm text-gray-500">
+                                <ExternalLink className="w-4 h-4" />
+                              </div>
+                            </div>
+                          </a>
+                        );
+                      })}
                     </div>
-                  </a>
-                );
-              })}
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         </div>
