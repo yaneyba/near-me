@@ -3,6 +3,9 @@
 export interface Env {
   DB: D1Database;
   D1_API_KEY: string;
+  SLACK_WEBHOOK_URL?: string; // Slack webhook URL for notifications
+  ADMIN_API_TOKEN?: string; // Admin API authentication token
+  ALLOWED_ORIGINS?: string; // Comma-separated list of allowed CORS origins
 }
 
 // Re-export Cloudflare types

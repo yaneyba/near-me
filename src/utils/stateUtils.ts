@@ -3,65 +3,93 @@
  */
 
 /**
+ * Map of state abbreviations to full names
+ * Single source of truth for state data
+ */
+const STATE_MAP: Record<string, string> = {
+  'AL': 'Alabama',
+  'AK': 'Alaska',
+  'AZ': 'Arizona',
+  'AR': 'Arkansas',
+  'CA': 'California',
+  'CO': 'Colorado',
+  'CT': 'Connecticut',
+  'DE': 'Delaware',
+  'FL': 'Florida',
+  'GA': 'Georgia',
+  'HI': 'Hawaii',
+  'ID': 'Idaho',
+  'IL': 'Illinois',
+  'IN': 'Indiana',
+  'IA': 'Iowa',
+  'KS': 'Kansas',
+  'KY': 'Kentucky',
+  'LA': 'Louisiana',
+  'ME': 'Maine',
+  'MD': 'Maryland',
+  'MA': 'Massachusetts',
+  'MI': 'Michigan',
+  'MN': 'Minnesota',
+  'MS': 'Mississippi',
+  'MO': 'Missouri',
+  'MT': 'Montana',
+  'NE': 'Nebraska',
+  'NV': 'Nevada',
+  'NH': 'New Hampshire',
+  'NJ': 'New Jersey',
+  'NM': 'New Mexico',
+  'NY': 'New York',
+  'NC': 'North Carolina',
+  'ND': 'North Dakota',
+  'OH': 'Ohio',
+  'OK': 'Oklahoma',
+  'OR': 'Oregon',
+  'PA': 'Pennsylvania',
+  'RI': 'Rhode Island',
+  'SC': 'South Carolina',
+  'SD': 'South Dakota',
+  'TN': 'Tennessee',
+  'TX': 'Texas',
+  'UT': 'Utah',
+  'VT': 'Vermont',
+  'VA': 'Virginia',
+  'WA': 'Washington',
+  'WV': 'West Virginia',
+  'WI': 'Wisconsin',
+  'WY': 'Wyoming'
+};
+
+/**
+ * Reverse map: Full state names to abbreviations
+ * Generated from STATE_MAP to avoid duplication
+ */
+const REVERSE_STATE_MAP: Record<string, string> = Object.entries(STATE_MAP).reduce(
+  (acc, [abbr, fullName]) => {
+    acc[fullName] = abbr;
+    return acc;
+  },
+  {} as Record<string, string>
+);
+
+/**
  * Normalizes state names to their standard abbreviations
  * @param state - The state name (full name or abbreviation)
  * @returns The standardized state abbreviation
  */
 export function normalizeStateName(state: string): string {
-  const stateMap: Record<string, string> = {
-    'California': 'CA',
-    'Texas': 'TX',
-    'Florida': 'FL',
-    'New York': 'NY',
-    'Illinois': 'IL',
-    'Pennsylvania': 'PA',
-    'Ohio': 'OH',
-    'Georgia': 'GA',
-    'North Carolina': 'NC',
-    'Michigan': 'MI',
-    'New Jersey': 'NJ',
-    'Virginia': 'VA',
-    'Washington': 'WA',
-    'Arizona': 'AZ',
-    'Massachusetts': 'MA',
-    'Tennessee': 'TN',
-    'Indiana': 'IN',
-    'Missouri': 'MO',
-    'Maryland': 'MD',
-    'Wisconsin': 'WI',
-    'Colorado': 'CO',
-    'Minnesota': 'MN',
-    'South Carolina': 'SC',
-    'Alabama': 'AL',
-    'Louisiana': 'LA',
-    'Kentucky': 'KY',
-    'Oregon': 'OR',
-    'Oklahoma': 'OK',
-    'Connecticut': 'CT',
-    'Utah': 'UT',
-    'Iowa': 'IA',
-    'Nevada': 'NV',
-    'Arkansas': 'AR',
-    'Mississippi': 'MS',
-    'Kansas': 'KS',
-    'New Mexico': 'NM',
-    'Nebraska': 'NE',
-    'West Virginia': 'WV',
-    'Idaho': 'ID',
-    'Hawaii': 'HI',
-    'New Hampshire': 'NH',
-    'Maine': 'ME',
-    'Montana': 'MT',
-    'Rhode Island': 'RI',
-    'Delaware': 'DE',
-    'South Dakota': 'SD',
-    'North Dakota': 'ND',
-    'Alaska': 'AK',
-    'Vermont': 'VT',
-    'Wyoming': 'WY'
-  };
-  
-  return stateMap[state] || state;
+  // If it's already an abbreviation (2 chars and exists in map), return it
+  if (state.length === 2 && STATE_MAP[state.toUpperCase()]) {
+    return state.toUpperCase();
+  }
+
+  // Check if it's a full name
+  const normalized = REVERSE_STATE_MAP[state];
+  if (normalized) {
+    return normalized;
+  }
+
+  // If not found, return original (might be invalid, but preserve it)
+  return state;
 }
 
 /**
@@ -70,58 +98,40 @@ export function normalizeStateName(state: string): string {
  * @returns The full state name or the abbreviation if not found
  */
 export function getFullStateName(abbreviation: string): string {
-  const abbreviationMap: Record<string, string> = {
-    'CA': 'California',
-    'TX': 'Texas',
-    'FL': 'Florida',
-    'NY': 'New York',
-    'IL': 'Illinois',
-    'PA': 'Pennsylvania',
-    'OH': 'Ohio',
-    'GA': 'Georgia',
-    'NC': 'North Carolina',
-    'MI': 'Michigan',
-    'NJ': 'New Jersey',
-    'VA': 'Virginia',
-    'WA': 'Washington',
-    'AZ': 'Arizona',
-    'MA': 'Massachusetts',
-    'TN': 'Tennessee',
-    'IN': 'Indiana',
-    'MO': 'Missouri',
-    'MD': 'Maryland',
-    'WI': 'Wisconsin',
-    'CO': 'Colorado',
-    'MN': 'Minnesota',
-    'SC': 'South Carolina',
-    'AL': 'Alabama',
-    'LA': 'Louisiana',
-    'KY': 'Kentucky',
-    'OR': 'Oregon',
-    'OK': 'Oklahoma',
-    'CT': 'Connecticut',
-    'UT': 'Utah',
-    'IA': 'Iowa',
-    'NV': 'Nevada',
-    'AR': 'Arkansas',
-    'MS': 'Mississippi',
-    'KS': 'Kansas',
-    'NM': 'New Mexico',
-    'NE': 'Nebraska',
-    'WV': 'West Virginia',
-    'ID': 'Idaho',
-    'HI': 'Hawaii',
-    'NH': 'New Hampshire',
-    'ME': 'Maine',
-    'MT': 'Montana',
-    'RI': 'Rhode Island',
-    'DE': 'Delaware',
-    'SD': 'South Dakota',
-    'ND': 'North Dakota',
-    'AK': 'Alaska',
-    'VT': 'Vermont',
-    'WY': 'Wyoming'
-  };
-  
-  return abbreviationMap[abbreviation] || abbreviation;
+  const fullName = STATE_MAP[abbreviation.toUpperCase()];
+  return fullName || abbreviation;
+}
+
+/**
+ * Check if a string is a valid US state abbreviation
+ * @param abbreviation - The string to check
+ * @returns True if valid state abbreviation
+ */
+export function isValidStateAbbreviation(abbreviation: string): boolean {
+  return abbreviation.length === 2 && STATE_MAP[abbreviation.toUpperCase()] !== undefined;
+}
+
+/**
+ * Check if a string is a valid US state full name
+ * @param stateName - The string to check
+ * @returns True if valid state name
+ */
+export function isValidStateName(stateName: string): boolean {
+  return REVERSE_STATE_MAP[stateName] !== undefined;
+}
+
+/**
+ * Get all state abbreviations
+ * @returns Array of all state abbreviations
+ */
+export function getAllStateAbbreviations(): string[] {
+  return Object.keys(STATE_MAP);
+}
+
+/**
+ * Get all state full names
+ * @returns Array of all state full names
+ */
+export function getAllStateNames(): string[] {
+  return Object.values(STATE_MAP);
 }
