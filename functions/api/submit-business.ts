@@ -1,15 +1,21 @@
 import { Env, PagesFunction } from '../types';
 import { sendSlackNotification, BusinessNotificationData } from '../utils/slack';
+import { requireAdminAuth } from '../utils/auth';
+import { getCorsHeaders, createCorsPreflightResponse } from '../utils/cors';
 
-const SLACK_WEBHOOK_URL = 'https://hooks.slack.com/services/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';
+// Use environment variable for Slack webhook URL
+// Fallback to empty string if not set (will gracefully fail in sendSlackNotification)
+const getSlackWebhookUrl = (env: Env): string => {
+  return env.SLACK_WEBHOOK_URL || '';
+};
 
 // GET: Retrieve all business submissions (for admin)
 export const onRequestGet: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
-  
-  // TODO: Add admin authentication check here
-  // const isAdmin = await verifyAdminToken(request);
-  // if (!isAdmin) return new Response('Unauthorized', { status: 401 });
+
+  // Require admin authentication
+  const authError = await requireAdminAuth(request, env);
+  if (authError) return authError;
 
   try {
     const query = `
@@ -23,9 +29,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     return new Response(JSON.stringify(submissions), {
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        ...getCorsHeaders(request, env),
       },
     });
   } catch (error) {
@@ -33,11 +37,11 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     return new Response(JSON.stringify({
       success: false,
       message: 'Failed to fetch business submissions'
-    }), { 
+    }), {
       status: 500,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
+        ...getCorsHeaders(request, env),
       }
     });
   }
@@ -119,7 +123,7 @@ async function handleBusinessSubmission(businessData: any, env: Env) {
 
   // Clean up and sanitize input data first
   const cleanZip = businessData.zip ? String(businessData.zip).replace(/[^\w\d]/g, '') : '00000';
-  
+
   // Prepare data with defaults for NOT NULL fields
   const business_name = businessData.name;
   const owner_name = businessData.submitterName || businessData.owner || 'Unknown';
@@ -133,35 +137,16 @@ async function handleBusinessSubmission(businessData: any, env: Env) {
   const website = businessData.website || null;
   const description = businessData.description || null;
   const site_id = 'water-refill';
-  
-  // Skip using placeholders - build a direct SQL statement instead
+
+  // Use parameterized queries to prevent SQL injection
   const query = `
     INSERT INTO business_submissions (
       id, business_name, owner_name, email, phone, address, city, state, zip_code,
       category, website, description, site_id
-    ) VALUES (
-      '${id}', 
-      '${business_name.replace(/'/g, "''")}', 
-      '${owner_name.replace(/'/g, "''")}', 
-      '${email.replace(/'/g, "''")}', 
-      '${phone.replace(/'/g, "''")}', 
-      '${address.replace(/'/g, "''")}', 
-      '${city.replace(/'/g, "''")}', 
-      '${state.replace(/'/g, "''")}', 
-      '${zip_code.replace(/'/g, "''")}',
-      '${category.replace(/'/g, "''")}', 
-      ${website ? `'${website.replace(/'/g, "''")}'` : 'NULL'}, 
-      ${description ? `'${description.replace(/'/g, "''")}'` : 'NULL'}, 
-      '${site_id.replace(/'/g, "''")}'
-    )
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
-  
-  console.log('Using direct SQL query:', query);
 
   try {
-    // Clean up and sanitize all input data
-    const cleanZip = businessData.zip ? String(businessData.zip).replace(/[^\w\d]/g, '') : '';
-    
     // Sanitize the JSON data before storing
     let sanitizedServices: string | null = null;
     let sanitizedHours: string | null = null;
@@ -195,20 +180,24 @@ async function handleBusinessSubmission(businessData: any, env: Env) {
       sanitizedHours = JSON.stringify({});
     }
     
-    console.log('Preparing to insert business submission:', {
-      id, 
-      name: businessData.name,
-      email: businessData.submitterEmail || businessData.email || '',
-      city: businessData.city,
-      state: businessData.state || '',
-      zip: cleanZip
-    });
-    
-    // Execute the direct SQL query without parameters
-    console.log('Executing direct SQL query');
-    
-    // Execute the query with prepare() but without binding parameters
-    await env.DB.prepare(query).run();
+    // Execute parameterized query to prevent SQL injection
+    await env.DB.prepare(query)
+      .bind(
+        id,
+        business_name,
+        owner_name,
+        email,
+        phone,
+        address,
+        city,
+        state,
+        zip_code,
+        category,
+        website,
+        description,
+        site_id
+      )
+      .run();
 
     // Send Slack notification
     const slackData: BusinessNotificationData = {
@@ -229,12 +218,15 @@ async function handleBusinessSubmission(businessData: any, env: Env) {
       submitterPhone: businessData.submitterPhone || undefined,
     };
 
-    await sendSlackNotification(SLACK_WEBHOOK_URL, {
-      type: 'business',
-      data: slackData,
-      submissionId: id,
-      timestamp: new Date().toISOString(),
-    });
+    const webhookUrl = getSlackWebhookUrl(env);
+    if (webhookUrl) {
+      await sendSlackNotification(webhookUrl, {
+        type: 'business',
+        data: slackData,
+        submissionId: id,
+        timestamp: new Date().toISOString(),
+      });
+    }
 
     return new Response(JSON.stringify({
       success: true,
@@ -249,37 +241,13 @@ async function handleBusinessSubmission(businessData: any, env: Env) {
       },
     });
   } catch (error) {
-    // Add detailed error logging with the specific error and payload
-    console.error('Error submitting business:', error);
-    
-    // Log the detailed error info for debugging
-    try {
-      console.error('Business data causing error:', {
-        id,
-        name: businessData.name,
-        city: businessData.city,
-        state: businessData.state || 'Not provided',
-        zip: businessData.zip || '00000',
-        category: businessData.category,
-        email: businessData.submitterEmail || businessData.email || '',
-        owner: businessData.submitterName || 'Unknown',
-        phone: businessData.phone || businessData.submitterPhone || 'Not provided',
-        address: businessData.address || 'Not provided',
-        servicesType: typeof businessData.services,
-        servicesIsArray: Array.isArray(businessData.services),
-        businessHoursType: typeof businessData.businessHours
-      });
-      
-      // If we have D1 error details, log them
-      if (error && typeof error === 'object' && 'cause' in error) {
-        console.error('Database error cause:', error.cause);
-      }
-      
-      // Log SQL query for debugging
-      console.error('Direct SQL query that failed:', query);
-    } catch (logError) {
-      console.error('Error while logging:', logError);
-    }
+    // Log error for debugging (without exposing sensitive data)
+    console.error('Error submitting business:', {
+      errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      businessId: id,
+      city: businessData.city,
+      category: businessData.category
+    });
     
     // Provide more helpful error message for debugging
     let errorMessage = 'Failed to submit business';
@@ -400,15 +368,18 @@ async function handleAdminAction(requestData: any, env: Env) {
       };
 
       // Send notification using fetch directly (don't await to avoid blocking the response)
-      fetch(SLACK_WEBHOOK_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(slackPayload),
-      }).catch(error => {
-        console.error('Failed to send Slack notification for admin action:', error);
-      });
+      const webhookUrl = getSlackWebhookUrl(env);
+      if (webhookUrl) {
+        fetch(webhookUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(slackPayload),
+        }).catch(error => {
+          console.error('Failed to send Slack notification for admin action:', error);
+        });
+      }
     }
 
     return new Response(JSON.stringify({ success: true }), {

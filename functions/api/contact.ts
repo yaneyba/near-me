@@ -1,7 +1,11 @@
 import { Env, PagesFunction } from '../types';
 import { sendSlackNotification, ContactNotificationData } from '../utils/slack';
+import { getCorsHeaders, createCorsPreflightResponse } from '../utils/cors';
 
-const SLACK_WEBHOOK_URL = 'https://hooks.slack.com/services/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';
+// Use environment variable for Slack webhook URL
+const getSlackWebhookUrl = (env: Env): string => {
+  return env.SLACK_WEBHOOK_URL || '';
+};
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
@@ -32,8 +36,6 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       city: contactData.city || null
     };
 
-    console.log('Contact API - Received data:', JSON.stringify(contactData, null, 2));
-    console.log('Contact API - DB fields:', JSON.stringify(dbFields, null, 2));
 
     // Insert into database
     await env.DB.prepare(query)
@@ -64,16 +66,16 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       preferredContact: contactData.preferredContact || undefined,
     };
 
-    console.log('Attempting to send Slack notification with data:', JSON.stringify(slackData, null, 2));
-
-    await sendSlackNotification(SLACK_WEBHOOK_URL, {
-      type: 'contact',
-      data: slackData,
-      submissionId: id,
-      timestamp: new Date().toISOString(),
-    });
-
-    console.log('Contact form processing completed successfully');
+    // Send Slack notification if webhook URL is configured
+    const webhookUrl = getSlackWebhookUrl(env);
+    if (webhookUrl) {
+      await sendSlackNotification(webhookUrl, {
+        type: 'contact',
+        data: slackData,
+        submissionId: id,
+        timestamp: new Date().toISOString(),
+      });
+    }
 
     return new Response(JSON.stringify({
       success: true,
@@ -82,18 +84,11 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     }), {
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
+        ...getCorsHeaders(request, env),
       },
     });
   } catch (error) {
-    console.error('Error submitting contact form:', error);
-    console.error('Error details:', {
-      message: error.message,
-      stack: error.stack,
-      name: error.name
-    });
+    console.error('Error submitting contact form:', error instanceof Error ? error.message : 'Unknown error');
     
     return new Response(JSON.stringify({
       success: false,
@@ -103,19 +98,12 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       status: 500,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
+        ...getCorsHeaders(request, env),
       },
     });
   }
 };
 
-export const onRequestOptions: PagesFunction = async () => {
-  return new Response(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    },
-  });
+export const onRequestOptions: PagesFunction<Env> = async (context) => {
+  return createCorsPreflightResponse(context.request, context.env);
 };

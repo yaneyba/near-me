@@ -5,6 +5,7 @@ import { parseSubdomain } from '@/utils/subdomainParser';
 import { SubdomainInfo } from '@/types';
 import { useAuth } from '@/lib/auth';
 import { useSEO } from '@/hooks/useSEO';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 // Import the Smart Door system
 import { SmartDoor } from '@/components/routing';
@@ -40,12 +41,14 @@ function App() {
   }, [user]);
 
   console.log('🚪 Rendering SmartDoor with subdomainInfo:', subdomainInfo);
-  
+
   return (
-    <Router>
-      {/* 🚪 The Smart Door decides which world to show */}
-      <SmartDoor subdomainInfo={subdomainInfo} />
-    </Router>
+    <ErrorBoundary>
+      <Router>
+        {/* 🚪 The Smart Door decides which world to show */}
+        <SmartDoor subdomainInfo={subdomainInfo} />
+      </Router>
+    </ErrorBoundary>
   );
 }
 
